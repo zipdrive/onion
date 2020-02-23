@@ -1,7 +1,5 @@
 #include <forward_list>
-
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include <iostream>
 
 #include "../include/math.h"
 #include "../include/game.h"
@@ -40,6 +38,25 @@ mat4x4f& mat_get()
 	return g_MatrixStack.front();
 }
 
+void mat_print()
+{
+	mat4x4f& mat = mat_get();
+	for (int i = 0; i < 4; ++i)
+	{
+		for (int j = 0; j < 4; ++j)
+		{
+			std::printf("% .2f\t", mat.get(i, j));
+		}
+		std::cout << "\n";
+	}
+	std::cout << "\n";
+}
+
+const float* mat_get_values()
+{
+	return mat_get().matrix_values();
+}
+
 void mat_ortho(float left, float right, float bottom, float top, float near, float far)
 {
 	g_MatrixStack.clear();
@@ -58,9 +75,13 @@ void mat_ortho(float left, float right, float bottom, float top, float near, flo
 void mat_translate(float dx, float dy, float dz)
 {
 	mat4x4f& top = mat_get();
-	top.set(0, 3, top.get(0, 3) + dx);
-	top.set(1, 3, top.get(1, 3) + dy);
-	top.set(2, 3, top.get(2, 3) + dz);
+	
+	mat4x4f trans;
+	trans.get(0, 3) = dx;
+	trans.get(1, 3) = dy;
+	trans.get(2, 3) = dz;
+
+	g_MatrixStack.front() = mat_mul(top, trans);
 }
 
 void mat_scale(float sx, float sy, float sz)
@@ -68,9 +89,9 @@ void mat_scale(float sx, float sy, float sz)
 	mat4x4f& top = mat_get();
 	for (int k = 3; k >= 0; --k)
 	{
-		top.set(0, k, top.get(0, k) * sx);
-		top.set(1, k, top.get(1, k) * sy);
-		top.set(2, k, top.get(2, k) * sz);
+		top.get(0, k) *= sx;
+		top.get(1, k) *= sy;
+		top.get(2, k) *= sz;
 	}
 }
 
@@ -245,11 +266,12 @@ void test()
 // Tests the display of sprites.
 void test_sprite()
 {
-	SpriteSheet sheet("res/img/test.png");
+	SpriteSheet sheet("res/img/tiles.png");
 
-	std::vector<Sprite> sprites;
-	sprites.push_back({ 0, 0, 50, 50 });
-	sheet.add_sprites(sprites, std::vector<SPRITE_KEY>());
+	SpriteInfo sprite(0, 0, TILE_WIDTH, TILE_HEIGHT);
+	std::vector<SpriteInfo*> sprites;
+	sprites.push_back(&sprite);
+	sheet.load_sprites(sprites);
 
 	// Enter the main loop for the program.
 	while (!glfwWindowShouldClose(g_Window))
@@ -266,18 +288,16 @@ void test_sprite()
 // Tests the display of chunks.
 void test_chunk()
 {
-	/*Chunk chunk;
+	Chunk chunk;
+
+	glClear(GL_COLOR_BUFFER_BIT);
+	chunk.display(0, 100, 0, 100);
+	glfwSwapBuffers(g_Window);
 
 	while (!glfwWindowShouldClose(g_Window))
 	{
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		chunk.display(0, (CHUNK_SIZE * TILE_WIDTH) - 1, 0, (CHUNK_SIZE * TILE_HEIGHT) - 1);
-
-		glfwSwapBuffers(g_Window);
 		glfwPollEvents();
 	}
-	*/
 }
 
 
@@ -290,7 +310,7 @@ int main()
 		return -1;
 	}
 
-	test_sprite();
+	test_chunk();
 
 	// Close everything down.
 	glfwDestroyWindow(g_Window);

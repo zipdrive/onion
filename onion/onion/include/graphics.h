@@ -1,6 +1,9 @@
 #pragma once
+
 #include <vector>
-#include <GLFW\glfw3.h>
+
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 
 #define SPRITE_SHEET_KEY int
@@ -8,8 +11,22 @@
 
 
 
-struct Sprite
+// Something visible on-screen.
+class Graphic
 {
+public:
+	/// <summary>Draws the graphic to the screen.</summary>
+	virtual void display() = 0;
+};
+
+
+
+// Data about an individual sprite on a sprite sheet.
+struct SpriteInfo
+{
+	// The key to draw the sprite.
+	SPRITE_KEY key;
+
 	// The distance from the left edge of the sprite to the left edge of the sprite sheet, in pixels.
 	int left;
 
@@ -21,6 +38,13 @@ struct Sprite
 
 	// The height of the sprite, in pixels.
 	int height;
+
+	/// <summary>Initializes the data about the individual sprite.</summary>
+	/// <param name="left">The distance from the left edge of the sprite to the left edge of the sprite sheet, in pixels.</param>
+	/// <param name="top">The distance from the top edge of the sprite to the top edge of the sprite sheet, in pixels.</param>
+	/// <param name="width">The width of the sprite, in pixels.</param>
+	/// <param name="height">The height of the sprite, in pixels.</param>
+	SpriteInfo(int left, int top, int width, int height);
 };
 
 
@@ -58,14 +82,24 @@ public:
 	// The height of the sprite sheet in pixels.
 	int height;
 
+	/// <summary>Creates an empty sprite sheet.</summary>
+	SpriteSheet();
+
 	/// <summary>Loads sprite sheet from file.</summary>
 	/// <param name="file">The file path.</param>
 	SpriteSheet(const char* file);
 
-	/// <summary>Creates all sprites. ONLY CALL THIS FUNCTION ONCE.</summary>
+	/// <summary>Indicates if individual sprites have been loaded or not.</summary>
+	/// <returns>True if individual sprites have been loaded, false otherwise.</returns>
+	bool sprites_loaded();
+
+	/// <summary>Loads sprite sheet from file.</summary>
+	/// <param name="file">The file path.</param>
+	void load_sprite_sheet(const char* file);
+
+	/// <summary>Loads individual sprites from a vector of data.</summary>
 	/// <param name="sprites">The data about the sprites.</param>
-	/// <param name="sprite_keys">An empty vector to be filled with the sprite keys.</param>
-	void add_sprites(std::vector<Sprite>& sprites, std::vector<SPRITE_KEY>& sprite_keys);
+	void load_sprites(std::vector<SpriteInfo*>& sprites);
 
 	/// <summary>Draws a sprite on the sprite sheet.</summary>
 	/// <param name="sprite">The key of the sprite.</param>

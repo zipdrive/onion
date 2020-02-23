@@ -1,8 +1,6 @@
 ﻿  world.cpp
-  main.cpp
+c:\users\zach\documents\github\onion\onion\onion\src\world.cpp(52): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  fileio.cpp
   Generating Code...
-LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
-glew32s.lib(glew.obj) : warning LNK4099: PDB 'vc120.pdb' was not found with 'glew32s.lib(glew.obj)' or at 'C:\Users\Zach\Documents\GitHub\onion\onion\bin\Debug\vc120.pdb'; linking object as if no debug info
   onion.vcxproj -> C:\Users\Zach\Documents\GitHub\onion\onion\bin\Debug\onion.exe
   onion.vcxproj -> C:\Users\Zach\Documents\GitHub\onion\onion\bin\Debug\onion.pdb (Full PDB)

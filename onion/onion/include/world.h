@@ -2,7 +2,7 @@
 
 #include "graphics.h"
 
-/*#define TILE_WIDTH 32
+#define TILE_WIDTH 32
 #define TILE_HEIGHT 24
 #define CHUNK_SIZE 32
 #define ZONE_SIZE 4
@@ -54,4 +54,3 @@ public:
 	/// <summary>Draws the world to the screen.</summary>
 	void display();
 };
-*/

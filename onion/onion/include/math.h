@@ -1,11 +1,35 @@
 #pragma once
 
-#define MAT_INDEX(r, c) (r) + (_Rows * (c))
-
 template <typename T, int _Rows, int _Columns>
-struct matrix
+class matrix
 {
+private:
 	T mat[_Rows * _Columns];
+
+public:
+	/// <summary>Retrieves a pointer to the matrix value array.</summary>
+	/// <returns>A pointer to the matrix value array.</returns>
+	const T* matrix_values()
+	{
+		return mat;
+	}
+
+	/// <summary>Retrieves a reference to the value at the specified row and column.</summary>
+	/// <param name="row">The row of the value.</param>
+	/// <param name="column">The column of the value.</param>
+	T& get(int row, int column)
+	{
+		return mat[row + (_Rows * column)]; // Row-major order
+		//return mat[(row * _Columns) + column]; // Column-major order
+	}
+
+	/// <summary>Sets the value at the specified row and column.</summary>
+	/// <param name="row">The row of the value.</param>
+	/// <param name="column">The column of the value.</param>
+	void set(int row, int column, T value)
+	{
+		get(row, column) = value;
+	}
 
 	matrix()
 	{
@@ -20,20 +44,10 @@ struct matrix
 			}
 		}
 	}
-
-	T get(int row, int column)
-	{
-		return mat[MAT_INDEX(row, column)];
-	}
-
-	void set(int row, int column, T value)
-	{
-		mat[MAT_INDEX(row, column)] = value;
-	}
 };
 
 template <typename T, int _Rows, int _Middle, int _Columns>
-matrix<T, _Rows, _Columns> matmul(matrix<T, _Rows, _Middle>& lhs, matrix<T, _Middle, _Columns>& rhs)
+matrix<T, _Rows, _Columns> mat_mul(matrix<T, _Rows, _Middle>& lhs, matrix<T, _Middle, _Columns>& rhs)
 {
 	matrix<T, _Rows, _Columns> res;
 
@@ -41,10 +55,10 @@ matrix<T, _Rows, _Columns> matmul(matrix<T, _Rows, _Middle>& lhs, matrix<T, _Mid
 	{
 		for (int c = _Columns - 1; c >= 0; --c)
 		{
-			T val = default;
+			T val = 0;
 			for (int k = _Middle - 1; k >= 0; --k)
 				val += lhs.get(r, k) * rhs.get(k, c);
-			res.set(r, c) = val;
+			res.get(r, c) = val;
 		}
 	}
 
@@ -63,6 +77,10 @@ void mat_pop();
 
 /// <summary>Gets the current matrix transform.</summary>
 mat4x4f& mat_get();
+
+/// <summary>Gets the value array of the current matrix transform.</summary>
+/// <returns>The value array of the current matrix transform.</returns>
+const float* mat_get_values();
 
 /// <summary>Clears the stack and sets the projection to orthogonal.</summary>
 /// <param name="left">The left side of the projection.</param>

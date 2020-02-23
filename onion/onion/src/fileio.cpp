@@ -3,13 +3,11 @@
 #include <string>
 #include <regex>
 
-#include <GL\glew.h>
-#include <GLFW\glfw3.h>
-#include <SOIL.h>
-
 #include "..\include\math.h"
 #include "..\include\game.h"
 #include "..\include\graphics.h"
+
+#include <SOIL.h>
 
 using namespace std;
 
@@ -108,6 +106,12 @@ Application::Application(Application* other) : title(other->title)
 
 
 
+SpriteInfo::SpriteInfo(int left, int top, int width, int height) : left(left), top(top), width(width), height(height)
+{
+	key = 0;
+}
+
+
 // The raw text of the vertex shader for sprites.
 const char* spriteVertexShaderText =
 "#version 330 core\n"
@@ -143,7 +147,19 @@ SPRITE_SHEET_KEY SpriteSheet::m_NextAvailableID{ 0 };
 GLuint SpriteSheet::m_SpriteShader{ 0 };
 GLuint SpriteSheet::m_SpriteShaderMVP{ 0 };
 
+SpriteSheet::SpriteSheet() {}
+
 SpriteSheet::SpriteSheet(const char* file)
+{
+	load_sprite_sheet(file);
+}
+
+bool SpriteSheet::sprites_loaded()
+{
+	return m_SpriteBuffer != 0;
+}
+
+void SpriteSheet::load_sprite_sheet(const char* file)
 {
 	// Load data from file using SOIL.
 	unsigned char* data;
@@ -187,66 +203,68 @@ SpriteSheet::SpriteSheet(const char* file)
 	}
 }
 
-void SpriteSheet::add_sprites(std::vector<Sprite>& sprites, std::vector<SPRITE_KEY>& sprite_keys)
+void SpriteSheet::load_sprites(std::vector<SpriteInfo*>& sprites)
 {
 	float* spriteData = new float[24 * sprites.size()];
-	sprite_keys.resize(sprites.size());
 
 	for (int k = sprites.size() - 1; k >= 0; --k)
 	{
-		float l = (float)sprites[k].left / width; // left texcoord
-		float r = (float)(sprites[k].left + sprites[k].width) / width; // right texcoord
-		float w = (float)sprites[k].width;
+		SpriteInfo* info = sprites[k];
 
-		float t = (float)sprites[k].top / height; // top texcoord
-		float b = (float)(sprites[k].top + sprites[k].height) / height; // bottom texcoord
-		float h = (float)sprites[k].height;
+		float l = (float)info->left / width; // left texcoord
+		float r = (float)(info->left + info->width) / width; // right texcoord
+		float w = (float)info->width;
 
-		// Base index
+		float t = (float)info->top / height; // top texcoord
+		float b = (float)(info->top + info->height) / height; // bottom texcoord
+		float h = (float)info->height;
+
+		// Calculate base index and starting pointer for sprite data
 		int i = (24 * k);
+		float* data = spriteData + i;
 
 		// First triangle: bottom-left, bottom-right, top-right
 		// Bottom-left corner, vertices
-		spriteData[k] = 0.0f;
-		spriteData[k + 1] = 0.0f;
+		data[0] = 0.0f;
+		data[1] = 0.0f;
 		// Bottom-left corner, tex coord
-		spriteData[k + 2] = l;
-		spriteData[k + 3] = b;
+		data[2] = l;
+		data[3] = b;
 		// Bottom-right corner, vertices
-		spriteData[k + 4] = w;
-		spriteData[k + 5] = 0.0f;
+		data[4] = w;
+		data[5] = 0.0f;
 		// Bottom-right corner, tex coord
-		spriteData[k + 6] = r;
-		spriteData[k + 7] = b;
+		data[6] = r;
+		data[7] = b;
 		// Top-right corner, vertices
-		spriteData[k + 8] = w;
-		spriteData[k + 9] = h;
+		data[8] = w;
+		data[9] = h;
 		// Top-right corner, tex coord
-		spriteData[k + 10] = r;
-		spriteData[k + 11] = t;
+		data[10] = r;
+		data[11] = t;
 
 		// Second triangle: bottom-left, top-left, top-right
 		// Bottom-left corner, vertices
-		spriteData[k + 12] = 0.0f;
-		spriteData[k + 13] = 0.0f;
+		data[12] = 0.0f;
+		data[13] = 0.0f;
 		// Bottom-left corner, tex coord
-		spriteData[k + 14] = l;
-		spriteData[k + 15] = b;
+		data[14] = l;
+		data[15] = b;
 		// Top-left corner, vertices
-		spriteData[k + 16] = 0.0f;
-		spriteData[k + 17] = h;
+		data[16] = 0.0f;
+		data[17] = h;
 		// Top-left corner, tex coord
-		spriteData[k + 18] = l;
-		spriteData[k + 19] = t;
+		data[18] = l;
+		data[19] = t;
 		// Top-right corner, vertices
-		spriteData[k + 20] = w;
-		spriteData[k + 21] = h;
+		data[20] = w;
+		data[21] = h;
 		// Top-right corner, tex coord
-		spriteData[k + 22] = r;
-		spriteData[k + 23] = t;
+		data[22] = r;
+		data[23] = t;
 
 		// Output sprite key
-		sprite_keys[k] = i;
+		info->key = 6 * k;
 	}
 
 	// Bind the sprite data to a buffer
@@ -282,7 +300,7 @@ void SpriteSheet::display(SPRITE_KEY sprite)
 	glUseProgram(m_SpriteShader);
 
 	// Set the current transformation
-	glUniformMatrix4fv(m_SpriteShaderMVP, 1, GL_FALSE, mat_get().mat);
+	glUniformMatrix4fv(m_SpriteShaderMVP, 1, GL_FALSE, mat_get_values());
 
 	// Draw the sprite using information from buffer
 	glDrawArrays(GL_TRIANGLES, sprite, 6);

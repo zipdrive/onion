@@ -2,33 +2,46 @@
 #include "../include/math.h"
 
 
-/*SpriteSheet Chunk::m_TileSprites;
+SpriteSheet Chunk::m_TileSprites;
 
 Chunk::Chunk()
 {
 	// Load tile sprites
-	if (!m_TileSprites.spritesAdded)
+	if (!m_TileSprites.sprites_loaded())
 	{
-		m_TileSprites.load("res/img/tiles.png");
+		m_TileSprites.load_sprite_sheet("res/img/tiles.png");
 
-		std::vector<SpriteInfo> sprites;
-		for (int i = (m_TileSprites.width / TILE_WIDTH) - 1; i >= 0; --i)
+		int imax = m_TileSprites.width / TILE_WIDTH;
+		int jmax = m_TileSprites.height / TILE_HEIGHT;
+
+		std::vector<SpriteInfo*> sprites;
+		for (int i = 0; i < imax; ++i)
 		{
-			for (int j = (m_TileSprites.height / TILE_HEIGHT) - 1; j >= 0; --j)
+			for (int j = 0; j < jmax; ++j)
 			{
-				sprites.push_back({ TILE_WIDTH * i, TILE_HEIGHT * j, TILE_WIDTH, TILE_HEIGHT });
+				sprites.push_back(new SpriteInfo(TILE_WIDTH * i, TILE_HEIGHT * j, TILE_WIDTH, TILE_HEIGHT));
 			}
 		}
 
-		m_TileSprites.load(sprites);
+		m_TileSprites.load_sprites(sprites);
+
+		for (auto iter = sprites.begin(); iter != sprites.end(); ++iter)
+		{
+			delete *iter;
+		}
+	}
+
+	for (int i = CHUNK_SIZE - 1; i >= 0; --i)
+	{
+		for (int j = CHUNK_SIZE - 1; j >= 0; --j)
+		{
+			m_Tiles[i][j] = 6 * ((i + j) % 4);
+		}
 	}
 }
 
 void Chunk::display(int xmin, int xmax, int ymin, int ymax)
 {
-	m_TileSprites.display(0);
-	return;
-
 	// Draw tiles
 	int imin = xmin / TILE_WIDTH;
 	int imax = xmax / TILE_WIDTH;
@@ -52,4 +65,3 @@ void Chunk::display(int xmin, int xmax, int ymin, int ymax)
 	}
 	mat_pop();
 }
-*/
