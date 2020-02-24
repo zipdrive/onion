@@ -6,6 +6,7 @@
 #include "..\include\math.h"
 #include "..\include\game.h"
 #include "..\include\graphics.h"
+#include "..\include\world.h"
 
 #include <SOIL.h>
 
@@ -306,4 +307,91 @@ void SpriteSheet::display(SPRITE_KEY sprite)
 	glDrawArrays(GL_TRIANGLES, sprite, 6);
 
 	return;
+}
+
+
+
+std::unordered_map<CHUNK_KEY, Chunk*> Chunk::m_Chunks{};
+
+Chunk::Chunk(const char* path) : m_ChunkFilepath(path)
+{
+	// Load tile sprites
+	if (!m_TileSprites.sprites_loaded())
+	{
+		m_TileSprites.load_sprite_sheet("res/img/tiles.png");
+
+		int imax = m_TileSprites.width / TILE_WIDTH;
+		int jmax = m_TileSprites.height / TILE_HEIGHT;
+
+		std::vector<SpriteInfo*> sprites;
+		for (int i = 0; i < imax; ++i)
+		{
+			for (int j = 0; j < jmax; ++j)
+			{
+				sprites.push_back(new SpriteInfo(TILE_WIDTH * i, TILE_HEIGHT * j, TILE_WIDTH, TILE_HEIGHT));
+			}
+		}
+
+		m_TileSprites.load_sprites(sprites);
+
+		for (auto iter = sprites.begin(); iter != sprites.end(); ++iter)
+		{
+			delete *iter;
+		}
+	}
+
+	m_Tiles = nullptr;
+	m_Objects = nullptr;
+}
+
+void Chunk::load()
+{
+	if (!m_Objects) // Make sure chunk hasn't already been loaded.
+	{
+		int s = width * height; // Size of arrays
+
+		// Initialize tiles and objects and set default values
+		m_Tiles = new SPRITE_KEY[s];
+		memset(m_Tiles, 0, s * sizeof(SPRITE_KEY));
+
+		m_Objects = new Object*[s];
+		memset(m_Objects, NULL, s * sizeof(Object*));
+	}
+}
+
+
+
+
+World::World() :
+	m_Transform(
+		1.f, 0.f, 0.f, 0.f,
+		0.f, 1.f, -1.f, 0.f,
+		0.f, 1.f, 1.f, 0.f
+	)
+{
+	// Load information about all chunks
+	for (int k = MAXIMUM_NUMBER_OF_CHUNKS; k > 0; --k)
+	{
+		std::string filename_to_check("res/data/chunks/chunk");
+		filename_to_check.append(to_string(k)).append(".dat");
+		const char* filename_to_check_cstr = filename_to_check.c_str();
+
+		std::ifstream file_to_check(filename_to_check_cstr);
+
+		if (file_to_check.good())
+		{
+			Chunk* chunk = Chunk::set_chunk(k, filename_to_check_cstr);
+
+			// TODO change this
+			chunk->width = CHUNK_SIZE;
+			chunk->height = CHUNK_SIZE;
+		}
+	}
+
+	// TODO
+	m_Chunk = Chunk::get_chunk(1);
+	m_Chunk->load();
+
+	// Set camera
+	camera_set(330, 50);
 }

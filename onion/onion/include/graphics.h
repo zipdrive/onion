@@ -105,3 +105,28 @@ public:
 	/// <param name="sprite">The key of the sprite.</param>
 	void display(SPRITE_KEY sprite);
 };
+
+
+class StaticSprite : Graphic
+{
+private:
+	SpriteSheet* m_SpriteSheet;
+
+	SPRITE_KEY m_SpriteKey;
+
+public:
+	void display();
+};
+
+class DynamicSprite : Graphic
+{
+private:
+	SpriteSheet* m_SpriteSheet;
+
+	SPRITE_KEY* m_SpriteKeys;
+
+public:
+	int frame;
+
+	void display();
+};

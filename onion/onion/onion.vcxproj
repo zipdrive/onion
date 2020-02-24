@@ -152,6 +152,7 @@
   <ItemGroup>
     <ClCompile Include="src\fileio.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\math.cpp" />
     <ClCompile Include="src\object.cpp" />
     <ClCompile Include="src\world.cpp" />
   </ItemGroup>

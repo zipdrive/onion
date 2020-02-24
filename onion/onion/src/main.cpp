@@ -1,99 +1,12 @@
 #include <forward_list>
 #include <iostream>
+#include <math.h>
 
 #include "../include/math.h"
 #include "../include/game.h"
 #include "../include/graphics.h"
 #include "../include/world.h"
 
-
-// The matrix stack.
-std::forward_list<mat4x4f> g_MatrixStack;
-
-void mat_push()
-{
-	if (g_MatrixStack.empty())
-	{
-		g_MatrixStack.emplace_front();
-	}
-	else
-	{
-		mat4x4f top = g_MatrixStack.front();
-		g_MatrixStack.push_front(top);
-	}
-}
-
-void mat_pop()
-{
-	g_MatrixStack.pop_front();
-}
-
-mat4x4f& mat_get()
-{
-	if (g_MatrixStack.empty())
-	{
-		g_MatrixStack.emplace_front();
-	}
-
-	return g_MatrixStack.front();
-}
-
-void mat_print()
-{
-	mat4x4f& mat = mat_get();
-	for (int i = 0; i < 4; ++i)
-	{
-		for (int j = 0; j < 4; ++j)
-		{
-			std::printf("% .2f\t", mat.get(i, j));
-		}
-		std::cout << "\n";
-	}
-	std::cout << "\n";
-}
-
-const float* mat_get_values()
-{
-	return mat_get().matrix_values();
-}
-
-void mat_ortho(float left, float right, float bottom, float top, float near, float far)
-{
-	g_MatrixStack.clear();
-
-	mat4x4f mat;
-	mat.set(0, 0, 2.f / (right - left));
-	mat.set(1, 1, 2.f / (top - bottom));
-	mat.set(2, 2, 2.f / (far - near));
-	mat.set(0, 3, (left + right) / (left - right));
-	mat.set(1, 3, (bottom + top) / (bottom - top));
-	mat.set(2, 3, (near + far) / (near - far));
-
-	g_MatrixStack.push_front(mat);
-}
-
-void mat_translate(float dx, float dy, float dz)
-{
-	mat4x4f& top = mat_get();
-	
-	mat4x4f trans;
-	trans.get(0, 3) = dx;
-	trans.get(1, 3) = dy;
-	trans.get(2, 3) = dz;
-
-	g_MatrixStack.front() = mat_mul(top, trans);
-}
-
-void mat_scale(float sx, float sy, float sz)
-{
-	mat4x4f& top = mat_get();
-	for (int k = 3; k >= 0; --k)
-	{
-		top.get(0, k) *= sx;
-		top.get(1, k) *= sy;
-		top.get(2, k) *= sz;
-	}
-}
 
 
 // The application window.
@@ -134,7 +47,7 @@ int Application::display()
 	// Set the orthogonal projection
 	float halfWidth = 0.5f * width;
 	float halfHeight = 0.5f * height;
-	mat_ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, -10.f, 100.f);
+	mat_ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, -halfHeight, halfHeight);
 
 	return 0;
 }
@@ -285,13 +198,28 @@ void test_sprite()
 	}
 }
 
-// Tests the display of chunks.
+// [Deprecated] Tests the display of chunks.
 void test_chunk()
 {
-	Chunk chunk;
+	/*Chunk chunk;
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	chunk.display(0, 100, 0, 100);
+	glfwSwapBuffers(g_Window);
+
+	while (!glfwWindowShouldClose(g_Window))
+	{
+		glfwPollEvents();
+	}*/
+}
+
+// Tests the display of the world.
+void test_world()
+{
+	World world;
+
+	glClear(GL_COLOR_BUFFER_BIT);
+	world.display();
 	glfwSwapBuffers(g_Window);
 
 	while (!glfwWindowShouldClose(g_Window))
@@ -310,7 +238,7 @@ int main()
 		return -1;
 	}
 
-	test_chunk();
+	test_world();
 
 	// Close everything down.
 	glfwDestroyWindow(g_Window);

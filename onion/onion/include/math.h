@@ -14,6 +14,13 @@ public:
 		return mat;
 	}
 
+	/// <summary>Retrieves a reference to the value at the specified index of the matrix value array.</summary>
+	/// <param name="index">The index of the value.</param>
+	T& get(int index)
+	{
+		return mat[index];
+	}
+
 	/// <summary>Retrieves a reference to the value at the specified row and column.</summary>
 	/// <param name="row">The row of the value.</param>
 	/// <param name="column">The column of the value.</param>
@@ -37,7 +44,7 @@ public:
 		{
 			for (int c = _Columns - 1; c >= 0; --c)
 			{
-				if (r == c)
+				if (r == c && _Rows == _Columns)
 					set(r, c, 1);
 				else
 					set(r, c, 0);
@@ -47,10 +54,8 @@ public:
 };
 
 template <typename T, int _Rows, int _Middle, int _Columns>
-matrix<T, _Rows, _Columns> mat_mul(matrix<T, _Rows, _Middle>& lhs, matrix<T, _Middle, _Columns>& rhs)
+void mat_mul(matrix<T, _Rows, _Middle>& lhs, matrix<T, _Middle, _Columns>& rhs, matrix<T, _Rows, _Columns>& res)
 {
-	matrix<T, _Rows, _Columns> res;
-
 	for (int r = _Rows - 1; r >= 0; --r)
 	{
 		for (int c = _Columns - 1; c >= 0; --c)
@@ -61,11 +66,23 @@ matrix<T, _Rows, _Columns> mat_mul(matrix<T, _Rows, _Middle>& lhs, matrix<T, _Mi
 			res.get(r, c) = val;
 		}
 	}
-
-	return res;
 }
 
-typedef matrix<float, 4, 4> mat4x4f;
+
+class mat4x4f : public matrix<float, 4, 4>
+{
+public:
+	mat4x4f();
+
+	mat4x4f(float a11, float a12, float a13, float a14,
+		float a21, float a22, float a23, float a24,
+		float a31, float a32, float a33, float a34);
+};
+
+
+typedef matrix<int, 2, 2> mat2x2i;
+
+typedef matrix<float, 2, 1> vec2f;
 typedef matrix<float, 4, 1> vec4f;
 
 
@@ -100,3 +117,24 @@ void mat_translate(float dx, float dy, float dz);
 /// <param name="sy">The scaling factor for the y-axis.</param>
 /// <param name="sz">The scaling factor for the z-axis.</param>
 void mat_scale(float sx, float sy, float sz);
+
+/// <summary>Adds a rotation transform around the x-axis to the current transformation.</summary>
+/// <param name="angle">The angle of rotation.</param>
+void mat_rotatex(float angle);
+
+/// <summary>Adds a rotation transform around the y-axis to the current transformation.</summary>
+/// <param name="angle">The angle of rotation.</param>
+void mat_rotatey(float angle);
+
+/// <summary>Adds a rotation transform around the z-axis to the current transformation.</summary>
+/// <param name="angle">The angle of rotation.</param>
+void mat_rotatex(float angle);
+
+/// <summary>Adds a rotation transform around the x-axis, followed by a scale transform of the y-axis, to the current transformation.</summary>
+/// <param name="angle">The angle of rotation.</param>
+/// <param name="sy">The scaling factor for the y-axis.</param>
+void mat_rotatex_scaley(float angle, float sy);
+
+/// <summary>Adds a custom transformation to the current transformation.</summary>
+/// <param name="transform">The matrix of the transformation.</summary>
+void mat_custom_transform(mat4x4f& transform);
