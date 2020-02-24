@@ -4,6 +4,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "onion", "onion\onion.vcxproj", "{ACE2722C-05EF-4D2A-8CB1-199861263F97}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D0F35399-2DBD-4CC2-9F9B-1B09E340205E} = {D0F35399-2DBD-4CC2-9F9B-1B09E340205E}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "onions", "onions\onions.vcxproj", "{D0F35399-2DBD-4CC2-9F9B-1B09E340205E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +26,14 @@ Global
 		{ACE2722C-05EF-4D2A-8CB1-199861263F97}.Release|x64.Build.0 = Release|x64
 		{ACE2722C-05EF-4D2A-8CB1-199861263F97}.Release|x86.ActiveCfg = Release|Win32
 		{ACE2722C-05EF-4D2A-8CB1-199861263F97}.Release|x86.Build.0 = Release|Win32
+		{D0F35399-2DBD-4CC2-9F9B-1B09E340205E}.Debug|x64.ActiveCfg = Debug|x64
+		{D0F35399-2DBD-4CC2-9F9B-1B09E340205E}.Debug|x64.Build.0 = Debug|x64
+		{D0F35399-2DBD-4CC2-9F9B-1B09E340205E}.Debug|x86.ActiveCfg = Debug|Win32
+		{D0F35399-2DBD-4CC2-9F9B-1B09E340205E}.Debug|x86.Build.0 = Debug|Win32
+		{D0F35399-2DBD-4CC2-9F9B-1B09E340205E}.Release|x64.ActiveCfg = Release|x64
+		{D0F35399-2DBD-4CC2-9F9B-1B09E340205E}.Release|x64.Build.0 = Release|x64
+		{D0F35399-2DBD-4CC2-9F9B-1B09E340205E}.Release|x86.ActiveCfg = Release|Win32
+		{D0F35399-2DBD-4CC2-9F9B-1B09E340205E}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

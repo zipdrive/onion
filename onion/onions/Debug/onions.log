@@ -1,0 +1,12 @@
+﻿  onion.cpp
+c:\users\zach\documents\github\onion\onion\onions\src\onion.cpp(543): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+c:\users\zach\documents\github\onion\onion\onions\src\onion.cpp(627): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+c:\users\zach\documents\github\onion\onion\onions\src\onion.cpp(634): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+c:\users\zach\documents\github\onion\onion\onions\src\onion.cpp(641): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+c:\users\zach\documents\github\onion\onion\onions\src\onion.cpp(649): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+c:\users\zach\documents\github\onion\onion\onions\src\onion.cpp(650): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+c:\users\zach\documents\github\onion\onion\onions\src\onion.cpp(657): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+c:\users\zach\documents\github\onion\onion\onions\src\onion.cpp(658): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+c:\users\zach\documents\github\onion\onion\onions\src\onion.cpp(664): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+c:\users\zach\documents\github\onion\onion\onions\src\onion.cpp(665): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  onions.vcxproj -> C:\Users\Zach\Documents\GitHub\onion\onion\bin\Debug\onions.lib
