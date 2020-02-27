@@ -10,6 +10,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "onion", "onion\onion.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "onions", "onions\onions.vcxproj", "{D0F35399-2DBD-4CC2-9F9B-1B09E340205E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "onioneditor", "onioneditor\onioneditor.vcxproj", "{E92B7F8B-B16A-4653-B3E5-A20412612C1D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D0F35399-2DBD-4CC2-9F9B-1B09E340205E} = {D0F35399-2DBD-4CC2-9F9B-1B09E340205E}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -34,6 +39,14 @@ Global
 		{D0F35399-2DBD-4CC2-9F9B-1B09E340205E}.Release|x64.Build.0 = Release|x64
 		{D0F35399-2DBD-4CC2-9F9B-1B09E340205E}.Release|x86.ActiveCfg = Release|Win32
 		{D0F35399-2DBD-4CC2-9F9B-1B09E340205E}.Release|x86.Build.0 = Release|Win32
+		{E92B7F8B-B16A-4653-B3E5-A20412612C1D}.Debug|x64.ActiveCfg = Debug|x64
+		{E92B7F8B-B16A-4653-B3E5-A20412612C1D}.Debug|x64.Build.0 = Debug|x64
+		{E92B7F8B-B16A-4653-B3E5-A20412612C1D}.Debug|x86.ActiveCfg = Debug|Win32
+		{E92B7F8B-B16A-4653-B3E5-A20412612C1D}.Debug|x86.Build.0 = Debug|Win32
+		{E92B7F8B-B16A-4653-B3E5-A20412612C1D}.Release|x64.ActiveCfg = Release|x64
+		{E92B7F8B-B16A-4653-B3E5-A20412612C1D}.Release|x64.Build.0 = Release|x64
+		{E92B7F8B-B16A-4653-B3E5-A20412612C1D}.Release|x86.ActiveCfg = Release|Win32
+		{E92B7F8B-B16A-4653-B3E5-A20412612C1D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

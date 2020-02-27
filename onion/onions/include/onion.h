@@ -21,7 +21,7 @@
 
 // The width and height of a tile in the world.
 #define TILE_WIDTH 32
-#define TILE_HEIGHT 24
+#define TILE_HEIGHT 32
 
 
 
@@ -43,8 +43,9 @@ private:
 public:
 	/// <summary>Retrieves a pointer to the matrix value array.</summary>
 	/// <returns>A pointer to the matrix value array.</returns>
-	const T* matrix_values()
+	const T* matrix_values() const
 	{
+		// DEBUG: Set breakpoint on this line to view 
 		return mat;
 	}
 
@@ -107,6 +108,15 @@ void mat_mul(matrix<T, _Rows, _Middle>& lhs, matrix<T, _Middle, _Columns>& rhs, 
 }
 
 
+// A 4-by-1 vector of float values
+class vec4f : public matrix<float, 4, 1>
+{
+public:
+	vec4f();
+
+	vec4f(float a1, float a2, float a3, float a4);
+};
+
 // A 4-by-4 matrix of float values
 class mat4x4f : public matrix<float, 4, 4>
 {
@@ -122,7 +132,6 @@ public:
 typedef matrix<int, 2, 2> mat2x2i;
 
 typedef matrix<float, 2, 1> vec2f;
-typedef matrix<float, 4, 1> vec4f;
 
 
 /// <summary>Pushes a copy of the current matrix to the top of the stack.</summary>
@@ -191,6 +200,10 @@ public:
 };
 
 
+Graphic* generate_solid_color_graphic(int r, int g, int b, int a);
+Graphic* generate_solid_color_graphic(float r, float g, float b, float a);
+
+
 // Data about an individual sprite on a sprite sheet.
 struct SpriteInfo
 {
@@ -247,7 +260,80 @@ public:
 
 	/// <summary>Draws a sprite from the sprite sheet.</summary>
 	/// <param name="sprite">The key of the sprite.</param>
-	virtual void display(SPRITE_KEY sprite) = 0;
+	/// <param name="color">The color tint matrix of the sprite.</param>
+	virtual void display(SPRITE_KEY sprite, const mat4x4f& color) = 0;
+};
+
+
+class SpriteGraphic : public Graphic
+{
+protected:
+	// A pointer to the sprite sheet that the sprite is on
+	SpriteSheet* m_SpriteSheet;
+
+	// The color tint matrix for the sprite
+	mat4x4f m_TintMatrix;
+
+	/// <summary>Constructs a graphic that draws sprites.</summary>
+	/// <param name="spriteSheet">The sprite sheet that the sprites are on.</param>
+	/// <param name="color">The color tint matrix for the sprites.</param>
+	SpriteGraphic(SpriteSheet* spriteSheet, mat4x4f& color);
+
+	/// <summary>Retrieves the current sprite to be drawn.</summary>
+	/// <returns>The key of the current sprite.</returns>
+	virtual SPRITE_KEY get_sprite() = 0;
+
+public:
+	/// <summary>Displays the sprite with the given key.</summary>
+	void display();
+};
+
+// A graphic that always displays the same sprite.
+class StaticSpriteGraphic : public SpriteGraphic
+{
+private:
+	// The key to the sprite
+	SPRITE_KEY m_Key;
+
+	/// <summary>Retrieves the current sprite to be drawn.</summary>
+	/// <returns>The key of the current sprite.</returns>
+	SPRITE_KEY get_sprite();
+
+public:
+	/// <summary>Constructs a static sprite graphic.</summary>
+	/// <param name="spriteSheet">The sprite sheet that the sprites are on.</param>
+	/// <param name="key">The key of the sprite.</param>
+	/// <param name="color">The color tint matrix for the sprites.</param>
+	StaticSpriteGraphic(SpriteSheet* spriteSheet, SPRITE_KEY key, mat4x4f& color);
+};
+
+// A graphic that can swap between multiple frames of sprites.
+class DynamicSpriteGraphic : public SpriteGraphic
+{
+private:
+	// The keys to the sprites
+	std::vector<SPRITE_KEY> m_Keys;
+
+	// The current frame
+	int m_Current;
+
+	/// <summary>Retrieves the current sprite to be drawn.</summary>
+	/// <returns>The key of the current sprite.</returns>
+	SPRITE_KEY get_sprite();
+
+public:
+	/// <summary>Constructs a static sprite graphic.</summary>
+	/// <param name="spriteSheet">The sprite sheet that the sprites are on.</param>
+	/// <param name="color">The color tint matrix for the sprites.</param>
+	DynamicSpriteGraphic(SpriteSheet* spriteSheet, mat4x4f& color);
+
+	/// <summary>Adds a new frame to the graphic.</summary>
+	/// <param name="key">The key of the frame's sprite.</param>
+	void add_frame(SPRITE_KEY key);
+
+	/// <summary>Sets the current frame.</summary>
+	/// <param name="frame">The index of the frame.</param>
+	void set_frame(int frame);
 };
 
 
@@ -326,24 +412,12 @@ public:
 class World
 {
 private:
+	// The singleton world object
 	static World* m_World;
 
 	// The current chunk
 	Chunk* m_Chunk;
-
-	/// <summary>A transform that does the following:
-	/// Translates so the camera is at (0,0) on-screen.
-	/// Rotates by -45 degrees, so the positive y-axis is pointing away from the screen.
-	/// Scales up the y- and z-axes by sqrt(2).
-	/// </summary>
-	mat4x4f m_Transform;
-
-	// The camera position
-	vec2f m_Camera;
-
-	// The camera bounds, in x- and y-coordinates
-	mat2x2i m_Bounds;
-
+	
 	/// <summary>Loads the world.</summary>
 	World();
 
@@ -352,19 +426,118 @@ public:
 	/// <returns>A pointer to the singleton world object.</summary>
 	static World* get_world();
 
+	/// <summary>Retrieves a pointer to the current chunk.</summary>
+	/// <returns>A pointer to the current chunk.</returns>
+	static Chunk* get_chunk();
+};
+
+
+
+
+
+/*
+*
+*	Frames
+*
+*/
+
+class Frame
+{
+protected:
+	// The frame boundaries on the screen
+	mat2x2i m_Bounds;
+
+public:
+	/// <summary>Sets the boundaries of the frame on the screen.</summary>
+	/// <param name="x">The x-coordinate of the frame.</param>
+	/// <param name="y">The y-coordinate of the frame.</param>
+	/// <param name="width">The width of the frame.</param>
+	/// <param name="height">The height of the frame.</param>
+	virtual void set_bounds(int x, int y, int width, int height);
+
+	/// <summary>Displays the contents of the frame.</summary>
+	virtual void display() = 0;
+};
+
+// A frame that displays the world orthographically.
+class WorldOrthographicFrame : public Frame
+{
+private:
+	/// <summary>
+	/// A transform that does the following:
+	/// Centers the view at the center of the frame.
+	/// Orthographically projects (pixel-perfect).
+	/// Centers the camera in world space.
+	/// Rotates by -45 degrees around the x-axis, and scales up by sqrt(2).
+	/// </summary>
+	mat4x4f m_Transform;
+
+	// The position of the camera
+	vec2f m_Camera;
+
+	// The boundaries of the area in world space being displayed.
+	mat2x2i m_DisplayArea;
+
+	// The number of tiles around the edges that should not be drawn.
+	const int m_TileMargin;
+
+	// The current chunk
+	Chunk* m_Chunk;
+
+	/// <summary>Resets the transformation.</summary>
+	void reset();
+
+	/// <summary>Clamps the display area to the boundaries of the chunk.</summary>
+	void clamp_display_area();
+
+public:
+	/// <summary>Creates an orthographic world frame.</summary>
+	/// <param name="x">The x-coordinate of the frame.</param>
+	/// <param name="y">The y-coordinate of the frame.</param>
+	/// <param name="width">The width of the frame.</param>
+	/// <param name="height">The height of the frame.</param>
+	/// <param name="tile_margin">The number of tiles around the edges that should not be drawn.</param>
+	WorldOrthographicFrame(int x, int y, int width, int height, int tile_margin = 1);
+
+	/// <summary>Sets the boundaries of the frame on the screen.</summary>
+	/// <param name="x">The x-coordinate of the frame.</param>
+	/// <param name="y">The y-coordinate of the frame.</param>
+	/// <param name="width">The width of the frame.</param>
+	/// <param name="height">The height of the frame.</param>
+	void set_bounds(int x, int y, int width, int height);
+
 	/// <summary>Sets the position of the camera.</summary>
 	/// <param name="x">The x-coordinate of the camera.</param>
 	/// <param name="y">The y-coordinate of the camera.</param>
-	void camera_set(float x, float y);
+	void set_camera(float x, float y);
 
 	/// <summary>Adjusts the position of the camera.</summary>
 	/// <param name="dx">The x-axis adjustment.</param>
 	/// <param name="dy">The y-axis adjustment.</param>
-	void camera_adjust(float dx, float dy);
+	void adjust_camera(float dx, float dy);
 
-	/// <summary>Draws the world to the screen.</summary>
+	/// <summary>Displays the contents of the frame.</summary>
 	void display();
 };
+
+/*class WorldFrame
+{
+private:
+	// A pointer to the world singleton
+	World* m_World;
+
+	/// <summary>A transform that does the following:
+	/// Translates so the camera is at (0,0) on-screen.
+	/// Rotates by -45 degrees, so the positive y-axis is pointing away from the screen.
+	/// Scales up the y- and z-axes by sqrt(2).
+	/// </summary>
+	mat4x4f m_Transform;
+
+public:
+	WorldFrame(int xmin, int xmax, int ymin, int ymax);
+
+	void display();
+};*/
 
 
 
@@ -405,16 +578,22 @@ struct Application
 
 /// <summary>Gets the main Application object.</summary>
 /// <returns>The main Application object.</returns>
-Application* get_application_settings();
+Application*& get_application_settings();
 
 /// <summary>Sets the main Application object.</summary>
 /// <param name="app">The Application object to set.</param>
 void set_application_settings(Application* app);
 
 
+typedef void(*onion_display_func)(void);
+typedef void(*onion_event_func)(void);
+
+
 /// <summary>Initializes the Onion library.</summary>
+/// <param name="settings_file">The path to the settings file.</param>
 /// <returns>1 if an error was encountered, 0 otherwise.</returns>
-int onion_init();
+int onion_init(const char* settings_file);
 
 /// <summary>Runs the main loop of the Onion library.</summary>
-void onion_main();
+/// <param name="display_callback">The callback function for displaying.</param>
+void onion_main(onion_display_func display_callback);

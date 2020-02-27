@@ -71,7 +71,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\Zach\Documents\GitHub\onion\onion\onions\include;C:\devel\glew-2.1.0-win32\glew-2.1.0\include;C:\devel\soil\Simple OpenGL Image Library\src;C:\devel\glfw-3.2.1.bin\glfw-3.2.1.bin.WIN32\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)onions\include;C:\devel\glew-2.1.0-win32\glew-2.1.0\include;C:\devel\soil\Simple OpenGL Image Library\src;C:\devel\glfw-3.2.1.bin\glfw-3.2.1.bin.WIN32\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)bin\$(Configuration)\;C:\devel\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;C:\devel\soil\Simple OpenGL Image Library\lib;C:\devel\glfw-3.2.1.bin\glfw-3.2.1.bin.WIN32\lib-vc2015;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
   </PropertyGroup>
@@ -80,7 +80,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Users\Zach\Documents\GitHub\onion\onion\onions\include;C:\devel\glew-2.1.0-win32\glew-2.1.0\include;C:\devel\soil\Simple OpenGL Image Library\src;C:\devel\glfw-3.2.1.bin\glfw-3.2.1.bin.WIN32\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)onions\include;C:\devel\glew-2.1.0-win32\glew-2.1.0\include;C:\devel\soil\Simple OpenGL Image Library\src;C:\devel\glfw-3.2.1.bin\glfw-3.2.1.bin.WIN32\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)bin\$(Configuration)\;C:\devel\glew-2.1.0-win32\glew-2.1.0\lib\Release\Win32;C:\devel\soil\Simple OpenGL Image Library\lib;C:\devel\glfw-3.2.1.bin\glfw-3.2.1.bin.WIN32\lib-vc2015;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
   </PropertyGroup>

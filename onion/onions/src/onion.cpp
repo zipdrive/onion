@@ -16,11 +16,13 @@
 *
 */
 
-#define GL_DEFAULT_VALUE UINT16_MAX
+#define GL_DEFAULT_VALUE 0
 
 #define MAXIMUM_NUMBER_OF_CHUNKS 100
 #define CHUNK_SIZE 32
 #define CHUNK_INDEX(x, y) ((x) + (width * (y)))
+
+#define SHADER_KEY int
 
 
 
@@ -53,6 +55,17 @@ mat4x4f::mat4x4f(float a11, float a12, float a13, float a14,
 	get(2, 1) = a32;
 	get(2, 2) = a33;
 	get(2, 3) = a34;
+}
+
+
+vec4f::vec4f() {}
+
+vec4f::vec4f(float a1, float a2, float a3, float a4)
+{
+	get(0) = a1;
+	get(1) = a2;
+	get(2) = a3;
+	get(3) = a4;
 }
 
 
@@ -187,17 +200,90 @@ void mat_rotatez(float angle)
 *
 */
 
+
+class Shader
+{
+private:
+	// The shader that's currently enabled.
+	static SHADER_KEY m_Enabled;
+
+	// The shader's key.
+	SHADER_KEY m_Key;
+
+protected:
+	bool is_enabled()
+	{
+		return m_Enabled == m_Key;
+	}
+
+	void enable()
+	{
+
+	}
+};
+
+
+// The raw text of the vertex shader for solid colors.
+const char* colorVertexShaderText =
+"#version 330 core\n"
+"layout(location = 0) in vec2 vertexPosition;\n"
+"uniform mat4 MVP;\n"
+"void main() {\n"
+"	gl_Position = MVP * vec4(vertexPosition, 0, 1);\n"
+"}";
+
+// The raw text of the fragment shader for solid colors.
+const char* colorFragmentShaderText =
+"#version 330 core\n"
+"uniform vec4 color;\n"
+"void main() {\n"
+"	gl_FragColor = color;\n"
+"}";
+
+
+class SolidColorGraphic : public Graphic
+{
+private:
+	// The color of the graphic
+	vec4f m_Color;
+
+public:
+	/// <summary>Creates a solid color graphic.</summary>
+	/// <param name="r">The red value.</param>
+	/// <param name="g">The green value.</param>
+	/// <param name="b">The blue value.</param>
+	/// <param name="a">The alpha value.</param>
+	SolidColorGraphic(float r, float g, float b, float a) : m_Color(r, g, b, a)
+	{
+
+	}
+
+	/// <summary>Draws the graphic to the screen.</summary>
+	void display()
+	{
+
+	}
+};
+
+Graphic* generate_solid_color_graphic(int r, int g, int b, int a)
+{
+	return new SolidColorGraphic(r / 255.f, g / 255.f, b / 255.f, a / 255.f);
+}
+
+Graphic* generate_solid_color_graphic(float r, float g, float b, float a)
+{
+	return new SolidColorGraphic(r, g, b, a);
+}
+
+
+
 // The raw text of the vertex shader for sprites.
 const char* spriteVertexShaderText =
 "#version 330 core\n"
-"\n"
 "layout(location = 0) in vec2 vertexPosition;\n"
 "layout(location = 1) in vec2 vertexUV;\n"
-"\n"
 "uniform mat4 MVP;\n"
-"\n"
 "out vec2 UV;\n"
-"\n"
 "void main() {\n"
 "	gl_Position = MVP * vec4(vertexPosition, 0, 1);\n"
 "	UV = vertexUV;\n"
@@ -206,13 +292,11 @@ const char* spriteVertexShaderText =
 // The raw text of the fragment shader for sprites.
 const char* spriteFragmentShaderText =
 "#version 330 core\n"
-"\n"
 "in vec2 UV;\n"
-"\n"
+"uniform mat4 tintMatrix;\n"
 "uniform sampler2D tex2D;\n"
-"\n"
 "void main() {\n"
-"	gl_FragColor = texture(tex2D, UV);\n"
+"	gl_FragColor = tintMatrix * texture(tex2D, UV);\n"
 "}";
 
 
@@ -244,6 +328,9 @@ private:
 	// The OpenGL ID for the MVP in the sprite shader program.
 	static GLuint m_SpriteShaderMVP;
 
+	// The OpenGL ID for the color tint matrix in the sprite shader program.
+	static GLuint m_SpriteShaderTint;
+
 
 	// The OpenGL ID for the texture.
 	GLuint m_TextureID;
@@ -253,6 +340,12 @@ private:
 
 	void load_raw_sprite_sheet(const char* path)
 	{
+		if (m_TextureID != GL_DEFAULT_VALUE)
+		{
+			// If the sprite sheet already was loaded, clear it.
+			glDeleteTextures(1, &m_TextureID);
+		}
+
 		// Load data from file using SOIL.
 		unsigned char* data;
 		int channels;
@@ -286,8 +379,9 @@ private:
 			glAttachShader(m_SpriteShader, fragmentShader);
 			glLinkProgram(m_SpriteShader);
 
-			// Determine the location of the MVP uniform
+			// Determine the location of the uniforms
 			m_SpriteShaderMVP = glGetUniformLocation(m_SpriteShader, "MVP");
+			m_SpriteShaderTint = glGetUniformLocation(m_SpriteShader, "tintMatrix");
 		}
 	}
 
@@ -297,12 +391,22 @@ public:
 	{
 		// Generate an ID for the sprite sheet.
 		m_ID = m_NextAvailableID++;
+
+		// Set OpenGL IDs to defaults.
+		m_TextureID = GL_DEFAULT_VALUE;
+		m_SpriteBuffer = GL_DEFAULT_VALUE;
 	}
 
 	/// <summary>Loads sprite sheet from file.</summary>
 	/// <param name="path">The path to the image file, using the res/img folder as a base. Note: The path to the meta file should be the same as the path to the image file, but with a .meta file extension instead.</param>
 	void load_sprite_sheet(const char* path)
 	{
+		if (m_SpriteBuffer != GL_DEFAULT_VALUE)
+		{
+			// If the sprite sheet already was loaded, clear it.
+			glDeleteBuffers(1, &m_SpriteBuffer);
+		}
+
 		// Construct the path to the image file.
 		string fpath("res/img/");
 		fpath.append(path);
@@ -315,7 +419,82 @@ public:
 		fpath = regex_replace(fpath, fext_finder, "$1.meta");
 
 		// Load data about sprites from meta file
-		// TODO
+		std::vector<float> spriteData;
+
+		ifstream meta(fpath.c_str(), ios::in | ios::binary);
+
+		while (meta.good())
+		{
+			// Pull information about the sprite from file
+			int16_t left; // The distance from the left side of the sprite sheet to the left side of the sprite
+			meta >> left;
+			int16_t top; // The distance from the top side of the sprite sheet to the top side of the sprite
+			meta >> top;
+			int16_t sprite_width; // The width of the sprite
+			meta >> sprite_width;
+			int16_t sprite_height; // The height of the sprite
+			meta >> sprite_height;
+
+			// Debug: Print values
+			cout << "(" << left << ", " << top << ") -> (" << (left + sprite_width) << ", " << (top + sprite_height) << ")\n";
+
+			// Calculate texcoord numbers
+			float l = (float)left / width; // left texcoord
+			float r = (float)(left + sprite_width) / width; // right texcoord
+			float w = (float)sprite_width;
+
+			float t = (float)top / height; // top texcoord
+			float b = (float)(top + sprite_height) / height; // bottom texcoord
+			float h = (float)sprite_height;
+
+			// First triangle: bottom-left, bottom-right, top-right
+			// Bottom-left corner, vertices
+			spriteData.push_back(0.0f);
+			spriteData.push_back(0.0f);
+			// Bottom-left corner, tex coord
+			spriteData.push_back(l);
+			spriteData.push_back(b);
+			// Bottom-right corner, vertices
+			spriteData.push_back(w);
+			spriteData.push_back(0.0f);
+			// Bottom-right corner, tex coord
+			spriteData.push_back(r);
+			spriteData.push_back(b);
+			// Top-right corner, vertices
+			spriteData.push_back(w);
+			spriteData.push_back(h);
+			// Top-right corner, tex coord
+			spriteData.push_back(r);
+			spriteData.push_back(t);
+
+			// Second triangle: bottom-left, top-left, top-right
+			// Bottom-left corner, vertices
+			spriteData.push_back(0.0f);
+			spriteData.push_back(0.0f);
+			// Bottom-left corner, tex coord
+			spriteData.push_back(l);
+			spriteData.push_back(b);
+			// Top-left corner, vertices
+			spriteData.push_back(0.0f);
+			spriteData.push_back(h);
+			// Top-left corner, tex coord
+			spriteData.push_back(l);
+			spriteData.push_back(t);
+			// Top-right corner, vertices
+			spriteData.push_back(w);
+			spriteData.push_back(h);
+			// Top-right corner, tex coord
+			spriteData.push_back(r);
+			spriteData.push_back(t);
+		}
+
+		// Close the meta file
+		meta.close();
+
+		// Bind the sprite data to a buffer
+		glGenBuffers(1, &m_SpriteBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, m_SpriteBuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * spriteData.size(), spriteData.data(), GL_STATIC_DRAW);
 	}
 
 	/// <summary>Loads sprite sheet from an image file, and equally partitions it into sprites.</summary>
@@ -324,6 +503,12 @@ public:
 	/// <param name="partition_height">The height of the individual sprites.</param>
 	void load_partitioned_sprite_sheet(const char* path, int partition_width, int partition_height)
 	{
+		if (m_SpriteBuffer != GL_DEFAULT_VALUE)
+		{
+			// If the sprite sheet already was loaded, clear it.
+			glDeleteBuffers(1, &m_SpriteBuffer);
+		}
+
 		// Construct the path to the image file.
 		string fpath("res/img/");
 		fpath.append(path);
@@ -400,11 +585,15 @@ public:
 		glGenBuffers(1, &m_SpriteBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, m_SpriteBuffer);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 24 * num_rows * num_cols, spriteData, GL_STATIC_DRAW);
+
+		// Free the sprite data buffer
+		delete[] spriteData;
 	}
 
 	/// <summary>Draws a sprite on the sprite sheet.</summary>
 	/// <param name="sprite">The key of the sprite.</param>
-	void display(SPRITE_KEY sprite)
+	/// <param name="color">The color tint matrix of the sprite.</param>
+	void display(SPRITE_KEY sprite, const mat4x4f& color)
 	{
 		if (m_ID != m_Enabled) // If not the currently bound sprite sheet, bind all of its data.
 		{
@@ -431,6 +620,9 @@ public:
 		// Set the current transformation
 		glUniformMatrix4fv(m_SpriteShaderMVP, 1, GL_FALSE, mat_get_values());
 
+		// Set the color tint matrix
+		glUniformMatrix4fv(m_SpriteShaderTint, 1, GL_FALSE, color.matrix_values());
+
 		// Draw the sprite using information from buffer
 		glDrawArrays(GL_TRIANGLES, sprite, 6);
 	}
@@ -440,11 +632,53 @@ SPRITE_SHEET_KEY SSpriteSheet::m_Enabled{ INT16_MAX };
 SPRITE_SHEET_KEY SSpriteSheet::m_NextAvailableID{ 0 };
 GLuint SSpriteSheet::m_SpriteShader{ GL_DEFAULT_VALUE };
 GLuint SSpriteSheet::m_SpriteShaderMVP{ GL_DEFAULT_VALUE };
+GLuint SSpriteSheet::m_SpriteShaderTint{ GL_DEFAULT_VALUE };
 
 
 SpriteSheet* SpriteSheet::generate_empty()
 {
 	return new SSpriteSheet();
+}
+
+
+SpriteGraphic::SpriteGraphic(SpriteSheet* spriteSheet, mat4x4f& color)
+{
+	m_SpriteSheet = spriteSheet;
+	m_TintMatrix = color;
+}
+
+void SpriteGraphic::display()
+{
+	m_SpriteSheet->display(get_sprite(), m_TintMatrix);
+}
+
+
+StaticSpriteGraphic::StaticSpriteGraphic(SpriteSheet* spriteSheet, SPRITE_KEY key, mat4x4f& color) : SpriteGraphic(spriteSheet, color)
+{
+	m_Key = key;
+}
+
+SPRITE_KEY StaticSpriteGraphic::get_sprite()
+{
+	return m_Key;
+}
+
+
+DynamicSpriteGraphic::DynamicSpriteGraphic(SpriteSheet* spriteSheet, mat4x4f& color) : SpriteGraphic(spriteSheet, color) {}
+
+SPRITE_KEY DynamicSpriteGraphic::get_sprite()
+{
+	return m_Keys[m_Current];
+}
+
+void DynamicSpriteGraphic::add_frame(SPRITE_KEY key)
+{
+	m_Keys.push_back(key);
+}
+
+void DynamicSpriteGraphic::set_frame(int frame)
+{
+	m_Current = frame;
 }
 
 
@@ -507,6 +741,15 @@ void Chunk::load()
 
 		m_Objects = new Object*[s];
 		memset(m_Objects, NULL, s * sizeof(Object*));
+
+		// Initialize tiles
+		for (int i = width - 1; i >= 0; --i)
+		{
+			for (int j = height - 1; j >= 0; --j)
+			{
+				m_Tiles[CHUNK_INDEX(i, j)] = 6 * ((i + j) % 4);
+			}
+		}
 	}
 }
 
@@ -531,6 +774,8 @@ void Chunk::unload()
 
 void Chunk::display(int xmin, int ymin, int xmax, int ymax)
 {
+	const mat4x4f identityMatrix;
+
 	if (m_Objects) // Check to make sure the chunk has actually been loaded first
 	{
 		// Set up transformation for tiles.
@@ -551,7 +796,7 @@ void Chunk::display(int xmin, int ymin, int xmax, int ymax)
 			for (int j = jmin; j <= jmax; ++j)
 			{
 				mat_translate(0.f, TILE_HEIGHT, 0.f);
-				m_TileSprites->display(m_Tiles[CHUNK_INDEX(i, j)]);
+				m_TileSprites->display(m_Tiles[CHUNK_INDEX(i, j)], identityMatrix);
 			}
 			mat_pop();
 		}
@@ -569,12 +814,12 @@ World* World::get_world()
 	return m_World = new World();
 }
 
-World::World() :
-	m_Transform(
-		1.f, 0.f, 0.f, 0.f,
-		0.f, 1.f, -1.f, 0.f,
-		0.f, 1.f, 1.f, 0.f
-	)
+Chunk* World::get_chunk()
+{
+	return get_world()->m_Chunk;
+}
+
+World::World()
 {
 	// Load information about all chunks
 	for (int k = MAXIMUM_NUMBER_OF_CHUNKS; k > 0; --k)
@@ -598,88 +843,158 @@ World::World() :
 	// TODO
 	m_Chunk = Chunk::get_chunk(1);
 	m_Chunk->load();
-
-	// Set camera
-	camera_set(330, 50);
 }
 
-void World::camera_set(float x, float y)
+
+
+
+/*
+*
+*	Frames
+*
+*/
+
+void Frame::set_bounds(int x, int y, int width, int height)
 {
-	// Sets the camera object
+	m_Bounds.set(0, 0, x);
+	m_Bounds.set(1, 0, y);
+
+	m_Bounds.set(0, 1, x + width);
+	m_Bounds.set(1, 1, y + height);
+}
+
+
+WorldOrthographicFrame::WorldOrthographicFrame(int x, int y, int width, int height, int tile_margin) : m_TileMargin(tile_margin)
+{
+	set_bounds(x, y, width, height);
+}
+
+void WorldOrthographicFrame::reset()
+{
+	// Calculate the world space area
+	m_Chunk = World::get_chunk();
+
+	int x = roundf(m_Camera.get(0));
+	int y = roundf(m_Camera.get(1));
+	int halfWidth = (m_Bounds.get(0, 1) - m_Bounds.get(0, 0)) / 2;
+	int halfHeight = (m_Bounds.get(1, 1) - m_Bounds.get(1, 0)) / 2;
+
+	m_DisplayArea.set(0, 0, x - halfWidth);
+	m_DisplayArea.set(0, 1, x + halfWidth - 1);
+	m_DisplayArea.set(1, 0, y - halfHeight);
+	m_DisplayArea.set(1, 1, y + halfHeight - 1);
+	clamp_display_area();
+
+	// Construct the transformation matrix
+	Application* app = get_application_settings();
+	float sx = 2.f / app->width; // The x-axis scale of the projection
+	float sy = 2.f / app->height; // The y-axis scale of the projection
+
+	float bx = 0.5f * (m_Bounds.get(0, 0) + m_Bounds.get(0, 1));
+	float by = 0.5f * (m_Bounds.get(1, 0) + m_Bounds.get(1, 1));
+
+	float cx = -sx * 0.5f * (m_DisplayArea.get(0, 0) + m_DisplayArea.get(0, 1));
+	float cy = -sy * 0.5f * (m_DisplayArea.get(1, 0) + m_DisplayArea.get(1, 1));
+
+	m_Transform = mat4x4f(
+		sx, 0.f, 0.f, (sx * bx) - 1.f + cx,
+		0.f, sy, -sy, (sy * by) - 1.f + cy,
+		0.f, sy, sy, cy
+	);
+}
+
+void WorldOrthographicFrame::clamp_display_area()
+{
+	int xmin = TILE_WIDTH * m_TileMargin;
+	int xmax = (m_Chunk->width * TILE_WIDTH) - (xmin + 1);
+	int xleft = xmin - m_DisplayArea.get(0, 0);
+	int xright = xmax - m_DisplayArea.get(0, 1);
+	if (xleft > 0)
+	{
+		m_DisplayArea.get(0, 1) += xleft;
+		m_DisplayArea.set(0, 0, xmin);
+		m_Camera.set(0, 0, (m_DisplayArea.get(0, 0) + m_DisplayArea.get(0, 1)) / 2);
+	}
+	else if (xright < 0)
+	{
+		m_DisplayArea.get(0, 0) += xright;
+		m_DisplayArea.set(0, 1, xmax);
+		m_Camera.set(0, 0, (m_DisplayArea.get(0, 0) + m_DisplayArea.get(0, 1)) / 2);
+	}
+
+	int ymin = TILE_HEIGHT * m_TileMargin;
+	int ymax = (m_Chunk->height * TILE_HEIGHT) - (ymin + 1);
+	int ybottom = ymin - m_DisplayArea.get(1, 0);
+	int ytop = ymax - m_DisplayArea.get(1, 1);
+	if (ybottom > 0)
+	{
+		m_DisplayArea.get(1, 1) += ybottom;
+		m_DisplayArea.set(1, 0, ymin);
+		m_Camera.set(1, 0, (m_DisplayArea.get(1, 0) + m_DisplayArea.get(1, 1)) / 2);
+	}
+	else if (ytop < 0)
+	{
+		m_DisplayArea.get(1, 0) += ytop;
+		m_DisplayArea.set(1, 1, ymax);
+		m_Camera.set(1, 0, (m_DisplayArea.get(1, 0) + m_DisplayArea.get(1, 1)) / 2);
+	}
+}
+
+void WorldOrthographicFrame::set_bounds(int x, int y, int width, int height)
+{
+	Frame::set_bounds(x, y, width, height);
+	reset();
+}
+
+void WorldOrthographicFrame::set_camera(float x, float y)
+{
 	m_Camera.set(0, 0, x);
 	m_Camera.set(1, 0, y);
-
-	// Prepares to set transform center and bounds
-	Application* app = get_application_settings();
-
-	int cx = (int)roundf(x); // the centered x-coordinate
-	int cy = (int)roundf(y); // the centered y-coordinate
-	int wHalf = app->width / 2; // half the width of the screen
-	int hHalf = app->height / 2; // half the height of the screen
-	int wc = (m_Chunk->width * TILE_WIDTH) - 1; // width of chunk, in pixels (minus 1)
-	int hc = (m_Chunk->height * TILE_HEIGHT) - 1; // height of chunk, in pixels (minus 1)
-
-	if (cx - wHalf < 0)
-	{
-		// If left edge would be less than 0, set left edge to be 0.
-		m_Bounds.set(0, 0, 0);
-		m_Bounds.set(0, 1, 2 * wHalf);
-		m_Transform.set(0, 3, -wHalf);
-	}
-	else if (cx + wHalf >= wc)
-	{
-		// If right edge would be greater than width of chunk, set right edge to width of chunk.
-		m_Bounds.set(0, 0, wc - (2 * wHalf));
-		m_Bounds.set(0, 1, wc);
-		m_Transform.set(0, 3, wHalf - wc);
-	}
-	else
-	{
-		// Set center to camera coordinates
-		m_Bounds.set(0, 0, cx - wHalf);
-		m_Bounds.set(0, 1, cx + wHalf);
-		m_Transform.set(0, 3, -cx);
-	}
-
-	if (cy - hHalf < 0)
-	{
-		// If bottom edge would be less than 0, set bottom edge to be 0.
-		m_Bounds.set(1, 0, 0);
-		m_Bounds.set(1, 1, 2 * hHalf);
-		m_Transform.set(1, 3, -hHalf);
-		m_Transform.set(2, 3, -hHalf);
-	}
-	else if (cy + hHalf >= hc)
-	{
-		// If top edge would be greater than height of chunk, set top edge to height of chunk.
-		m_Bounds.set(1, 0, hc - (2 * hHalf));
-		m_Bounds.set(1, 1, hc);
-		m_Transform.set(1, 3, hHalf - hc);
-		m_Transform.set(2, 3, hHalf - hc);
-	}
-	else
-	{
-		m_Bounds.set(1, 0, cy - hHalf);
-		m_Bounds.set(1, 1, cy + hHalf);
-		m_Transform.set(1, 3, -cy);
-		m_Transform.set(2, 3, -cy);
-	}
+	reset();
 }
 
-void World::camera_adjust(float dx, float dy)
+void WorldOrthographicFrame::adjust_camera(float dx, float dy)
 {
-	m_Camera.get(0) -= dx;
-	m_Camera.get(1) -= dy;
+	float& cx = m_Camera.get(0);
+	float& cy = m_Camera.get(1);
+	
+	int former_x = roundf(cx);
+	int former_y = roundf(cy);
+
+	cx += dx;
+	cy += dy;
+
+	int dcx = (int)roundf(cx) - former_x;
+	if (dcx)
+	{
+		m_DisplayArea.get(0, 0) += dcx;
+		m_DisplayArea.get(0, 1) += dcx;
+	}
+
+	int dcy = (int)roundf(cy) - former_y;
+	if (dcy)
+	{
+		m_DisplayArea.get(1, 0) += dcy;
+		m_DisplayArea.get(1, 1) += dcy;
+	}
+
+	if (dcx || dcy)
+	{
+		clamp_display_area();
+	}
 }
 
-void World::display()
+void WorldOrthographicFrame::display()
 {
 	// Set up transformation.
 	mat_push();
 	mat_custom_transform(m_Transform);
 
 	// Draw chunk
-	m_Chunk->display(m_Bounds.get(0, 0), m_Bounds.get(1, 0), m_Bounds.get(0, 1), m_Bounds.get(1, 1));
+	m_Chunk->display(
+		m_DisplayArea.get(0, 0), m_DisplayArea.get(1, 0), 
+		m_DisplayArea.get(0, 1), m_DisplayArea.get(1, 1)
+	);
 
 	mat_pop();
 }
@@ -697,6 +1012,9 @@ void World::display()
 // The main Application object.
 Application* g_Application = NULL;
 
+// The settings file.
+const char* g_SettingsFile = NULL;
+
 // The application window.
 GLFWwindow* g_Window = NULL;
 
@@ -706,7 +1024,7 @@ void load_settings()
 	g_Application = new Application();
 
 	string line;
-	ifstream settings("settings.ini");
+	ifstream settings(g_SettingsFile);
 
 	if (settings.is_open())
 	{
@@ -742,7 +1060,7 @@ void load_settings()
 
 void save_settings()
 {
-	ofstream settings("settings.ini", ios::out | ios::trunc);
+	ofstream settings(g_SettingsFile, ios::out | ios::trunc);
 
 	if (settings.is_open())
 	{
@@ -756,7 +1074,7 @@ void save_settings()
 }
 
 
-Application* get_application_settings()
+Application*& get_application_settings()
 {
 	if (!g_Application)
 	{
@@ -818,18 +1136,12 @@ int Application::display()
 
 	// Set the viewport
 	glViewport(0, 0, width, height);
-
-	// Set the orthogonal projection
-	float halfWidth = 0.5f * width;
-	float halfHeight = 0.5f * height;
-	mat_ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, -halfHeight, halfHeight);
-
 	return 0;
 }
 
 
 
-int onion_init()
+int onion_init(const char* settings_file)
 {
 	// Initialize the GLFW library.
 	if (!glfwInit())
@@ -838,6 +1150,8 @@ int onion_init()
 	}
 
 	// Load the application settings.
+	g_SettingsFile = settings_file;
+
 	Application* app = get_application_settings();
 	if (!app)
 	{
@@ -866,17 +1180,15 @@ int onion_init()
 	return 0;
 }
 
-void onion_main()
+void onion_main(onion_display_func display_callback)
 {
-	World* world = World::get_world();
-
 	while (!glfwWindowShouldClose(g_Window))
 	{
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		// Draw the world
-		world->display();
+		// Draw everything
+		display_callback();
 
 		// Swap buffers
 		glfwSwapBuffers(g_Window);
