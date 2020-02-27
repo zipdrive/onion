@@ -201,26 +201,98 @@ void mat_rotatez(float angle)
 */
 
 
-class Shader
+// Handles switching between array buffers.
+class Buffer
 {
-private:
-	// The shader that's currently enabled.
-	static SHADER_KEY m_Enabled;
-
-	// The shader's key.
-	SHADER_KEY m_Key;
-
 protected:
-	bool is_enabled()
+	// The buffer that's currently bound.
+	static GLuint m_ActiveBuffer;
+
+	// The buffer's OpenGL key.
+	GLuint m_Buffer;
+
+public:
+	/// <summary>Constructs a buffer object.</summary>
+	Buffer(GLuint buffer)
 	{
-		return m_Enabled == m_Key;
+		m_Buffer = buffer;
 	}
 
-	void enable()
+	/// <summary>Checks whether the buffer is the currently activated one.</summary>
+	/// <returns>True if the buffer is active, false otherwise.</returns>
+	bool is_buffer_active()
 	{
+		return m_ActiveBuffer == m_Buffer;
+	}
 
+	/// <summary>Activates the buffer.</summary>
+	virtual void activate()
+	{
+		if (!is_buffer_active())
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, m_Buffer);
+			m_ActiveBuffer = m_Buffer;
+		}
 	}
 };
+
+GLuint Buffer::m_ActiveBuffer{ GL_DEFAULT_VALUE };
+
+
+// Handles switching between shader programs.
+class Shader
+{
+protected:
+	// The shader that's currently active.
+	static GLuint m_ActiveShader;
+
+	// The shader's OpenGL key.
+	GLuint m_Shader;
+
+public:
+	Shader(GLuint shader)
+	{
+		m_Shader = shader;
+	}
+
+	Shader(const char* rawVertexShaderText, const char* rawFragmentShaderText)
+	{
+		// Vertex shader
+		GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+		glShaderSource(vertexShader, 1, &rawVertexShaderText, NULL);
+		glCompileShader(vertexShader);
+
+		// Fragment shader
+		GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+		glShaderSource(fragmentShader, 1, &rawFragmentShaderText, NULL);
+		glCompileShader(fragmentShader);
+
+		// Create shader program
+		m_Shader = glCreateProgram();
+		glAttachShader(m_Shader, vertexShader);
+		glAttachShader(m_Shader, fragmentShader);
+		glLinkProgram(m_Shader);
+	}
+
+	/// <summary>Retrieves whether this shader is active.</summary>
+	/// <returns>True if this shader is active, false otherwise.</returns>
+	bool is_shader_active()
+	{
+		return m_ActiveShader == m_Shader;
+	}
+
+	/// <summary>Activates the shader program.</summary>
+	virtual void activate()
+	{
+		if (!is_shader_active())
+		{
+			glUseProgram(m_Shader);
+			m_ActiveShader = m_Shader;
+		}
+	}
+};
+
+GLuint Shader::m_ActiveShader{ GL_DEFAULT_VALUE };
 
 
 // The raw text of the vertex shader for solid colors.
@@ -244,8 +316,74 @@ const char* colorFragmentShaderText =
 class SolidColorGraphic : public Graphic
 {
 private:
+	class SolidColorShader : public Shader, public Buffer
+	{
+	private:
+		// The OpenGL ID of the MVP uniform.
+		GLuint m_MVP;
+
+		// The OpenGL ID of the color uniform.
+		GLuint m_Color;
+
+	public:
+		SolidColorShader() : Shader(colorVertexShaderText, colorFragmentShaderText), Buffer(GL_DEFAULT_VALUE)
+		{
+			// Determine the location of the uniforms
+			m_MVP = glGetUniformLocation(m_Shader, "MVP");
+			m_Color = glGetUniformLocation(m_Shader, "color");
+
+			// Generate the buffer
+			float bufferValues[] = {
+				0.f, 0.f,
+				1.f, 0.f, 
+				1.f, 1.f,
+
+				0.f, 0.f,
+				0.f, 1.f, 
+				1.f, 1.f
+			};
+
+			glGenBuffers(1, &m_Buffer);
+			glBindBuffer(GL_ARRAY_BUFFER, m_Buffer);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 12, bufferValues, GL_STATIC_DRAW);
+		}
+
+		void activate(const vec4f& color)
+		{
+			if (!is_shader_active())
+			{
+				// Activate the shader program
+				glUseProgram(m_Shader);
+				m_ActiveShader = m_Shader;
+
+				// Change the buffer being used.
+				glBindBuffer(GL_ARRAY_BUFFER, m_Buffer);
+				m_ActiveBuffer = m_Buffer;
+
+				// Set attrib array for position
+				glEnableVertexAttribArray(0);
+				glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, (void*)0);
+			}
+
+			// Set the current transformation
+			glUniformMatrix4fv(m_MVP, 1, GL_FALSE, mat_get_values());
+
+			// Set the color
+			glUniform4fv(m_Color, 1, color.matrix_values());
+		}
+	};
+
+	// The shader program for the graphic
+	static SolidColorShader* m_Shader;
+
 	// The color of the graphic
 	vec4f m_Color;
+
+	// The width of the graphic
+	int m_Width;
+
+	// The height of the graphic
+	int m_Height;
 
 public:
 	/// <summary>Creates a solid color graphic.</summary>
@@ -253,26 +391,44 @@ public:
 	/// <param name="g">The green value.</param>
 	/// <param name="b">The blue value.</param>
 	/// <param name="a">The alpha value.</param>
-	SolidColorGraphic(float r, float g, float b, float a) : m_Color(r, g, b, a)
+	/// <param name="width">The width of the graphic.</param>
+	/// <param name="height">The height of the graphic.</param>
+	SolidColorGraphic(float r, float g, float b, float a, int width, int height) : m_Color(r, g, b, a)
 	{
+		if (!m_Shader)
+		{
+			m_Shader = new SolidColorShader();
+		}
 
+		m_Width = width;
+		m_Height = height;
 	}
 
 	/// <summary>Draws the graphic to the screen.</summary>
 	void display()
 	{
+		// Stretch the graphic to match width and height
+		mat_scale(m_Width, m_Height, 1.f);
 
+		// Activate the shader program
+		m_Shader->activate(m_Color);
+
+		// Display the graphic
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 };
 
-Graphic* generate_solid_color_graphic(int r, int g, int b, int a)
+SolidColorGraphic::SolidColorShader* SolidColorGraphic::m_Shader{ nullptr };
+
+
+Graphic* generate_solid_color_graphic(int r, int g, int b, int a, int width, int height)
 {
-	return new SolidColorGraphic(r / 255.f, g / 255.f, b / 255.f, a / 255.f);
+	return new SolidColorGraphic(r / 255.f, g / 255.f, b / 255.f, a / 255.f, width, height);
 }
 
-Graphic* generate_solid_color_graphic(float r, float g, float b, float a)
+Graphic* generate_solid_color_graphic(float r, float g, float b, float a, int width, int height)
 {
-	return new SolidColorGraphic(r, g, b, a);
+	return new SolidColorGraphic(r, g, b, a, width, height);
 }
 
 
@@ -312,38 +468,99 @@ SpriteSheet::SpriteSheet() {}
 class SSpriteSheet : public SpriteSheet
 {
 private:
-	// The ID for which sprite sheet is currently being drawn from.
-	static SPRITE_SHEET_KEY m_Enabled;
-
-	// The next available sprite sheet ID.
-	static SPRITE_SHEET_KEY m_NextAvailableID;
-
-	// The ID for this sprite sheet.
-	SPRITE_SHEET_KEY m_ID;
-
-
-	// The OpenGL ID for the sprite shader program.
-	static GLuint m_SpriteShader;
-
-	// The OpenGL ID for the MVP in the sprite shader program.
-	static GLuint m_SpriteShaderMVP;
-
-	// The OpenGL ID for the color tint matrix in the sprite shader program.
-	static GLuint m_SpriteShaderTint;
-
-
-	// The OpenGL ID for the texture.
-	GLuint m_TextureID;
-
-	// An array that contains information about the sprites.
-	GLuint m_SpriteBuffer;
-
-	void load_raw_sprite_sheet(const char* path)
+	// A shader that displays a sprite texture.
+	class SpriteShader : public Shader
 	{
-		if (m_TextureID != GL_DEFAULT_VALUE)
+	private:
+		// The OpenGL ID for the MVP in the sprite shader program.
+		GLuint m_MVP;
+
+		// The OpenGL ID for the color tint matrix in the sprite shader program.
+		GLuint m_TintMatrix;
+
+	public:
+		SpriteShader() : Shader(spriteVertexShaderText, spriteFragmentShaderText)
+		{
+			// Determine the location of the uniforms
+			m_MVP = glGetUniformLocation(m_Shader, "MVP");
+			m_TintMatrix = glGetUniformLocation(m_Shader, "tintMatrix");
+		}
+
+		void activate(const mat4x4f& tintMatrix)
+		{
+			// Activate the shader program
+			Shader::activate();
+
+			// Set the current transformation
+			glUniformMatrix4fv(m_MVP, 1, GL_FALSE, mat_get_values());
+
+			// Set the color tint matrix
+			glUniformMatrix4fv(m_TintMatrix, 1, GL_FALSE, tintMatrix.matrix_values());
+		}
+	};
+
+
+	// A buffer for the sprite data.
+	class SpriteBuffer : public Buffer
+	{
+	private:
+		// The OpenGL ID for the texture.
+		GLuint m_Texture;
+
+	public:
+		/// <summary>Constructs a sprite buffer.</summary>
+		/// <param name="buffer">The OpenGL buffer ID.</param>
+		/// <param name="textureID">The OpenGL texture ID.</param>
+		SpriteBuffer(GLuint buffer, GLuint texture) : Buffer(buffer)
+		{
+			m_Texture = texture;
+		}
+
+		/// <summary>Frees the buffer and texture.</summary>
+		~SpriteBuffer()
+		{
+			glDeleteBuffers(1, &m_Buffer);
+			glDeleteTextures(1, &m_Texture);
+		}
+
+		/// <summary>Activates the buffer.</summary>
+		void activate()
+		{
+			if (!is_buffer_active())
+			{
+				// Change the texture being drawn from.
+				glBindTexture(GL_TEXTURE_2D, m_Texture);
+
+				// Change the buffer being used.
+				glBindBuffer(GL_ARRAY_BUFFER, m_Buffer);
+				m_ActiveBuffer = m_Buffer;
+
+				// Set attrib array for position
+				glEnableVertexAttribArray(0);
+				glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)0);
+
+				// Set attrib array for tex coord
+				glEnableVertexAttribArray(1);
+				glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(sizeof(float) * 2));
+			}
+		}
+	};
+
+
+	// The shader for all sprite sheets.
+	static SpriteShader* m_Shader;
+
+	// The buffer for this specific sprite sheet.
+	SpriteBuffer* m_Buffer;
+
+
+	GLuint load_raw_sprite_sheet(const char* path)
+	{
+		if (m_Buffer)
 		{
 			// If the sprite sheet already was loaded, clear it.
-			glDeleteTextures(1, &m_TextureID);
+			delete m_Buffer;
+			m_Buffer = nullptr;
 		}
 
 		// Load data from file using SOIL.
@@ -353,66 +570,34 @@ private:
 		data = SOIL_load_image(path, &width, &height, &channels, SOIL_LOAD_RGBA);
 
 		// Bind data to texture.
-		glGenTextures(1, &m_TextureID);
-		glBindTexture(GL_TEXTURE_2D, m_TextureID);
+		GLuint tex;
+		glGenTextures(1, &tex);
+		glBindTexture(GL_TEXTURE_2D, tex);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
 		// If it hasn't been done yet, generate the shader program.
-		if (m_SpriteShader == GL_DEFAULT_VALUE)
+		if (!m_Shader)
 		{
-			// Vertex shader
-			GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-			glShaderSource(vertexShader, 1, &spriteVertexShaderText, NULL);
-			glCompileShader(vertexShader);
-
-			// Fragment shader
-			GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-			glShaderSource(fragmentShader, 1, &spriteFragmentShaderText, NULL);
-			glCompileShader(fragmentShader);
-
-			// Create shader program
-			m_SpriteShader = glCreateProgram();
-			glAttachShader(m_SpriteShader, vertexShader);
-			glAttachShader(m_SpriteShader, fragmentShader);
-			glLinkProgram(m_SpriteShader);
-
-			// Determine the location of the uniforms
-			m_SpriteShaderMVP = glGetUniformLocation(m_SpriteShader, "MVP");
-			m_SpriteShaderTint = glGetUniformLocation(m_SpriteShader, "tintMatrix");
+			m_Shader = new SpriteShader();
 		}
+
+		return tex;
 	}
 
 public:
-	/// <summary>Creates an empty sprite sheet.</summary>
-	SSpriteSheet()
-	{
-		// Generate an ID for the sprite sheet.
-		m_ID = m_NextAvailableID++;
-
-		// Set OpenGL IDs to defaults.
-		m_TextureID = GL_DEFAULT_VALUE;
-		m_SpriteBuffer = GL_DEFAULT_VALUE;
-	}
-
 	/// <summary>Loads sprite sheet from file.</summary>
 	/// <param name="path">The path to the image file, using the res/img folder as a base. Note: The path to the meta file should be the same as the path to the image file, but with a .meta file extension instead.</param>
 	void load_sprite_sheet(const char* path)
 	{
-		if (m_SpriteBuffer != GL_DEFAULT_VALUE)
-		{
-			// If the sprite sheet already was loaded, clear it.
-			glDeleteBuffers(1, &m_SpriteBuffer);
-		}
-
 		// Construct the path to the image file.
 		string fpath("res/img/");
 		fpath.append(path);
 
 		// Load the raw sprite sheet
-		load_raw_sprite_sheet(fpath.c_str());
+		GLuint tex = load_raw_sprite_sheet(fpath.c_str());
 
 		// Construct the path to the meta file.
 		regex fext_finder("(.*)\\.[^\\.]+"); // Regex to find the path excluding file extension
@@ -492,9 +677,19 @@ public:
 		meta.close();
 
 		// Bind the sprite data to a buffer
-		glGenBuffers(1, &m_SpriteBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, m_SpriteBuffer);
+		GLuint buf;
+		glGenBuffers(1, &buf);
+		glBindBuffer(GL_ARRAY_BUFFER, buf);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * spriteData.size(), spriteData.data(), GL_STATIC_DRAW);
+
+		// If the buffer already exists, free it
+		if (m_Buffer)
+		{
+			delete m_Buffer;
+		}
+
+		// Create the buffer object
+		m_Buffer = new SpriteBuffer(buf, tex);
 	}
 
 	/// <summary>Loads sprite sheet from an image file, and equally partitions it into sprites.</summary>
@@ -503,18 +698,12 @@ public:
 	/// <param name="partition_height">The height of the individual sprites.</param>
 	void load_partitioned_sprite_sheet(const char* path, int partition_width, int partition_height)
 	{
-		if (m_SpriteBuffer != GL_DEFAULT_VALUE)
-		{
-			// If the sprite sheet already was loaded, clear it.
-			glDeleteBuffers(1, &m_SpriteBuffer);
-		}
-
 		// Construct the path to the image file.
 		string fpath("res/img/");
 		fpath.append(path);
 
 		// Load the raw sprite sheet
-		load_raw_sprite_sheet(fpath.c_str());
+		GLuint tex = load_raw_sprite_sheet(fpath.c_str());
 
 		// Figure out how many sprites are across each row and column
 		int num_rows = height / partition_height;
@@ -582,12 +771,22 @@ public:
 		}
 
 		// Bind the sprite data to a buffer
-		glGenBuffers(1, &m_SpriteBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, m_SpriteBuffer);
+		GLuint buf;
+		glGenBuffers(1, &buf);
+		glBindBuffer(GL_ARRAY_BUFFER, buf);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 24 * num_rows * num_cols, spriteData, GL_STATIC_DRAW);
 
 		// Free the sprite data buffer
 		delete[] spriteData;
+
+		// If the buffer already exists, free it
+		if (m_Buffer)
+		{
+			delete m_Buffer;
+		}
+
+		// Create the buffer object
+		m_Buffer = new SpriteBuffer(buf, tex);
 	}
 
 	/// <summary>Draws a sprite on the sprite sheet.</summary>
@@ -595,44 +794,18 @@ public:
 	/// <param name="color">The color tint matrix of the sprite.</param>
 	void display(SPRITE_KEY sprite, const mat4x4f& color)
 	{
-		if (m_ID != m_Enabled) // If not the currently bound sprite sheet, bind all of its data.
-		{
-			m_Enabled = m_ID;
+		// Activate the shader program
+		m_Shader->activate(color);
 
-			// Change the texture being drawn from.
-			glBindTexture(GL_TEXTURE_2D, m_TextureID);
-
-			// Change the buffer being used.
-			glBindBuffer(GL_ARRAY_BUFFER, m_SpriteBuffer);
-
-			// Set attrib array for position
-			glEnableVertexAttribArray(0);
-			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)0);
-
-			// Set attrib array for tex coord
-			glEnableVertexAttribArray(1);
-			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(sizeof(float) * 2));
-		}
-
-		// Set the shader program
-		glUseProgram(m_SpriteShader);
-
-		// Set the current transformation
-		glUniformMatrix4fv(m_SpriteShaderMVP, 1, GL_FALSE, mat_get_values());
-
-		// Set the color tint matrix
-		glUniformMatrix4fv(m_SpriteShaderTint, 1, GL_FALSE, color.matrix_values());
+		// Activate the buffer
+		m_Buffer->activate();
 
 		// Draw the sprite using information from buffer
 		glDrawArrays(GL_TRIANGLES, sprite, 6);
 	}
 };
 
-SPRITE_SHEET_KEY SSpriteSheet::m_Enabled{ INT16_MAX };
-SPRITE_SHEET_KEY SSpriteSheet::m_NextAvailableID{ 0 };
-GLuint SSpriteSheet::m_SpriteShader{ GL_DEFAULT_VALUE };
-GLuint SSpriteSheet::m_SpriteShaderMVP{ GL_DEFAULT_VALUE };
-GLuint SSpriteSheet::m_SpriteShaderTint{ GL_DEFAULT_VALUE };
+SSpriteSheet::SpriteShader* SSpriteSheet::m_Shader{ nullptr };
 
 
 SpriteSheet* SpriteSheet::generate_empty()
@@ -861,6 +1034,77 @@ void Frame::set_bounds(int x, int y, int width, int height)
 
 	m_Bounds.set(0, 1, x + width);
 	m_Bounds.set(1, 1, y + height);
+}
+
+
+LayerFrame::LayerFrame()
+{
+	Application* app = get_application_settings();
+	set_bounds(0, 0, app->width, app->height);
+	reset();
+}
+
+LayerFrame::LayerFrame(int x, int y, int width, int height)
+{
+	set_bounds(x, y, width, height);
+	reset();
+}
+
+void LayerFrame::reset()
+{
+	if (m_Sequence.empty())
+	{
+		m_ZScale = 1.f;
+	}
+	else
+	{
+		m_ZScale = 1.f / m_Sequence.size();
+	}
+
+	m_Transform.set(2, 2, m_ZScale);
+	m_Transform.set(2, 3, 1.f - m_ZScale);
+}
+
+void LayerFrame::insert_top(Graphic* graphic)
+{
+	m_Sequence.push_back(graphic);
+	reset();
+}
+
+void LayerFrame::display()
+{
+	// Set up the transformation
+	mat_push();
+	mat_custom_transform(m_Transform);
+
+	// Display the layers from back to front
+	float dz = -2.f * m_ZScale;
+	for (auto iter = m_Sequence.begin(); iter != m_Sequence.end(); ++iter)
+	{
+		(*iter)->display();
+		mat_translate(0.f, 0.f, dz);
+	}
+
+	mat_pop();
+}
+
+
+UIFrame::UIFrame() : LayerFrame() {}
+
+UIFrame::UIFrame(int x, int y, int width, int height) : LayerFrame(x, y, width, height) {}
+
+void UIFrame::reset()
+{
+	LayerFrame::reset();
+
+	Application* app = get_application_settings();
+	float sx = 1.f / app->width;
+	float sy = 1.f / app->height;
+
+	m_Transform.set(0, 0, 2.f * sx);
+	m_Transform.set(1, 1, 2.f * sy);
+	m_Transform.set(0, 3, (sx * (m_Bounds.get(0, 0) + m_Bounds.get(0, 1))) - 1.f);
+	m_Transform.set(1, 3, (sy * (m_Bounds.get(1, 0) + m_Bounds.get(1, 1))) - 1.f);
 }
 
 
@@ -1182,10 +1426,15 @@ int onion_init(const char* settings_file)
 
 void onion_main(onion_display_func display_callback)
 {
+	// Enable depth testing
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+
+	// Core loop
 	while (!glfwWindowShouldClose(g_Window))
 	{
 		// Clear the screen
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Draw everything
 		display_callback();

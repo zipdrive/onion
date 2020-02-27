@@ -200,8 +200,23 @@ public:
 };
 
 
-Graphic* generate_solid_color_graphic(int r, int g, int b, int a);
-Graphic* generate_solid_color_graphic(float r, float g, float b, float a);
+/// <summary>Creates a solid color graphic.</summary>
+/// <param name="r">The red value.</param>
+/// <param name="g">The green value.</param>
+/// <param name="b">The blue value.</param>
+/// <param name="a">The alpha value.</param>
+/// <param name="width">The width of the graphic.</param>
+/// <param name="height">The height of the graphic.</param>
+Graphic* generate_solid_color_graphic(int r, int g, int b, int a, int width, int height);
+
+/// <summary>Creates a solid color graphic.</summary>
+/// <param name="r">The red value.</param>
+/// <param name="g">The green value.</param>
+/// <param name="b">The blue value.</param>
+/// <param name="a">The alpha value.</param>
+/// <param name="width">The width of the graphic.</param>
+/// <param name="height">The height of the graphic.</param>
+Graphic* generate_solid_color_graphic(float r, float g, float b, float a, int width, int height);
 
 
 // Data about an individual sprite on a sprite sheet.
@@ -441,7 +456,7 @@ public:
 *
 */
 
-class Frame
+class Frame : public Graphic
 {
 protected:
 	// The frame boundaries on the screen
@@ -454,10 +469,62 @@ public:
 	/// <param name="width">The width of the frame.</param>
 	/// <param name="height">The height of the frame.</param>
 	virtual void set_bounds(int x, int y, int width, int height);
+};
+
+
+class LayerFrame : public Frame
+{
+protected:
+	// A sequence of things to be displayed.
+	std::vector<Graphic*> m_Sequence;
+
+	// The transformation to apply before displaying.
+	mat4x4f m_Transform;
+
+	// The z-scale of the transformation.
+	float m_ZScale;
+
+	/// <summary>Resets the transformation data.</summary>
+	virtual void reset();
+
+public:
+	/// <summary>Constructs an empty frame that fills the screen.</summary>
+	LayerFrame();
+
+	/// <summary>Constructs an empty frame with the given dimensions.</summary>
+	/// <param name="x">The x-coordinate of the frame.</param>
+	/// <param name="y">The y-coordinate of the frame.</param>
+	/// <param name="width">The width of the frame.</param>
+	/// <param name="height">The height of the frame.</param>
+	LayerFrame(int x, int y, int width, int height);
+
+	/// <summary>Adds a graphic to be displayed over existing graphics.</summary>
+	/// <param name="graphic">The graphic to be displayed.</param>
+	void insert_top(Graphic* graphic);
 
 	/// <summary>Displays the contents of the frame.</summary>
-	virtual void display() = 0;
+	void display();
 };
+
+// A frame of layers that applies an orthographic projection before displaying.
+class UIFrame : public LayerFrame
+{
+protected:
+	/// <summary>Resets the transformation matrix.</summary>
+	void reset();
+
+public:
+	/// <summary>Creates an empty UI frame that takes up the whole screen.</summary>
+	UIFrame();
+
+	/// <summary>Creates an empty UI frame.</summary>
+	/// <param name="x">The x-coordinate of the frame.</param>
+	/// <param name="y">The y-coordinate of the frame.</param>
+	/// <param name="width">The width of the frame.</param>
+	/// <param name="height">The height of the frame.</param>
+	UIFrame(int x, int y, int width, int height);
+};
+
 
 // A frame that displays the world orthographically.
 class WorldOrthographicFrame : public Frame
