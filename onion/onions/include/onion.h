@@ -11,10 +11,8 @@
 */
 
 // The key to an individual sprite on a sprite sheet
+#define SPRITE_ID int16_t
 #define SPRITE_KEY int
-
-// The key to a whole sprite sheet
-#define SPRITE_SHEET_KEY int
 
 // The key to a chunk of static data
 #define CHUNK_KEY int
@@ -49,9 +47,10 @@ public:
 		return mat;
 	}
 
+
 	/// <summary>Retrieves a reference to the value at the specified index of the matrix value array.</summary>
 	/// <param name="index">The index of the value.</param>
-	T& get(int index)
+	T& operator()(int index)
 	{
 		return mat[index];
 	}
@@ -59,18 +58,34 @@ public:
 	/// <summary>Retrieves a reference to the value at the specified row and column.</summary>
 	/// <param name="row">The row of the value.</param>
 	/// <param name="column">The column of the value.</param>
-	T& get(int row, int column)
+	T& operator()(int row, int column)
 	{
 		return mat[row + (_Rows * column)]; // Row-major order
-											//return mat[(row * _Columns) + column]; // Column-major order
 	}
+
+
+	/// <summary>Retrieves the value at the specified index of the matrix value array.</summary>
+	/// <param name="index">The index of the value.</param>
+	T get(int index) const
+	{
+		return mat[index];
+	}
+
+	/// <summary>Retrieves the value at the specified row and column.</summary>
+	/// <param name="row">The row of the value.</param>
+	/// <param name="column">The column of the value.</param>
+	T get(int row, int column) const
+	{
+		return mat[row + (_Rows * column)]; // Row-major order
+	}
+
 
 	/// <summary>Sets the value at the specified row and column.</summary>
 	/// <param name="row">The row of the value.</param>
 	/// <param name="column">The column of the value.</param>
 	void set(int row, int column, T value)
 	{
-		get(row, column) = value;
+		mat[row + (_Rows * column)] = value;
 	}
 
 	matrix()
@@ -93,7 +108,7 @@ public:
 /// <param name="rhs">The matrix being multiplied on the right.</param>
 /// <param name="res">Outputs the resulting matrix.</param>
 template <typename T, int _Rows, int _Middle, int _Columns>
-void mat_mul(matrix<T, _Rows, _Middle>& lhs, matrix<T, _Middle, _Columns>& rhs, matrix<T, _Rows, _Columns>& res)
+void mat_mul(const matrix<T, _Rows, _Middle>& lhs, const matrix<T, _Middle, _Columns>& rhs, matrix<T, _Rows, _Columns>& res)
 {
 	for (int r = _Rows - 1; r >= 0; --r)
 	{
@@ -102,7 +117,7 @@ void mat_mul(matrix<T, _Rows, _Middle>& lhs, matrix<T, _Middle, _Columns>& rhs, 
 			T val = 0;
 			for (int k = _Middle - 1; k >= 0; --k)
 				val += lhs.get(r, k) * rhs.get(k, c);
-			res.get(r, c) = val;
+			res.set(r, c, val);
 		}
 	}
 }
@@ -180,7 +195,7 @@ void mat_rotatez(float angle);
 
 /// <summary>Adds a custom transformation to the current transformation.</summary>
 /// <param name="transform">The matrix of the transformation.</summary>
-void mat_custom_transform(mat4x4f& transform);
+void mat_custom_transform(const mat4x4f& transform);
 
 
 
@@ -195,8 +210,16 @@ void mat_custom_transform(mat4x4f& transform);
 class Graphic
 {
 public:
+	/// <summary>Retrieves the width of the graphic.</summary>
+	/// <returns>The width of the graphic.</returns>
+	virtual int get_width() const = 0;
+
+	/// <summary>Retrieves the height of the graphic.</summary>
+	/// <returns>The height of the graphic.</returns>
+	virtual int get_height() const = 0;
+
 	/// <summary>Draws the graphic to the screen.</summary>
-	virtual void display() = 0;
+	virtual void display() const = 0;
 };
 
 
@@ -219,32 +242,6 @@ Graphic* generate_solid_color_graphic(int r, int g, int b, int a, int width, int
 Graphic* generate_solid_color_graphic(float r, float g, float b, float a, int width, int height);
 
 
-// Data about an individual sprite on a sprite sheet.
-struct SpriteInfo
-{
-	// The key to draw the sprite.
-	SPRITE_KEY key;
-
-	// The distance from the left edge of the sprite to the left edge of the sprite sheet, in pixels.
-	int left;
-
-	// The distance from the top edge of the sprite to the top edge of the sprite sheet, in pixels.
-	int top;
-
-	// The width of the sprite, in pixels.
-	int width;
-
-	// The height of the sprite, in pixels.
-	int height;
-
-	/// <summary>Initializes the data about the individual sprite.</summary>
-	/// <param name="left">The distance from the left edge of the sprite to the left edge of the sprite sheet, in pixels.</param>
-	/// <param name="top">The distance from the top edge of the sprite to the top edge of the sprite sheet, in pixels.</param>
-	/// <param name="width">The width of the sprite, in pixels.</param>
-	/// <param name="height">The height of the sprite, in pixels.</param>
-	SpriteInfo(int left, int top, int width, int height);
-};
-
 // Contains multiple sprites on a single texture.
 class SpriteSheet
 {
@@ -264,7 +261,7 @@ public:
 	int height;
 
 	/// <summary>Loads sprite sheet from an image and meta file.</summary>
-	/// <param name="path">The path to the image file, using the res/img/ folder as a base.\nNote: The path to the meta file should be the same as the path to the image file, but with a .meta file extension instead.</param>
+	/// <param name="path">The path to the image file, using the res/img/ folder as a base. Note: The path to the meta file should be the same as the path to the image file, but with a .meta file extension instead.</param>
 	virtual void load_sprite_sheet(const char* path) = 0;
 
 	/// <summary>Loads sprite sheet from an image file, and equally partitions it into sprites.</summary>
@@ -280,27 +277,68 @@ public:
 };
 
 
+// An individual sprite on a sprite sheet.
+struct Sprite
+{
+private:
+	static std::unordered_map<SPRITE_ID, Sprite*> m_Sprites;
+
+public:
+	/// <summary>Retrieves the sprite with the given ID.</summary>
+	/// <param name="id">The ID of the sprite.</param>
+	static Sprite* get_sprite(SPRITE_ID id);
+
+	/// <summary>Sets the sprite with the given ID.</summary>
+	/// <param name="id">The ID of the sprite.</param>
+	/// <param name="sprite">The sprite to set.</param>
+	static void set_sprite(SPRITE_ID id, Sprite* sprite);
+
+
+	// The key of the sprite
+	SPRITE_KEY key;
+
+	// The width of the sprite
+	int width;
+
+	// The height of the sprite
+	int height;
+
+	/// <summary>Constructs sprite information.</summary>
+	/// <param name="key">The key of the sprite.</param>
+	/// <param name="width">The width of the sprite.</param>
+	/// <param name="height">The height of the sprite.</param>
+	Sprite(SPRITE_KEY key, int width, int height);
+};
+
 class SpriteGraphic : public Graphic
 {
 protected:
-	// A pointer to the sprite sheet that the sprite is on
+	// A pointer to the sprite information
 	SpriteSheet* m_SpriteSheet;
 
 	// The color tint matrix for the sprite
 	mat4x4f m_TintMatrix;
 
 	/// <summary>Constructs a graphic that draws sprites.</summary>
-	/// <param name="spriteSheet">The sprite sheet that the sprites are on.</param>
+	/// <param name="sprite_sheet">The sprite sheet.</param>
 	/// <param name="color">The color tint matrix for the sprites.</param>
-	SpriteGraphic(SpriteSheet* spriteSheet, mat4x4f& color);
+	SpriteGraphic(SpriteSheet* sprite_sheet, mat4x4f& color);
 
 	/// <summary>Retrieves the current sprite to be drawn.</summary>
-	/// <returns>The key of the current sprite.</returns>
-	virtual SPRITE_KEY get_sprite() = 0;
+	/// <returns>The current sprite.</returns>
+	virtual Sprite* get_sprite() const = 0;
 
 public:
+	/// <summary>Retrieves the width of the graphic.</summary>
+	/// <returns>The width of the graphic.</returns>
+	int get_width() const;
+
+	/// <summary>Retrieves the height of the graphic.</summary>
+	/// <returns>The height of the graphic.</returns>
+	int get_height() const;
+
 	/// <summary>Displays the sprite with the given key.</summary>
-	void display();
+	void display() const;
 };
 
 // A graphic that always displays the same sprite.
@@ -308,18 +346,18 @@ class StaticSpriteGraphic : public SpriteGraphic
 {
 private:
 	// The key to the sprite
-	SPRITE_KEY m_Key;
+	Sprite* m_Sprite;
 
 	/// <summary>Retrieves the current sprite to be drawn.</summary>
 	/// <returns>The key of the current sprite.</returns>
-	SPRITE_KEY get_sprite();
+	Sprite* get_sprite() const;
 
 public:
 	/// <summary>Constructs a static sprite graphic.</summary>
-	/// <param name="spriteSheet">The sprite sheet that the sprites are on.</param>
-	/// <param name="key">The key of the sprite.</param>
+	/// <param name="sprite_sheet">The sprite sheet that the sprites are on.</param>
+	/// <param name="sprite">The sprite data.</param>
 	/// <param name="color">The color tint matrix for the sprites.</param>
-	StaticSpriteGraphic(SpriteSheet* spriteSheet, SPRITE_KEY key, mat4x4f& color);
+	StaticSpriteGraphic(SpriteSheet* sprite_sheet, Sprite* sprite, mat4x4f& color);
 };
 
 // A graphic that can swap between multiple frames of sprites.
@@ -327,28 +365,42 @@ class DynamicSpriteGraphic : public SpriteGraphic
 {
 private:
 	// The keys to the sprites
-	std::vector<SPRITE_KEY> m_Keys;
+	std::vector<Sprite*> m_Sprites;
 
 	// The current frame
 	int m_Current;
 
 	/// <summary>Retrieves the current sprite to be drawn.</summary>
 	/// <returns>The key of the current sprite.</returns>
-	SPRITE_KEY get_sprite();
+	Sprite* get_sprite() const;
 
 public:
 	/// <summary>Constructs a static sprite graphic.</summary>
-	/// <param name="spriteSheet">The sprite sheet that the sprites are on.</param>
+	/// <param name="sprite_sheet">The sprite sheet that the sprites are on.</param>
 	/// <param name="color">The color tint matrix for the sprites.</param>
-	DynamicSpriteGraphic(SpriteSheet* spriteSheet, mat4x4f& color);
+	DynamicSpriteGraphic(SpriteSheet* sprite_sheet, mat4x4f& color);
 
 	/// <summary>Adds a new frame to the graphic.</summary>
-	/// <param name="key">The key of the frame's sprite.</param>
-	void add_frame(SPRITE_KEY key);
+	/// <param name="sprite">The frame's sprite.</param>
+	void add_frame(Sprite* sprite);
 
 	/// <summary>Sets the current frame.</summary>
 	/// <param name="frame">The index of the frame.</param>
 	void set_frame(int frame);
+};
+
+
+// A graphic that allows a user to scroll between values.
+class ScrollBarGraphic : public Graphic
+{
+private:
+	// The background of the scroll area.
+	Graphic* m_Background;
+
+	// 
+
+public:
+
 };
 
 
@@ -469,6 +521,14 @@ public:
 	/// <param name="width">The width of the frame.</param>
 	/// <param name="height">The height of the frame.</param>
 	virtual void set_bounds(int x, int y, int width, int height);
+
+	/// <summary>Retrieves the width of the frame.</summary>
+	/// <returns>The width of the frame.</returns>
+	int get_width() const;
+
+	/// <summary>Retrieves the height of the frame.</summary>
+	/// <returns>The height of the frame.</returns>
+	int get_height() const;
 };
 
 
@@ -503,7 +563,7 @@ public:
 	void insert_top(Graphic* graphic);
 
 	/// <summary>Displays the contents of the frame.</summary>
-	void display();
+	void display() const;
 };
 
 // A frame of layers that applies an orthographic projection before displaying.
@@ -584,27 +644,9 @@ public:
 	void adjust_camera(float dx, float dy);
 
 	/// <summary>Displays the contents of the frame.</summary>
-	void display();
+	void display() const;
 };
 
-/*class WorldFrame
-{
-private:
-	// A pointer to the world singleton
-	World* m_World;
-
-	/// <summary>A transform that does the following:
-	/// Translates so the camera is at (0,0) on-screen.
-	/// Rotates by -45 degrees, so the positive y-axis is pointing away from the screen.
-	/// Scales up the y- and z-axes by sqrt(2).
-	/// </summary>
-	mat4x4f m_Transform;
-
-public:
-	WorldFrame(int xmin, int xmax, int ymin, int ymax);
-
-	void display();
-};*/
 
 
 

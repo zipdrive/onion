@@ -1,5 +1,5 @@
 #pragma once
-#include <onion.h>
+#include "gui.h"
 
 // Used to edit stuff.
 class Editor

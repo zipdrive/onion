@@ -3,12 +3,13 @@
 
 Editor* g_Editor = nullptr;
 
-//WorldOrthographicFrame* g_WorldFrame = nullptr;
+WorldOrthographicFrame* g_WorldFrame = nullptr;
 
 
 void display_editor()
 {
 	g_Editor->display();
+	//g_WorldFrame->display();
 }
 
 int main()
@@ -19,7 +20,7 @@ int main()
 
 	// Initialize stuff
 	g_Editor = new ChunkEditor();
-	//g_WorldFrame = new WorldOrthographicFrame(0, 24, 640, 352, 0);
+	//g_WorldFrame = new WorldOrthographicFrame(0, 0, 640, 360);
 
 	// Run the core loop
 	onion_main(display_editor);

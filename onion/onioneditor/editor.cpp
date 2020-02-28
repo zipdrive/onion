@@ -1,7 +1,24 @@
 #include "editor.h"
 
+
+SpriteSheet* g_GUI;
+
+SpriteSheet* get_gui_sprite_sheet()
+{
+	if (!g_GUI)
+	{
+		g_GUI = SpriteSheet::generate_empty();
+		g_GUI->load_sprite_sheet("editor/ui.png");
+	}
+
+	return g_GUI;
+}
+
+
 ChunkEditor::ChunkEditor()
 {
+	SpriteSheet* gui = get_gui_sprite_sheet();
+
 	Application*& app = get_application_settings();
 	int chunkFrameWidth = app->width - 184;
 	int chunkFrameHeight = app->height - 48;
@@ -9,7 +26,13 @@ ChunkEditor::ChunkEditor()
 	m_Frame = new WorldOrthographicFrame(0, 24, chunkFrameWidth, chunkFrameHeight, 1);
 
 	m_UI = new UIFrame(0, 0, app->width, app->height);
-	m_UI->insert_top(generate_solid_color_graphic(1.f, 1.f, 1.f, 1.f, 100, 100));
+	m_UI->insert_top(
+		new StaticSpriteGraphic(
+			gui, 
+			Sprite::get_sprite(SCROLL_BAR), 
+			mat4x4f()
+		)
+	);
 
 	m_Layers = new LayerFrame();
 	m_Layers->insert_top(m_Frame);

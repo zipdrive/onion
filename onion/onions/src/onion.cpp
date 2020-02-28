@@ -41,20 +41,20 @@ mat4x4f::mat4x4f(float a11, float a12, float a13, float a14,
 	float a21, float a22, float a23, float a24,
 	float a31, float a32, float a33, float a34)
 {
-	get(0, 0) = a11;
-	get(0, 1) = a12;
-	get(0, 2) = a13;
-	get(0, 3) = a14;
+	set(0, 0, a11); 
+	set(0, 1, a12);
+	set(0, 2, a13);
+	set(0, 3, a14);
 
-	get(1, 0) = a21;
-	get(1, 1) = a22;
-	get(1, 2) = a23;
-	get(1, 3) = a24;
+	set(1, 0, a21);
+	set(1, 1, a22);
+	set(1, 2, a23);
+	set(1, 3, a24);
 
-	get(2, 0) = a31;
-	get(2, 1) = a32;
-	get(2, 2) = a33;
-	get(2, 3) = a34;
+	set(2, 0, a31);
+	set(2, 1, a32);
+	set(2, 2, a33);
+	set(2, 3, a34);
 }
 
 
@@ -62,10 +62,10 @@ vec4f::vec4f() {}
 
 vec4f::vec4f(float a1, float a2, float a3, float a4)
 {
-	get(0) = a1;
-	get(1) = a2;
-	get(2) = a3;
-	get(3) = a4;
+	set(0, 0, a1);
+	set(1, 0, a2);
+	set(2, 0, a3);
+	set(3, 0, a4);
 }
 
 
@@ -107,7 +107,7 @@ void mat_pop()
 }
 
 
-void mat_custom_transform(mat4x4f& transform)
+void mat_custom_transform(const mat4x4f& transform)
 {
 	mat4x4f top = mat_get();
 	mat_mul(top, transform, mat_get());
@@ -131,9 +131,9 @@ void mat_ortho(float left, float right, float bottom, float top, float near, flo
 void mat_translate(float dx, float dy, float dz)
 {
 	mat4x4f trans;
-	trans.get(0, 3) = dx;
-	trans.get(1, 3) = dy;
-	trans.get(2, 3) = dz;
+	trans.set(0, 3, dx);
+	trans.set(1, 3, dy);
+	trans.set(2, 3, dz);
 
 	mat_custom_transform(trans);
 }
@@ -143,9 +143,9 @@ void mat_scale(float sx, float sy, float sz)
 	mat4x4f& top = mat_get();
 	for (int k = 3; k >= 0; --k)
 	{
-		top.get(0, k) *= sx;
-		top.get(1, k) *= sy;
-		top.get(2, k) *= sz;
+		top(0, k) *= sx;
+		top(1, k) *= sy;
+		top(2, k) *= sz;
 	}
 }
 
@@ -155,10 +155,10 @@ void mat_rotatex(float angle)
 	float c = cosf(angle);
 
 	mat4x4f rot;
-	rot.get(1, 1) = c;
-	rot.get(1, 2) = -s;
-	rot.get(2, 1) = s;
-	rot.get(2, 2) = c;
+	rot.set(1, 1, c);
+	rot.set(1, 2, -s);
+	rot.set(2, 1, s);
+	rot.set(2, 2, c);
 
 	mat_custom_transform(rot);
 }
@@ -169,10 +169,10 @@ void mat_rotatey(float angle)
 	float c = cosf(angle);
 
 	mat4x4f rot;
-	rot.get(0, 0) = c;
-	rot.get(0, 2) = s;
-	rot.get(2, 0) = -s;
-	rot.get(2, 2) = c;
+	rot.set(0, 0, c);
+	rot.set(0, 2, s);
+	rot.set(2, 0, -s);
+	rot.set(2, 2, c);
 
 	mat_custom_transform(rot);
 }
@@ -183,10 +183,10 @@ void mat_rotatez(float angle)
 	float c = cosf(angle);
 
 	mat4x4f rot;
-	rot.get(0, 0) = c;
-	rot.get(0, 1) = -s;
-	rot.get(1, 0) = s;
-	rot.get(1, 1) = c;
+	rot.set(0, 0, c);
+	rot.set(0, 1, -s);
+	rot.set(1, 0, s);
+	rot.set(1, 1, c);
 
 	mat_custom_transform(rot);
 }
@@ -404,8 +404,22 @@ public:
 		m_Height = height;
 	}
 
+	/// <summary>Retrieves the width of the graphic.</summary>
+	/// <returns>The width of the graphic.</returns>
+	int get_width() const
+	{
+		return m_Width;
+	}
+
+	/// <summary>Retrieves the height of the graphic.</summary>
+	/// <returns>The height of the graphic.</returns>
+	int get_height() const
+	{
+		return m_Height;
+	}
+
 	/// <summary>Draws the graphic to the screen.</summary>
-	void display()
+	void display() const
 	{
 		// Stretch the graphic to match width and height
 		mat_scale(m_Width, m_Height, 1.f);
@@ -454,12 +468,6 @@ const char* spriteFragmentShaderText =
 "void main() {\n"
 "	gl_FragColor = tintMatrix * texture(tex2D, UV);\n"
 "}";
-
-
-SpriteInfo::SpriteInfo(int left, int top, int width, int height) : left(left), top(top), width(width), height(height)
-{
-	key = 0;
-}
 
 
 SpriteSheet::SpriteSheet() {}
@@ -607,21 +615,24 @@ public:
 		std::vector<float> spriteData;
 
 		ifstream meta(fpath.c_str(), ios::in | ios::binary);
+		char buffer[10];
 
 		while (meta.good())
 		{
 			// Pull information about the sprite from file
-			int16_t left; // The distance from the left side of the sprite sheet to the left side of the sprite
-			meta >> left;
-			int16_t top; // The distance from the top side of the sprite sheet to the top side of the sprite
-			meta >> top;
-			int16_t sprite_width; // The width of the sprite
-			meta >> sprite_width;
-			int16_t sprite_height; // The height of the sprite
-			meta >> sprite_height;
+			meta.read(buffer, 10);
 
-			// Debug: Print values
-			cout << "(" << left << ", " << top << ") -> (" << (left + sprite_width) << ", " << (top + sprite_height) << ")\n";
+			// The key for the sprite.
+			SPRITE_ID id = buffer[0] | ((int16_t)buffer[1] << 8);
+
+			// The distance from the left side of the sprite sheet to the left side of the sprite.
+			int16_t left = buffer[2] | ((int16_t)buffer[3] << 8);
+			// The distance from the top side of the sprite sheet to the top side of the sprite.
+			int16_t top = buffer[4] | ((int16_t)buffer[5] << 8);
+			// The width of the sprite.
+			int16_t sprite_width = buffer[6] | ((int16_t)buffer[7] << 8);
+			// The height of the sprite.
+			int16_t sprite_height = buffer[8] | ((int16_t)buffer[9] << 8);
 
 			// Calculate texcoord numbers
 			float l = (float)left / width; // left texcoord
@@ -631,6 +642,9 @@ public:
 			float t = (float)top / height; // top texcoord
 			float b = (float)(top + sprite_height) / height; // bottom texcoord
 			float h = (float)sprite_height;
+
+			// Set the sprite data
+			Sprite::set_sprite(id, new Sprite(spriteData.size() / 4, sprite_width, sprite_height));
 
 			// First triangle: bottom-left, bottom-right, top-right
 			// Bottom-left corner, vertices
@@ -814,39 +828,79 @@ SpriteSheet* SpriteSheet::generate_empty()
 }
 
 
-SpriteGraphic::SpriteGraphic(SpriteSheet* spriteSheet, mat4x4f& color)
+
+std::unordered_map<SPRITE_ID, Sprite*> Sprite::m_Sprites;
+
+Sprite::Sprite(SPRITE_KEY key, int width, int height) : key(key), width(width), height(height) {}
+
+Sprite* Sprite::get_sprite(SPRITE_ID id)
 {
-	m_SpriteSheet = spriteSheet;
+	auto iter = m_Sprites.find(id);
+	if (iter != m_Sprites.end())
+	{
+		return iter->second;
+	}
+	return nullptr;
+}
+
+void Sprite::set_sprite(SPRITE_ID id, Sprite* sprite)
+{
+	auto iter = m_Sprites.find(id);
+	if (iter == m_Sprites.end())
+	{
+		m_Sprites.emplace(id, sprite);
+	}
+	else
+	{
+		m_Sprites.erase(iter);
+		m_Sprites.emplace_hint(iter, id, sprite);
+	}
+}
+
+
+SpriteGraphic::SpriteGraphic(SpriteSheet* sprite_sheet, mat4x4f& color)
+{
+	m_SpriteSheet = sprite_sheet;
 	m_TintMatrix = color;
 }
 
-void SpriteGraphic::display()
+int SpriteGraphic::get_width() const
 {
-	m_SpriteSheet->display(get_sprite(), m_TintMatrix);
+	return get_sprite()->width;
+}
+
+int SpriteGraphic::get_height() const
+{
+	return get_sprite()->height;
+}
+
+void SpriteGraphic::display() const
+{
+	m_SpriteSheet->display(get_sprite()->key, m_TintMatrix);
 }
 
 
-StaticSpriteGraphic::StaticSpriteGraphic(SpriteSheet* spriteSheet, SPRITE_KEY key, mat4x4f& color) : SpriteGraphic(spriteSheet, color)
+StaticSpriteGraphic::StaticSpriteGraphic(SpriteSheet* sprite_sheet, Sprite* sprite, mat4x4f& color) : SpriteGraphic(sprite_sheet, color)
 {
-	m_Key = key;
+	m_Sprite = sprite;
 }
 
-SPRITE_KEY StaticSpriteGraphic::get_sprite()
+Sprite* StaticSpriteGraphic::get_sprite() const
 {
-	return m_Key;
+	return m_Sprite;
 }
 
 
 DynamicSpriteGraphic::DynamicSpriteGraphic(SpriteSheet* spriteSheet, mat4x4f& color) : SpriteGraphic(spriteSheet, color) {}
 
-SPRITE_KEY DynamicSpriteGraphic::get_sprite()
+Sprite* DynamicSpriteGraphic::get_sprite() const
 {
-	return m_Keys[m_Current];
+	return m_Sprites[m_Current];
 }
 
-void DynamicSpriteGraphic::add_frame(SPRITE_KEY key)
+void DynamicSpriteGraphic::add_frame(Sprite* sprite)
 {
-	m_Keys.push_back(key);
+	m_Sprites.push_back(sprite);
 }
 
 void DynamicSpriteGraphic::set_frame(int frame)
@@ -1036,6 +1090,16 @@ void Frame::set_bounds(int x, int y, int width, int height)
 	m_Bounds.set(1, 1, y + height);
 }
 
+int Frame::get_width() const
+{
+	return m_Bounds.get(0, 1) - m_Bounds.get(0, 0);
+}
+
+int Frame::get_height() const
+{
+	return m_Bounds.get(1, 1) - m_Bounds.get(1, 0);
+}
+
 
 LayerFrame::LayerFrame()
 {
@@ -1071,7 +1135,7 @@ void LayerFrame::insert_top(Graphic* graphic)
 	reset();
 }
 
-void LayerFrame::display()
+void LayerFrame::display() const
 {
 	// Set up the transformation
 	mat_push();
@@ -1155,13 +1219,13 @@ void WorldOrthographicFrame::clamp_display_area()
 	int xright = xmax - m_DisplayArea.get(0, 1);
 	if (xleft > 0)
 	{
-		m_DisplayArea.get(0, 1) += xleft;
+		m_DisplayArea(0, 1) += xleft;
 		m_DisplayArea.set(0, 0, xmin);
 		m_Camera.set(0, 0, (m_DisplayArea.get(0, 0) + m_DisplayArea.get(0, 1)) / 2);
 	}
 	else if (xright < 0)
 	{
-		m_DisplayArea.get(0, 0) += xright;
+		m_DisplayArea(0, 0) += xright;
 		m_DisplayArea.set(0, 1, xmax);
 		m_Camera.set(0, 0, (m_DisplayArea.get(0, 0) + m_DisplayArea.get(0, 1)) / 2);
 	}
@@ -1172,13 +1236,13 @@ void WorldOrthographicFrame::clamp_display_area()
 	int ytop = ymax - m_DisplayArea.get(1, 1);
 	if (ybottom > 0)
 	{
-		m_DisplayArea.get(1, 1) += ybottom;
+		m_DisplayArea(1, 1) += ybottom;
 		m_DisplayArea.set(1, 0, ymin);
 		m_Camera.set(1, 0, (m_DisplayArea.get(1, 0) + m_DisplayArea.get(1, 1)) / 2);
 	}
 	else if (ytop < 0)
 	{
-		m_DisplayArea.get(1, 0) += ytop;
+		m_DisplayArea(1, 0) += ytop;
 		m_DisplayArea.set(1, 1, ymax);
 		m_Camera.set(1, 0, (m_DisplayArea.get(1, 0) + m_DisplayArea.get(1, 1)) / 2);
 	}
@@ -1199,8 +1263,8 @@ void WorldOrthographicFrame::set_camera(float x, float y)
 
 void WorldOrthographicFrame::adjust_camera(float dx, float dy)
 {
-	float& cx = m_Camera.get(0);
-	float& cy = m_Camera.get(1);
+	float& cx = m_Camera(0);
+	float& cy = m_Camera(1);
 	
 	int former_x = roundf(cx);
 	int former_y = roundf(cy);
@@ -1211,15 +1275,15 @@ void WorldOrthographicFrame::adjust_camera(float dx, float dy)
 	int dcx = (int)roundf(cx) - former_x;
 	if (dcx)
 	{
-		m_DisplayArea.get(0, 0) += dcx;
-		m_DisplayArea.get(0, 1) += dcx;
+		m_DisplayArea(0, 0) += dcx;
+		m_DisplayArea(0, 1) += dcx;
 	}
 
 	int dcy = (int)roundf(cy) - former_y;
 	if (dcy)
 	{
-		m_DisplayArea.get(1, 0) += dcy;
-		m_DisplayArea.get(1, 1) += dcy;
+		m_DisplayArea(1, 0) += dcy;
+		m_DisplayArea(1, 1) += dcy;
 	}
 
 	if (dcx || dcy)
@@ -1228,7 +1292,7 @@ void WorldOrthographicFrame::adjust_camera(float dx, float dy)
 	}
 }
 
-void WorldOrthographicFrame::display()
+void WorldOrthographicFrame::display() const
 {
 	// Set up transformation.
 	mat_push();
