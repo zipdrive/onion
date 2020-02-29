@@ -390,20 +390,6 @@ public:
 };
 
 
-// A graphic that allows a user to scroll between values.
-class ScrollBarGraphic : public Graphic
-{
-private:
-	// The background of the scroll area.
-	Graphic* m_Background;
-
-	// 
-
-public:
-
-};
-
-
 
 
 /*
@@ -515,6 +501,16 @@ protected:
 	mat2x2i m_Bounds;
 
 public:
+	/// <summary>Creates an empty frame.</summary>
+	Frame();
+
+	/// <summary>Creates an empty frame with the given boundaries.</summary>
+	/// <param name="x">The x-coordinate of the frame.</param>
+	/// <param name="y">The y-coordinate of the frame.</param>
+	/// <param name="width">The width of the frame.</param>
+	/// <param name="height">The height of the frame.</param>
+	Frame(int x, int y, int width, int height);
+
 	/// <summary>Sets the boundaries of the frame on the screen.</summary>
 	/// <param name="x">The x-coordinate of the frame.</param>
 	/// <param name="y">The y-coordinate of the frame.</param>
@@ -529,6 +525,35 @@ public:
 	/// <summary>Retrieves the height of the frame.</summary>
 	/// <returns>The height of the frame.</returns>
 	int get_height() const;
+};
+
+
+
+// A frame that allows a user to scroll between values.
+class ScrollBarFrame : public Frame
+{
+private:
+	// Whether the scroll bar scrolls horizontally or vertically.
+	bool m_Horizontal;
+
+	// The translation
+	vec2f m_Center;
+
+	// The background of the scroll area.
+	Graphic* m_Background;
+
+	// The left- or top-facing arrow.
+	Graphic* m_Arrow;
+
+	// The horizontal scroll object.
+	Graphic* m_Scroller;
+
+public:
+	ScrollBarFrame(Graphic* backgroundGraphic, Graphic* arrowGraphic, Graphic* scrollGraphic, int x, int y, bool horizontal);
+
+	void set_bounds(int x, int y, int width, int height);
+
+	void display() const;
 };
 
 
@@ -576,13 +601,6 @@ protected:
 public:
 	/// <summary>Creates an empty UI frame that takes up the whole screen.</summary>
 	UIFrame();
-
-	/// <summary>Creates an empty UI frame.</summary>
-	/// <param name="x">The x-coordinate of the frame.</param>
-	/// <param name="y">The y-coordinate of the frame.</param>
-	/// <param name="width">The width of the frame.</param>
-	/// <param name="height">The height of the frame.</param>
-	UIFrame(int x, int y, int width, int height);
 };
 
 

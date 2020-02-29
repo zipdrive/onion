@@ -23,14 +23,41 @@ ChunkEditor::ChunkEditor()
 	int chunkFrameWidth = app->width - 184;
 	int chunkFrameHeight = app->height - 48;
 
-	m_Frame = new WorldOrthographicFrame(0, 24, chunkFrameWidth, chunkFrameHeight, 1);
+	m_Frame = new WorldOrthographicFrame(0, 24, chunkFrameWidth, chunkFrameHeight, 0);
 
-	m_UI = new UIFrame(0, 0, app->width, app->height);
+	m_UI = new UIFrame();
+
+	// Bottom-right corner between scroll bars
+	//m_UI->insert_top(generate_solid_color_graphic(230, 247, 251, 255, 24, 24));
+
+	// World horizontal scroll bar
+	Graphic* horizontalWSBBG = generate_solid_color_graphic(230, 247, 251, 255, chunkFrameWidth - 48, 24);
+	Graphic* horizontalWSBArrow = new StaticSpriteGraphic(gui, Sprite::get_sprite(LEFT_ARROW_SPRITE), mat4x4f());
+	Graphic* horizontalWSBScroller = new StaticSpriteGraphic(gui, Sprite::get_sprite(SCROLL_BAR), mat4x4f());
+
 	m_UI->insert_top(
-		new StaticSpriteGraphic(
-			gui, 
-			Sprite::get_sprite(SCROLL_BAR), 
-			mat4x4f()
+		new ScrollBarFrame(
+			horizontalWSBBG, 
+			horizontalWSBArrow,
+			horizontalWSBScroller,
+			0,
+			0,
+			true
+		)
+	);
+
+	Graphic* verticalWSBBG = generate_solid_color_graphic(230, 247, 251, 255, 24, chunkFrameHeight - 48);
+	Graphic* verticalWSBArrow = new StaticSpriteGraphic(gui, Sprite::get_sprite(UP_ARROW_SPRITE), mat4x4f());
+	Graphic* verticalWSBScroller = new StaticSpriteGraphic(gui, Sprite::get_sprite(SCROLL_BAR), mat4x4f());
+
+	m_UI->insert_top(
+		new ScrollBarFrame(
+			verticalWSBBG,
+			verticalWSBArrow,
+			verticalWSBScroller,
+			chunkFrameWidth,
+			24,
+			false
 		)
 	);
 

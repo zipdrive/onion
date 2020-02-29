@@ -141,11 +141,11 @@ void mat_translate(float dx, float dy, float dz)
 void mat_scale(float sx, float sy, float sz)
 {
 	mat4x4f& top = mat_get();
-	for (int k = 3; k >= 0; --k)
+	for (int k = 2; k >= 0; --k)
 	{
-		top(0, k) *= sx;
-		top(1, k) *= sy;
-		top(2, k) *= sz;
+		top(k, 0) *= sx;
+		top(k, 1) *= sy;
+		top(k, 2) *= sz;
 	}
 }
 
@@ -422,6 +422,7 @@ public:
 	void display() const
 	{
 		// Stretch the graphic to match width and height
+		mat_push();
 		mat_scale(m_Width, m_Height, 1.f);
 
 		// Activate the shader program
@@ -429,6 +430,9 @@ public:
 
 		// Display the graphic
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		// Pop the transformation
+		mat_pop();
 	}
 };
 
@@ -1081,6 +1085,13 @@ World::World()
 *
 */
 
+Frame::Frame() {}
+
+Frame::Frame(int x, int y, int width, int height)
+{
+	set_bounds(x, y, width, height);
+}
+
 void Frame::set_bounds(int x, int y, int width, int height)
 {
 	m_Bounds.set(0, 0, x);
@@ -1101,17 +1112,97 @@ int Frame::get_height() const
 }
 
 
+ScrollBarFrame::ScrollBarFrame(Graphic* backgroundGraphic, Graphic* arrowGraphic, Graphic* scrollGraphic, int x, int y, bool horizontal)
+{
+	m_Background = backgroundGraphic;
+	m_Arrow = arrowGraphic;
+	m_Scroller = scrollGraphic;
+
+	if (horizontal)
+	{
+		m_Horizontal = true;
+		set_bounds(x, y, m_Background->get_width() + (m_Arrow->get_width() * 2), max(m_Background->get_height(), m_Arrow->get_height()));
+	}
+	else
+	{
+		m_Horizontal = false;
+		set_bounds(x, y, max(m_Background->get_width(), m_Arrow->get_width()), m_Background->get_height() + (m_Arrow->get_height() * 2));
+	}
+}
+
+void ScrollBarFrame::set_bounds(int x, int y, int width, int height)
+{
+	Frame::set_bounds(x, y, width, height);
+
+	m_Center.set(0, 0, x + (0.5f * width));
+	m_Center.set(1, 0, y + (0.5f * height));
+}
+
+void ScrollBarFrame::display() const
+{
+	// Set up transformation
+	mat_push();
+	mat_translate(m_Bounds.get(0), m_Bounds.get(1), 0.f);
+
+	if (m_Horizontal)
+	{
+		// Draw the left arrow
+		m_Arrow->display();
+
+		// Draw the background
+		mat_translate(m_Arrow->get_width(), 0.f, 0.f);
+		m_Background->display();
+
+		// Draw the scroller
+		mat_push();
+		mat_translate(0.f, 0.f, -0.1f);
+		m_Scroller->display();
+		mat_pop();
+		
+		// Draw the right arrow
+		mat_translate(m_Background->get_width() + m_Arrow->get_width(), 0.f, 0.f);
+		mat_scale(-1.f, 1.f, 1.f);
+		m_Arrow->display();
+	}
+	else
+	{
+		// Draw the bottom arrow
+		mat_translate(0.f, m_Arrow->get_height(), 0.f);
+
+		mat_push();
+		mat_scale(1.f, -1.f, 1.f);
+		m_Arrow->display();
+		mat_pop();
+
+		// Draw the background
+		m_Background->display();
+
+		// Draw the scroller
+		mat_push();
+		mat_translate(0.f, 0.f, -0.1f);
+		mat_scale(-1.f, 1.f, 1.f);
+		mat_rotatez(1.570796f);
+		m_Scroller->display();
+		mat_pop();
+
+		// Draw the top arrow
+		mat_translate(0.f, m_Background->get_height(), 0.f);
+		m_Arrow->display();
+	}
+
+	mat_pop();
+}
+
+
 LayerFrame::LayerFrame()
 {
 	Application* app = get_application_settings();
 	set_bounds(0, 0, app->width, app->height);
-	reset();
 }
 
 LayerFrame::LayerFrame(int x, int y, int width, int height)
 {
 	set_bounds(x, y, width, height);
-	reset();
 }
 
 void LayerFrame::reset()
@@ -1132,7 +1223,7 @@ void LayerFrame::reset()
 void LayerFrame::insert_top(Graphic* graphic)
 {
 	m_Sequence.push_back(graphic);
-	reset();
+	this->reset();
 }
 
 void LayerFrame::display() const
@@ -1155,20 +1246,18 @@ void LayerFrame::display() const
 
 UIFrame::UIFrame() : LayerFrame() {}
 
-UIFrame::UIFrame(int x, int y, int width, int height) : LayerFrame(x, y, width, height) {}
-
 void UIFrame::reset()
 {
 	LayerFrame::reset();
 
 	Application* app = get_application_settings();
-	float sx = 1.f / app->width;
-	float sy = 1.f / app->height;
+	float sx = 2.f / app->width;
+	float sy = 2.f / app->height;
 
-	m_Transform.set(0, 0, 2.f * sx);
-	m_Transform.set(1, 1, 2.f * sy);
-	m_Transform.set(0, 3, (sx * (m_Bounds.get(0, 0) + m_Bounds.get(0, 1))) - 1.f);
-	m_Transform.set(1, 3, (sy * (m_Bounds.get(1, 0) + m_Bounds.get(1, 1))) - 1.f);
+	m_Transform.set(0, 0, sx);
+	m_Transform.set(1, 1, sy);
+	m_Transform.set(0, 3, (sx * m_Bounds.get(0, 0)) - 1.f);
+	m_Transform.set(1, 3, (sy * m_Bounds.get(1, 0)) - 1.f);
 }
 
 
@@ -1184,13 +1273,16 @@ void WorldOrthographicFrame::reset()
 
 	int x = roundf(m_Camera.get(0));
 	int y = roundf(m_Camera.get(1));
-	int halfWidth = (m_Bounds.get(0, 1) - m_Bounds.get(0, 0)) / 2;
-	int halfHeight = (m_Bounds.get(1, 1) - m_Bounds.get(1, 0)) / 2;
+
+	int width = m_Bounds.get(0, 1) - m_Bounds.get(0, 0);
+	int height = m_Bounds.get(1, 1) - m_Bounds.get(1, 0);
+	int halfWidth = (width + 1) / 2;
+	int halfHeight = (height + 1) / 2;
 
 	m_DisplayArea.set(0, 0, x - halfWidth);
-	m_DisplayArea.set(0, 1, x + halfWidth - 1);
+	m_DisplayArea.set(0, 1, x + (width / 2) - 1);
 	m_DisplayArea.set(1, 0, y - halfHeight);
-	m_DisplayArea.set(1, 1, y + halfHeight - 1);
+	m_DisplayArea.set(1, 1, y + (height / 2) - 1);
 	clamp_display_area();
 
 	// Construct the transformation matrix
@@ -1198,11 +1290,13 @@ void WorldOrthographicFrame::reset()
 	float sx = 2.f / app->width; // The x-axis scale of the projection
 	float sy = 2.f / app->height; // The y-axis scale of the projection
 
-	float bx = 0.5f * (m_Bounds.get(0, 0) + m_Bounds.get(0, 1));
-	float by = 0.5f * (m_Bounds.get(1, 0) + m_Bounds.get(1, 1));
+	float bx = m_Bounds.get(0, 0) + halfWidth;
+	float by = m_Bounds.get(1, 0) + halfHeight;
 
-	float cx = -sx * 0.5f * (m_DisplayArea.get(0, 0) + m_DisplayArea.get(0, 1));
-	float cy = -sy * 0.5f * (m_DisplayArea.get(1, 0) + m_DisplayArea.get(1, 1));
+	int mx = 1 + ((m_Bounds.get(0, 1) - m_Bounds.get(0, 0)) % 2);
+	int my = 1 + ((m_Bounds.get(1, 1) - m_Bounds.get(1, 0)) % 2);
+	float cx = -sx * ((m_DisplayArea.get(0, 0) + m_DisplayArea.get(0, 1) + mx) / 2);
+	float cy = -sy * ((m_DisplayArea.get(1, 0) + m_DisplayArea.get(1, 1) + my) / 2);
 
 	m_Transform = mat4x4f(
 		sx, 0.f, 0.f, (sx * bx) - 1.f + cx,
