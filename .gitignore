@@ -18,6 +18,23 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Visual Studio junk
+*/.vs/*
+*/ipch/*
+*.VC.db
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.obj
+*.obj.enc
+*.idb
+*.ilk
+*.log
+*.pdb
+*.tlog
+*.lastbuildstate
+
 # =========================
 # Operating System Files
 # =========================

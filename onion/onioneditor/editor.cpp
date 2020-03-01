@@ -15,6 +15,55 @@ SpriteSheet* get_gui_sprite_sheet()
 }
 
 
+
+
+// A scroll bar that controls the x- or y-coordinate of the camera of a world frame.
+class WorldScrollBarFrame : public ScrollBarFrame
+{
+private:
+	// A pointer to the world orthographic frame.
+	WorldOrthographicFrame* m_WorldFrame;
+
+public:
+	/// <summary>Constructs a scroll bar.</summary>
+	/// <param name="worldFrame">The world orthographic frame.</param>
+	/// <param name="backgroundGraphic">A graphic to display as the background for the scrolling area.</param>
+	/// <param name="arrowGraphic">A graphic to display as arrows on either side of the scrolling area.</param>
+	/// <param name="scrollGraphic">A graphic to display to show the current value of the scroll bar.</param>
+	/// <param name="x">The x-coordinate of the left side.</param>
+	/// <param name="y">The y-coordinate of the bottom side.</param>
+	/// <param name="horizontal">True if the scroll bar is horizontal, false if vertical.</param>
+	WorldScrollBarFrame(WorldOrthographicFrame* worldFrame, Graphic* backgroundGraphic, Graphic* arrowGraphic, Graphic* scrollGraphic, int x, int y, bool horizontal) : ScrollBarFrame(backgroundGraphic, arrowGraphic, scrollGraphic, x, y, horizontal)
+	{
+		m_WorldFrame = worldFrame;
+
+		m_WorldFrame->set_camera(0.5f * World::get_chunk()->width * TILE_WIDTH, 0.5f * World::get_chunk()->height * TILE_HEIGHT);
+		m_Value = 0.5f;
+	}
+
+	void set_value(float value)
+	{
+		float dv = value - m_Value;
+		const mat2x2i& bounds = m_WorldFrame->get_bounds();
+
+		if (m_Horizontal)
+		{
+			int span = (World::get_chunk()->width * TILE_WIDTH) - (bounds.get(0, 1) - bounds.get(0, 0));
+			m_WorldFrame->adjust_camera(dv * span, 0.f);
+		}
+		else
+		{
+			int span = (World::get_chunk()->height * TILE_HEIGHT) - (bounds.get(1, 1) - bounds.get(1, 0));
+			m_WorldFrame->adjust_camera(0.f, dv * span);
+		}
+
+		m_Value = value;
+	}
+};
+
+
+
+
 ChunkEditor::ChunkEditor()
 {
 	SpriteSheet* gui = get_gui_sprite_sheet();
@@ -40,7 +89,8 @@ ChunkEditor::ChunkEditor()
 	Graphic* horizontalWSBArrow = new StaticSpriteGraphic(gui, Sprite::get_sprite(LEFT_ARROW_SPRITE), palette);
 	Graphic* horizontalWSBScroller = new StaticSpriteGraphic(gui, Sprite::get_sprite(SCROLL_BAR), palette);
 
-	ScrollBarFrame* horizontalWSB = new ScrollBarFrame(
+	ScrollBarFrame* horizontalWSB = new WorldScrollBarFrame(
+			m_Frame,
 			horizontalWSBBG,
 			horizontalWSBArrow,
 			horizontalWSBScroller,
@@ -56,7 +106,8 @@ ChunkEditor::ChunkEditor()
 	Graphic* verticalWSBArrow = new StaticSpriteGraphic(gui, Sprite::get_sprite(UP_ARROW_SPRITE), palette);
 	Graphic* verticalWSBScroller = new StaticSpriteGraphic(gui, Sprite::get_sprite(SCROLL_BAR), palette);
 	
-	ScrollBarFrame* verticalWSB = new ScrollBarFrame(
+	ScrollBarFrame* verticalWSB = new WorldScrollBarFrame(
+			m_Frame,
 			verticalWSBBG,
 			verticalWSBArrow,
 			verticalWSBScroller,

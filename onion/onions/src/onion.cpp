@@ -1224,6 +1224,11 @@ Frame::Frame(int x, int y, int width, int height)
 	set_bounds(x, y, width, height);
 }
 
+const mat2x2i& Frame::get_bounds() const
+{
+	return m_Bounds;
+}
+
 void Frame::set_bounds(int x, int y, int width, int height)
 {
 	m_Bounds.set(0, 0, x);
@@ -1513,13 +1518,11 @@ void WorldOrthographicFrame::clamp_display_area()
 	{
 		m_DisplayArea(0, 1) += xleft;
 		m_DisplayArea.set(0, 0, xmin);
-		m_Camera.set(0, 0, (m_DisplayArea.get(0, 0) + m_DisplayArea.get(0, 1)) / 2);
 	}
 	else if (xright < 0)
 	{
 		m_DisplayArea(0, 0) += xright;
 		m_DisplayArea.set(0, 1, xmax);
-		m_Camera.set(0, 0, (m_DisplayArea.get(0, 0) + m_DisplayArea.get(0, 1)) / 2);
 	}
 
 	int ymin = TILE_HEIGHT * m_TileMargin;
@@ -1530,13 +1533,11 @@ void WorldOrthographicFrame::clamp_display_area()
 	{
 		m_DisplayArea(1, 1) += ybottom;
 		m_DisplayArea.set(1, 0, ymin);
-		m_Camera.set(1, 0, (m_DisplayArea.get(1, 0) + m_DisplayArea.get(1, 1)) / 2);
 	}
 	else if (ytop < 0)
 	{
 		m_DisplayArea(1, 0) += ytop;
 		m_DisplayArea.set(1, 1, ymax);
-		m_Camera.set(1, 0, (m_DisplayArea.get(1, 0) + m_DisplayArea.get(1, 1)) / 2);
 	}
 }
 
@@ -1555,33 +1556,103 @@ void WorldOrthographicFrame::set_camera(float x, float y)
 
 void WorldOrthographicFrame::adjust_camera(float dx, float dy)
 {
+	cout << "Adjust camera: (" << dx << ", " << dy << ")\n";
+
+	// Get camera coordinates
 	float& cx = m_Camera(0);
 	float& cy = m_Camera(1);
 	
+	// Store original (integer) camera coordinates
 	int former_x = roundf(cx);
 	int former_y = roundf(cy);
 
+	// Adjust camera
 	cx += dx;
 	cy += dy;
 
+	// Calculate absolute change in x-coordinates of camera
 	int dcx = (int)roundf(cx) - former_x;
 	if (dcx)
 	{
-		m_DisplayArea(0, 0) += dcx;
-		m_DisplayArea(0, 1) += dcx;
+		int width = m_Bounds.get(0, 1) - m_Bounds.get(0, 0);
+
+		int xmin = TILE_WIDTH * m_TileMargin;
+		int xmax = (TILE_WIDTH * m_Chunk->width) - xmin - 1;
+
+		// Calculate displayed change in x-coordinates of camera
+		// (Which may be different from absolute change due to clamping of display)
+		if (dcx > 0)
+		{
+			int former_xmin = former_x - ((width + 1) / 2);
+
+			if (former_xmin < xmin)
+				dcx = max(0, dcx - xmin + former_xmin);
+			dcx = min(dcx, xmax - m_DisplayArea.get(0, 1));
+		}
+		else
+		{
+			int former_xmax = former_x + (width / 2) - 1;
+
+			if (former_xmax > xmax)
+				dcx = min(0, dcx - xmax + former_xmax);
+			dcx = max(dcx, xmin - m_DisplayArea.get(0, 0));
+		}
+		
+		if (dcx)
+		{
+			m_DisplayArea(0, 0) += dcx;
+			m_DisplayArea(0, 1) += dcx;
+		}
 	}
 
+	// Calculate absolute change in y-coordinates of camera
 	int dcy = (int)roundf(cy) - former_y;
 	if (dcy)
 	{
-		m_DisplayArea(1, 0) += dcy;
-		m_DisplayArea(1, 1) += dcy;
+		int height = m_Bounds.get(1, 1) - m_Bounds.get(1, 0);
+
+		int ymin = TILE_HEIGHT * m_TileMargin;
+		int ymax = (TILE_HEIGHT * m_Chunk->width) - ymin - 1;
+
+		// Calculate displayed change in y-coordinates of camera
+		if (dcy > 0)
+		{
+			int former_ymin = former_y - ((height + 1) / 2);
+
+			if (former_ymin < ymin)
+				dcy = max(0, dcy - ymin + former_ymin);
+			dcy = min(dcy, ymax - m_DisplayArea.get(1, 1));
+		}
+		else
+		{
+			int former_ymax = former_y + (height / 2) - 1;
+
+			if (former_ymax > ymax)
+				dcy = min(0, dcy - ymax + former_ymax);
+			dcy = max(dcy, ymin - m_DisplayArea.get(1, 0));
+		}
+
+		if (dcy)
+		{
+			m_DisplayArea(1, 0) += dcy;
+			m_DisplayArea(1, 1) += dcy;
+		}
 	}
 
+	// If there was a change in the integer camera position, clamp the display and adjust the transformation
 	if (dcx || dcy)
 	{
-		clamp_display_area();
+		// Calculate the change in the translation
+		float dtx = -m_Transform.get(0, 0) * dcx;
+		float dty = -m_Transform.get(1, 1) * dcy;
+
+		// Adjust the transformation
+		m_Transform(0, 3) += dtx;
+		m_Transform(1, 3) += dty;
+		m_Transform(2, 3) += dty;
 	}
+
+	cout << "  Camera display adjusted from (" << former_x << ", " << former_y << ") to (" << (former_x + dcx) << ", " << (former_y + dcy) << ")\n";
 }
 
 void WorldOrthographicFrame::display() const

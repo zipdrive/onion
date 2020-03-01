@@ -630,6 +630,10 @@ public:
 	/// <param name="height">The height of the frame.</param>
 	Frame(int x, int y, int width, int height);
 
+	/// <summary>Retrieves the boundaries of the frame on the screen.</summary>
+	/// <returns>A const reference to the boundaries. The first column represents minimum values, and the second column represents maximum values.</returns>
+	const mat2x2i& get_bounds() const;
+
 	/// <summary>Sets the boundaries of the frame on the screen.</summary>
 	/// <param name="x">The x-coordinate of the frame.</param>
 	/// <param name="y">The y-coordinate of the frame.</param>
@@ -652,9 +656,6 @@ public:
 class ScrollBarFrame : public Frame, public MousePressListener
 {
 private:
-	// Whether the scroll bar scrolls horizontally or vertically.
-	bool m_Horizontal;
-
 	// The background of the scroll area.
 	Graphic* m_Background;
 
@@ -664,18 +665,22 @@ private:
 	// The horizontal scroll object.
 	Graphic* m_Scroller;
 
+protected:
 	// The value of the scroll bar.
 	float m_Value;
 
+	// Whether the scroll bar scrolls horizontally or vertically.
+	bool m_Horizontal;
+
 public:
 	/// <summary>Constructs a scroll bar.</summary>
-	/// <param name="backgroundGraphic">A graphic to display as the background for the scrolling area.</param>
-	/// <param name="arrowGraphic">A graphic to display as arrows on either side of the scrolling area.</param>
-	/// <param name="scrollGraphic">A graphic to display to show the current value of the scroll bar.</param>
+	/// <param name="background_graphic">A graphic to display as the background for the scrolling area.</param>
+	/// <param name="arrow_graphic">A graphic to display as arrows on either side of the scrolling area.</param>
+	/// <param name="scroll_graphic">A graphic to display to show the current value of the scroll bar.</param>
 	/// <param name="x">The x-coordinate of the left side.</param>
 	/// <param name="y">The y-coordinate of the bottom side.</param>
 	/// <param name="horizontal">True if the scroll bar is horizontal, false if vertical.</param>
-	ScrollBarFrame(Graphic* backgroundGraphic, Graphic* arrowGraphic, Graphic* scrollGraphic, int x, int y, bool horizontal);
+	ScrollBarFrame(Graphic* background_graphic, Graphic* arrow_graphic, Graphic* scroll_graphic, int x, int y, bool horizontal);
 
 	/// <summary>Retrieves the current value of the scroll bar.</summary>
 	/// <returns>The current value of the scroll bar.</returns>
