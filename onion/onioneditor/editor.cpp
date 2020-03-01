@@ -27,39 +27,46 @@ ChunkEditor::ChunkEditor()
 
 	m_UI = new UIFrame();
 
+	mat4x4f palette = generate_palette_matrix(
+		230, 247, 251, 0,
+		38, 162, 221, 0
+	);
+
 	// Bottom-right corner between scroll bars
 	//m_UI->insert_top(generate_solid_color_graphic(230, 247, 251, 255, 24, 24));
 
 	// World horizontal scroll bar
 	Graphic* horizontalWSBBG = generate_solid_color_graphic(230, 247, 251, 255, chunkFrameWidth - 48, 24);
-	Graphic* horizontalWSBArrow = new StaticSpriteGraphic(gui, Sprite::get_sprite(LEFT_ARROW_SPRITE), mat4x4f());
-	Graphic* horizontalWSBScroller = new StaticSpriteGraphic(gui, Sprite::get_sprite(SCROLL_BAR), mat4x4f());
+	Graphic* horizontalWSBArrow = new StaticSpriteGraphic(gui, Sprite::get_sprite(LEFT_ARROW_SPRITE), palette);
+	Graphic* horizontalWSBScroller = new StaticSpriteGraphic(gui, Sprite::get_sprite(SCROLL_BAR), palette);
 
-	m_UI->insert_top(
-		new ScrollBarFrame(
-			horizontalWSBBG, 
+	ScrollBarFrame* horizontalWSB = new ScrollBarFrame(
+			horizontalWSBBG,
 			horizontalWSBArrow,
 			horizontalWSBScroller,
 			0,
 			0,
 			true
-		)
-	);
+		);
+
+	m_UI->insert_top(horizontalWSB);
+	push_mouse_press_listener(horizontalWSB);
 
 	Graphic* verticalWSBBG = generate_solid_color_graphic(230, 247, 251, 255, 24, chunkFrameHeight - 48);
-	Graphic* verticalWSBArrow = new StaticSpriteGraphic(gui, Sprite::get_sprite(UP_ARROW_SPRITE), mat4x4f());
-	Graphic* verticalWSBScroller = new StaticSpriteGraphic(gui, Sprite::get_sprite(SCROLL_BAR), mat4x4f());
-
-	m_UI->insert_top(
-		new ScrollBarFrame(
+	Graphic* verticalWSBArrow = new StaticSpriteGraphic(gui, Sprite::get_sprite(UP_ARROW_SPRITE), palette);
+	Graphic* verticalWSBScroller = new StaticSpriteGraphic(gui, Sprite::get_sprite(SCROLL_BAR), palette);
+	
+	ScrollBarFrame* verticalWSB = new ScrollBarFrame(
 			verticalWSBBG,
 			verticalWSBArrow,
 			verticalWSBScroller,
 			chunkFrameWidth,
 			24,
 			false
-		)
-	);
+		);
+
+	m_UI->insert_top(verticalWSB);
+	push_mouse_press_listener(verticalWSB);
 
 	m_Layers = new LayerFrame();
 	m_Layers->insert_top(m_Frame);

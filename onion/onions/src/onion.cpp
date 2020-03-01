@@ -39,7 +39,8 @@ mat4x4f::mat4x4f() {}
 
 mat4x4f::mat4x4f(float a11, float a12, float a13, float a14,
 	float a21, float a22, float a23, float a24,
-	float a31, float a32, float a33, float a34)
+	float a31, float a32, float a33, float a34,
+	float a41, float a42, float a43, float a44)
 {
 	set(0, 0, a11); 
 	set(0, 1, a12);
@@ -55,6 +56,11 @@ mat4x4f::mat4x4f(float a11, float a12, float a13, float a14,
 	set(2, 1, a32);
 	set(2, 2, a33);
 	set(2, 3, a34);
+
+	set(3, 0, a41);
+	set(3, 1, a42);
+	set(3, 2, a43);
+	set(3, 3, a44);
 }
 
 
@@ -199,6 +205,22 @@ void mat_rotatez(float angle)
 *	Graphics
 *
 */
+
+
+mat4x4f generate_palette_matrix(
+	int rr, int rg, int rb, int ra,
+	int gr, int gg, int gb, int ga,
+	int br, int bg, int bb, int ba,
+	int ar, int ag, int ab, int aa) {
+
+	static float scale = 0.00392157f;
+	return mat4x4f(
+		rr * scale, gr * scale, br * scale, ar * scale,
+		rg * scale, gg * scale, bg * scale, ag * scale,
+		rb * scale, gb * scale, bb * scale, ab * scale,
+		ra * scale, ga * scale, ba * scale, aa * scale
+	);
+}
 
 
 // Handles switching between array buffers.
@@ -1081,6 +1103,116 @@ World::World()
 
 /*
 *
+*	Events
+*
+*/
+
+template <typename EventType>
+void StackEventListener<EventType>::push(EventListener<EventType>* listener)
+{
+	m_Stack.push_back(listener);
+}
+
+template <typename EventType>
+void StackEventListener<EventType>::pop()
+{
+	if (!m_Stack.empty())
+	{
+		m_Stack.pop_back();
+	}
+}
+
+template <typename EventType>
+int StackEventListener<EventType>::trigger(const EventType& event_data)
+{
+	for (auto iter = m_Stack.rbegin(); iter != m_Stack.rend(); ++iter)
+	{
+		if ((*iter)->trigger(event_data) == EVENT_STOP)
+		{
+			return EVENT_STOP;
+		}
+	}
+
+	return EVENT_CONTINUE;
+}
+
+
+
+// A listener that keeps track of the mouse state.
+class StackMouseListener : public StackMouseMoveListener, public StackMousePressListener
+{
+public:
+	// The x-coordinate of the mouse.
+	int x;
+
+	// The y-coordinate of the mouse.
+	int y;
+
+	/// <summary>Triggers against a mouse move event.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	int trigger(const MouseMoveEvent& event_data)
+	{
+		x = event_data.x;
+		y = event_data.y;
+
+		return StackMouseMoveListener::trigger(event_data);
+	}
+
+	/// <summary>Triggers against a mouse press event.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	int trigger(const MouseButtonEvent& event_data)
+	{
+		return StackMousePressListener::trigger(event_data);
+	}
+
+	void push(MouseMoveListener* listener)
+	{
+		StackMouseMoveListener::push(listener);
+	}
+
+	void push(MousePressListener* listener)
+	{
+		StackMousePressListener::push(listener);
+	}
+
+	void pop_mouse_move_listener()
+	{
+		StackMouseMoveListener::pop();
+	}
+
+	void pop_mouse_press_listener()
+	{
+		StackMousePressListener::pop();
+	}
+};
+
+StackMouseListener g_MouseListener;
+
+void push_mouse_move_listener(MouseMoveListener* listener)
+{
+	g_MouseListener.push(listener);
+}
+
+void pop_mouse_move_listener()
+{
+	g_MouseListener.pop_mouse_move_listener();
+}
+
+void push_mouse_press_listener(MousePressListener* listener)
+{
+	g_MouseListener.push(listener);
+}
+
+void pop_mouse_press_listener()
+{
+	g_MouseListener.pop_mouse_press_listener();
+}
+
+
+
+
+/*
+*
 *	Frames
 *
 */
@@ -1128,14 +1260,80 @@ ScrollBarFrame::ScrollBarFrame(Graphic* backgroundGraphic, Graphic* arrowGraphic
 		m_Horizontal = false;
 		set_bounds(x, y, max(m_Background->get_width(), m_Arrow->get_width()), m_Background->get_height() + (m_Arrow->get_height() * 2));
 	}
+
+	m_Value = 0.f;
 }
 
-void ScrollBarFrame::set_bounds(int x, int y, int width, int height)
+float ScrollBarFrame::get_value()
 {
-	Frame::set_bounds(x, y, width, height);
+	return m_Value;
+}
 
-	m_Center.set(0, 0, x + (0.5f * width));
-	m_Center.set(1, 0, y + (0.5f * height));
+void ScrollBarFrame::set_value(float value)
+{
+	m_Value = value;
+}
+
+int ScrollBarFrame::trigger(const MouseButtonEvent& event_data)
+{
+	int dx = event_data.x - m_Bounds.get(0, 0);
+	int dy = event_data.y - m_Bounds.get(1, 0);
+
+	if (dx >= 0 && dx < get_width() && dy >= 0 && dy < get_height())
+	{
+		if (m_Horizontal)
+		{
+			if ((dx -= m_Arrow->get_width()) < 0)
+			{
+				// Click the left arrow
+				set_value(0.f);
+			}
+			else if (dx < m_Background->get_width())
+			{
+				// Click in the scroll area
+				set_value(
+					min(
+						max(dx - (m_Scroller->get_width() / 2), 0) 
+							/ (float)(m_Background->get_width() - m_Scroller->get_width()),
+						1.f
+					)
+				);
+			}
+			else
+			{
+				// Click the right arrow
+				set_value(1.f);
+			}
+		}
+		else
+		{
+			if ((dy -= m_Arrow->get_height()) < 0)
+			{
+				// Click the bottom arrow
+				set_value(0.f);
+			}
+			else if (dy < m_Background->get_height())
+			{
+				// Click in the scroll area
+				set_value(
+					min(
+						max(dy - (m_Scroller->get_height() / 2), 0)
+							/ (float)(m_Background->get_height() - m_Scroller->get_height()),
+						1.f
+					)
+				);
+			}
+			else
+			{
+				// Click the top arrow
+				set_value(1.f);
+			}
+		}
+
+		return EVENT_STOP;
+	}
+
+	return EVENT_CONTINUE;
 }
 
 void ScrollBarFrame::display() const
@@ -1155,7 +1353,7 @@ void ScrollBarFrame::display() const
 
 		// Draw the scroller
 		mat_push();
-		mat_translate(0.f, 0.f, -0.1f);
+		mat_translate(roundf(m_Value * (m_Background->get_width() - m_Scroller->get_width())), 0.f, -0.1f);
 		m_Scroller->display();
 		mat_pop();
 		
@@ -1179,7 +1377,7 @@ void ScrollBarFrame::display() const
 
 		// Draw the scroller
 		mat_push();
-		mat_translate(0.f, 0.f, -0.1f);
+		mat_translate(0.f, roundf(m_Value * (m_Background->get_height() - m_Scroller->get_height() - (0.5f * m_Arrow->get_height()))), -0.1f);
 		mat_scale(-1.f, 1.f, 1.f);
 		mat_rotatez(1.570796f);
 		m_Scroller->display();
@@ -1543,6 +1741,49 @@ int Application::display()
 
 
 
+/// <summary>The callback function for when a physical key is pressed, released, or repeated.</summary>
+/// <param name="window">The window that the event triggered from.</param>
+/// <param name="key">The keyboard key that triggered the event.</param>
+/// <param name="scancode">The scancode of the key.</param>
+/// <param name="action">Whether the key was pressed, released, or repeated.</param>
+/// <param name="mods">Bit field of which modifier keys were held down.</param>
+void onion_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+
+}
+
+/// <summary>The callback function for when the mouse moves.</summary>
+/// <param name="window">The window that the event triggered from.</param>
+/// <param name="xpos">The x-coordinate of the mouse cursor.</param>
+/// <param name="ypos">The y-coordinate of the mouse cursor.</param>
+void onion_mouse_move_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	// Construct the data object
+	MouseMoveEvent event_data = { round(xpos), g_Application->height - (int)round(ypos) };
+
+	// Trigger the global listener
+	g_MouseListener.trigger(event_data);
+}
+
+/// <summary>The callback function for when a mouse button is pressed or released.</summary>
+/// <param name="window">The window that the event triggered from.</param>
+/// <param name="button">The mouse button that triggered the event.</param>
+/// <param name="action">Whether the mouse button was pressed or released.</param>
+/// <param name="mods">Bit field of which modifier keys were held down.</param>
+void onion_mouse_click_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (action == GLFW_PRESS)
+	{
+		// Construct the data object
+		MouseButtonEvent event_data = { g_MouseListener.x, g_MouseListener.y, button, mods };
+
+		// Trigger the global listener
+		g_MouseListener.trigger(event_data);
+	}
+}
+
+
+
 int onion_init(const char* settings_file)
 {
 	// Initialize the GLFW library.
@@ -1570,6 +1811,10 @@ int onion_init(const char* settings_file)
 	}
 
 	glfwMakeContextCurrent(g_Window);
+
+	glfwSetKeyCallback(g_Window, onion_key_callback);
+	glfwSetCursorPosCallback(g_Window, onion_mouse_move_callback);
+	glfwSetMouseButtonCallback(g_Window, onion_mouse_click_callback);
 
 	glewExperimental = true;
 	if (glewInit() != GLEW_OK)

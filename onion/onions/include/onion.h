@@ -21,6 +21,11 @@
 #define TILE_WIDTH 32
 #define TILE_HEIGHT 32
 
+// Return value to continue processing events.
+#define EVENT_CONTINUE 0
+// Return value to stop processing events.
+#define EVENT_STOP 1
+
 
 
 
@@ -140,7 +145,8 @@ public:
 
 	mat4x4f(float a11, float a12, float a13, float a14,
 		float a21, float a22, float a23, float a24,
-		float a31, float a32, float a33, float a34);
+		float a31, float a32, float a33, float a34,
+		float a41 = 0.f, float a42 = 0.f, float a43 = 0.f, float a44 = 1.f);
 };
 
 
@@ -205,6 +211,32 @@ void mat_custom_transform(const mat4x4f& transform);
 *	Graphics
 *
 */
+
+
+/// <summary>Generates a palette matrix for use in graphics.</summary>
+/// <param name="rr">The red-value of the color that red maps to.</param>
+/// <param name="rg">The green-value of the color that red maps to.</param>
+/// <param name="rb">The blue-value of the color that red maps to.</param>
+/// <param name="ra">The alpha-value of the color that red maps to.</param>
+/// <param name="gr">The red-value of the color that green maps to.</param>
+/// <param name="gg">The green-value of the color that green maps to.</param>
+/// <param name="gb">The blue-value of the color that green maps to.</param>
+/// <param name="ga">The alpha-value of the color that green maps to.</param>
+/// <param name="br">The red-value of the color that blue maps to.</param>
+/// <param name="bg">The green-value of the color that blue maps to.</param>
+/// <param name="bb">The blue-value of the color that blue maps to.</param>
+/// <param name="ba">The alpha-value of the color that blue maps to.</param>
+/// <param name="ar">The red-value of the color that alpha maps to.</param>
+/// <param name="ag">The green-value of the color that alpha maps to.</param>
+/// <param name="ab">The blue-value of the color that alpha maps to.</param>
+/// <param name="aa">The alpha-value of the color that alpha maps to.</param>
+mat4x4f generate_palette_matrix(
+	int rr = 255, int rg = 0, int rb = 0, int ra = 0,
+	int gr = 0, int gg = 255, int gb = 0, int ga = 0,
+	int br = 0, int bg = 0, int bb = 255, int ba = 0,
+	int ar = 0, int ag = 0, int ab = 0, int aa = 255
+);
+
 
 // Something visible on-screen.
 class Graphic
@@ -487,6 +519,93 @@ public:
 
 
 
+/*
+*
+*	Events
+*
+*/
+
+// An interface that responds to an event.
+template <typename EventType>
+class EventListener 
+{
+public:
+	/// <summary>Responds to an event.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	virtual int trigger(const EventType& event_data) = 0;
+};
+
+// A stack of event listeners to call in order.
+template <typename EventType>
+class StackEventListener : public EventListener<EventType>
+{
+private:
+	// The stack of event listeners to call.
+	std::vector<EventListener<EventType>*> m_Stack;
+
+public:
+	/// <summary>Pushes a listener on top of the stack.</summary>
+	/// <param name="listener">The listener to add to the stack.</param>
+	void push(EventListener<EventType>* listener);
+
+	/// <summary>Pops the listener on top of the stack.</summary>
+	void pop();
+
+	/// <summary>Responds to an event.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	virtual int trigger(const EventType& event_data);
+};
+
+
+struct MouseMoveEvent
+{
+	// The x-coordinate of the mouse.
+	int x;
+
+	// The y-coordinate of the mouse.
+	int y;
+};
+
+typedef EventListener<MouseMoveEvent> MouseMoveListener;
+typedef StackEventListener<MouseMoveEvent> StackMouseMoveListener;
+
+
+struct MouseButtonEvent
+{
+	// The x-coordinate of the mouse.
+	int x;
+
+	// The y-coordinate of the mouse.
+	int y;
+
+	// The button pressed.
+	int button;
+
+	// Bit field of modifier keys.
+	int mods;
+};
+
+typedef EventListener<MouseButtonEvent> MousePressListener;
+typedef StackEventListener<MouseButtonEvent> StackMousePressListener;
+
+
+/// <summary>Pushes a listener for mouse movement to the global event listener stack.</summary>
+/// <param name="listener">The listener to push.</param>
+void push_mouse_move_listener(MouseMoveListener* listener);
+
+/// <summary>Pops the listener for mouse movement that is on top of the global event listener stack.</summary>
+void pop_mouse_move_listener();
+
+/// <summary>Pushes a listener for mouse button pressing to the global event listener stack.</summary>
+/// <param name="listener">The listener to push.</param>
+void push_mouse_press_listener(MousePressListener* listener);
+
+/// <summary>Pops the listener for mouse button pressing that is on top of the global event listener stack.</summary>
+void pop_mouse_press_listener();
+
+
+
+
 
 /*
 *
@@ -530,14 +649,11 @@ public:
 
 
 // A frame that allows a user to scroll between values.
-class ScrollBarFrame : public Frame
+class ScrollBarFrame : public Frame, public MousePressListener
 {
 private:
 	// Whether the scroll bar scrolls horizontally or vertically.
 	bool m_Horizontal;
-
-	// The translation
-	vec2f m_Center;
 
 	// The background of the scroll area.
 	Graphic* m_Background;
@@ -548,11 +664,32 @@ private:
 	// The horizontal scroll object.
 	Graphic* m_Scroller;
 
+	// The value of the scroll bar.
+	float m_Value;
+
 public:
+	/// <summary>Constructs a scroll bar.</summary>
+	/// <param name="backgroundGraphic">A graphic to display as the background for the scrolling area.</param>
+	/// <param name="arrowGraphic">A graphic to display as arrows on either side of the scrolling area.</param>
+	/// <param name="scrollGraphic">A graphic to display to show the current value of the scroll bar.</param>
+	/// <param name="x">The x-coordinate of the left side.</param>
+	/// <param name="y">The y-coordinate of the bottom side.</param>
+	/// <param name="horizontal">True if the scroll bar is horizontal, false if vertical.</param>
 	ScrollBarFrame(Graphic* backgroundGraphic, Graphic* arrowGraphic, Graphic* scrollGraphic, int x, int y, bool horizontal);
 
-	void set_bounds(int x, int y, int width, int height);
+	/// <summary>Retrieves the current value of the scroll bar.</summary>
+	/// <returns>The current value of the scroll bar.</returns>
+	float get_value();
 
+	/// <summary>Sets the value of the scroll bar.</summary>
+	/// <param name="value">The value for the scroll bar.</param>
+	virtual void set_value(float value);
+
+	/// <summary>Triggers in response to a mouse button being pressed.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	int trigger(const MouseButtonEvent& event_data);
+
+	/// <summary>Displays the contents of the frame.</summary>
 	void display() const;
 };
 
