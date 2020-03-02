@@ -1504,7 +1504,7 @@ void WorldOrthographicFrame::reset()
 	m_Transform = mat4x4f(
 		sx, 0.f, 0.f, (sx * bx) - 1.f + cx,
 		0.f, sy, -sy, (sy * by) - 1.f + cy,
-		0.f, sy, sy, cy
+		0.f, 0.5f * sy, 0.5f * sy, 0.5f * cy
 	);
 }
 
@@ -1556,8 +1556,6 @@ void WorldOrthographicFrame::set_camera(float x, float y)
 
 void WorldOrthographicFrame::adjust_camera(float dx, float dy)
 {
-	cout << "Adjust camera: (" << dx << ", " << dy << ")\n";
-
 	// Get camera coordinates
 	float& cx = m_Camera(0);
 	float& cy = m_Camera(1);
@@ -1651,8 +1649,6 @@ void WorldOrthographicFrame::adjust_camera(float dx, float dy)
 		m_Transform(1, 3) += dty;
 		m_Transform(2, 3) += dty;
 	}
-
-	cout << "  Camera display adjusted from (" << former_x << ", " << former_y << ") to (" << (former_x + dcx) << ", " << (former_y + dcy) << ")\n";
 }
 
 void WorldOrthographicFrame::display() const

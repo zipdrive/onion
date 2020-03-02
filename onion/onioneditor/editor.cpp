@@ -41,6 +41,8 @@ public:
 		m_Value = 0.5f;
 	}
 
+	/// <summary>Sets the value for the scroll bar.</summary>
+	/// <param name="value">The value for the scroll bar.</param>
 	void set_value(float value)
 	{
 		float dv = value - m_Value;
@@ -64,16 +66,23 @@ public:
 
 
 
+Editor::Editor()
+{
+	Application*& app = get_application_settings();
+	set_bounds(0, 0, app->width, app->height - 24);
+}
+
+
+
+
 ChunkEditor::ChunkEditor()
 {
 	SpriteSheet* gui = get_gui_sprite_sheet();
 
-	Application*& app = get_application_settings();
-	int chunkFrameWidth = app->width - 184;
-	int chunkFrameHeight = app->height - 48;
+	int chunkFrameWidth = m_Bounds.get(0, 1) - m_Bounds.get(0, 0) - 184;
+	int chunkFrameHeight = m_Bounds.get(1, 1) - m_Bounds.get(1, 0) - 24;
 
 	m_Frame = new WorldOrthographicFrame(0, 24, chunkFrameWidth, chunkFrameHeight, 0);
-
 	m_UI = new UIFrame();
 
 	mat4x4f palette = generate_palette_matrix(
@@ -83,6 +92,24 @@ ChunkEditor::ChunkEditor()
 
 	// Bottom-right corner between scroll bars
 	//m_UI->insert_top(generate_solid_color_graphic(230, 247, 251, 255, 24, 24));
+
+	// World vertical scroll bar
+	Graphic* verticalWSBBG = generate_solid_color_graphic(230, 247, 251, 255, 24, chunkFrameHeight - 48);
+	Graphic* verticalWSBArrow = new StaticSpriteGraphic(gui, Sprite::get_sprite(UP_ARROW_SPRITE), palette);
+	Graphic* verticalWSBScroller = new StaticSpriteGraphic(gui, Sprite::get_sprite(SCROLL_BAR), palette);
+
+	ScrollBarFrame* verticalWSB = new WorldScrollBarFrame(
+		m_Frame,
+		verticalWSBBG,
+		verticalWSBArrow,
+		verticalWSBScroller,
+		chunkFrameWidth,
+		24,
+		false
+	);
+
+	m_UI->insert_top(verticalWSB);
+	push_mouse_press_listener(verticalWSB);
 
 	// World horizontal scroll bar
 	Graphic* horizontalWSBBG = generate_solid_color_graphic(230, 247, 251, 255, chunkFrameWidth - 48, 24);
@@ -102,26 +129,8 @@ ChunkEditor::ChunkEditor()
 	m_UI->insert_top(horizontalWSB);
 	push_mouse_press_listener(horizontalWSB);
 
-	Graphic* verticalWSBBG = generate_solid_color_graphic(230, 247, 251, 255, 24, chunkFrameHeight - 48);
-	Graphic* verticalWSBArrow = new StaticSpriteGraphic(gui, Sprite::get_sprite(UP_ARROW_SPRITE), palette);
-	Graphic* verticalWSBScroller = new StaticSpriteGraphic(gui, Sprite::get_sprite(SCROLL_BAR), palette);
-	
-	ScrollBarFrame* verticalWSB = new WorldScrollBarFrame(
-			m_Frame,
-			verticalWSBBG,
-			verticalWSBArrow,
-			verticalWSBScroller,
-			chunkFrameWidth,
-			24,
-			false
-		);
-
-	m_UI->insert_top(verticalWSB);
-	push_mouse_press_listener(verticalWSB);
-
-	m_Layers = new LayerFrame();
-	m_Layers->insert_top(m_Frame);
-	m_Layers->insert_top(m_UI);
+	insert_top(m_Frame);
+	insert_top(m_UI);
 
 	m_Tool = nullptr;
 }
@@ -129,7 +138,7 @@ ChunkEditor::ChunkEditor()
 void ChunkEditor::display()
 {
 	// Draw world space in space from (0, 24) to (W - 184, H - 24)
-	m_Layers->display();
+	LayerFrame::display();
 
 	// Draw horizontal and vertical scroll bars
 
