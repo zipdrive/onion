@@ -2,10 +2,11 @@
 #include "gui.h"
 
 // Used to edit stuff.
-class Editor : public LayerFrame
+class Editor
 {
 public:
-	Editor();
+	/// <summary>Displays the editor.</summary>
+	virtual void display() = 0;
 };
 
 
@@ -26,11 +27,11 @@ public:
 class ChunkEditor : public Editor
 {
 private:
-	// The frame that displays the chunk.
-	WorldOrthographicFrame* m_Frame;
+	// The frame for the world.
+	WorldOrthographicFrame m_WorldFrame;
 
-	// The frame that displays the UI.
-	UIFrame* m_UI;
+	// The frame for the UI.
+	UIFrame m_UIFrame;
 
 	// The currently activated tool.
 	ChunkTool* m_Tool;
@@ -38,5 +39,6 @@ private:
 public:
 	ChunkEditor();
 
+	/// <summary>Displays the chunk editor.</summary>
 	void display();
 };

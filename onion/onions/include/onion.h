@@ -168,6 +168,9 @@ mat4x4f& mat_get();
 /// <returns>The value array of the current matrix transform.</returns>
 const float* mat_get_values();
 
+/// <summary>Sets the current matrix transform to the identity.</summary>
+void mat_identity();
+
 /// <summary>Clears the stack and sets the projection to orthogonal.</summary>
 /// <param name="left">The left side of the projection.</param>
 /// <param name="right">The right side of the projection.</param>
@@ -530,30 +533,15 @@ template <typename EventType>
 class EventListener 
 {
 public:
+	/// <summary>Freezes the listener.</summary>
+	virtual void freeze() = 0;
+
+	/// <summary>Unfreezes the listener.</summary>
+	virtual void unfreeze() = 0;
+
 	/// <summary>Responds to an event.</summary>
 	/// <param name="event_data">The data for the event.</param>
 	virtual int trigger(const EventType& event_data) = 0;
-};
-
-// A stack of event listeners to call in order.
-template <typename EventType>
-class StackEventListener : public EventListener<EventType>
-{
-private:
-	// The stack of event listeners to call.
-	std::vector<EventListener<EventType>*> m_Stack;
-
-public:
-	/// <summary>Pushes a listener on top of the stack.</summary>
-	/// <param name="listener">The listener to add to the stack.</param>
-	void push(EventListener<EventType>* listener);
-
-	/// <summary>Pops the listener on top of the stack.</summary>
-	void pop();
-
-	/// <summary>Responds to an event.</summary>
-	/// <param name="event_data">The data for the event.</param>
-	virtual int trigger(const EventType& event_data);
 };
 
 
@@ -566,11 +554,19 @@ struct MouseMoveEvent
 	int y;
 };
 
-typedef EventListener<MouseMoveEvent> MouseMoveListener;
-typedef StackEventListener<MouseMoveEvent> StackMouseMoveListener;
+// A listener that responds to mouse movements.
+class MouseMoveListener : public EventListener<MouseMoveEvent>
+{
+public:
+	/// <summary>Freezes the listener.</summary>
+	virtual void freeze();
+
+	/// <summary>Unfreezes the listener.</summary>
+	virtual void unfreeze();
+};
 
 
-struct MouseButtonEvent
+struct MousePressEvent
 {
 	// The x-coordinate of the mouse.
 	int x;
@@ -585,8 +581,56 @@ struct MouseButtonEvent
 	int mods;
 };
 
-typedef EventListener<MouseButtonEvent> MousePressListener;
-typedef StackEventListener<MouseButtonEvent> StackMousePressListener;
+// A listener that responds to mouse button pressing.
+class MousePressListener : public EventListener<MousePressEvent>
+{
+public:
+	/// <summary>Freezes the listener.</summary>
+	virtual void freeze();
+
+	/// <summary>Unfreezes the listener.</summary>
+	virtual void unfreeze();
+};
+
+
+struct MouseReleaseEvent
+{
+	// The x-coordinate of the mouse.
+	int x;
+
+	// The y-coordinate of the mouse.
+	int y;
+
+	// The button released.
+	int button;
+};
+
+// A listener that responds to mouse movements.
+class MouseReleaseListener : public EventListener<MouseReleaseEvent>
+{
+public:
+	/// <summary>Freezes the listener.</summary>
+	virtual void freeze();
+
+	/// <summary>Unfreezes the listener.</summary>
+	virtual void unfreeze();
+};
+
+
+
+class MouseDraggableListener : public MousePressListener, public MouseMoveListener, public MouseReleaseListener
+{
+public:
+	// The dragged object.
+	static MouseDraggableListener* dragged;
+
+	/// <summary>Freezes the listener.</summary>
+	virtual void freeze();
+
+	/// <summary>Unfreezes the listener.</summary>
+	virtual void unfreeze();
+};
+
 
 
 /// <summary>Pushes a listener for mouse movement to the global event listener stack.</summary>
@@ -603,6 +647,13 @@ void push_mouse_press_listener(MousePressListener* listener);
 /// <summary>Pops the listener for mouse button pressing that is on top of the global event listener stack.</summary>
 void pop_mouse_press_listener();
 
+/// <summary>Pushes a listener for mouse button releasing to the global event listener stack.</summary>
+/// <param name="listener">The listener to push.</param>
+void push_mouse_release_listener(MouseReleaseListener* listener);
+
+/// <summary>Pops the listener for mouse button releasing that is on top of the global event listener stack.</summary>
+void pop_mouse_release_listener();
+
 
 
 
@@ -616,6 +667,9 @@ void pop_mouse_press_listener();
 class Frame : public Graphic
 {
 protected:
+	// The parent of the frame.
+	Frame* m_Parent;
+
 	// The frame boundaries on the screen
 	mat2x2i m_Bounds;
 
@@ -648,12 +702,24 @@ public:
 	/// <summary>Retrieves the height of the frame.</summary>
 	/// <returns>The height of the frame.</returns>
 	int get_height() const;
+
+	/// <summary>Sets the parent of the frame.</summary>
+	/// <param name="parent">The parent of the frame.</param>
+	void set_parent(Frame* parent);
+
+	/// <summary>Retrieves the width of the parent frame.</summary>
+	/// <returns>The width of the parent frame.</returns>
+	int get_parent_width() const;
+
+	/// <summary>Retrieves the height of the parent frame.</summary>
+	/// <returns>The height of the parent frame.</returns>
+	int get_parent_height() const;
 };
 
 
 
 // A frame that allows a user to scroll between values.
-class ScrollBarFrame : public Frame, public MousePressListener
+class ScrollBarFrame : public Frame, public MouseDraggableListener
 {
 private:
 	// The background of the scroll area.
@@ -671,6 +737,11 @@ protected:
 
 	// Whether the scroll bar scrolls horizontally or vertically.
 	bool m_Horizontal;
+
+	/// <summary>Sets the center of the scroller.</summary>
+	/// <param name="dx">The distance from the left side to the x-coordinate.</param>
+	/// <param name="dy">The distance from the bottom side to the y-coordinate.</param>
+	void set_center_of_scroller(int dx, int dy);
 
 public:
 	/// <summary>Constructs a scroll bar.</summary>
@@ -692,7 +763,15 @@ public:
 
 	/// <summary>Triggers in response to a mouse button being pressed.</summary>
 	/// <param name="event_data">The data for the event.</param>
-	int trigger(const MouseButtonEvent& event_data);
+	int trigger(const MousePressEvent& event_data);
+
+	/// <summary>Triggers in response to the mouse being moved.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	int trigger(const MouseMoveEvent& event_data);
+
+	/// <summary>Triggers in response to a mouse button being released.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	int trigger(const MouseReleaseEvent& event_data);
 
 	/// <summary>Displays the contents of the frame.</summary>
 	void display() const;

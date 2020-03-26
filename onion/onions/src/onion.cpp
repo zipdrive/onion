@@ -113,6 +113,11 @@ void mat_pop()
 }
 
 
+void mat_identity()
+{
+	g_MatrixStack.front() = mat4x4f();
+}
+
 void mat_custom_transform(const mat4x4f& transform)
 {
 	mat4x4f top = mat_get();
@@ -1107,40 +1112,60 @@ World::World()
 *
 */
 
-template <typename EventType>
-void StackEventListener<EventType>::push(EventListener<EventType>* listener)
-{
-	m_Stack.push_back(listener);
-}
 
+// A stack of event listeners to call in order.
 template <typename EventType>
-void StackEventListener<EventType>::pop()
+class StackEventListener : public EventListener<EventType>
 {
-	if (!m_Stack.empty())
+private:
+	// The stack of event listeners to call.
+	std::vector<EventListener<EventType>*> m_Stack;
+
+public:
+	/// <summary>Pushes a listener on top of the stack.</summary>
+	/// <param name="listener">The listener to add to the stack.</param>
+	void push(EventListener<EventType>* listener)
 	{
-		m_Stack.pop_back();
+		m_Stack.push_back(listener);
 	}
-}
 
-template <typename EventType>
-int StackEventListener<EventType>::trigger(const EventType& event_data)
-{
-	for (auto iter = m_Stack.rbegin(); iter != m_Stack.rend(); ++iter)
+	/// <summary>Pops the listener on top of the stack.</summary>
+	void pop()
 	{
-		if ((*iter)->trigger(event_data) == EVENT_STOP)
+		if (!m_Stack.empty())
 		{
-			return EVENT_STOP;
+			m_Stack.pop_back();
 		}
 	}
 
-	return EVENT_CONTINUE;
-}
+	/// <summary>Responds to an event.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	virtual int trigger(const EventType& event_data)
+	{
+		for (auto iter = m_Stack.rbegin(); iter != m_Stack.rend(); ++iter)
+		{
+			if ((*iter)->trigger(event_data) == EVENT_STOP)
+			{
+				return EVENT_STOP;
+			}
+		}
 
+		return EVENT_CONTINUE;
+	}
+};
+
+typedef StackEventListener<MouseMoveEvent> StackMouseMoveListener;
+typedef StackEventListener<MousePressEvent> StackMousePressListener;
+typedef StackEventListener<MouseReleaseEvent> StackMouseReleaseListener;
 
 
 // A listener that keeps track of the mouse state.
-class StackMouseListener : public StackMouseMoveListener, public StackMousePressListener
+class StackMouseListener : public StackMouseMoveListener, public StackMousePressListener, public StackMouseReleaseListener
 {
+private:
+	// Whether the listener is frozen or not.
+	bool m_Frozen = false;
+
 public:
 	// The x-coordinate of the mouse.
 	int x;
@@ -1155,15 +1180,37 @@ public:
 		x = event_data.x;
 		y = event_data.y;
 
+		if (m_Frozen) return EVENT_CONTINUE;
 		return StackMouseMoveListener::trigger(event_data);
 	}
 
 	/// <summary>Triggers against a mouse press event.</summary>
 	/// <param name="event_data">The data for the event.</param>
-	int trigger(const MouseButtonEvent& event_data)
+	int trigger(const MousePressEvent& event_data)
 	{
+		if (m_Frozen) return EVENT_CONTINUE;
 		return StackMousePressListener::trigger(event_data);
 	}
+
+	/// <summary>Triggers against a mouse release event.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	int trigger(const MouseReleaseEvent& event_data)
+	{
+		if (m_Frozen) return EVENT_CONTINUE;
+		return StackMouseReleaseListener::trigger(event_data);
+	}
+
+
+	void freeze()
+	{
+		m_Frozen = true;
+	}
+
+	void unfreeze()
+	{
+		m_Frozen = false;
+	}
+
 
 	void push(MouseMoveListener* listener)
 	{
@@ -1175,18 +1222,29 @@ public:
 		StackMousePressListener::push(listener);
 	}
 
-	void pop_mouse_move_listener()
+	void push(MouseReleaseListener* listener)
+	{
+		StackMouseReleaseListener::push(listener);
+	}
+
+
+	void pop_move_listener()
 	{
 		StackMouseMoveListener::pop();
 	}
 
-	void pop_mouse_press_listener()
+	void pop_press_listener()
 	{
 		StackMousePressListener::pop();
 	}
-};
 
-StackMouseListener g_MouseListener;
+	void pop_release_listener()
+	{
+		StackMouseReleaseListener::pop();
+	}
+
+} g_MouseListener;
+
 
 void push_mouse_move_listener(MouseMoveListener* listener)
 {
@@ -1195,7 +1253,7 @@ void push_mouse_move_listener(MouseMoveListener* listener)
 
 void pop_mouse_move_listener()
 {
-	g_MouseListener.pop_mouse_move_listener();
+	g_MouseListener.pop_move_listener();
 }
 
 void push_mouse_press_listener(MousePressListener* listener)
@@ -1205,7 +1263,67 @@ void push_mouse_press_listener(MousePressListener* listener)
 
 void pop_mouse_press_listener()
 {
-	g_MouseListener.pop_mouse_press_listener();
+	g_MouseListener.pop_press_listener();
+}
+
+void push_mouse_release_listener(MouseReleaseListener* listener)
+{
+	g_MouseListener.push(listener);
+}
+
+void pop_mouse_release_listener()
+{
+	g_MouseListener.pop_release_listener();
+}
+
+
+void MouseMoveListener::freeze()
+{
+	g_MouseListener.push(this);
+}
+
+void MouseMoveListener::unfreeze()
+{
+	//g_MouseListener.pop_move_listener(this);
+}
+
+
+void MousePressListener::freeze()
+{
+	g_MouseListener.push(this);
+}
+
+void MousePressListener::unfreeze()
+{
+	//
+}
+
+
+void MouseReleaseListener::freeze()
+{
+	g_MouseListener.push(this);
+}
+
+void MouseReleaseListener::unfreeze()
+{
+	//
+}
+
+
+MouseDraggableListener* MouseDraggableListener::dragged{ nullptr };
+
+void MouseDraggableListener::freeze()
+{
+	MousePressListener::freeze();
+	MouseMoveListener::freeze();
+	MouseReleaseListener::freeze();
+}
+
+void MouseDraggableListener::unfreeze()
+{
+	MousePressListener::unfreeze();
+	MouseMoveListener::unfreeze();
+	MouseReleaseListener::unfreeze();
 }
 
 
@@ -1217,10 +1335,14 @@ void pop_mouse_press_listener()
 *
 */
 
-Frame::Frame() {}
+Frame::Frame() 
+{
+	m_Parent = nullptr;
+}
 
 Frame::Frame(int x, int y, int width, int height)
 {
+	m_Parent = nullptr;
 	set_bounds(x, y, width, height);
 }
 
@@ -1248,6 +1370,31 @@ int Frame::get_height() const
 	return m_Bounds.get(1, 1) - m_Bounds.get(1, 0);
 }
 
+void Frame::set_parent(Frame* parent)
+{
+	m_Parent = parent;
+}
+
+int Frame::get_parent_width() const
+{
+	static Application*& app = get_application_settings();
+
+	if (m_Parent)
+		return m_Parent->get_width();
+	else
+		return app->width;
+}
+
+int Frame::get_parent_height() const
+{
+	static Application*& app = get_application_settings();
+
+	if (m_Parent)
+		return m_Parent->get_height();
+	else
+		return app->height;
+}
+
 
 ScrollBarFrame::ScrollBarFrame(Graphic* backgroundGraphic, Graphic* arrowGraphic, Graphic* scrollGraphic, int x, int y, bool horizontal)
 {
@@ -1269,6 +1416,30 @@ ScrollBarFrame::ScrollBarFrame(Graphic* backgroundGraphic, Graphic* arrowGraphic
 	m_Value = 0.f;
 }
 
+void ScrollBarFrame::set_center_of_scroller(int dx, int dy)
+{
+	if (m_Horizontal)
+	{
+		set_value(
+			min(
+				max(dx - (m_Scroller->get_width() / 2), 0)
+				/ (float)(m_Background->get_width() - m_Scroller->get_width()),
+				1.f
+			)
+		);
+	}
+	else
+	{
+		set_value(
+			min(
+				max(dy - (m_Scroller->get_height() / 2), 0)
+				/ (float)(m_Background->get_height() - m_Scroller->get_height()),
+				1.f
+			)
+		);
+	}
+}
+
 float ScrollBarFrame::get_value()
 {
 	return m_Value;
@@ -1279,7 +1450,7 @@ void ScrollBarFrame::set_value(float value)
 	m_Value = value;
 }
 
-int ScrollBarFrame::trigger(const MouseButtonEvent& event_data)
+int ScrollBarFrame::trigger(const MousePressEvent& event_data)
 {
 	int dx = event_data.x - m_Bounds.get(0, 0);
 	int dy = event_data.y - m_Bounds.get(1, 0);
@@ -1296,13 +1467,8 @@ int ScrollBarFrame::trigger(const MouseButtonEvent& event_data)
 			else if (dx < m_Background->get_width())
 			{
 				// Click in the scroll area
-				set_value(
-					min(
-						max(dx - (m_Scroller->get_width() / 2), 0) 
-							/ (float)(m_Background->get_width() - m_Scroller->get_width()),
-						1.f
-					)
-				);
+				set_center_of_scroller(dx, dy);
+				dragged = this;
 			}
 			else
 			{
@@ -1320,13 +1486,8 @@ int ScrollBarFrame::trigger(const MouseButtonEvent& event_data)
 			else if (dy < m_Background->get_height())
 			{
 				// Click in the scroll area
-				set_value(
-					min(
-						max(dy - (m_Scroller->get_height() / 2), 0)
-							/ (float)(m_Background->get_height() - m_Scroller->get_height()),
-						1.f
-					)
-				);
+				set_center_of_scroller(dx, dy);
+				dragged = this;
 			}
 			else
 			{
@@ -1335,6 +1496,30 @@ int ScrollBarFrame::trigger(const MouseButtonEvent& event_data)
 			}
 		}
 
+		return EVENT_STOP;
+	}
+
+	return EVENT_CONTINUE;
+}
+
+int ScrollBarFrame::trigger(const MouseMoveEvent& event_data)
+{
+	if (dragged == this)
+	{
+		int dx = event_data.x - m_Bounds.get(0, 0) - m_Arrow->get_width();
+		int dy = event_data.y - m_Bounds.get(1, 0) - m_Arrow->get_height();
+
+		set_center_of_scroller(dx, dy);
+	}
+
+	return EVENT_CONTINUE;
+}
+
+int ScrollBarFrame::trigger(const MouseReleaseEvent& event_data)
+{
+	if (dragged == this)
+	{
+		dragged = nullptr;
 		return EVENT_STOP;
 	}
 
@@ -1399,17 +1584,25 @@ void ScrollBarFrame::display() const
 
 LayerFrame::LayerFrame()
 {
-	Application* app = get_application_settings();
-	set_bounds(0, 0, app->width, app->height);
+	if (m_Parent)
+		set_bounds(0, 0, m_Parent->get_width(), m_Parent->get_height());
+	else
+		set_bounds(-1, -1, 2, 2);
+
+	insert_top(generate_solid_color_graphic(rand() % 256, rand() % 256, rand() % 256, 255, 2, 2));
 }
 
 LayerFrame::LayerFrame(int x, int y, int width, int height)
 {
 	set_bounds(x, y, width, height);
+
+	insert_top(generate_solid_color_graphic(rand() % 256, rand() % 256, rand() % 256, 255, width, height));
 }
 
 void LayerFrame::reset()
 {
+	static Application*& app = get_application_settings();
+
 	if (m_Sequence.empty())
 	{
 		m_ZScale = 1.f;
@@ -1426,6 +1619,12 @@ void LayerFrame::reset()
 void LayerFrame::insert_top(Graphic* graphic)
 {
 	m_Sequence.push_back(graphic);
+
+	if (Frame* frame = dynamic_cast<Frame*>(graphic))
+	{
+		frame->set_parent(this);
+	}
+
 	this->reset();
 }
 
@@ -1447,7 +1646,12 @@ void LayerFrame::display() const
 }
 
 
-UIFrame::UIFrame() : LayerFrame() {}
+UIFrame::UIFrame()
+{
+	Application* app = get_application_settings();
+	set_bounds(0, 0, app->width, app->height);
+	reset();
+}
 
 void UIFrame::reset()
 {
@@ -1492,19 +1696,21 @@ void WorldOrthographicFrame::reset()
 	Application* app = get_application_settings();
 	float sx = 2.f / app->width; // The x-axis scale of the projection
 	float sy = 2.f / app->height; // The y-axis scale of the projection
+	float sz = 2.f / (TILE_HEIGHT * m_Chunk->height); // The z-scale of the projection
 
-	float bx = m_Bounds.get(0, 0) + halfWidth;
-	float by = m_Bounds.get(1, 0) + halfHeight;
+	int mx = 1 + (width % 2);
+	int my = 1 + (height % 2);
 
-	int mx = 1 + ((m_Bounds.get(0, 1) - m_Bounds.get(0, 0)) % 2);
-	int my = 1 + ((m_Bounds.get(1, 1) - m_Bounds.get(1, 0)) % 2);
-	float cx = -sx * ((m_DisplayArea.get(0, 0) + m_DisplayArea.get(0, 1) + mx) / 2);
-	float cy = -sy * ((m_DisplayArea.get(1, 0) + m_DisplayArea.get(1, 1) + my) / 2);
+	int fx = -(m_DisplayArea.get(0, 0) + m_DisplayArea.get(0, 1) + mx) / 2;
+	int fy = -(m_DisplayArea.get(1, 0) + m_DisplayArea.get(1, 1) + my) / 2;
+
+	float cx = (sx * ((m_Bounds.get(0, 0) + halfWidth) + fx)) - 1.f;
+	float cy = (sy * ((m_Bounds.get(1, 0) + halfHeight) + fy)) - 1.f;
 
 	m_Transform = mat4x4f(
-		sx, 0.f, 0.f, (sx * bx) - 1.f + cx,
-		0.f, sy, -sy, (sy * by) - 1.f + cy,
-		0.f, 0.5f * sy, 0.5f * sy, 0.5f * cy
+		sx, 0.f, 0.f, cx,
+		0.f, sy, -sy, cy,
+		0.f, sz, sz, sz * fy
 	);
 }
 
@@ -1643,11 +1849,12 @@ void WorldOrthographicFrame::adjust_camera(float dx, float dy)
 		// Calculate the change in the translation
 		float dtx = -m_Transform.get(0, 0) * dcx;
 		float dty = -m_Transform.get(1, 1) * dcy;
+		float dtz = -m_Transform.get(2, 2) * dcy;
 
 		// Adjust the transformation
 		m_Transform(0, 3) += dtx;
 		m_Transform(1, 3) += dty;
-		m_Transform(2, 3) += dty;
+		m_Transform(2, 3) += dtz;
 	}
 }
 
@@ -1842,7 +2049,15 @@ void onion_mouse_click_callback(GLFWwindow* window, int button, int action, int 
 	if (action == GLFW_PRESS)
 	{
 		// Construct the data object
-		MouseButtonEvent event_data = { g_MouseListener.x, g_MouseListener.y, button, mods };
+		MousePressEvent event_data = { g_MouseListener.x, g_MouseListener.y, button, mods };
+
+		// Trigger the global listener
+		g_MouseListener.trigger(event_data);
+	}
+	else
+	{
+		// Construct the data object
+		MouseReleaseEvent event_data = { g_MouseListener.x, g_MouseListener.y, button };
 
 		// Trigger the global listener
 		g_MouseListener.trigger(event_data);
@@ -1899,6 +2114,10 @@ void onion_main(onion_display_func display_callback)
 	// Enable depth testing
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+
+	// Set the blend function
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// Core loop
 	while (!glfwWindowShouldClose(g_Window))

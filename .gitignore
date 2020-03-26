@@ -38,3 +38,4 @@ $RECYCLE.BIN/
 # =========================
 # Operating System Files
 # =========================
+*.opendb
