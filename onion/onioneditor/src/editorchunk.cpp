@@ -62,6 +62,9 @@ PaintSelectFrame::PaintSelectFrame(int width)
 	height += m_NumberRows * (TILE_HEIGHT + 2);
 
 	set_bounds(0, 0, width, height);
+
+	m_Highlight = generate_solid_color_graphic(1.f, 0.f, 0.f, 1.f, TILE_WIDTH + 4, TILE_HEIGHT + 4);
+	m_PaintKey = 0;
 }
 
 void PaintSelectFrame::display() const
@@ -81,7 +84,17 @@ void PaintSelectFrame::display() const
 			int index = (r * m_NumberTilesPerRow) + c;
 			if (index < m_NumberTiles)
 			{
-				m_TileSpriteSheet->display(6 * index, palette);
+				SPRITE_KEY key = 6 * index;
+
+				if (key == m_PaintKey)
+				{
+					mat_push();
+					mat_translate(-2.f, -2.f, 0.1f);
+					m_Highlight->display();
+					mat_pop();
+				}
+
+				m_TileSpriteSheet->display(key, palette);
 			}
 
 			mat_translate(dx, 0.f, 0.f);
@@ -96,7 +109,14 @@ void PaintSelectFrame::display() const
 
 void PaintSelectFrame::select(int dx, int dy)
 {
-	// TODO
+	int horizontalIndex = (dx - m_Margin + 1) / (TILE_WIDTH + 2);
+	int verticalIndex = m_NumberRows - 1 - ((dy - (TILE_HEIGHT / 2) + 1) / (TILE_HEIGHT + 2));
+
+	if (horizontalIndex >= 0 && horizontalIndex < m_NumberTilesPerRow
+		&& verticalIndex >= 0 && verticalIndex < m_NumberRows)
+	{
+		m_PaintKey = ((verticalIndex * m_NumberTilesPerRow) + horizontalIndex) * 6;
+	}
 }
 
 
@@ -143,7 +163,7 @@ void PaintChunkTool::display()
 int PaintChunkTool::trigger(const MousePressEvent& event_data)
 {
 	mat2x2i bounds = m_ToolbarFrame->get_bounds();
-	int dx = event_data.x - bounds.get(0, 0) - get_application_settings()->width + 184;
+	int dx = event_data.x - bounds.get(0, 0);
 	int dy = event_data.y - bounds.get(1, 0);
 
 	if (dx >= 0 && dx < m_ToolbarFrame->get_width()

@@ -29,6 +29,8 @@ private:
 	// The sprite sheet of tiles
 	SpriteSheet* m_TileSpriteSheet;
 
+	SPRITE_KEY m_PaintKey;
+
 	int m_NumberTiles;
 
 	int m_NumberTilesPerRow;
@@ -36,6 +38,8 @@ private:
 	int m_NumberRows;
 
 	int m_Margin;
+
+	Graphic* m_Highlight;
 
 public:
 	PaintSelectFrame(int width);
