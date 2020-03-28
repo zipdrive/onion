@@ -102,6 +102,10 @@ public:
 	// The dragged object.
 	static MouseDraggableListener* dragged;
 
+	/// <summary>Responds to the mouse being released.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	virtual int trigger(const MouseReleaseEvent& event_data);
+
 	/// <summary>Freezes the listener.</summary>
 	virtual void freeze();
 

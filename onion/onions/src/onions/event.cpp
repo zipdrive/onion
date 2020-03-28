@@ -209,6 +209,17 @@ void MouseReleaseListener::unfreeze()
 
 MouseDraggableListener* MouseDraggableListener::dragged{ nullptr };
 
+int MouseDraggableListener::trigger(const MouseReleaseEvent& event_data)
+{
+	if (dragged == this)
+	{
+		dragged = nullptr;
+		return EVENT_STOP;
+	}
+
+	return EVENT_CONTINUE;
+}
+
 void MouseDraggableListener::freeze()
 {
 	MousePressListener::freeze();

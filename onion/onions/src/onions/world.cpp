@@ -95,6 +95,11 @@ void Chunk::unload()
 	}
 }
 
+void Chunk::set_tile(int x, int y, SPRITE_KEY tile)
+{
+	m_Tiles[CHUNK_INDEX(x, y)] = tile;
+}
+
 void Chunk::display(int xmin, int ymin, int xmax, int ymax)
 {
 	const mat4x4f identityMatrix;
@@ -125,28 +130,6 @@ void Chunk::display(int xmin, int ymin, int xmax, int ymax)
 		}
 		mat_pop();
 	}
-}
-
-int Chunk::trigger(const MouseMoveEvent& event_data)
-{
-	return EVENT_CONTINUE;
-}
-
-int Chunk::trigger(const MousePressEvent& event_data)
-{
-	return EVENT_CONTINUE;
-}
-
-void Chunk::freeze()
-{
-	MouseMoveListener::freeze();
-	MousePressListener::freeze();
-}
-
-void Chunk::unfreeze()
-{
-	MouseMoveListener::unfreeze();
-	MousePressListener::unfreeze();
 }
 
 

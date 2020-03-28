@@ -67,6 +67,11 @@ PaintSelectFrame::PaintSelectFrame(int width)
 	m_PaintKey = 0;
 }
 
+SPRITE_KEY PaintSelectFrame::get_paint_key() const
+{
+	return m_PaintKey;
+}
+
 void PaintSelectFrame::display() const
 {
 	const mat4x4f palette = mat4x4f();
@@ -122,8 +127,6 @@ void PaintSelectFrame::select(int dx, int dy)
 
 PaintChunkTool::PaintChunkTool()
 {
-	m_TileSpriteSheet = Chunk::get_tile_sprite_sheet();
-
 	Application*& app = get_application_settings();
 	SpriteSheet* gui = get_gui_sprite_sheet();
 
@@ -196,6 +199,16 @@ void PaintChunkTool::unfreeze()
 {
 	MousePressListener::unfreeze();
 	m_VerticalScrollBar->unfreeze();
+}
+
+void PaintChunkTool::highlight(int dx, int dy)
+{
+	m_Highlight = get_tile(dx, dy);
+}
+
+void PaintChunkTool::select()
+{
+	World::get_chunk()->set_tile(m_Highlight.get(0), m_Highlight.get(1), m_ToolbarSelectFrame->get_paint_key());
 }
 
 
@@ -274,6 +287,7 @@ void ChunkEditor::set_tool(ChunkTool* tool)
 	if (m_Tool) m_Tool->freeze();
 
 	m_Tool = tool;
+	m_WorldFrame->set_tool(m_Tool);
 	m_Tool->unfreeze();
 }
 
@@ -321,6 +335,9 @@ void ChunkEditor::freeze()
 	m_HorizontalScrollBar->freeze();
 	m_VerticalScrollBar->freeze();
 
+	// Freezes the world frame
+	m_WorldFrame->freeze();
+
 	// Freezes the toolbar
 	if (m_Tool)
 		m_Tool->freeze();
@@ -331,6 +348,9 @@ void ChunkEditor::unfreeze()
 	// Unfreezes the scroll bars
 	m_HorizontalScrollBar->unfreeze();
 	m_VerticalScrollBar->unfreeze();
+
+	// Unfreezes the world frame
+	m_WorldFrame->unfreeze();
 
 	// Unfreezes the toolbar
 	if (m_Tool)

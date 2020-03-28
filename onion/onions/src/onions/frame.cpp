@@ -185,17 +185,6 @@ int ScrollBar::trigger(const MouseMoveEvent& event_data)
 	return EVENT_CONTINUE;
 }
 
-int ScrollBar::trigger(const MouseReleaseEvent& event_data)
-{
-	if (dragged == this)
-	{
-		dragged = nullptr;
-		return EVENT_STOP;
-	}
-
-	return EVENT_CONTINUE;
-}
-
 void ScrollBar::display() const
 {
 	// Set up transformation
@@ -384,6 +373,19 @@ void UIFrame::reset()
 }
 
 
+
+
+vec2i WorldOrthographicFrame::Tool::get_tile(int dx, int dy)
+{
+	return vec2i(dx / TILE_WIDTH, dy / TILE_HEIGHT);
+}
+
+Object* WorldOrthographicFrame::Tool::get_object(int dx, int dy)
+{
+	return nullptr;
+}
+
+
 WorldOrthographicFrame::WorldOrthographicFrame(int x, int y, int width, int height, int tile_margin) : m_TileMargin(tile_margin)
 {
 	set_bounds(x, y, width, height);
@@ -397,8 +399,8 @@ void WorldOrthographicFrame::reset()
 	int x = roundf(m_Camera.get(0));
 	int y = roundf(m_Camera.get(1));
 
-	int width = m_Bounds.get(0, 1) - m_Bounds.get(0, 0);
-	int height = m_Bounds.get(1, 1) - m_Bounds.get(1, 0);
+	int width = get_width();
+	int height = get_height();
 	int halfWidth = (width + 1) / 2;
 	int halfHeight = (height + 1) / 2;
 
@@ -428,6 +430,8 @@ void WorldOrthographicFrame::reset()
 		0.f, sy, -sy, cy,
 		0.f, sz, sz, sz * fy
 	);
+
+	m_Tool = nullptr;
 }
 
 void WorldOrthographicFrame::clamp_display_area()
@@ -474,6 +478,11 @@ void WorldOrthographicFrame::set_camera(float x, float y)
 	m_Camera.set(0, 0, x);
 	m_Camera.set(1, 0, y);
 	reset();
+}
+
+void WorldOrthographicFrame::set_tool(WorldOrthographicFrame::Tool* tool)
+{
+	m_Tool = tool;
 }
 
 void WorldOrthographicFrame::adjust_camera(float dx, float dy)
@@ -587,4 +596,44 @@ void WorldOrthographicFrame::display() const
 	);
 
 	mat_pop();
+}
+
+int WorldOrthographicFrame::trigger(const MousePressEvent& event_data)
+{
+	if (m_Tool)
+	{
+		mat2x2i absbounds = get_absolute_bounds();
+		if (event_data.x >= absbounds.get(0, 0) && event_data.x < absbounds.get(0, 1)
+			&& event_data.y >= absbounds.get(1, 0) && event_data.y < absbounds.get(1, 1))
+		{
+			m_Tool->select();
+			dragged = this;
+			return EVENT_STOP;
+		}
+	}
+
+	return EVENT_CONTINUE;
+}
+
+int WorldOrthographicFrame::trigger(const MouseMoveEvent& event_data)
+{
+	if (m_Tool)
+	{
+		mat2x2i absbounds = get_absolute_bounds();
+		int dx = event_data.x - absbounds.get(0, 0);
+		int dy = event_data.y - absbounds.get(1, 0);
+		if (dx >= 0 && event_data.x < absbounds.get(0, 1)
+			&& dy >= 0 && dy < absbounds.get(1, 1))
+		{
+			// Call the tool highlight function
+			m_Tool->highlight(dx + m_DisplayArea.get(0, 0), dy + m_DisplayArea.get(1, 0));
+
+			// If mouse button is held down, call the tool select function
+			if (dragged == this) m_Tool->select();
+
+			return EVENT_STOP;
+		}
+	}
+
+	return EVENT_CONTINUE;
 }

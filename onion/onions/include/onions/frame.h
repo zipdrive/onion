@@ -106,10 +106,6 @@ public:
 	/// <param name="event_data">The data for the event.</param>
 	int trigger(const MouseMoveEvent& event_data);
 
-	/// <summary>Triggers in response to a mouse button being released.</summary>
-	/// <param name="event_data">The data for the event.</param>
-	int trigger(const MouseReleaseEvent& event_data);
-
 	/// <summary>Displays the contents of the frame.</summary>
 	void display() const;
 };
@@ -194,9 +190,37 @@ public:
 };
 
 
+
+
 // A frame that displays the world orthographically.
-class WorldOrthographicFrame : public Frame
+class WorldOrthographicFrame : public Frame, public MouseDraggableListener
 {
+public:
+	class Tool
+	{
+	protected:
+		/// <summary>Determines which tile is being highlighted.</summary>
+		/// <param name="x">The in-world x-coordinate being highlighted.</param>
+		/// <param name="y">The in-world y-coordinate being highlighted.</param>
+		/// <returns>The coordinates of the tile being highlighted.</returns>
+		vec2i get_tile(int dx, int dy);
+
+		/// <summary>Determines which object is being highlighted.</summary>
+		/// <param name="x">The in-world x-coordinate being highlighted.</param>
+		/// <param name="y">The in-world y-coordinate being highlighted.</param>
+		/// <returns>The object being highlighted, or NULL if no objects are being highlighted.</returns>
+		Object* get_object(int dx, int dy);
+
+	public:
+		/// <summary>Triggers in response to something being highlighted.</summary>
+		/// <param name="x">The in-world x-coordinate being highlighted.</param>
+		/// <param name="y">The in-world y-coordinate being highlighted.</param>
+		virtual void highlight(int dx, int dy) = 0;
+
+		/// <summary>Triggers in response to the highlighted tile being selected.</summary>
+		virtual void select() = 0;
+	};
+
 private:
 	/// <summary>
 	/// A transform that does the following:
@@ -218,6 +242,9 @@ private:
 
 	// The current chunk
 	Chunk* m_Chunk;
+
+	// The world interaction tool
+	Tool* m_Tool;
 
 	/// <summary>Resets the transformation.</summary>
 	void reset();
@@ -253,4 +280,16 @@ public:
 
 	/// <summary>Displays the contents of the frame.</summary>
 	void display() const;
+
+	/// <summary>Sets the current tool.</summary>
+	/// <param name="tool">The tool to use.</param>
+	void set_tool(Tool* tool);
+
+	/// <summary>Triggers in response to a mouse button being pressed.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	int trigger(const MousePressEvent& event_data);
+
+	/// <summary>Triggers in response to the mouse being moved.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	int trigger(const MouseMoveEvent& event_data);
 };

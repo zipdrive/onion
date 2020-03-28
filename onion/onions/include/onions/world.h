@@ -1,7 +1,6 @@
 #pragma once
 
 #include "graphics.h"
-#include "event.h"
 
 
 // The key to a chunk of static data
@@ -26,7 +25,7 @@ public:
 //typedef void(*tileClickCallbackFunc)(int x, int y);
 
 // A block of static information about the world.
-class Chunk : public MouseMoveListener, public MousePressListener
+class Chunk
 {
 private:
 	// A collection of all chunks
@@ -76,26 +75,18 @@ public:
 	/// <summary>Unloads the chunk from memory.</summary>
 	void unload();
 
+	/// <summary>Sets the sprite of the tile at the given coordinates.</summary>
+	/// <param name="x">The x-coordinate of the tile.</param>
+	/// <param name="y">The y-coordinate of the tile.</param>
+	/// <param name="tile">The key of the tile.</param>
+	void set_tile(int x, int y, SPRITE_KEY tile);
+
 	/// <summary>Draws the tiles of the chunk to the screen.</summary>
 	/// <param name="xmin">The leftmost x-coordinate to draw.</param>
 	/// <param name="xmax">The rightmost x-coordinate to draw.</param>
 	/// <param name="ymin">The bottommost y-coordinate to draw.</param>
 	/// <param name="ymax">The topmost y-coordinate to draw.</param>
 	void display(int xmin, int ymin, int xmax, int ymax);
-
-	/// <summary>Triggers in response to the mouse moving.</summary>
-	/// <param name="event_data">The data for the event.</param>
-	int trigger(const MouseMoveEvent& event_data);
-
-	/// <summary>Triggers in response to the mouse being pressed.</summary>
-	/// <param name="event_data">The data for the event.</param>
-	int trigger(const MousePressEvent& event_data);
-
-	/// <summary>Freezes input for the chunk.</summary>
-	void freeze();
-
-	/// <summary>Unfreezes input for the chunk.</summary>
-	void unfreeze();
 };
 
 // All currently loaded information about the world.
