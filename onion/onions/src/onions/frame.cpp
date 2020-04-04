@@ -294,14 +294,14 @@ LayerFrame::LayerFrame()
 	else
 		set_bounds(-1, -1, 2, 2);
 
-	insert_top(generate_solid_color_graphic(rand() % 256, rand() % 256, rand() % 256, 255, 2, 2));
+	insert_top(SolidColorGraphic::generate(rand() % 256, rand() % 256, rand() % 256, 255, 2, 2));
 }
 
 LayerFrame::LayerFrame(int x, int y, int width, int height)
 {
 	set_bounds(x, y, width, height);
 
-	insert_top(generate_solid_color_graphic(rand() % 256, rand() % 256, rand() % 256, 255, width, height));
+	insert_top(SolidColorGraphic::generate(rand() % 256, rand() % 256, rand() % 256, 255, width, height));
 }
 
 void LayerFrame::reset()
@@ -465,12 +465,6 @@ void WorldOrthographicFrame::clamp_display_area()
 		m_DisplayArea(1, 0) += ytop;
 		m_DisplayArea.set(1, 1, ymax);
 	}
-}
-
-void WorldOrthographicFrame::set_bounds(int x, int y, int width, int height)
-{
-	Frame::set_bounds(x, y, width, height);
-	reset();
 }
 
 void WorldOrthographicFrame::set_camera(float x, float y)

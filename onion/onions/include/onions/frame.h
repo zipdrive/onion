@@ -142,6 +142,13 @@ public:
 };
 
 
+class ListFrame : public Frame
+{
+public:
+	
+};
+
+
 
 class LayerFrame : public Frame
 {
@@ -260,13 +267,6 @@ public:
 	/// <param name="height">The height of the frame.</param>
 	/// <param name="tile_margin">The number of tiles around the edges that should not be drawn.</param>
 	WorldOrthographicFrame(int x, int y, int width, int height, int tile_margin = 1);
-
-	/// <summary>Sets the boundaries of the frame on the screen.</summary>
-	/// <param name="x">The x-coordinate of the frame.</param>
-	/// <param name="y">The y-coordinate of the frame.</param>
-	/// <param name="width">The width of the frame.</param>
-	/// <param name="height">The height of the frame.</param>
-	void set_bounds(int x, int y, int width, int height);
 
 	/// <summary>Sets the position of the camera.</summary>
 	/// <param name="x">The x-coordinate of the camera.</param>

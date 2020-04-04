@@ -34,9 +34,6 @@ private:
 	// The sprite sheet for the tiles
 	static SpriteSheet* m_TileSprites;
 
-	// The path to the file containing the chunk's data
-	const char* m_ChunkFilepath;
-
 	// Tiles on the ground
 	SPRITE_KEY* m_Tiles;
 
@@ -59,6 +56,9 @@ public:
 	/// <returns>A pointer to the tile sprite sheet.</returns>
 	static SpriteSheet* get_tile_sprite_sheet();
 
+	// The name of the chunk
+	const char* name;
+
 	// The width of the chunk, in tiles.
 	int width;
 
@@ -66,8 +66,8 @@ public:
 	int height;
 
 	/// <summary>Creates a chunk that uses data from the given file.</summary>
-	/// <param name="path">The path to the file containing the chunk's data.</param>
-	Chunk(const char* path);
+	/// <param name="name">The name of the chunk.</param>
+	Chunk(const char* name);
 
 	/// <summary>Loads the chunk into memory.</summary>
 	void load();

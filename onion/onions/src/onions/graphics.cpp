@@ -6,6 +6,8 @@
 #include <SOIL.h>
 #include "../../include/onions/graphics.h"
 
+#include <iostream>
+
 
 #define GL_DEFAULT_VALUE 0
 
@@ -144,7 +146,7 @@ const char* colorFragmentShaderText =
 "}";
 
 
-class SolidColorGraphic : public Graphic
+class SSolidColorGraphic : public SolidColorGraphic
 {
 private:
 	class SolidColorShader : public Shader, public Buffer
@@ -207,15 +209,6 @@ private:
 	// The shader program for the graphic
 	static SolidColorShader* m_Shader;
 
-	// The color of the graphic
-	vec4f m_Color;
-
-	// The width of the graphic
-	int m_Width;
-
-	// The height of the graphic
-	int m_Height;
-
 public:
 	/// <summary>Creates a solid color graphic.</summary>
 	/// <param name="r">The red value.</param>
@@ -224,29 +217,12 @@ public:
 	/// <param name="a">The alpha value.</param>
 	/// <param name="width">The width of the graphic.</param>
 	/// <param name="height">The height of the graphic.</param>
-	SolidColorGraphic(float r, float g, float b, float a, int width, int height) : m_Color(r, g, b, a)
+	SSolidColorGraphic(float r, float g, float b, float a, int width, int height) : SolidColorGraphic(vec4f(r, g, b, a), width, height)
 	{
 		if (!m_Shader)
 		{
 			m_Shader = new SolidColorShader();
 		}
-
-		m_Width = width;
-		m_Height = height;
-	}
-
-	/// <summary>Retrieves the width of the graphic.</summary>
-	/// <returns>The width of the graphic.</returns>
-	int get_width() const
-	{
-		return m_Width;
-	}
-
-	/// <summary>Retrieves the height of the graphic.</summary>
-	/// <returns>The height of the graphic.</returns>
-	int get_height() const
-	{
-		return m_Height;
 	}
 
 	/// <summary>Draws the graphic to the screen.</summary>
@@ -254,10 +230,10 @@ public:
 	{
 		// Stretch the graphic to match width and height
 		mat_push();
-		mat_scale(m_Width, m_Height, 1.f);
+		mat_scale(width, height, 1.f);
 
 		// Activate the shader program
-		m_Shader->activate(m_Color);
+		m_Shader->activate(color);
 
 		// Display the graphic
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -267,17 +243,29 @@ public:
 	}
 };
 
-SolidColorGraphic::SolidColorShader* SolidColorGraphic::m_Shader{ nullptr };
+SSolidColorGraphic::SolidColorShader* SSolidColorGraphic::m_Shader{ nullptr };
 
 
-Graphic* generate_solid_color_graphic(int r, int g, int b, int a, int width, int height)
+SolidColorGraphic* SolidColorGraphic::generate(int r, int g, int b, int a, int width, int height)
 {
-	return new SolidColorGraphic(r / 255.f, g / 255.f, b / 255.f, a / 255.f, width, height);
+	return new SSolidColorGraphic(r / 255.f, g / 255.f, b / 255.f, a / 255.f, width, height);
 }
 
-Graphic* generate_solid_color_graphic(float r, float g, float b, float a, int width, int height)
+SolidColorGraphic* SolidColorGraphic::generate(float r, float g, float b, float a, int width, int height)
 {
-	return new SolidColorGraphic(r, g, b, a, width, height);
+	return new SSolidColorGraphic(r, g, b, a, width, height);
+}
+
+SolidColorGraphic::SolidColorGraphic(const vec4f& color, int width, int height) : color(color), width(width), height(height) {}
+
+int SolidColorGraphic::get_width() const
+{
+	return width;
+}
+
+int SolidColorGraphic::get_height() const
+{
+	return height;
 }
 
 
@@ -433,7 +421,7 @@ protected:
 public:
 	/// <summary>Loads sprite sheet from file.</summary>
 	/// <param name="path">The path to the image file, using the res/img folder as a base. Note: The path to the meta file should be the same as the path to the image file, but with a .meta file extension instead.</param>
-	virtual void load_sprite_sheet(const char* path)
+	void load_sprite_sheet(const char* path)
 	{
 		// Construct the path to the image file.
 		string fpath("res/img/");
@@ -701,6 +689,13 @@ public:
 SSpriteSheet::SpriteShader* SSpriteSheet::m_Shader{ nullptr };
 
 
+SpriteSheet* SpriteSheet::generate(const char* path)
+{
+	SpriteSheet* sheet = new SSpriteSheet();
+	sheet->load_sprite_sheet(path);
+	return sheet;
+}
+
 SpriteSheet* SpriteSheet::generate_empty()
 {
 	return new SSpriteSheet();
@@ -795,7 +790,7 @@ public:
 	void load_sprite_sheet(const char* path)
 	{
 		// Construct the path to the image file.
-		string fpath("res/img/");
+		string fpath("res/img/fonts/");
 		fpath.append(path);
 
 		// Load the raw sprite sheet
@@ -814,19 +809,21 @@ public:
 		while (meta.good())
 		{
 			// Pull information about the sprite from file
-			meta.read(buffer, 10);
+			meta.read(buffer, 9);
 
 			// The key for the sprite.
 			char character = buffer[0];
 
 			// The distance from the left side of the sprite sheet to the left side of the sprite.
-			int16_t left = buffer[1] | ((int16_t)buffer[2] << 8);
+			uint16_t left = (unsigned char)buffer[1] | ((uint16_t)(unsigned char)buffer[2] << 8);
 			// The distance from the top side of the sprite sheet to the top side of the sprite.
-			int16_t top = buffer[3] | ((int16_t)buffer[4] << 8);
+			uint16_t top = (unsigned char)buffer[3] | ((uint16_t)(unsigned char)buffer[4] << 8);
 			// The width of the sprite.
-			int16_t sprite_width = buffer[5] | ((int16_t)buffer[6] << 8);
+			uint16_t sprite_width = (unsigned char)buffer[5] | ((uint16_t)(unsigned char)buffer[6] << 8);
 			// The height of the sprite.
-			int16_t sprite_height = buffer[7] | ((int16_t)buffer[8] << 8);
+			uint16_t sprite_height = (unsigned char)buffer[7] | ((uint16_t)(unsigned char)buffer[8] << 8);
+
+			cout << "'" << character << "'\n   Left: " << left << "\n   Top: " << top << "\n   Width: " << sprite_width << "\n   Height: " << sprite_height << "\n";
 
 			// Calculate texcoord numbers
 			float l = (float)left / width; // left texcoord
@@ -837,7 +834,7 @@ public:
 			float b = (float)(top + sprite_height) / height; // bottom texcoord
 			float h = (float)sprite_height;
 
-			// Set the character data
+			// Set the sprite data
 			m_Characters.emplace(character, Sprite(spriteData.size() / 4, sprite_width, sprite_height));
 
 			// First triangle: bottom-left, bottom-right, top-right
@@ -900,12 +897,33 @@ public:
 		m_Buffer = new SpriteBuffer(buf, tex);
 	}
 
-	void display(std::string text)
+	void display_line(string line, const mat4x4f& color)
 	{
-		for (int k = 0; k < text.size(); ++k)
-		{
+		mat_push();
 
+		for (int k = 0; k < line.size(); ++k)
+		{
+			auto iter = m_Characters.find(line.at(k));
+
+			if (iter != m_Characters.end())
+			{
+				Sprite& sprite = iter->second;
+				display(sprite.key, color);
+				mat_translate(sprite.width + m_Kerning, 0.f, 0.f);
+			}
+			else
+			{
+				//cout << "Could not find '" << line.at(k) << "'.\n";
+				mat_translate(3.f, 0.f, 0.f);
+			}
 		}
+
+		mat_pop();
+	}
+
+	void display_paragraph(std::string text, const mat4x4f& color, int width)
+	{
+		// TODO
 	}
 };
 

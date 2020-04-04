@@ -9,3 +9,5 @@
 
 
 SpriteSheet* get_gui_sprite_sheet();
+
+Font* get_gui_font();

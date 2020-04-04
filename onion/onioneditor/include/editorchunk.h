@@ -131,3 +131,15 @@ public:
 	/// <summary>Unfreezes input for the editor.</summary>
 	void unfreeze();
 };
+
+
+// Used for selecting a chunk to edit.
+class ChunksEditor : public Editor
+{
+private:
+	// The chunk editor
+	ChunkEditor m_ChunkEditor;
+
+	// Whether a chunk is being edited currently
+	bool m_CurrentlyEditingChunk;
+};

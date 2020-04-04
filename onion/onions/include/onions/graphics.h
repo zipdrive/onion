@@ -53,23 +53,52 @@ public:
 };
 
 
-/// <summary>Creates a solid color graphic.</summary>
-/// <param name="r">The red value.</param>
-/// <param name="g">The green value.</param>
-/// <param name="b">The blue value.</param>
-/// <param name="a">The alpha value.</param>
-/// <param name="width">The width of the graphic.</param>
-/// <param name="height">The height of the graphic.</param>
-Graphic* generate_solid_color_graphic(int r, int g, int b, int a, int width, int height);
 
-/// <summary>Creates a solid color graphic.</summary>
-/// <param name="r">The red value.</param>
-/// <param name="g">The green value.</param>
-/// <param name="b">The blue value.</param>
-/// <param name="a">The alpha value.</param>
-/// <param name="width">The width of the graphic.</param>
-/// <param name="height">The height of the graphic.</param>
-Graphic* generate_solid_color_graphic(float r, float g, float b, float a, int width, int height);
+class SolidColorGraphic : public Graphic
+{
+protected:
+	/// <summary>Protected so it can't be called from the outside.</summary>
+	/// <param name="color">The color of the graphic.</param>
+	/// <param name="width">The width of the graphic.</param>
+	/// <param name="height">The height of the graphic.</param>
+	SolidColorGraphic(const vec4f& color, int width, int height);
+
+public:
+	/// <summary>Creates a solid color graphic.</summary>
+	/// <param name="r">The red value, from 0 to 255.</param>
+	/// <param name="g">The green value, from 0 to 255.</param>
+	/// <param name="b">The blue value, from 0 to 255.</param>
+	/// <param name="a">The alpha value, from 0 to 255.</param>
+	/// <param name="width">The width of the graphic.</param>
+	/// <param name="height">The height of the graphic.</param>
+	static SolidColorGraphic* generate(int r, int g, int b, int a, int width, int height);
+
+	/// <summary>Creates a solid color graphic.</summary>
+	/// <param name="r">The red value, from 0 to 1.</param>
+	/// <param name="g">The green value, from 0 to 1.</param>
+	/// <param name="b">The blue value, from 0 to 1.</param>
+	/// <param name="a">The alpha value, from 0 to 1.</param>
+	/// <param name="width">The width of the graphic.</param>
+	/// <param name="height">The height of the graphic.</param>
+	static SolidColorGraphic* generate(float r, float g, float b, float a, int width, int height);
+
+	// The color of the graphic
+	vec4f color;
+
+	// The width of the sprite
+	int width;
+
+	// The height of the sprite
+	int height;
+
+	/// <summary>Retrieves the width of the graphic.</summary>
+	/// <returns>The width of the graphic.</returns>
+	int get_width() const;
+
+	/// <summary>Retrieves the height of the graphic.</summary>
+	/// <returns>The height of the graphic.</returns>
+	int get_height() const;
+};
 
 
 // Contains multiple sprites on a single texture.
@@ -80,6 +109,11 @@ protected:
 	SpriteSheet();
 
 public:
+	/// <summary>Loads a sprite sheet from file.</summary>
+	/// <param name="path">The path to the image file, using the res/img/ folder as a base.</param>
+	/// <returns>A pointer to the loaded sprite sheet.</returns>
+	static SpriteSheet* generate(const char* path);
+
 	/// <summary>Generates an empty sprite sheet.</summary>
 	/// <returns>A pointer to an empty sprite sheet.</returns>
 	static SpriteSheet* generate_empty();
@@ -226,12 +260,22 @@ protected:
 	// A map from individual characters to the sprite for that character.
 	std::unordered_map<char, Sprite> m_Characters;
 
+	// The separation between individual characters.
+	int m_Kerning = -1;
+
 public:
 	/// <summary>Loads a font from an image and meta file.</summary>
 	/// <param name="path">The path to the image file, from the res/img/ folder.</param>
 	static Font* load_sprite_font(const char* path);
 
+	/// <summary>Displays a line of text.</summary>
+	/// <param name="text">The line of text to display.</param>
+	/// <param name="color">The color palette of the text.</param>
+	virtual void display_line(std::string line, const mat4x4f& color) = 0;
+
 	/// <summary>Displays a string of text.</summary>
 	/// <param name="text">The text to display.</param>
-	virtual void display(std::string text) = 0;
+	/// <param name="color">The color palette of the text.</param>
+	/// <param name="width">The maximum width of the text.</param>
+	virtual void display_paragraph(std::string text, const mat4x4f& color, int width = INT16_MAX) = 0;
 };

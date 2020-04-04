@@ -63,7 +63,7 @@ PaintSelectFrame::PaintSelectFrame(int width)
 
 	set_bounds(0, 0, width, height);
 
-	m_Highlight = generate_solid_color_graphic(1.f, 0.f, 0.f, 1.f, TILE_WIDTH + 4, TILE_HEIGHT + 4);
+	m_Highlight = SolidColorGraphic::generate(1.f, 0.f, 0.f, 1.f, TILE_WIDTH + 4, TILE_HEIGHT + 4);
 	m_PaintKey = 0;
 }
 
@@ -137,7 +137,7 @@ PaintChunkTool::PaintChunkTool()
 	);
 
 	// Vertical scroll bar
-	Graphic* verticalWSBBG = generate_solid_color_graphic(230, 247, 251, 255, 24, app->height - 72);
+	Graphic* verticalWSBBG = SolidColorGraphic::generate(230, 247, 251, 255, 24, app->height - 72);
 	Graphic* verticalWSBArrow = new StaticSpriteGraphic(gui, Sprite::get_sprite(UP_ARROW_SPRITE), palette);
 	Graphic* verticalWSBScroller = new StaticSpriteGraphic(gui, Sprite::get_sprite(SCROLL_BAR), palette);
 
@@ -232,7 +232,7 @@ ChunkEditor::ChunkEditor()
 	);
 
 	// World vertical scroll bar
-	Graphic* verticalWSBBG = generate_solid_color_graphic(230, 247, 251, 255, 24, chunkFrameHeight - 48);
+	Graphic* verticalWSBBG = SolidColorGraphic::generate(230, 247, 251, 255, 24, chunkFrameHeight - 48);
 	Graphic* verticalWSBArrow = new StaticSpriteGraphic(gui, Sprite::get_sprite(UP_ARROW_SPRITE), palette);
 	Graphic* verticalWSBScroller = new StaticSpriteGraphic(gui, Sprite::get_sprite(SCROLL_BAR), palette);
 
@@ -247,7 +247,7 @@ ChunkEditor::ChunkEditor()
 	);
 
 	// World horizontal scroll bar
-	Graphic* horizontalWSBBG = generate_solid_color_graphic(230, 247, 251, 255, chunkFrameWidth - 48, 24);
+	Graphic* horizontalWSBBG = SolidColorGraphic::generate(230, 247, 251, 255, chunkFrameWidth - 48, 24);
 	Graphic* horizontalWSBArrow = new StaticSpriteGraphic(gui, Sprite::get_sprite(LEFT_ARROW_SPRITE), palette);
 	Graphic* horizontalWSBScroller = new StaticSpriteGraphic(gui, Sprite::get_sprite(SCROLL_BAR), palette);
 
@@ -262,10 +262,10 @@ ChunkEditor::ChunkEditor()
 	);
 
 	// Corner between scroll bars
-	m_ScrollBarCorner = generate_solid_color_graphic(219, 243, 250, 255, 24, 24);
+	m_ScrollBarCorner = SolidColorGraphic::generate(219, 243, 250, 255, 24, 24);
 
 	// Background for the toolbars
-	m_ToolbarBackground = generate_solid_color_graphic(219, 243, 250, 255, 184, chunkFrameHeight + 24);
+	m_ToolbarBackground = SolidColorGraphic::generate(219, 243, 250, 255, 184, chunkFrameHeight + 24);
 
 
 

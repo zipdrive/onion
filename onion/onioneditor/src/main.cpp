@@ -17,11 +17,13 @@ void display_editor()
 	mat_custom_transform(g_UITransform);
 
 	// Display the editor
-	g_Editor->display();
+	//g_Editor->display();
 
 	// Display the editor tabs
 	mat_translate(0.f, g_EditorHeight, 0.f);
-	g_EditorTabsBackground->display();
+	//g_EditorTabsBackground->display();
+
+	get_gui_font()->display_line("FUCK_YOU.PNG", generate_palette_matrix(255, 255, 255, 255, 255, 255, 255, 96, 0, 0, 0, 0, 0, 0, 0, 0));
 	
 	// Clean up the transformation
 	mat_pop();
@@ -43,16 +45,19 @@ int main()
 	g_UITransform.set(1, 3, -1.f);
 	g_UITransform.set(2, 3, -0.5f);
 
-	// Initialize editors
-	g_ChunkEditor = new ChunkEditor();
+	// Initialize data
+	Data::load();
 
-	g_Editor = g_ChunkEditor;
-	g_Editor->unfreeze();
+	// Initialize editors
+	//g_ChunkEditor = new ChunkEditor();
+
+	//g_Editor = g_ChunkEditor;
+	//g_Editor->unfreeze();
 
 	g_EditorHeight = app->height - 24;
 
 	// Initialize editor tabs
-	g_EditorTabsBackground = generate_solid_color_graphic(183, 227, 244, 255, app->width, 24);
+	g_EditorTabsBackground = SolidColorGraphic::generate(183, 227, 244, 255, app->width, 24);
 
 	// Run the core loop
 	onion_main(display_editor);

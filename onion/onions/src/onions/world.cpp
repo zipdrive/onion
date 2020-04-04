@@ -1,12 +1,14 @@
 #include <fstream>
 #include <string>
 #include "../../include/onions/world.h"
+#include "../../include/onions/fileio.h"
 
 
 #define MAXIMUM_NUMBER_OF_CHUNKS 100
 #define CHUNK_SIZE 64
 #define CHUNK_INDEX(x, y) ((x) + (width * (y)))
 
+using namespace std;
 
 
 std::unordered_map<CHUNK_KEY, Chunk*> Chunk::m_Chunks{};
@@ -39,7 +41,7 @@ SpriteSheet* Chunk::get_tile_sprite_sheet()
 	return m_TileSprites;
 }
 
-Chunk::Chunk(const char* path) : m_ChunkFilepath(path)
+Chunk::Chunk(const char* name) : name(name)
 {
 	// Load tile sprites
 	if (!m_TileSprites)
@@ -56,22 +58,42 @@ void Chunk::load()
 {
 	if (!m_Objects) // Make sure chunk hasn't already been loaded.
 	{
-		int s = width * height; // Size of arrays
+		// Load the chunk
+		string path("res/data/chunks/");
+		path.append(name);
+		path.append(".dat");
 
-								// Initialize tiles and objects and set default values
-		m_Tiles = new SPRITE_KEY[s];
-		memset(m_Tiles, 0, s * sizeof(SPRITE_KEY));
+		LoadFile file(path);
 
-		m_Objects = new Object*[s];
-		memset(m_Objects, NULL, s * sizeof(Object*));
-
-		// Initialize tiles
-		for (int i = width - 1; i >= 0; --i)
+		if (file.good())
 		{
-			for (int j = height - 1; j >= 0; --j)
+			width = file.load_int();
+			height = file.load_int();
+
+			int s = width * height; // Size of arrays
+
+			// Load the tiles
+			m_Tiles = new SPRITE_KEY[s];
+			for (int k = (width * height) - 1; k >= 0; --k)
 			{
-				m_Tiles[CHUNK_INDEX(i, j)] = 6 * ((i + j) % 4);
+				m_Tiles[k] = file.load_int();
 			}
+
+			// Load the objects
+			m_Objects = new Object*[s];
+			memset(m_Objects, NULL, s * sizeof(Object*));
+		}
+		else
+		{
+			int s = width * height; // Size of arrays
+
+			// Load the tiles
+			m_Tiles = new SPRITE_KEY[s];
+			memset(m_Tiles, 0, s * sizeof(SPRITE_KEY));
+
+			// Load the objects
+			m_Objects = new Object*[s];
+			memset(m_Objects, NULL, s * sizeof(Object*));
 		}
 	}
 }
@@ -80,6 +102,25 @@ void Chunk::unload()
 {
 	if (m_Objects) // Make sure chunk has been loaded previously.
 	{
+		// Save the chunk
+		string path("res/data/chunks/");
+		path.append(name);
+		path.append(".dat");
+
+		SaveFile file(path);
+
+		// Save the width and height
+		file.save_int(width);
+		file.save_int(height);
+
+		int s = width * height;
+
+		// Save the tiles
+		for (int k = s - 1; k >= 0; --k)
+		{
+			file.save_int(m_Tiles[k]);
+		}
+
 		// Unload tiles
 		delete[] m_Tiles;
 
@@ -150,26 +191,21 @@ Chunk* World::get_chunk()
 
 World::World()
 {
-	// Load information about all chunks
-	for (int k = MAXIMUM_NUMBER_OF_CHUNKS; k > 0; --k)
+	// Load information about chunks
+	LoadFile file("res/data/world.dat");
+
+	if (file.good())
 	{
-		std::string filename_to_check("res/data/chunks/chunk");
-		filename_to_check.append(std::to_string(k)).append(".dat");
-		const char* filename_to_check_cstr = filename_to_check.c_str();
-
-		std::ifstream file_to_check(filename_to_check_cstr);
-
-		if (file_to_check.good())
+		while (file.good())
 		{
-			Chunk* chunk = Chunk::set_chunk(k, filename_to_check_cstr);
+			CHUNK_KEY key = file.load_int();
+			string name = file.load_string();
 
-			// TODO change this
-			chunk->width = CHUNK_SIZE;
-			chunk->height = CHUNK_SIZE;
+			Chunk::set_chunk(key, name.c_str());
 		}
 	}
-
-	// TODO
-	m_Chunk = Chunk::get_chunk(1);
-	m_Chunk->load();
+	else
+	{
+		// TODO
+	}
 }
