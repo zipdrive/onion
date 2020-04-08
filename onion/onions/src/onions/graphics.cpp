@@ -270,6 +270,141 @@ int SolidColorGraphic::get_height() const
 
 
 
+SlicedGraphic::SlicedGraphic(
+		Graphic* top_left, Graphic* top, Graphic* top_right,
+		Graphic* left, Graphic* center, Graphic* right,
+		Graphic* bottom_left, Graphic* bottom, Graphic* bottom_right,
+		int width, int height
+	) : width(width), height(height)
+{
+	m_Graphics[0] = top_left;
+	m_Graphics[1] = top;
+	m_Graphics[2] = top_right;
+	m_Graphics[3] = left;
+	m_Graphics[4] = center;
+	m_Graphics[5] = right;
+	m_Graphics[6] = bottom_left;
+	m_Graphics[7] = bottom;
+	m_Graphics[8] = bottom_right;
+}
+
+int SlicedGraphic::get_width() const
+{
+	return width;
+}
+
+int SlicedGraphic::get_height() const
+{
+	return height;
+}
+
+void SlicedGraphic::display() const
+{
+	// TODO revise later, doesn't work right if corners aren't all the same size
+
+	int lmax; // Maximum right edge of a left-side corner
+	int rmin; // Minimum left edge of a right-side corner
+	int bmax; // Maximum top edge of a bottom-side corner
+	int tmin; // Minimum bottom edge of a top-side corner
+
+	// Display corners
+	if (m_Graphics[6]) // Bottom-left corner
+	{
+		lmax = m_Graphics[6]->get_width();
+		bmax = m_Graphics[6]->get_height();
+
+		m_Graphics[6]->display();
+	}
+	if (m_Graphics[2]) // Top-right corner
+	{
+		rmin = m_Graphics[2]->get_width();
+		tmin = m_Graphics[2]->get_height();
+
+		mat_push();
+		mat_translate(width - rmin, height - tmin, 0.f);
+		m_Graphics[2]->display();
+		mat_pop();
+	}
+	if (m_Graphics[0]) // Top-left corner
+	{
+		if (m_Graphics[0]->get_width() > lmax) lmax = m_Graphics[0]->get_width();
+		if (m_Graphics[0]->get_height() > tmin) tmin = m_Graphics[0]->get_height();
+
+		mat_push();
+		mat_translate(0.f, height - tmin, 0.f);
+		m_Graphics[0]->display();
+		mat_pop();
+	}
+	if (m_Graphics[8]) // Bottom-right corner
+	{
+		if (m_Graphics[8]->get_width() > rmin) rmin = m_Graphics[8]->get_width();
+		if (m_Graphics[8]->get_height() > bmax) bmax = m_Graphics[8]->get_height();
+
+		mat_push();
+		mat_translate(width - rmin, 0.f, 0.f);
+		m_Graphics[8]->display();
+		mat_pop();
+	}
+
+	// Display edges
+	if (m_Graphics[1]) // Top edge
+	{
+		int l = m_Graphics[0] ? m_Graphics[0]->get_width() : 0;
+		int w = width - l - (m_Graphics[2] ? m_Graphics[2]->get_width() : 0);
+
+		mat_push();
+		mat_translate(l, height - tmin, 0.f);
+		mat_scale(w / (float)m_Graphics[1]->get_width(), tmin / (float)m_Graphics[1]->get_height(), 1.f);
+		m_Graphics[1]->display();
+		mat_pop();
+	}
+	if (m_Graphics[3]) // Left edge
+	{
+		int b = m_Graphics[6] ? m_Graphics[6]->get_height() : 0;
+		int h = height - b - (m_Graphics[0] ? m_Graphics[0]->get_height() : 0);
+
+		mat_push();
+		mat_translate(0.f, b, 0.f);
+		mat_scale(lmax / (float)m_Graphics[3]->get_width(), h / (float)m_Graphics[3]->get_height(), 1.f);
+		m_Graphics[3]->display();
+		mat_pop();
+	}
+	if (m_Graphics[5]) // Right edge
+	{
+		int b = m_Graphics[8] ? m_Graphics[8]->get_height() : 0;
+		int h = height - b - (m_Graphics[2] ? m_Graphics[2]->get_height() : 0);
+
+		mat_push();
+		mat_translate(width - rmin, b, 0.f);
+		mat_scale(rmin / (float)m_Graphics[5]->get_width(), h / (float)m_Graphics[5]->get_height(), 1.f);
+		m_Graphics[5]->display();
+		mat_pop();
+	}
+	if (m_Graphics[7]) // Bottom edge
+	{
+		int l = m_Graphics[6] ? m_Graphics[6]->get_width() : 0;
+		int w = width - l - (m_Graphics[8] ? m_Graphics[8]->get_width() : 0);
+
+		mat_push();
+		mat_translate(l, 0.f, 0.f);
+		mat_scale(w / (float)m_Graphics[7]->get_width(), bmax / (float)m_Graphics[7]->get_height(), 1.f);
+		m_Graphics[7]->display();
+		mat_pop();
+	}
+
+	// Display center
+	if (m_Graphics[4]) // Center
+	{
+		mat_push();
+		mat_translate(lmax, bmax, 0.f);
+		mat_scale((width - lmax - rmin) / (float)m_Graphics[4]->get_width(), (height - bmax - tmin) / (float)m_Graphics[4]->get_height(), 1.f);
+		m_Graphics[4]->display();
+		mat_pop();
+	}
+}
+
+
+
 // The raw text of the vertex shader for sprites.
 const char* spriteVertexShaderText =
 "#version 330 core\n"
@@ -289,7 +424,9 @@ const char* spriteFragmentShaderText =
 "uniform mat4 tintMatrix;\n"
 "uniform sampler2D tex2D;\n"
 "void main() {\n"
-"	gl_FragColor = tintMatrix * texture(tex2D, UV);\n"
+"   vec4 fragColor = tintMatrix * texture(tex2D, UV);\n"
+"   if (fragColor.a < 0.1) discard;\n"
+"	gl_FragColor = fragColor;\n"
 "}";
 
 
@@ -732,7 +869,7 @@ void Sprite::set_sprite(SPRITE_ID id, Sprite* sprite)
 }
 
 
-SpriteGraphic::SpriteGraphic(SpriteSheet* sprite_sheet, mat4x4f& color)
+SpriteGraphic::SpriteGraphic(SpriteSheet* sprite_sheet, const mat4x4f& color)
 {
 	m_SpriteSheet = sprite_sheet;
 	m_TintMatrix = color;
@@ -754,7 +891,7 @@ void SpriteGraphic::display() const
 }
 
 
-StaticSpriteGraphic::StaticSpriteGraphic(SpriteSheet* sprite_sheet, Sprite* sprite, mat4x4f& color) : SpriteGraphic(sprite_sheet, color)
+StaticSpriteGraphic::StaticSpriteGraphic(SpriteSheet* sprite_sheet, Sprite* sprite, const mat4x4f& color) : SpriteGraphic(sprite_sheet, color)
 {
 	m_Sprite = sprite;
 }
@@ -765,7 +902,7 @@ Sprite* StaticSpriteGraphic::get_sprite() const
 }
 
 
-DynamicSpriteGraphic::DynamicSpriteGraphic(SpriteSheet* spriteSheet, mat4x4f& color) : SpriteGraphic(spriteSheet, color) {}
+DynamicSpriteGraphic::DynamicSpriteGraphic(SpriteSheet* spriteSheet, const mat4x4f& color) : SpriteGraphic(spriteSheet, color) {}
 
 Sprite* DynamicSpriteGraphic::get_sprite() const
 {
@@ -804,7 +941,7 @@ public:
 		std::vector<float> spriteData;
 
 		ifstream meta(fpath.c_str(), ios::in | ios::binary);
-		char buffer[10];
+		char buffer[9];
 
 		while (meta.good())
 		{
@@ -822,8 +959,6 @@ public:
 			uint16_t sprite_width = (unsigned char)buffer[5] | ((uint16_t)(unsigned char)buffer[6] << 8);
 			// The height of the sprite.
 			uint16_t sprite_height = (unsigned char)buffer[7] | ((uint16_t)(unsigned char)buffer[8] << 8);
-
-			cout << "'" << character << "'\n   Left: " << left << "\n   Top: " << top << "\n   Width: " << sprite_width << "\n   Height: " << sprite_height << "\n";
 
 			// Calculate texcoord numbers
 			float l = (float)left / width; // left texcoord
@@ -932,4 +1067,17 @@ Font* Font::load_sprite_font(const char* path)
 	SpriteFont* font = new SpriteFont();
 	font->load_sprite_sheet(path);
 	return font;
+}
+
+
+
+TextLineGraphic::TextLineGraphic(Font* font, string text, const mat4x4f& color) : text(text)
+{
+	m_Font = font;
+	m_Color = color;
+}
+
+void TextLineGraphic::display() const
+{
+	m_Font->display_line(text, m_Color);
 }

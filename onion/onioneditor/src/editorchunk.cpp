@@ -1,3 +1,4 @@
+#include "../include/dialog.h"
 #include "../include/editorchunk.h"
 
 // A scroll bar that controls the x- or y-coordinate of the camera of a world frame.
@@ -20,7 +21,7 @@ public:
 	{
 		m_WorldFrame = worldFrame;
 
-		m_WorldFrame->set_camera(0.5f * World::get_chunk()->width * TILE_WIDTH, 0.5f * World::get_chunk()->height * TILE_HEIGHT);
+		//m_WorldFrame->set_camera(0.5f * World::get_chunk()->width * TILE_WIDTH, 0.5f * World::get_chunk()->height * TILE_HEIGHT);
 		m_Value = 0.5f;
 	}
 
@@ -355,4 +356,149 @@ void ChunkEditor::unfreeze()
 	// Unfreezes the toolbar
 	if (m_Tool)
 		m_Tool->unfreeze();
+}
+
+
+
+ChunksEditor::ChunksListFrame::ChunksListFrame()
+{
+	set_bounds(0, 0, get_width(), Data::chunks.empty() ? 28 : (20 * Data::chunks.size()) + 8);
+}
+
+int ChunksEditor::ChunksListFrame::get_height() const
+{
+	return Data::chunks.empty() ? 28 : (20 * Data::chunks.size()) + 8;
+}
+
+void ChunksEditor::ChunksListFrame::display() const
+{
+	Font* gui = get_gui_font();
+	const mat4x4f& palette = get_gui_font_palette();
+
+	if (Data::chunks.empty())
+	{
+		// Display that no chunks have been initialized
+		mat_push();
+		mat_translate(12.f, 8.f, 0.f);
+		gui->display_line("NO CHUNKS HAVE BEEN INITIALIZED.", palette);
+		mat_pop();
+	}
+	else
+	{
+		// Display a list of all chunks
+		mat_push();
+		mat_translate(12.f, -12.f, 0.f);
+		for (auto iter = Data::chunks.rbegin(); iter != Data::chunks.rend(); ++iter)
+		{
+			mat_translate(0.f, 20.f, 0.f);
+
+			if (iter->first == m_Highlighted)
+			{
+				// TODO
+			}
+
+			get_gui_font()->display_line(iter->second, palette);
+		}
+		mat_pop();
+	}
+}
+
+
+
+class NewChunkDialog : public TextInputDialog
+{
+public:
+	NewChunkDialog() : TextInputDialog("ENTER THE NAME OF THE AREA:") {}
+
+	void confirm()
+	{
+		CHUNK_KEY key = 1;
+		while (true)
+		{
+			auto iter = Data::chunks.find(key);
+			if (iter == Data::chunks.end())
+			{
+				Data::chunks.emplace(key, m_TextInput.get_input());
+				break;
+			}
+
+			++key;
+		}
+
+		TextInputDialog::confirm();
+	}
+};
+
+void ChunksEditor::NewChunkButton::click()
+{
+	push_dialog(new NewChunkDialog());
+}
+
+ChunksEditor::NewChunkButton::NewChunkButton() : GUITextButton("NEW") {}
+
+
+
+ChunksEditor::ChunksEditor()
+{
+	Application* app = get_application_settings();
+	int h = app->height - 64;
+
+	SpriteSheet* gui = get_gui_sprite_sheet();
+
+	// Construct the palette for the UI
+	m_Background = SolidColorGraphic::generate(230, 247, 251, 255, app->width - 24, h);
+	m_LowBackground = SolidColorGraphic::generate(230, 247, 251, 255, app->width, 40);
+
+	// World vertical scroll bar
+	Graphic* verticalWSBBG = SolidColorGraphic::generate(230, 247, 251, 255, 24, h - 48);
+	Graphic* verticalWSBArrow = new StaticSpriteGraphic(gui, Sprite::get_sprite(UP_ARROW_SPRITE), get_gui_palette());
+	Graphic* verticalWSBScroller = new StaticSpriteGraphic(gui, Sprite::get_sprite(SCROLL_BAR), get_gui_palette());
+
+	m_ScrollBar = new ScrollBar(
+		verticalWSBBG,
+		verticalWSBArrow,
+		verticalWSBScroller,
+		app->width - 24,
+		0,
+		false
+	);
+
+	m_ChunksScroller = new ScrollableFrame(&m_ChunksList, nullptr, m_ScrollBar, 0, 40, app->width, h);
+
+	m_NewChunkButton.editor = this;
+	m_NewChunkButton.set_bounds(8, 8, 72, 24);
+}
+
+void ChunksEditor::display()
+{
+	if (m_CurrentlyEditingChunk)
+	{
+		m_ChunkEditor.display();
+	}
+	else
+	{
+		mat_push();
+		mat_translate(0.f, 40.f, 0.f);
+		m_Background->display();
+		mat_pop();
+
+		m_ChunksScroller->display();
+
+		m_LowBackground->display();
+		m_NewChunkButton.display();
+	}
+}
+
+void ChunksEditor::freeze()
+{
+	m_ScrollBar->freeze();
+
+	m_NewChunkButton.freeze();
+}
+
+void ChunksEditor::unfreeze()
+{
+	m_ScrollBar->unfreeze();
+
+	m_NewChunkButton.unfreeze();
 }

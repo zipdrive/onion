@@ -1,3 +1,6 @@
+#include <iostream>
+#include <list>
+#include "../include/dialog.h"
 #include "../include/editorchunk.h"
 
 
@@ -7,7 +10,36 @@ float g_EditorHeight;
 Graphic* g_EditorTabsBackground;
 
 Editor* g_Editor = nullptr;
-ChunkEditor* g_ChunkEditor = nullptr;
+ChunksEditor* g_ChunksEditor = nullptr;
+
+
+std::list<Dialog*> g_Dialogs;
+
+void push_dialog(Dialog* dialog)
+{
+	if (g_Dialogs.empty())
+		g_Editor->freeze();
+	else 
+		g_Dialogs.front()->freeze();
+
+	g_Dialogs.push_front(dialog);
+	dialog->unfreeze();
+}
+
+Dialog* pop_dialog()
+{
+	if (g_Dialogs.empty()) return nullptr;
+
+	Dialog* dialog = g_Dialogs.front();
+	g_Dialogs.pop_front();
+
+	if (g_Dialogs.empty())
+		g_Editor->unfreeze();
+	else
+		g_Dialogs.front()->unfreeze();
+
+	return dialog;
+}
 
 
 void display_editor()
@@ -17,14 +49,18 @@ void display_editor()
 	mat_custom_transform(g_UITransform);
 
 	// Display the editor
-	//g_Editor->display();
+	g_Editor->display();
+
+	// Display the dialogs
+	for (auto iter = g_Dialogs.rbegin(); iter != g_Dialogs.rend(); ++iter)
+	{
+		(*iter)->display();
+	}
 
 	// Display the editor tabs
 	mat_translate(0.f, g_EditorHeight, 0.f);
-	//g_EditorTabsBackground->display();
+	g_EditorTabsBackground->display();
 
-	get_gui_font()->display_line("FUCK_YOU.PNG", generate_palette_matrix(255, 255, 255, 255, 255, 255, 255, 96, 0, 0, 0, 0, 0, 0, 0, 0));
-	
 	// Clean up the transformation
 	mat_pop();
 }
@@ -49,10 +85,10 @@ int main()
 	Data::load();
 
 	// Initialize editors
-	//g_ChunkEditor = new ChunkEditor();
+	g_ChunksEditor = new ChunksEditor();
 
-	//g_Editor = g_ChunkEditor;
-	//g_Editor->unfreeze();
+	g_Editor = g_ChunksEditor;
+	g_Editor->unfreeze();
 
 	g_EditorHeight = app->height - 24;
 
@@ -63,6 +99,6 @@ int main()
 	onion_main(display_editor);
 
 	// Clean up
-	delete g_ChunkEditor;
+	delete g_ChunksEditor;
 	return 0;
 }

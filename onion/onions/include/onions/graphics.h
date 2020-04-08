@@ -40,6 +40,9 @@ mat4x4f generate_palette_matrix(
 class Graphic
 {
 public:
+	/// <summary>Destroys the graphic.</summary>
+	virtual ~Graphic() {}
+
 	/// <summary>Retrieves the width of the graphic.</summary>
 	/// <returns>The width of the graphic.</returns>
 	virtual int get_width() const = 0;
@@ -98,6 +101,51 @@ public:
 	/// <summary>Retrieves the height of the graphic.</summary>
 	/// <returns>The height of the graphic.</returns>
 	int get_height() const;
+};
+
+
+class SlicedGraphic : public Graphic
+{
+protected:
+	// The graphics of the sliced
+	Graphic* m_Graphics[9];
+
+public:
+	// The width of the graphic
+	int width;
+
+	// The height of the graphic
+	int height;
+
+	/// <summary>Constructs a sliced graphic.</summary>
+	/// <param name="top_left">The top left corner graphic.</param>
+	/// <param name="top">The center top graphic.</param>
+	/// <param name="top_right">The top right corner graphic.</param>
+	/// <param name="left">The center left graphic.</param>
+	/// <param name="center">The center graphic.</param>
+	/// <param name="right">The center right graphic.</param>
+	/// <param name="bottom_left">The bottom left corner graphic.</param>
+	/// <param name="bottom">The center bottom graphic.</param>
+	/// <param name="bottom_right">The bottom right corner graphic.</param>
+	/// <param name="width">The width of the graphic.</param>
+	/// <param name="height">The height of the graphic.</param>
+	SlicedGraphic(
+		Graphic* top_left, Graphic* top, Graphic* top_right,
+		Graphic* left, Graphic* center, Graphic* right,
+		Graphic* bottom_left, Graphic* bottom, Graphic* bottom_right,
+		int width, int height
+	);
+
+	/// <summary>Retrieves the width of the graphic.</summary>
+	/// <returns>The width of the graphic.</returns>
+	int get_width() const;
+
+	/// <summary>Retrieves the height of the graphic.</summary>
+	/// <returns>The height of the graphic.</returns>
+	int get_height() const;
+
+	/// <summary>Displays the graphic.</summary>
+	void display() const;
 };
 
 
@@ -186,7 +234,7 @@ protected:
 	/// <summary>Constructs a graphic that draws sprites.</summary>
 	/// <param name="sprite_sheet">The sprite sheet.</param>
 	/// <param name="color">The color tint matrix for the sprites.</param>
-	SpriteGraphic(SpriteSheet* sprite_sheet, mat4x4f& color);
+	SpriteGraphic(SpriteSheet* sprite_sheet, const mat4x4f& color);
 
 	/// <summary>Retrieves the current sprite to be drawn.</summary>
 	/// <returns>The current sprite.</returns>
@@ -221,7 +269,7 @@ public:
 	/// <param name="sprite_sheet">The sprite sheet that the sprites are on.</param>
 	/// <param name="sprite">The sprite data.</param>
 	/// <param name="color">The color tint matrix for the sprites.</param>
-	StaticSpriteGraphic(SpriteSheet* sprite_sheet, Sprite* sprite, mat4x4f& color);
+	StaticSpriteGraphic(SpriteSheet* sprite_sheet, Sprite* sprite, const mat4x4f& color);
 };
 
 // A graphic that can swap between multiple frames of sprites.
@@ -242,7 +290,7 @@ public:
 	/// <summary>Constructs a static sprite graphic.</summary>
 	/// <param name="sprite_sheet">The sprite sheet that the sprites are on.</param>
 	/// <param name="color">The color tint matrix for the sprites.</param>
-	DynamicSpriteGraphic(SpriteSheet* sprite_sheet, mat4x4f& color);
+	DynamicSpriteGraphic(SpriteSheet* sprite_sheet, const mat4x4f& color);
 
 	/// <summary>Adds a new frame to the graphic.</summary>
 	/// <param name="sprite">The frame's sprite.</param>
@@ -254,6 +302,8 @@ public:
 };
 
 
+
+// A font that displays text
 class Font
 {
 protected:
@@ -278,4 +328,29 @@ public:
 	/// <param name="color">The color palette of the text.</param>
 	/// <param name="width">The maximum width of the text.</param>
 	virtual void display_paragraph(std::string text, const mat4x4f& color, int width = INT16_MAX) = 0;
+};
+
+
+// Displays a line of text.
+class TextLineGraphic : public Graphic
+{
+private:
+	// The font to use
+	Font* m_Font;
+
+	// The palette of the font
+	mat4x4f m_Color;
+
+public:
+	// The line of text to display
+	std::string text;
+
+	/// <summary>Constructs a graphic that displays text.</summary>
+	/// <param name="font">The font of the graphic.</param>
+	/// <param name="text">The text of the graphic.</param>
+	/// <param name="color">The color palette of the graphic.</param>
+	TextLineGraphic(Font* font, std::string text, const mat4x4f& color);
+
+	/// <summary>Displays the text.</summary>
+	void display() const;
 };

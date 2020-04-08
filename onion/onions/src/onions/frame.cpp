@@ -64,6 +64,111 @@ void Frame::set_parent(Frame* parent)
 
 
 
+void Button::highlight() {}
+void Button::unhighlight() {}
+void Button::click() {}
+
+int Button::trigger(const MouseMoveEvent& event_data)
+{
+	mat2x2i absbounds = get_absolute_bounds();
+	
+	if (event_data.x >= absbounds.get(0, 0) && event_data.x < absbounds.get(0, 1)
+		&& event_data.y >= absbounds.get(1, 0) && event_data.y < absbounds.get(1, 1))
+	{
+		if (!m_Highlighted)
+		{
+			m_Highlighted = true;
+			highlight();
+		}
+
+		return EVENT_STOP;
+	}
+	else if (m_Highlighted)
+	{
+		m_Highlighted = false;
+		unhighlight();
+	}
+
+	return EVENT_CONTINUE;
+}
+
+int Button::trigger(const MousePressEvent& event_data)
+{
+	if (m_Highlighted)
+	{
+		click();
+		return EVENT_STOP;
+	}
+
+	return EVENT_CONTINUE;
+}
+
+void Button::freeze()
+{
+	MouseMoveListener::freeze();
+	MousePressListener::freeze();
+}
+
+void Button::unfreeze()
+{
+	MouseMoveListener::unfreeze();
+	MousePressListener::unfreeze();
+}
+
+
+
+string TextInput::get_input() const
+{
+	return m_TextInput;
+}
+
+int TextInput::trigger(const MousePressEvent& event_data)
+{
+	mat2x2i absbounds = get_absolute_bounds();
+
+	if (event_data.x >= absbounds.get(0, 0) && event_data.x < absbounds.get(0, 1)
+		&& event_data.y >= absbounds.get(1, 0) && event_data.y < absbounds.get(1, 1))
+	{
+		if (m_TextFrozen)
+		{
+			m_TextFrozen = false;
+			KeyboardListener::unfreeze();
+		}
+
+		// TODO position cursor
+
+		return EVENT_STOP;
+	}
+	else if (!m_TextFrozen)
+	{
+		m_TextFrozen = true;
+		KeyboardListener::freeze();
+	}
+
+	return EVENT_CONTINUE;
+}
+
+int TextInput::trigger(const UnicodeEvent& event_data)
+{
+	m_TextInput.insert(m_Cursor++, 1, event_data.character);
+
+	return EVENT_STOP;
+}
+
+void TextInput::freeze()
+{
+	m_TextFrozen = true;
+	MousePressListener::freeze();
+	KeyboardListener::freeze();
+}
+
+void TextInput::unfreeze()
+{
+	MousePressListener::unfreeze();
+}
+
+
+
 ScrollBar::ScrollBar(Graphic* backgroundGraphic, Graphic* arrowGraphic, Graphic* scrollGraphic, int x, int y, bool horizontal)
 {
 	m_Background = backgroundGraphic;

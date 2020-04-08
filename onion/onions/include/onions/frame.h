@@ -55,6 +55,72 @@ public:
 
 
 
+// A frame that 
+class Button : public Frame, public MouseMoveListener, public MousePressListener
+{
+protected:
+	// Whether the button is highlighted or not.
+	bool m_Highlighted = false;
+
+	/// <summary>A function that triggers when the button is highlighted. Does nothing by default.</summary>
+	virtual void highlight();
+
+	/// <summary>A function that triggers when the button is unhighlighted. Does nothing by default.</summary>
+	virtual void unhighlight();
+
+	/// <summary>A function that triggers when the button is pressed. Does nothing by default.</summary>
+	virtual void click();
+
+public:
+	/// <summary>Triggers when the mouse cursor is moved.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	virtual int trigger(const MouseMoveEvent& event_data);
+
+	/// <summary>Triggers when a mouse button is pressed.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	virtual int trigger(const MousePressEvent& event_data);
+
+	/// <summary>Freezes reaction to inputs.</summary>
+	virtual void freeze();
+
+	/// <summary>Unfreezes reaction to inputs.</summary>
+	virtual void unfreeze();
+};
+
+
+class TextInput : public Frame, public MousePressListener, public KeyboardListener
+{
+protected:
+	// Whether the frame is receiving text inputs or not.
+	bool m_TextFrozen = true;
+
+	// The text being inputted.
+	std::string m_TextInput;
+
+	// The position of the cursor.
+	int m_Cursor = 0;
+
+public:
+	/// <summary>Retrieves the text input.</summary>
+	/// <returns>The text inputted by the user.</returns>
+	std::string get_input() const;
+
+	/// <summary>Triggers when a mouse button is pressed.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	virtual int trigger(const MousePressEvent& event_data);
+
+	/// <summary>Triggers when a mouse button is pressed.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	virtual int trigger(const UnicodeEvent& event_data);
+
+	/// <summary>Freezes reaction to inputs.</summary>
+	virtual void freeze();
+
+	/// <summary>Unfreezes reaction to inputs.</summary>
+	virtual void unfreeze();
+};
+
+
 // A frame that allows a user to scroll between values.
 class ScrollBar : public Frame, public MouseDraggableListener
 {

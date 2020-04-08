@@ -137,9 +137,61 @@ public:
 class ChunksEditor : public Editor
 {
 private:
+	class ChunksListFrame : public Frame
+	{
+	private:
+		// The currently highlighted chunk
+		CHUNK_KEY m_Highlighted;
+
+	public:
+		ChunksListFrame();
+
+		/// <summary>Displays the frame.</summary>
+		void display() const;
+
+		/// <summary>Retrieves the height of the frame.</summary>
+		int get_height() const;
+
+	} m_ChunksList; // The list of chunks
+
+	class NewChunkButton : public GUITextButton
+	{
+	protected:
+		/// <summary>Triggers when the button is clicked.</summary>
+		void click();
+
+	public:
+		// The chunks editor
+		ChunksEditor* editor;
+
+		NewChunkButton();
+
+	} m_NewChunkButton; // The button to create a new chunk
+
+	// The background of the list of chunks
+	Graphic* m_Background;
+
+	// The background of the options pane at the bottom of the screen
+	Graphic* m_LowBackground;
+
+	// The main scrolling pane
+	ScrollableFrame* m_ChunksScroller;
+
+	// The scroll bar to scroll through the list of chunks
+	ScrollBar* m_ScrollBar;
+
 	// The chunk editor
 	ChunkEditor m_ChunkEditor;
 
 	// Whether a chunk is being edited currently
-	bool m_CurrentlyEditingChunk;
+	bool m_CurrentlyEditingChunk = false;
+
+public:
+	ChunksEditor();
+
+	void display();
+
+	void freeze();
+
+	void unfreeze();
 };

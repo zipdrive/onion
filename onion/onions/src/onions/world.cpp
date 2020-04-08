@@ -1,10 +1,13 @@
 #include <fstream>
 #include <string>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include "../../include/onions/world.h"
 #include "../../include/onions/fileio.h"
 
 
 #define MAXIMUM_NUMBER_OF_CHUNKS 100
+#define CHUNK_DEFAULT_SIZE 32
 #define CHUNK_SIZE 64
 #define CHUNK_INDEX(x, y) ((x) + (width * (y)))
 
@@ -38,17 +41,20 @@ Chunk* Chunk::set_chunk(CHUNK_KEY key, const char* path)
 
 SpriteSheet* Chunk::get_tile_sprite_sheet()
 {
-	return m_TileSprites;
-}
-
-Chunk::Chunk(const char* name) : name(name)
-{
 	// Load tile sprites
 	if (!m_TileSprites)
 	{
 		m_TileSprites = SpriteSheet::generate_empty();
 		m_TileSprites->load_partitioned_sprite_sheet("tiles.png", TILE_WIDTH, TILE_HEIGHT);
 	}
+
+	return m_TileSprites;
+}
+
+Chunk::Chunk(const char* name) : name(name)
+{
+	width = CHUNK_DEFAULT_SIZE;
+	height = CHUNK_DEFAULT_SIZE;
 
 	m_Tiles = nullptr;
 	m_Objects = nullptr;
@@ -145,6 +151,10 @@ void Chunk::display(int xmin, int ymin, int xmax, int ymax)
 {
 	const mat4x4f identityMatrix;
 
+	// Enable depth testing
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+
 	if (m_Objects) // Check to make sure the chunk has actually been loaded first
 	{
 		// Set up transformation for tiles.
@@ -171,6 +181,9 @@ void Chunk::display(int xmin, int ymin, int xmax, int ymax)
 		}
 		mat_pop();
 	}
+
+	// Disable depth testing
+	glDisable(GL_DEPTH_TEST);
 }
 
 

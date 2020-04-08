@@ -11,6 +11,8 @@ template <typename EventType>
 class EventListener
 {
 public:
+	virtual ~EventListener() {}
+
 	/// <summary>Freezes the listener.</summary>
 	virtual void freeze() = 0;
 
@@ -21,6 +23,62 @@ public:
 	/// <param name="event_data">The data for the event.</param>
 	virtual int trigger(const EventType& event_data) = 0;
 };
+
+
+
+struct KeyEvent
+{
+	// The keyboard input that was processed.
+	int control;
+
+	// True if the key was pressed, false if it was released.
+	bool pressed;
+};
+
+struct UnicodeEvent
+{
+	// The Unicode character that was processed.
+	unsigned int character;
+};
+
+// A listener that responds to key presses and text input.
+class KeyboardListener : public EventListener<KeyEvent>, public EventListener<UnicodeEvent>
+{
+public:
+	/// <summary>Destroys the listener.</summary>
+	virtual ~KeyboardListener();
+
+	/// <summary>Freezes the listener.</summary>
+	virtual void freeze();
+
+	/// <summary>Unfreezes the listener.</summary>
+	virtual void unfreeze();
+
+	/// <summary>Responds to a keyboard control being pressed.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	virtual int trigger(const KeyEvent& event_data);
+
+	/// <summary>Responds to a Unicode character being received.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	virtual int trigger(const UnicodeEvent& event_data);
+};
+
+
+
+/// <summary>Registers a keyboard control to be recognized by the application.</summary>
+/// <param name="control">The unique ID of the control.</param>
+void register_keyboard_control(int control);
+
+/// <summary>Retrieves the name of the key assigned to a keyboard control.</summary>
+/// <param name="control">The unique ID of the control.</param>
+/// <returns>The name of the key assigned to the keyboard control.</returns>
+std::string get_assigned_key(int control);
+
+/// <summary>Assigns the next key pressed to the keyboard control passed to this function.</summary>
+/// <param name="control">The unique ID of the control.</param>
+void assign_key(int control);
+
+
 
 
 struct MouseMoveEvent
@@ -36,6 +94,9 @@ struct MouseMoveEvent
 class MouseMoveListener : public EventListener<MouseMoveEvent>
 {
 public:
+	/// <summary>Destroys the listener.</summary>
+	virtual ~MouseMoveListener();
+
 	/// <summary>Freezes the listener.</summary>
 	virtual void freeze();
 
@@ -63,6 +124,9 @@ struct MousePressEvent
 class MousePressListener : public EventListener<MousePressEvent>
 {
 public:
+	/// <summary>Destroys the listener.</summary>
+	virtual ~MousePressListener();
+
 	/// <summary>Freezes the listener.</summary>
 	virtual void freeze();
 
@@ -87,6 +151,9 @@ struct MouseReleaseEvent
 class MouseReleaseListener : public EventListener<MouseReleaseEvent>
 {
 public:
+	/// <summary>Destroys the listener.</summary>
+	virtual ~MouseReleaseListener();
+
 	/// <summary>Freezes the listener.</summary>
 	virtual void freeze();
 
@@ -112,26 +179,3 @@ public:
 	/// <summary>Unfreezes the listener.</summary>
 	virtual void unfreeze();
 };
-
-
-
-/// <summary>Pushes a listener for mouse movement to the global event listener stack.</summary>
-/// <param name="listener">The listener to push.</param>
-void push_mouse_move_listener(MouseMoveListener* listener);
-
-/// <summary>Pops the listener for mouse movement that is on top of the global event listener stack.</summary>
-void pop_mouse_move_listener();
-
-/// <summary>Pushes a listener for mouse button pressing to the global event listener stack.</summary>
-/// <param name="listener">The listener to push.</param>
-void push_mouse_press_listener(MousePressListener* listener);
-
-/// <summary>Pops the listener for mouse button pressing that is on top of the global event listener stack.</summary>
-void pop_mouse_press_listener();
-
-/// <summary>Pushes a listener for mouse button releasing to the global event listener stack.</summary>
-/// <param name="listener">The listener to push.</param>
-void push_mouse_release_listener(MouseReleaseListener* listener);
-
-/// <summary>Pops the listener for mouse button releasing that is on top of the global event listener stack.</summary>
-void pop_mouse_release_listener();

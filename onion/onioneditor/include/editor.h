@@ -5,16 +5,14 @@
 
 
 // Contains all data about the game.
-class Data
+struct Data
 {
-private:
 	// A mapping from a path to the sprite sheet loaded from it.
-	static std::unordered_map<std::string, SpriteSheet*> m_SpriteSheets;
+	static std::unordered_map<std::string, SpriteSheet*> sprite_sheets;
 
 	// A set of chunk names.
-	static std::map<CHUNK_KEY, std::string> m_Chunks;
+	static std::map<CHUNK_KEY, std::string> chunks;
 
-public:
 	/// <summary>Saves everything the game needs to know to the data files.</summary>
 	static void save();
 

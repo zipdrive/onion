@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <regex>
+#include <unordered_map>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "../../include/onions/application.h"
@@ -8,6 +9,7 @@
 
 
 using namespace std;
+
 
 
 // A stack of event listeners to call in order.
@@ -26,12 +28,17 @@ public:
 		m_Stack.push_back(listener);
 	}
 
-	/// <summary>Pops the listener on top of the stack.</summary>
-	void pop()
+	/// <summary>Pops a listener from the stack.</summary>
+	/// <param name="listener">The listener to remove from the stack.</param>
+	void pop(EventListener<EventType>* listener)
 	{
-		if (!m_Stack.empty())
+		for (auto iter = m_Stack.begin(); iter != m_Stack.end(); ++iter)
 		{
-			m_Stack.pop_back();
+			if (*iter == listener)
+			{
+				m_Stack.erase(iter);
+				break;
+			}
 		}
 	}
 
@@ -54,6 +61,199 @@ public:
 typedef StackEventListener<MouseMoveEvent> StackMouseMoveListener;
 typedef StackEventListener<MousePressEvent> StackMousePressListener;
 typedef StackEventListener<MouseReleaseEvent> StackMouseReleaseListener;
+
+
+
+class StackKeyboardListener : public EventListener<UnicodeEvent>
+{
+private:
+	// Whether the manager is receiving keyboard inputs or not
+	bool m_Frozen;
+
+	// The map from keys to keyboard controls
+	std::unordered_map<int, int> m_KeyboardControls;
+
+	// The stack of listeners
+	std::vector<KeyboardListener*> m_Stack;
+
+public:
+	/// <summary>Converts a key input to the associated keyboard control. Returns -1 if no control is assigned.</summary>
+	/// <param name="key">The key received.</param>
+	/// <returns>The unique ID of the keyboard control associated with the key.</returns>
+	int convert_key_to_control(int key)
+	{
+		auto iter = m_KeyboardControls.find(key);
+		return iter != m_KeyboardControls.end() ? iter->second : -1;
+	}
+
+	/// <summary>Retrieves the name of the key assigned to the keyboard control.</summary>
+	/// <param name="control">The unique ID of the keyboard control.</param>
+	string get_key_from_control(int control)
+	{
+		for (auto iter = m_KeyboardControls.begin(); iter != m_KeyboardControls.end(); ++iter)
+		{
+			if (iter->second == control)
+			{
+				const char* key_name = glfwGetKeyName(iter->first, 0);
+				return string(key_name ? key_name : "UNKNOWN");
+			}
+		}
+	}
+	
+	/// <summary>Assigns a key input with a keyboard control.</summary>
+	/// <param name="control">The unique ID of the keyboard control to assign.</param>
+	/// <param name="key">The key to assign.</param>
+	void assign_key_to_control(int control, int key = -1)
+	{
+		if (key >= 0)
+		{
+			auto prev = m_KeyboardControls.find(key);
+			if (prev == m_KeyboardControls.end())
+			{
+				for (auto iter = m_KeyboardControls.begin(); iter != m_KeyboardControls.end(); ++iter)
+				{
+					if (iter->second == control)
+					{
+						m_KeyboardControls.erase(iter);
+					}
+				}
+
+				m_KeyboardControls.emplace(key, control);
+			}
+		}
+		else
+		{
+			int k = 0;
+			while (true)
+			{
+				auto prev = m_KeyboardControls.find(k);
+				if (prev != m_KeyboardControls.end())
+				{
+					m_KeyboardControls.emplace(k, control);
+					break;
+				}
+
+				++k;
+			}
+		}
+	}
+
+
+	/// <summary>Pushes a listener on top of the stack.</summary>
+	/// <param name="listener">The listener to add to the stack.</param>
+	void push(KeyboardListener* listener)
+	{
+		m_Stack.push_back(listener);
+	}
+
+	/// <summary>Pops a listener from the stack.</summary>
+	/// <param name="listener">The listener to remove from the stack.</param>
+	void pop(KeyboardListener* listener)
+	{
+		for (auto iter = m_Stack.begin(); iter != m_Stack.end(); ++iter)
+		{
+			if (*iter == listener)
+			{
+				m_Stack.erase(iter);
+				break;
+			}
+		}
+	}
+
+
+	/// <summary>Responds to an event.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	int trigger(const KeyEvent& event_data)
+	{
+		if (!m_Frozen)
+		{
+			for (auto iter = m_Stack.rbegin(); iter != m_Stack.rend(); ++iter)
+			{
+				if ((*iter)->trigger(event_data) == EVENT_STOP)
+				{
+					return EVENT_STOP;
+				}
+			}
+		}
+
+		return EVENT_CONTINUE;
+	}
+	
+	/// <summary>Responds to an event.</summary>
+	/// <param name="event_data">The data for the event.</param>
+	int trigger(const UnicodeEvent& event_data)
+	{
+		if (!m_Frozen)
+		{
+			for (auto iter = m_Stack.rbegin(); iter != m_Stack.rend(); ++iter)
+			{
+				if ((*iter)->trigger(event_data) == EVENT_STOP)
+				{
+					return EVENT_STOP;
+				}
+			}
+		}
+
+		return EVENT_CONTINUE;
+	}
+
+
+	void freeze()
+	{
+		m_Frozen = true;
+	}
+
+	void unfreeze()
+	{
+		m_Frozen = false;
+	}
+
+} g_KeyboardManager;
+
+
+
+KeyboardListener::~KeyboardListener()
+{
+	g_KeyboardManager.pop(this);
+}
+
+void KeyboardListener::freeze()
+{
+	g_KeyboardManager.pop(this);
+}
+
+void KeyboardListener::unfreeze()
+{
+	g_KeyboardManager.push(this);
+}
+
+int KeyboardListener::trigger(const KeyEvent& event_data)
+{
+	return EVENT_STOP;
+}
+
+int KeyboardListener::trigger(const UnicodeEvent& event_data)
+{
+	return EVENT_STOP;
+}
+
+
+
+void register_keyboard_control(int control)
+{
+	g_KeyboardManager.assign_key_to_control(control);
+}
+
+string get_assigned_key(int control)
+{
+	return g_KeyboardManager.get_key_from_control(control);
+}
+
+void assign_key(int control)
+{
+	// TODO
+}
+
 
 
 // A listener that keeps track of the mouse state.
@@ -125,85 +325,73 @@ public:
 	}
 
 
-	void pop_move_listener()
+	void pop(MouseMoveListener* listener)
 	{
-		StackMouseMoveListener::pop();
+		StackMouseMoveListener::pop(listener);
 	}
 
-	void pop_press_listener()
+	void pop(MousePressListener* listener)
 	{
-		StackMousePressListener::pop();
+		StackMousePressListener::pop(listener);
 	}
 
-	void pop_release_listener()
+	void pop(MouseReleaseListener* listener)
 	{
-		StackMouseReleaseListener::pop();
+		StackMouseReleaseListener::pop(listener);
 	}
 
-} g_MouseListener;
+} g_MouseManager;
 
 
-void push_mouse_move_listener(MouseMoveListener* listener)
+
+MouseMoveListener::~MouseMoveListener()
 {
-	g_MouseListener.push(listener);
+	std::cout << "Destroyed mouse move listener.\n";
+	g_MouseManager.pop(this);
 }
-
-void pop_mouse_move_listener()
-{
-	g_MouseListener.pop_move_listener();
-}
-
-void push_mouse_press_listener(MousePressListener* listener)
-{
-	g_MouseListener.push(listener);
-}
-
-void pop_mouse_press_listener()
-{
-	g_MouseListener.pop_press_listener();
-}
-
-void push_mouse_release_listener(MouseReleaseListener* listener)
-{
-	g_MouseListener.push(listener);
-}
-
-void pop_mouse_release_listener()
-{
-	g_MouseListener.pop_release_listener();
-}
-
 
 void MouseMoveListener::freeze()
 {
-	//g_MouseListener.pop_move_listener(this);
+	g_MouseManager.pop(this);
 }
 
 void MouseMoveListener::unfreeze()
 {
-	g_MouseListener.push(this);
+	g_MouseManager.push(this);
 }
 
 
+MousePressListener::~MousePressListener()
+{
+	std::cout << "Destroyed mouse press listener.\n";
+	g_MouseManager.pop(this);
+}
+
 void MousePressListener::freeze()
 {
-	//
+	g_MouseManager.pop(this);
 }
 
 void MousePressListener::unfreeze()
 {
-	g_MouseListener.push(this);
+	g_MouseManager.push(this);
 }
 
 
+MouseReleaseListener::~MouseReleaseListener()
+{
+	std::cout << "Destroyed mouse release listener.\n";
+	g_MouseManager.pop(this);
+}
+
 void MouseReleaseListener::freeze()
 {
-	//
+	g_MouseManager.pop(this);
 }
 
 void MouseReleaseListener::unfreeze()
 {
-	g_MouseListener.push(this);
+	g_MouseManager.push(this);
 }
 
 
@@ -379,6 +567,18 @@ void onion_key_callback(GLFWwindow* window, int key, int scancode, int action, i
 
 }
 
+/// <summary>The callback function for when input for a Unicode character is received.</summary>
+/// <param name="window">The window where the event was triggered.</param>
+/// <param name="codepoint">The native endian UTF-32 codepoint received.</param>
+void onion_unicode_callback(GLFWwindow* window, unsigned int codepoint)
+{
+	// Construct the data object
+	UnicodeEvent event_data = { codepoint };
+
+	// Trigger the global listener
+	g_KeyboardManager.trigger(event_data);
+}
+
 /// <summary>The callback function for when the mouse moves.</summary>
 /// <param name="window">The window that the event triggered from.</param>
 /// <param name="xpos">The x-coordinate of the mouse cursor.</param>
@@ -389,7 +589,7 @@ void onion_mouse_move_callback(GLFWwindow* window, double xpos, double ypos)
 	MouseMoveEvent event_data = { round(xpos), g_Application->height - (int)round(ypos) };
 
 	// Trigger the global listener
-	g_MouseListener.trigger(event_data);
+	g_MouseManager.trigger(event_data);
 }
 
 /// <summary>The callback function for when a mouse button is pressed or released.</summary>
@@ -402,18 +602,18 @@ void onion_mouse_click_callback(GLFWwindow* window, int button, int action, int 
 	if (action == GLFW_PRESS)
 	{
 		// Construct the data object
-		MousePressEvent event_data = { g_MouseListener.x, g_MouseListener.y, button, mods };
+		MousePressEvent event_data = { g_MouseManager.x, g_MouseManager.y, button, mods };
 
 		// Trigger the global listener
-		g_MouseListener.trigger(event_data);
+		g_MouseManager.trigger(event_data);
 	}
 	else
 	{
 		// Construct the data object
-		MouseReleaseEvent event_data = { g_MouseListener.x, g_MouseListener.y, button };
+		MouseReleaseEvent event_data = { g_MouseManager.x, g_MouseManager.y, button };
 
 		// Trigger the global listener
-		g_MouseListener.trigger(event_data);
+		g_MouseManager.trigger(event_data);
 	}
 }
 
@@ -448,6 +648,7 @@ int onion_init(const char* settings_file)
 	glfwMakeContextCurrent(g_Window);
 
 	glfwSetKeyCallback(g_Window, onion_key_callback);
+	glfwSetCharCallback(g_Window, onion_unicode_callback);
 	glfwSetCursorPosCallback(g_Window, onion_mouse_move_callback);
 	glfwSetMouseButtonCallback(g_Window, onion_mouse_click_callback);
 
@@ -464,13 +665,10 @@ int onion_init(const char* settings_file)
 
 void onion_main(onion_display_func display_callback)
 {
-	// Enable depth testing
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-
 	// Set the blend function
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	// glBlendFuncSeparate does rgb and alpha separately
 
 	// Core loop
 	while (!glfwWindowShouldClose(g_Window))
