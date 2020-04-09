@@ -41,7 +41,6 @@ void set_application_settings(Application* app);
 
 
 typedef void(*onion_display_func)(void);
-typedef void(*onion_event_func)(void);
 
 
 /// <summary>Initializes the Onion library.</summary>
@@ -50,5 +49,5 @@ typedef void(*onion_event_func)(void);
 int onion_init(const char* settings_file);
 
 /// <summary>Runs the main loop of the Onion library.</summary>
-/// <param name="display_callback">The callback function for displaying.</param>
+/// <param name="display_callback">The callback function for displaying the application at regular intervals.</param>
 void onion_main(onion_display_func display_callback);

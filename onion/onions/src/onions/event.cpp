@@ -2,6 +2,7 @@
 #include <fstream>
 #include <regex>
 #include <unordered_map>
+#include <thread>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "../../include/onions/application.h"
@@ -21,13 +22,6 @@ private:
 	std::vector<EventListener<EventType>*> m_Stack;
 
 public:
-	/// <summary>Pushes a listener on top of the stack.</summary>
-	/// <param name="listener">The listener to add to the stack.</param>
-	void push(EventListener<EventType>* listener)
-	{
-		m_Stack.push_back(listener);
-	}
-
 	/// <summary>Pops a listener from the stack.</summary>
 	/// <param name="listener">The listener to remove from the stack.</param>
 	void pop(EventListener<EventType>* listener)
@@ -40,6 +34,14 @@ public:
 				break;
 			}
 		}
+	}
+
+	/// <summary>Pushes a listener on top of the stack.</summary>
+	/// <param name="listener">The listener to add to the stack.</param>
+	void push(EventListener<EventType>* listener)
+	{
+		pop(listener);
+		m_Stack.push_back(listener);
 	}
 
 	/// <summary>Responds to an event.</summary>
@@ -61,6 +63,94 @@ public:
 typedef StackEventListener<MouseMoveEvent> StackMouseMoveListener;
 typedef StackEventListener<MousePressEvent> StackMousePressListener;
 typedef StackEventListener<MouseReleaseEvent> StackMouseReleaseListener;
+
+
+
+int UpdateEvent::frame{ 1 };
+
+class StackUpdateListener : public UpdateListener
+{
+private:
+	// Whether the listener is updating or not.
+	bool m_Frozen;
+
+	// The stack of event listeners to update.
+	vector<UpdateListener*> m_Stack;
+
+protected:
+	void __update()
+	{
+		for (auto iter = m_Stack.rbegin(); iter != m_Stack.rend(); ++iter)
+		{
+			(*iter)->update();
+		}
+	}
+
+public:
+	/// <summary>Freezes input to the global listener.</summary>
+	void freeze()
+	{
+		m_Frozen = true;
+	}
+
+	/// <summary>Unfreezes input to the global listener.</summary>
+	void unfreeze()
+	{
+		m_Frozen = false;
+	}
+
+	/// <summary>Pops a listener from the stack.</summary>
+	/// <param name="listener">The listener to remove from the stack.</param>
+	void pop(UpdateListener* listener)
+	{
+		for (auto iter = m_Stack.begin(); iter != m_Stack.end(); ++iter)
+		{
+			if (*iter == listener)
+			{
+				m_Stack.erase(iter);
+				break;
+			}
+		}
+	}
+
+	/// <summary>Pushes a listener on top of the stack.</summary>
+	/// <param name="listener">The listener to add to the stack.</param>
+	void push(UpdateListener* listener)
+	{
+		pop(listener);
+		m_Stack.push_back(listener);
+	}
+
+} g_UpdateManager;
+
+
+
+UpdateListener::~UpdateListener()
+{
+	g_UpdateManager.pop(this);
+}
+
+void UpdateListener::update()
+{
+	__update();
+	m_LastFrameUpdated = UpdateEvent::frame;
+}
+
+bool UpdateListener::has_updated()
+{
+	return UpdateEvent::frame == m_LastFrameUpdated;
+}
+
+void UpdateListener::freeze()
+{
+	g_UpdateManager.pop(this);
+}
+
+void UpdateListener::unfreeze()
+{
+	g_UpdateManager.push(this);
+}
+
 
 
 
@@ -346,7 +436,6 @@ public:
 
 MouseMoveListener::~MouseMoveListener()
 {
-	std::cout << "Destroyed mouse move listener.\n";
 	g_MouseManager.pop(this);
 }
 
@@ -363,7 +452,6 @@ void MouseMoveListener::unfreeze()
 
 MousePressListener::~MousePressListener()
 {
-	std::cout << "Destroyed mouse press listener.\n";
 	g_MouseManager.pop(this);
 }
 
@@ -380,7 +468,6 @@ void MousePressListener::unfreeze()
 
 MouseReleaseListener::~MouseReleaseListener()
 {
-	std::cout << "Destroyed mouse release listener.\n";
 	g_MouseManager.pop(this);
 }
 
@@ -668,7 +755,7 @@ void onion_main(onion_display_func display_callback)
 	// Set the blend function
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	// glBlendFuncSeparate does rgb and alpha separately
+	// TODO glBlendFuncSeparate to do rgb and alpha separately?
 
 	// Core loop
 	while (!glfwWindowShouldClose(g_Window))
@@ -676,14 +763,18 @@ void onion_main(onion_display_func display_callback)
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// Update everything
+		++UpdateEvent::frame;
+		g_UpdateManager.update();
+
 		// Draw everything
 		display_callback();
 
 		// Swap buffers
 		glfwSwapBuffers(g_Window);
 
-		// Poll events
-		glfwPollEvents();
+		// TODO wait until frame interval has passed
+		glfwPollEvents();// temporary
 	}
 
 	// Close everything down.

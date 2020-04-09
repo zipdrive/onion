@@ -177,7 +177,7 @@ public:
 };
 
 
-class ScrollableFrame : public Frame
+class ScrollableFrame : public Frame, public UpdateListener
 {
 protected:
 	// The frame being scrolled
@@ -191,6 +191,9 @@ protected:
 
 	// The distance available to scroll
 	vec2i m_ScrollDistance;
+
+	/// <summary>Updates the frame.</summary>
+	void __update();
 
 public:
 	/// <summary></summary>

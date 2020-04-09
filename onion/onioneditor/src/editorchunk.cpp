@@ -492,6 +492,7 @@ void ChunksEditor::display()
 void ChunksEditor::freeze()
 {
 	m_ScrollBar->freeze();
+	m_ChunksScroller->freeze();
 
 	m_NewChunkButton.freeze();
 }
@@ -499,6 +500,7 @@ void ChunksEditor::freeze()
 void ChunksEditor::unfreeze()
 {
 	m_ScrollBar->unfreeze();
+	m_ChunksScroller->unfreeze();
 
 	m_NewChunkButton.unfreeze();
 }

@@ -26,6 +26,41 @@ public:
 
 
 
+struct UpdateEvent
+{
+	// The current frame
+	static int frame;
+};
+
+class UpdateListener
+{
+private:
+	// The last frame that the listener updated.
+	int m_LastFrameUpdated;
+
+protected:
+	/// <summary>Updates the listener. This is the function that should be overridden by subclasses.</summary>
+	virtual void __update() = 0;
+
+public:
+	/// <summary>Destroys the listener.</summary>
+	virtual ~UpdateListener();
+
+	/// <summary>Checks whether the listener has been updated this frame.</summary>
+	bool has_updated();
+
+	/// <summary>Stops the listener from updating.</summary>
+	virtual void freeze();
+
+	/// <summary>Causes the listener to update.</summary>
+	virtual void unfreeze();
+
+	/// <summary>Updates the listener, including frame data.</summary>
+	void update();
+};
+
+
+
 struct KeyEvent
 {
 	// The keyboard input that was processed.

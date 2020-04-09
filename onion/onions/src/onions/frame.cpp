@@ -358,9 +358,12 @@ ScrollableFrame::ScrollableFrame(Frame* frame, ScrollBar* horizontal, ScrollBar*
 	if (m_VerticalScrollBar) m_VerticalScrollBar->set_parent(this);
 
 	set_bounds(x, y, width, height);
+}
 
-	int w = width - m_Frame->get_width();
-	int h = height - m_Frame->get_height();
+void ScrollableFrame::__update()
+{
+	int w = get_width() - m_Frame->get_width();
+	int h = get_height() - m_Frame->get_height();
 
 	m_ScrollDistance = vec2i(min(w, 0), h);
 }
