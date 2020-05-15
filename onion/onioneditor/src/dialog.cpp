@@ -10,13 +10,16 @@ void Dialog::ConfirmButton::click()
 }
 
 
-Dialog::Dialog(int width, int height)
+Dialog::Dialog(int width, int height, std::string message) : m_Message(get_gui_font(), get_gui_font_palette(), message, width - 24)
 {
+	int message_height = m_Message.get_height();
+	int h = height + 48 + (message_height == 0 ? 0 : 8 + m_Message.get_height());
+
 	Application* app = get_application_settings();
-	set_bounds((app->width - width) / 2, (app->height - height) / 2, width, height);
+	set_bounds((app->width - width) / 2, (app->height - h) / 2, width, h);
 
 	// Yes I am aware this will cause a memory leak, but it's just a placeholder so I don't care
-	m_Background = SolidColorGraphic::generate(1.f, 1.f, 0.f, 1.f, width, height);
+	m_Background = SolidColorGraphic::generate(1.f, 1.f, 0.f, 1.f, width, h);
 
 	m_ConfirmButton.set_bounds((width / 2) - 36, 8, 72, 24);
 	m_ConfirmButton.set_parent(this);
@@ -25,6 +28,11 @@ Dialog::Dialog(int width, int height)
 void Dialog::display_content() const
 {
 	m_ConfirmButton.display();
+
+	mat_push();
+	mat_translate(12.f, get_height() - 12, 0.f);
+	m_Message.display();
+	mat_pop();
 }
 
 void Dialog::display() const
@@ -78,7 +86,7 @@ void CancelableDialog::CancelButton::click()
 	}
 }
 
-CancelableDialog::CancelableDialog(int width, int height) : Dialog(width, height)
+CancelableDialog::CancelableDialog(int width, int height, std::string message) : Dialog(width, height, message)
 {
 	m_ConfirmButton.set_bounds((width / 2) - 84, 8, 72, 24);
 	m_CancelButton.set_bounds((width / 2) + 12, 8, 72, 24);
@@ -111,9 +119,23 @@ void CancelableDialog::display_content() const
 
 
 
+ConfirmationDialog::ConfirmationDialog(std::string message) : CancelableDialog(320, 0, message) {}
+
+
+
 TextInputDialog::DialogTextInput::DialogTextInput()
 {
 	m_Background = SolidColorGraphic::generate(1.f, 0.f, 1.f, 1.f, 1, 1);
+}
+
+Font* TextInputDialog::DialogTextInput::get_font() const
+{
+	return get_gui_font();
+}
+
+const Palette* TextInputDialog::DialogTextInput::get_font_palette() const
+{
+	return get_gui_font_palette();
 }
 
 void TextInputDialog::DialogTextInput::display() const
@@ -125,13 +147,12 @@ void TextInputDialog::DialogTextInput::display() const
 	m_Background->height = get_height();
 	m_Background->display();
 
-	mat_translate(8.f, (get_height() - 12) / 2, 0.f);
-	get_gui_font()->display_line(m_TextInput, get_gui_font_palette());
-
 	mat_pop();
+
+	TextInput::display();
 }
 
-TextInputDialog::TextInputDialog(std::string desc) : CancelableDialog(420, 72)
+TextInputDialog::TextInputDialog(std::string message) : CancelableDialog(420, 32, message)
 {
 	m_TextInput.set_bounds(36, 40, 348, 24);
 	m_TextInput.set_parent(this);

@@ -149,7 +149,7 @@ void Chunk::set_tile(int x, int y, SPRITE_KEY tile)
 
 void Chunk::display(int xmin, int ymin, int xmax, int ymax)
 {
-	const mat4x4f identityMatrix;
+	const SinglePalette identityPalette(vec4f(1.f, 0.f, 0.f, 1.f), vec4f(0.f, 1.f, 0.f, 1.f), vec4f(0.f, 0.f, 1.f, 1.f));
 
 	// Enable depth testing
 	glEnable(GL_DEPTH_TEST);
@@ -175,7 +175,7 @@ void Chunk::display(int xmin, int ymin, int xmax, int ymax)
 			for (int j = jmin; j <= jmax; ++j)
 			{
 				mat_translate(0.f, TILE_HEIGHT, 0.f);
-				m_TileSprites->display(m_Tiles[CHUNK_INDEX(i, j)], identityMatrix);
+				m_TileSprites->display(m_Tiles[CHUNK_INDEX(i, j)], &identityPalette);
 			}
 			mat_pop();
 		}

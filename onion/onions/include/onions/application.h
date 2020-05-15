@@ -3,6 +3,9 @@
 #include <string>
 
 
+#define FRAME_RATE 30
+
+
 // Contains all settings for the application window.
 struct Application
 {

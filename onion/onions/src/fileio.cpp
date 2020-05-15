@@ -1,3 +1,4 @@
+#include <regex>
 #include "../include/onions/fileio.h"
 
 using namespace std;
@@ -59,4 +60,22 @@ string LoadFile::load_string()
 	buffer[len] = '\0';
 
 	return string(buffer);
+}
+
+string LoadFile::load_data(unordered_map<string, int>& data)
+{
+	string line;
+	regex line_data("(.*\\S)\\s+(\\S+)\\s*=\\s*(\\d+)");
+
+	if (getline(m_File, line))
+	{
+		smatch match;
+		while (regex_match(line, match, line_data))
+		{
+			data.emplace(match[2].str(), stoi(match[3].str()));
+			line = match[1].str();
+		}
+	}
+
+	return line;
 }

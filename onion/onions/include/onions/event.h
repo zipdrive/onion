@@ -30,6 +30,9 @@ struct UpdateEvent
 {
 	// The current frame
 	static int frame;
+
+	// The number of frames per second.
+	static int frames_per_second;
 };
 
 class UpdateListener

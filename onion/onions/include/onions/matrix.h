@@ -467,11 +467,41 @@ public:
 };
 
 
+
+// A matrix with 2 rows and 4 columns.
+template <typename T>
+class mat2x4 : public matrix<T, 2, 4>
+{
+public:
+	mat2x4(T a11, T a12, T a13, T a14,
+		T a21, T a22, T a23, T a24)
+	{
+		set(0, 0, a11);
+		set(0, 1, a12);
+		set(0, 2, a13);
+		set(0, 3, a14);
+
+		set(1, 0, a21);
+		set(1, 1, a22);
+		set(1, 2, a23);
+		set(1, 3, a24);
+	}
+
+	mat2x4& operator=(const matrix<T, 2, 4>& other)
+	{
+		matrix<T, 2, 4>::operator=(other);
+		return *this;
+	}
+};
+
+
 typedef mat2x2<int> mat2x2i;
 
 typedef mat2x2<float> mat2x2f;
 typedef mat3x3<float> mat3x3f;
 typedef mat4x4<float> mat4x4f;
+
+typedef mat2x4<float> mat2x4f;
 
 typedef vec2<int> vec2i;
 typedef vec3<int> vec3i;

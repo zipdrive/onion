@@ -67,6 +67,7 @@ typedef StackEventListener<MouseReleaseEvent> StackMouseReleaseListener;
 
 
 int UpdateEvent::frame{ 1 };
+int UpdateEvent::frames_per_second{ 480 };
 
 class StackUpdateListener : public UpdateListener
 {
@@ -643,17 +644,6 @@ int Application::display()
 
 
 
-/// <summary>The callback function for when a physical key is pressed, released, or repeated.</summary>
-/// <param name="window">The window that the event triggered from.</param>
-/// <param name="key">The keyboard key that triggered the event.</param>
-/// <param name="scancode">The scancode of the key.</param>
-/// <param name="action">Whether the key was pressed, released, or repeated.</param>
-/// <param name="mods">Bit field of which modifier keys were held down.</param>
-void onion_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-
-}
-
 /// <summary>The callback function for when input for a Unicode character is received.</summary>
 /// <param name="window">The window where the event was triggered.</param>
 /// <param name="codepoint">The native endian UTF-32 codepoint received.</param>
@@ -664,6 +654,30 @@ void onion_unicode_callback(GLFWwindow* window, unsigned int codepoint)
 
 	// Trigger the global listener
 	g_KeyboardManager.trigger(event_data);
+}
+
+/// <summary>The callback function for when a physical key is pressed, released, or repeated.</summary>
+/// <param name="window">The window that the event triggered from.</param>
+/// <param name="key">The keyboard key that triggered the event.</param>
+/// <param name="scancode">The scancode of the key.</param>
+/// <param name="action">Whether the key was pressed, released, or repeated.</param>
+/// <param name="mods">Bit field of which modifier keys were held down.</param>
+void onion_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	// Call key
+
+	// Call unicode callback
+	if (action == GLFW_PRESS)
+	{
+		if (key == GLFW_KEY_BACKSPACE)
+		{
+			onion_unicode_callback(window, 0x08);
+		}
+		else if (key == GLFW_KEY_DELETE)
+		{
+			onion_unicode_callback(window, 0x7f);
+		}
+	}
 }
 
 /// <summary>The callback function for when the mouse moves.</summary>
@@ -756,6 +770,11 @@ void onion_main(onion_display_func display_callback)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	// TODO glBlendFuncSeparate to do rgb and alpha separately?
+
+	// TEMP? Enable depth testing
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glClearColor(1.f, 1.f, 1.f, 1.f);
 
 	// Core loop
 	while (!glfwWindowShouldClose(g_Window))

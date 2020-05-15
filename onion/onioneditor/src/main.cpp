@@ -2,6 +2,7 @@
 #include <list>
 #include "../include/dialog.h"
 #include "../include/editorchunk.h"
+#include "../include/editorsprite.h"
 
 
 mat4x4f g_UITransform;
@@ -11,6 +12,7 @@ Graphic* g_EditorTabsBackground;
 
 Editor* g_Editor = nullptr;
 ChunksEditor* g_ChunksEditor = nullptr;
+SpriteSheetsEditor* g_SpriteSheetsEditor = nullptr;
 
 
 std::list<Dialog*> g_Dialogs;
@@ -86,8 +88,9 @@ int main()
 
 	// Initialize editors
 	g_ChunksEditor = new ChunksEditor();
+	g_SpriteSheetsEditor = new SpriteSheetsEditor();
 
-	g_Editor = g_ChunksEditor;
+	g_Editor = g_SpriteSheetsEditor;
 	g_Editor->unfreeze();
 
 	g_EditorHeight = app->height - 24;

@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <string>
+#include <unordered_map>
 
 class SaveFile
 {
@@ -51,4 +52,9 @@ public:
 	/// <summary>Loads a string from file.</summary>
 	/// <returns>A string from the file.</returns>
 	std::string load_string();
+
+	/// <summary>Loads a line of key-value pairs from file, when stored in the format "key1 = value1  key2 = value2 ..."</summary>
+	/// <param name="data">A reference to where the key-value pairs will be stored. Keys cannot include spaces.</param>
+	/// <returns>The prefix for the line, which does not correspond to a key or value.</returns>
+	std::string load_data(std::unordered_map<std::string, int>& data);
 };

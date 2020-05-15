@@ -4,7 +4,10 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <SOIL.h>
+#include "../../include/onions/fileio.h"
 #include "../../include/onions/graphics.h"
+#include "../../include/onions/frame.h"
+#include "../../include/onions/application.h"
 
 #include <iostream>
 
@@ -18,19 +21,126 @@ using namespace std;
 
 
 
-mat4x4f generate_palette_matrix(
-	int rr, int rg, int rb, int ra,
-	int gr, int gg, int gb, int ga,
-	int br, int bg, int bb, int ba,
-	int ar, int ag, int ab, int aa) {
-
+void Palette::generate_palette_matrix(const vec4i& red_maps_to, const vec4i& green_maps_to, const vec4i& blue_maps_to, PALETTE_MATRIX& matrix)
+{
 	static float scale = 0.00392157f;
-	return mat4x4f(
-		rr * scale, gr * scale, br * scale, ar * scale,
-		rg * scale, gg * scale, bg * scale, ag * scale,
-		rb * scale, gb * scale, bb * scale, ab * scale,
-		ra * scale, ga * scale, ba * scale, aa * scale
-	);
+
+	matrix.set(0, 0, scale * red_maps_to.get(0));
+	matrix.set(1, 0, scale * red_maps_to.get(1));
+	matrix.set(2, 0, scale * red_maps_to.get(2));
+	matrix.set(3, 0, scale * red_maps_to.get(3));
+
+	matrix.set(0, 1, scale * green_maps_to.get(0));
+	matrix.set(1, 1, scale * green_maps_to.get(1));
+	matrix.set(2, 1, scale * green_maps_to.get(2));
+	matrix.set(3, 1, scale * green_maps_to.get(3));
+
+	matrix.set(0, 2, scale * blue_maps_to.get(0));
+	matrix.set(1, 2, scale * blue_maps_to.get(1));
+	matrix.set(2, 2, scale * blue_maps_to.get(2));
+	matrix.set(3, 2, scale * blue_maps_to.get(3));
+}
+
+void Palette::generate_palette_matrix(const vec4f& red_maps_to, const vec4f& green_maps_to, const vec4f& blue_maps_to, PALETTE_MATRIX& matrix)
+{
+	matrix.set(0, 0, red_maps_to.get(0));
+	matrix.set(1, 0, red_maps_to.get(1));
+	matrix.set(2, 0, red_maps_to.get(2));
+	matrix.set(3, 0, red_maps_to.get(3));
+
+	matrix.set(0, 1, green_maps_to.get(0));
+	matrix.set(1, 1, green_maps_to.get(1));
+	matrix.set(2, 1, green_maps_to.get(2));
+	matrix.set(3, 1, green_maps_to.get(3));
+
+	matrix.set(0, 2, blue_maps_to.get(0));
+	matrix.set(1, 2, blue_maps_to.get(1));
+	matrix.set(2, 2, blue_maps_to.get(2));
+	matrix.set(3, 2, blue_maps_to.get(3));
+}
+
+
+
+SinglePalette::SinglePalette(const vec4i& red_maps_to, const vec4i& green_maps_to, const vec4i& blue_maps_to)
+{
+	generate_palette_matrix(red_maps_to, green_maps_to, blue_maps_to, m_Matrix);
+}
+
+SinglePalette::SinglePalette(const vec4f& red_maps_to, const vec4f& green_maps_to, const vec4f& blue_maps_to)
+{
+	generate_palette_matrix(red_maps_to, green_maps_to, blue_maps_to, m_Matrix);
+}
+
+const PALETTE_MATRIX& SinglePalette::get_red_palette_matrix() const
+{
+	return m_Matrix;
+}
+
+const PALETTE_MATRIX& SinglePalette::get_green_palette_matrix() const
+{
+	return m_Matrix;
+}
+
+const PALETTE_MATRIX& SinglePalette::get_blue_palette_matrix() const
+{
+	return m_Matrix;
+}
+
+
+
+MultiplePalette::MultiplePalette()
+{
+	generate_palette_matrix(vec4i(255, 0, 0, 255), vec4i(255, 255, 255, 255), vec4i(0, 0, 0, 255), m_RedMatrix);
+	generate_palette_matrix(vec4i(0, 255, 0, 255), vec4i(255, 255, 255, 255), vec4i(0, 0, 0, 255), m_GreenMatrix);
+	generate_palette_matrix(vec4i(0, 0, 255, 255), vec4i(255, 255, 255, 255), vec4i(0, 0, 0, 255), m_BlueMatrix);
+}
+
+MultiplePalette::MultiplePalette(const vec4i& red_maps_red_maps_to, const vec4i& red_maps_green_maps_to, const vec4i& red_maps_blue_maps_to,
+	const vec4i& green_maps_red_maps_to, const vec4i& green_maps_green_maps_to, const vec4i& green_maps_blue_maps_to, 
+	const vec4i& blue_maps_red_maps_to, const vec4i& blue_maps_green_maps_to, const vec4i& blue_maps_blue_maps_to)
+{
+	generate_palette_matrix(red_maps_red_maps_to, red_maps_green_maps_to, red_maps_blue_maps_to, m_RedMatrix);
+	generate_palette_matrix(green_maps_red_maps_to, green_maps_green_maps_to, green_maps_blue_maps_to, m_GreenMatrix);
+	generate_palette_matrix(blue_maps_red_maps_to, blue_maps_green_maps_to, blue_maps_blue_maps_to, m_BlueMatrix);
+}
+
+MultiplePalette::MultiplePalette(const vec4f& red_maps_red_maps_to, const vec4f& red_maps_green_maps_to, const vec4f& red_maps_blue_maps_to,
+	const vec4f& green_maps_red_maps_to, const vec4f& green_maps_green_maps_to, const vec4f& green_maps_blue_maps_to,
+	const vec4f& blue_maps_red_maps_to, const vec4f& blue_maps_green_maps_to, const vec4f& blue_maps_blue_maps_to)
+{
+	generate_palette_matrix(red_maps_red_maps_to, red_maps_green_maps_to, red_maps_blue_maps_to, m_RedMatrix);
+	generate_palette_matrix(green_maps_red_maps_to, green_maps_green_maps_to, green_maps_blue_maps_to, m_GreenMatrix);
+	generate_palette_matrix(blue_maps_red_maps_to, blue_maps_green_maps_to, blue_maps_blue_maps_to, m_BlueMatrix);
+}
+
+const PALETTE_MATRIX& MultiplePalette::get_red_palette_matrix() const
+{
+	return m_RedMatrix;
+}
+
+void MultiplePalette::set_red_palette_matrix(const vec4i& red_maps_to, const vec4i& green_maps_to, const vec4i& blue_maps_to)
+{
+	generate_palette_matrix(red_maps_to, green_maps_to, blue_maps_to, m_RedMatrix);
+}
+
+const PALETTE_MATRIX& MultiplePalette::get_green_palette_matrix() const
+{
+	return m_GreenMatrix;
+}
+
+void MultiplePalette::set_green_palette_matrix(const vec4i& red_maps_to, const vec4i& green_maps_to, const vec4i& blue_maps_to)
+{
+	generate_palette_matrix(red_maps_to, green_maps_to, blue_maps_to, m_GreenMatrix);
+}
+
+const PALETTE_MATRIX& MultiplePalette::get_blue_palette_matrix() const
+{
+	return m_BlueMatrix;
+}
+
+void MultiplePalette::set_blue_palette_matrix(const vec4i& red_maps_to, const vec4i& green_maps_to, const vec4i& blue_maps_to)
+{
+	generate_palette_matrix(red_maps_to, green_maps_to, blue_maps_to, m_BlueMatrix);
 }
 
 
@@ -41,10 +151,35 @@ protected:
 	// The buffer that's currently bound.
 	static GLuint m_ActiveBuffer;
 
+	// The clipping rectangle for the shader, in (-1, -1) to (+1, +1) coordinates.
+	static mat2x2f m_ClippingRect;
+
 	// The buffer's OpenGL key.
 	GLuint m_Buffer;
 
 public:
+	/// <summary>Sets the clipping rectangle for the buffer.</summary>
+	/// <param name="rect">The bounds of the clipping rectangle.</param>
+	static void set_clipping_rectangle(const mat2x2f& rect)
+	{
+		const mat4x4f& trans = mat_get();
+
+		m_ClippingRect.set(0, 0, (rect.get(0, 0) * trans.get(0, 0)) + (rect.get(1, 0) * trans.get(0, 1)) + trans.get(0, 3));
+		m_ClippingRect.set(0, 1, (rect.get(0, 1) * trans.get(0, 0)) + (rect.get(1, 1) * trans.get(0, 1)) + trans.get(0, 3));
+
+		m_ClippingRect.set(1, 0, (rect.get(0, 0) * trans.get(1, 0)) + (rect.get(1, 0) * trans.get(1, 1)) + trans.get(1, 3));
+		m_ClippingRect.set(1, 1, (rect.get(0, 1) * trans.get(1, 0)) + (rect.get(1, 1) * trans.get(1, 1)) + trans.get(1, 3));
+	}
+
+	static void clear_clipping_rectangle()
+	{
+		m_ClippingRect.set(0, 0, -1.f);
+		m_ClippingRect.set(0, 1, 1.f);
+
+		m_ClippingRect.set(1, 0, -1.f);
+		m_ClippingRect.set(1, 1, 1.f);
+	}
+
 	/// <summary>Constructs a buffer object.</summary>
 	Buffer(GLuint buffer)
 	{
@@ -70,6 +205,7 @@ public:
 };
 
 GLuint Buffer::m_ActiveBuffer{ GL_DEFAULT_VALUE };
+mat2x2f Buffer::m_ClippingRect(0.f, 0.f, INFINITY, INFINITY);
 
 
 // Handles switching between shader programs.
@@ -454,7 +590,7 @@ protected:
 			m_TintMatrix = glGetUniformLocation(m_Shader, "tintMatrix");
 		}
 
-		void activate(const mat4x4f& tintMatrix)
+		void activate(const Palette* palette)
 		{
 			// Activate the shader program
 			Shader::activate();
@@ -463,7 +599,7 @@ protected:
 			glUniformMatrix4fv(m_MVP, 1, GL_FALSE, mat_get_values());
 
 			// Set the color tint matrix
-			glUniformMatrix4fv(m_TintMatrix, 1, GL_FALSE, tintMatrix.matrix_values());
+			glUniformMatrix4fv(m_TintMatrix, 1, GL_FALSE, palette->get_red_palette_matrix().matrix_values());
 		}
 	};
 
@@ -519,7 +655,7 @@ protected:
 	static SpriteShader* m_Shader;
 
 	// The buffer for this specific sprite sheet.
-	SpriteBuffer* m_Buffer;
+	SpriteBuffer* m_Buffer = nullptr;
 
 
 	GLuint load_raw_sprite_sheet(const char* path)
@@ -572,133 +708,85 @@ public:
 		fpath = regex_replace(fpath, fext_finder, "$1.meta");
 
 		// Load data about sprites from meta file
-		std::vector<float> spriteData;
-
-		// Create a sprite that is the whole sprite sheet
-
-		// First triangle: bottom-left, bottom-right, top-right
-		// Bottom-left corner, vertices
-		spriteData.push_back(0.f);
-		spriteData.push_back(0.f);
-		// Bottom-left corner, tex coord
-		spriteData.push_back(0.f);
-		spriteData.push_back(0.f);
-		// Bottom-right corner, vertices
-		spriteData.push_back(width);
-		spriteData.push_back(0.f);
-		// Bottom-right corner, tex coord
-		spriteData.push_back(1.f);
-		spriteData.push_back(0.f);
-		// Top-right corner, vertices
-		spriteData.push_back(width);
-		spriteData.push_back(height);
-		// Top-right corner, tex coord
-		spriteData.push_back(1.f);
-		spriteData.push_back(1.f);
-
-		// Second triangle: bottom-left, top-left, top-right
-		// Bottom-left corner, vertices
-		spriteData.push_back(0.f);
-		spriteData.push_back(0.f);
-		// Bottom-left corner, tex coord
-		spriteData.push_back(0.f);
-		spriteData.push_back(0.f);
-		// Top-left corner, vertices
-		spriteData.push_back(0.f);
-		spriteData.push_back(height);
-		// Top-left corner, tex coord
-		spriteData.push_back(0.f);
-		spriteData.push_back(1.f);
-		// Top-right corner, vertices
-		spriteData.push_back(width);
-		spriteData.push_back(height);
-		// Top-right corner, tex coord
-		spriteData.push_back(1.f);
-		spriteData.push_back(1.f);
-
+		vector<float> sprite_data;
 
 		// Load the file
-		ifstream meta(fpath.c_str(), ios::in | ios::binary);
-		char buffer[10];
+		LoadFile meta(fpath.c_str());
 
 		while (meta.good())
 		{
-			// Pull information about the sprite from file
-			meta.read(buffer, 10);
+			// Load the sprite data from file
+			unordered_map<string, int> file_data;
+			string id = meta.load_data(file_data);
 
-			// The key for the sprite.
-			SPRITE_ID id = buffer[0] | ((int16_t)buffer[1] << 8);
+			if (!file_data.empty()) // Check to make sure that the line wasn't empty
+			{
+				// Load the integer values
+				// TODO make this operation safer
+				int left = file_data["left"];
+				int top = file_data["top"];
+				int sprite_width = file_data["width"];
+				int sprite_height = file_data["height"];
 
-			// The distance from the left side of the sprite sheet to the left side of the sprite.
-			int16_t left = buffer[2] | ((int16_t)buffer[3] << 8);
-			// The distance from the top side of the sprite sheet to the top side of the sprite.
-			int16_t top = buffer[4] | ((int16_t)buffer[5] << 8);
-			// The width of the sprite.
-			int16_t sprite_width = buffer[6] | ((int16_t)buffer[7] << 8);
-			// The height of the sprite.
-			int16_t sprite_height = buffer[8] | ((int16_t)buffer[9] << 8);
+				// Calculate texcoord numbers
+				float l = (float)left / width; // left texcoord
+				float r = (float)(left + sprite_width) / width; // right texcoord
+				float w = (float)sprite_width;
 
-			// Calculate texcoord numbers
-			float l = (float)left / width; // left texcoord
-			float r = (float)(left + sprite_width) / width; // right texcoord
-			float w = (float)sprite_width;
+				float t = (float)top / height; // top texcoord
+				float b = (float)(top + sprite_height) / height; // bottom texcoord
+				float h = (float)sprite_height;
 
-			float t = (float)top / height; // top texcoord
-			float b = (float)(top + sprite_height) / height; // bottom texcoord
-			float h = (float)sprite_height;
+				// Set the sprite data
+				Sprite::set_sprite(id, new Sprite(sprite_data.size() / 4, sprite_width, sprite_height));
 
-			// Set the sprite data
-			Sprite::set_sprite(id, new Sprite(spriteData.size() / 4, sprite_width, sprite_height));
+				// First triangle: bottom-left, bottom-right, top-right
+				// Bottom-left corner, vertices
+				sprite_data.push_back(0.0f);
+				sprite_data.push_back(0.0f);
+				// Bottom-left corner, tex coord
+				sprite_data.push_back(l);
+				sprite_data.push_back(b);
+				// Bottom-right corner, vertices
+				sprite_data.push_back(w);
+				sprite_data.push_back(0.0f);
+				// Bottom-right corner, tex coord
+				sprite_data.push_back(r);
+				sprite_data.push_back(b);
+				// Top-right corner, vertices
+				sprite_data.push_back(w);
+				sprite_data.push_back(h);
+				// Top-right corner, tex coord
+				sprite_data.push_back(r);
+				sprite_data.push_back(t);
 
-			// First triangle: bottom-left, bottom-right, top-right
-			// Bottom-left corner, vertices
-			spriteData.push_back(0.0f);
-			spriteData.push_back(0.0f);
-			// Bottom-left corner, tex coord
-			spriteData.push_back(l);
-			spriteData.push_back(b);
-			// Bottom-right corner, vertices
-			spriteData.push_back(w);
-			spriteData.push_back(0.0f);
-			// Bottom-right corner, tex coord
-			spriteData.push_back(r);
-			spriteData.push_back(b);
-			// Top-right corner, vertices
-			spriteData.push_back(w);
-			spriteData.push_back(h);
-			// Top-right corner, tex coord
-			spriteData.push_back(r);
-			spriteData.push_back(t);
-
-			// Second triangle: bottom-left, top-left, top-right
-			// Bottom-left corner, vertices
-			spriteData.push_back(0.0f);
-			spriteData.push_back(0.0f);
-			// Bottom-left corner, tex coord
-			spriteData.push_back(l);
-			spriteData.push_back(b);
-			// Top-left corner, vertices
-			spriteData.push_back(0.0f);
-			spriteData.push_back(h);
-			// Top-left corner, tex coord
-			spriteData.push_back(l);
-			spriteData.push_back(t);
-			// Top-right corner, vertices
-			spriteData.push_back(w);
-			spriteData.push_back(h);
-			// Top-right corner, tex coord
-			spriteData.push_back(r);
-			spriteData.push_back(t);
+				// Second triangle: bottom-left, top-left, top-right
+				// Bottom-left corner, vertices
+				sprite_data.push_back(0.0f);
+				sprite_data.push_back(0.0f);
+				// Bottom-left corner, tex coord
+				sprite_data.push_back(l);
+				sprite_data.push_back(b);
+				// Top-left corner, vertices
+				sprite_data.push_back(0.0f);
+				sprite_data.push_back(h);
+				// Top-left corner, tex coord
+				sprite_data.push_back(l);
+				sprite_data.push_back(t);
+				// Top-right corner, vertices
+				sprite_data.push_back(w);
+				sprite_data.push_back(h);
+				// Top-right corner, tex coord
+				sprite_data.push_back(r);
+				sprite_data.push_back(t);
+			}
 		}
-
-		// Close the meta file
-		meta.close();
 
 		// Bind the sprite data to a buffer
 		GLuint buf;
 		glGenBuffers(1, &buf);
 		glBindBuffer(GL_ARRAY_BUFFER, buf);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * spriteData.size(), spriteData.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * sprite_data.size(), sprite_data.data(), GL_STATIC_DRAW);
 
 		// If the buffer already exists, free it
 		if (m_Buffer)
@@ -809,11 +897,11 @@ public:
 
 	/// <summary>Draws a sprite on the sprite sheet.</summary>
 	/// <param name="sprite">The key of the sprite.</param>
-	/// <param name="color">The color tint matrix of the sprite.</param>
-	void display(SPRITE_KEY sprite, const mat4x4f& color)
+	/// <param name="palette">The color palette of the sprite.</param>
+	void display(SPRITE_KEY sprite, const Palette* palette)
 	{
 		// Activate the shader program
-		m_Shader->activate(color);
+		m_Shader->activate(palette);
 
 		// Activate the buffer
 		m_Buffer->activate();
@@ -836,6 +924,368 @@ SpriteSheet* SpriteSheet::generate(const char* path)
 SpriteSheet* SpriteSheet::generate_empty()
 {
 	return new SSpriteSheet();
+}
+
+
+
+// The raw text of the vertex shader for texture-map sprites.
+const char* texmapSpriteVertexShaderText =
+"#version 330 core\n"
+"layout(location = 0) in vec2 vertexPosition;\n"
+"layout(location = 1) in vec2 vertexShadingUV;\n"
+"layout(location = 2) in vec2 vertexMappingUV;\n"
+"uniform mat4 MVP;\n"
+"out vec2 fragmentShadingUV;\n"
+"out vec2 fragmentMappingUV;\n"
+"void main() {\n"
+"	gl_Position = MVP * vec4(vertexPosition, 0, 1);\n"
+"	fragmentShadingUV = vertexShadingUV;\n"
+"	fragmentMappingUV = vertexMappingUV;\n"
+"}";
+
+// The raw text of the fragment shader for texture-map sprites.
+const char* texmapSpriteFragmentShaderText =
+"#version 330 core\n"
+"in vec2 fragmentShadingUV;\n"
+"in vec2 fragmentMappingUV;\n"
+"uniform mat4x2 mappingMatrix;\n"
+"uniform mat4 redPaletteMatrix;\n"
+"uniform mat4 greenPaletteMatrix;\n"
+"uniform mat4 bluePaletteMatrix;\n"
+"uniform sampler2D tex2D;\n"
+"void main() {\n"
+"   vec4 fragShading = texture(tex2D, fragmentShadingUV);\n"
+"   if (fragShading.a < 0.1) discard;\n"
+"   vec2 fragMapping = vec2(mappingMatrix * texture(tex2D, fragmentMappingUV));\n"
+"   vec4 fragPalette = texture(tex2D, fragMapping);\n"
+"   if (fragPalette.a < 0.1) discard;\n"
+"   mat4 fragPaletteMatrix = (fragPalette.r * redPaletteMatrix) + (fragPalette.g * greenPaletteMatrix) + (fragPalette.b * bluePaletteMatrix);\n"
+"   vec4 fragColor = fragPalette.a * fragPaletteMatrix * fragShading;\n"
+"	gl_FragColor = fragColor;\n"
+"}";
+
+
+// A sprite sheet that maps 
+class TextureMapSSpriteSheet : public TextureMapSpriteSheet
+{
+protected:
+	// A shader that displays a sprite texture.
+	class TextureMapSpriteShader : public Shader
+	{
+	private:
+		// The OpenGL ID for the MVP in the sprite shader program.
+		GLuint m_MVP;
+
+		// The OpenGL ID for the matrix that maps an RGBA color into texture coordinates.
+		GLuint m_TextureMapping;
+
+		// The OpenGL ID for the color palette matrix that the texture-mapping maps RED to in the sprite shader program.
+		GLuint m_RedMatrix;
+
+		// The OpenGL ID for the color palette matrix that the texture-mapping maps GREEN to in the sprite shader program.
+		GLuint m_GreenMatrix;
+
+		// The OpenGL ID for the color palette matrix that the texture-mapping maps BLUE to in the sprite shader program.
+		GLuint m_BlueMatrix;
+
+	public:
+		TextureMapSpriteShader() : Shader(texmapSpriteVertexShaderText, texmapSpriteFragmentShaderText)
+		{
+			// Determine the location of the uniforms
+			m_MVP = glGetUniformLocation(m_Shader, "MVP");
+			m_TextureMapping = glGetUniformLocation(m_Shader, "mappingMatrix");
+			m_RedMatrix = glGetUniformLocation(m_Shader, "redPaletteMatrix");
+			m_GreenMatrix = glGetUniformLocation(m_Shader, "greenPaletteMatrix");
+			m_BlueMatrix = glGetUniformLocation(m_Shader, "bluePaletteMatrix");
+		}
+
+		void activate(const mat2x4f& texture, const Palette* palette)
+		{
+			// Activate the shader program
+			Shader::activate();
+
+			// Set the current transformation
+			glUniformMatrix4fv(m_MVP, 1, GL_FALSE, mat_get_values());
+
+			// Set the texture mapping transformation
+			glUniformMatrix4x2fv(m_TextureMapping, 1, GL_FALSE, texture.matrix_values());
+
+			// Set the color palette matrices
+			glUniformMatrix4fv(m_RedMatrix, 1, GL_FALSE, palette->get_red_palette_matrix().matrix_values());
+			glUniformMatrix4fv(m_GreenMatrix, 1, GL_FALSE, palette->get_green_palette_matrix().matrix_values());
+			glUniformMatrix4fv(m_BlueMatrix, 1, GL_FALSE, palette->get_blue_palette_matrix().matrix_values());
+		}
+	};
+
+	// A buffer for the sprite data.
+	class TextureMapSpriteBuffer : public Buffer
+	{
+	private:
+		// The OpenGL ID for the texture.
+		GLuint m_Texture;
+
+	public:
+		/// <summary>Constructs a sprite buffer.</summary>
+		/// <param name="buffer">The OpenGL buffer ID.</param>
+		/// <param name="textureID">The OpenGL texture ID.</param>
+		TextureMapSpriteBuffer(GLuint buffer, GLuint texture) : Buffer(buffer)
+		{
+			m_Texture = texture;
+		}
+
+		/// <summary>Frees the buffer and texture.</summary>
+		~TextureMapSpriteBuffer()
+		{
+			glDeleteBuffers(1, &m_Buffer);
+			glDeleteTextures(1, &m_Texture);
+		}
+
+		/// <summary>Activates the buffer.</summary>
+		void activate()
+		{
+			if (!is_buffer_active())
+			{
+				// Change the texture being drawn from.
+				glBindTexture(GL_TEXTURE_2D, m_Texture);
+
+				// Change the buffer being used.
+				glBindBuffer(GL_ARRAY_BUFFER, m_Buffer);
+				m_ActiveBuffer = m_Buffer;
+
+				// Set attrib array for position
+				glEnableVertexAttribArray(0);
+				glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)0);
+
+				// Set attrib array for shading tex coord
+				glEnableVertexAttribArray(1);
+				glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)(sizeof(float) * 2));
+
+				// Set attrib array for mapping tex coord
+				glEnableVertexAttribArray(2);
+				glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)(sizeof(float) * 4));
+			}
+		}
+	};
+
+
+	static TextureMapSpriteShader* m_Shader;
+
+	TextureMapSpriteBuffer* m_Buffer;
+
+
+	GLuint load_raw_sprite_sheet(const char* path)
+	{
+		if (m_Buffer)
+		{
+			// If the sprite sheet already was loaded, clear it.
+			delete m_Buffer;
+			m_Buffer = nullptr;
+		}
+
+		// Load data from file using SOIL.
+		unsigned char* data;
+		int channels;
+
+		data = SOIL_load_image(path, &width, &height, &channels, SOIL_LOAD_RGBA);
+
+		// Bind data to texture.
+		GLuint tex;
+		glGenTextures(1, &tex);
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+		// If it hasn't been done yet, generate the shader program.
+		if (!m_Shader)
+		{
+			m_Shader = new TextureMapSpriteShader();
+		}
+
+		return tex;
+	}
+
+public:
+	/// <summary>Loads sprite sheet from file.</summary>
+	/// <param name="path">The path to the image file, using the res/img folder as a base. Note: The path to the meta file should be the same as the path to the image file, but with a .meta file extension instead.</param>
+	void load_sprite_sheet(const char* path)
+	{
+		// Construct the path to the image file.
+		string fpath("res/img/");
+		fpath.append(path);
+
+		// Load the raw sprite sheet
+		GLuint tex = load_raw_sprite_sheet(fpath.c_str());
+
+		// Construct the path to the meta file.
+		regex fext_finder("(.*)\\.[^\\.]+"); // Regex to find the path excluding file extension
+		fpath = regex_replace(fpath, fext_finder, "$1.meta");
+
+		// Load data about sprites from meta file
+		std::vector<float> sprite_data;
+
+		// Load the file
+		LoadFile meta(fpath.c_str());
+		regex texture_finder("texture\\s+(\\S.+)");
+
+		while (meta.good())
+		{
+			unordered_map<string, int> file_data;
+			string id = meta.load_data(file_data);
+
+			smatch idmatch;
+			if (regex_match(id, idmatch, texture_finder))
+			{
+				id = idmatch[1].str();
+
+				int texture_width = file_data["width"];
+				int texture_height = file_data["height"];
+				int left = file_data["left"];
+				int top = file_data["top"];
+
+				float half_width = (0.5f * texture_width) / width;
+
+				Texture* texture = new Texture(mat2x4f(
+					-half_width, half_width, 0.f, ((float)left / width) + half_width,
+					0.f, 0.f, (float)texture_height / height, (float)top / height
+				));
+				Texture::set_texture(id, texture);
+			}
+			else
+			{
+				// Load the data values
+				int sprite_width = file_data["width"];
+				int sprite_height = file_data["height"];
+				int shading_left = file_data["shading_left"];
+				int shading_top = file_data["shading_top"];
+				int mapping_left = file_data["mapping_left"];
+				int mapping_top = file_data["mapping_top"];
+
+				// Calculate texcoords
+				float w = (float)sprite_width;
+				float h = (float)sprite_height;
+
+				float sl = (float)shading_left / width; // left texcoord for shading
+				float sr = (float)(shading_left + sprite_width) / width; // right texcoord for shading
+				float st = (float)shading_top / height; // top texcoord for shading
+				float sb = (float)(shading_top + sprite_height) / height; // bottom texcoord for shading
+
+				float ml = (float)mapping_left / width; // left texcoord for shading
+				float mr = (float)(mapping_left + sprite_width) / width; // right texcoord for shading
+				float mt = (float)mapping_top / height; // top texcoord for shading
+				float mb = (float)(mapping_top + sprite_height) / height; // bottom texcoord for shading
+
+				// Set the sprite data
+				Sprite::set_sprite(id, new Sprite(sprite_data.size() / 6, sprite_width, sprite_height));
+
+				// First triangle: bottom-left, bottom-right, top-right
+				// Bottom-left corner, vertices
+				sprite_data.push_back(0.0f);
+				sprite_data.push_back(0.0f);
+				// Bottom-left corner, shading tex coord
+				sprite_data.push_back(sl);
+				sprite_data.push_back(sb);
+				// Bottom-left corner, mapping tex coord
+				sprite_data.push_back(ml);
+				sprite_data.push_back(mb);
+				// Bottom-right corner, vertices
+				sprite_data.push_back(w);
+				sprite_data.push_back(0.0f);
+				// Bottom-right corner, shading tex coord
+				sprite_data.push_back(sr);
+				sprite_data.push_back(sb);
+				// Bottom-right corner, mapping tex coord
+				sprite_data.push_back(mr);
+				sprite_data.push_back(mb);
+				// Top-right corner, vertices
+				sprite_data.push_back(w);
+				sprite_data.push_back(h);
+				// Top-right corner, shading tex coord
+				sprite_data.push_back(sr);
+				sprite_data.push_back(st);
+				// Top-right corner, mapping tex coord
+				sprite_data.push_back(mr);
+				sprite_data.push_back(mt);
+
+				// Second triangle: bottom-left, top-left, top-right
+				// Bottom-left corner, vertices
+				sprite_data.push_back(0.0f);
+				sprite_data.push_back(0.0f);
+				// Bottom-left corner, shading tex coord
+				sprite_data.push_back(sl);
+				sprite_data.push_back(sb);
+				// Bottom-left corner, mapping tex coord
+				sprite_data.push_back(ml);
+				sprite_data.push_back(mb);
+				// Top-left corner, vertices
+				sprite_data.push_back(0.0f);
+				sprite_data.push_back(h);
+				// Top-left corner, shading tex coord
+				sprite_data.push_back(sl);
+				sprite_data.push_back(st);
+				// Top-left corner, shading tex coord
+				sprite_data.push_back(ml);
+				sprite_data.push_back(mt);
+				// Top-right corner, vertices
+				sprite_data.push_back(w);
+				sprite_data.push_back(h);
+				// Top-right corner, shading tex coord
+				sprite_data.push_back(sr);
+				sprite_data.push_back(st);
+				// Top-right corner, mapping tex coord
+				sprite_data.push_back(mr);
+				sprite_data.push_back(mt);
+			}
+		}
+
+		// Bind the sprite data to a buffer
+		GLuint buf;
+		glGenBuffers(1, &buf);
+		glBindBuffer(GL_ARRAY_BUFFER, buf);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * sprite_data.size(), sprite_data.data(), GL_STATIC_DRAW);
+
+		// If the buffer already exists, free it
+		if (m_Buffer)
+		{
+			delete m_Buffer;
+		}
+
+		// Create the buffer object
+		m_Buffer = new TextureMapSpriteBuffer(buf, tex);
+	}
+
+	/// <summary>Draws a sprite on the sprite sheet.</summary>
+	/// <param name="sprite">The key of the sprite.</param>
+	/// <param name="palette">The color palette of the sprite.</param>
+	void display(SPRITE_KEY sprite, const mat2x4f& texture, const Palette* palette) const
+	{
+		// Activate the shader program
+		m_Shader->activate(texture, palette);
+
+		// Activate the buffer
+		m_Buffer->activate();
+
+		// Draw the sprite using information from buffer
+		glDrawArrays(GL_TRIANGLES, sprite, 6);
+	}
+};
+
+TextureMapSSpriteSheet::TextureMapSpriteShader* TextureMapSSpriteSheet::m_Shader{ nullptr };
+
+
+TextureMapSpriteSheet::TextureMapSpriteSheet() {}
+
+TextureMapSpriteSheet* TextureMapSpriteSheet::generate(const char* path)
+{
+	TextureMapSpriteSheet* sprite_sheet = new TextureMapSSpriteSheet();
+	sprite_sheet->load_sprite_sheet(path);
+	return sprite_sheet;
+}
+
+TextureMapSpriteSheet* TextureMapSpriteSheet::generate_empty()
+{
+	return new TextureMapSSpriteSheet();
 }
 
 
@@ -869,10 +1319,10 @@ void Sprite::set_sprite(SPRITE_ID id, Sprite* sprite)
 }
 
 
-SpriteGraphic::SpriteGraphic(SpriteSheet* sprite_sheet, const mat4x4f& color)
+SpriteGraphic::SpriteGraphic(SpriteSheet* sprite_sheet, const Palette* palette)
 {
 	m_SpriteSheet = sprite_sheet;
-	m_TintMatrix = color;
+	m_Palette = palette;
 }
 
 int SpriteGraphic::get_width() const
@@ -887,11 +1337,11 @@ int SpriteGraphic::get_height() const
 
 void SpriteGraphic::display() const
 {
-	m_SpriteSheet->display(get_sprite()->key, m_TintMatrix);
+	m_SpriteSheet->display(get_sprite()->key, m_Palette);
 }
 
 
-StaticSpriteGraphic::StaticSpriteGraphic(SpriteSheet* sprite_sheet, Sprite* sprite, const mat4x4f& color) : SpriteGraphic(sprite_sheet, color)
+StaticSpriteGraphic::StaticSpriteGraphic(SpriteSheet* sprite_sheet, Sprite* sprite, const Palette* palette) : SpriteGraphic(sprite_sheet, palette)
 {
 	m_Sprite = sprite;
 }
@@ -902,7 +1352,7 @@ Sprite* StaticSpriteGraphic::get_sprite() const
 }
 
 
-DynamicSpriteGraphic::DynamicSpriteGraphic(SpriteSheet* spriteSheet, const mat4x4f& color) : SpriteGraphic(spriteSheet, color) {}
+DynamicSpriteGraphic::DynamicSpriteGraphic(SpriteSheet* spriteSheet, const Palette* palette) : SpriteGraphic(spriteSheet, palette) {}
 
 Sprite* DynamicSpriteGraphic::get_sprite() const
 {
@@ -918,6 +1368,33 @@ void DynamicSpriteGraphic::set_frame(int frame)
 {
 	m_Current = frame;
 }
+
+
+
+
+unordered_map<TEXTURE_ID, Texture*> Texture::m_Textures{};
+
+Texture* Texture::get_texture(TEXTURE_ID id)
+{
+	auto iter = m_Textures.find(id);
+	return iter != m_Textures.end() ? iter->second : nullptr;
+}
+
+void Texture::set_texture(TEXTURE_ID id, Texture* texture)
+{
+	auto iter = m_Textures.find(id);
+	if (iter != m_Textures.end())
+	{
+		m_Textures.erase(iter);
+		m_Textures.emplace_hint(iter, id, texture);
+	}
+	else
+	{
+		m_Textures.emplace(id, texture);
+	}
+}
+
+Texture::Texture(const mat2x4f& trans) : transform(trans) {}
 
 
 
@@ -1032,7 +1509,32 @@ public:
 		m_Buffer = new SpriteBuffer(buf, tex);
 	}
 
-	void display_line(string line, const mat4x4f& color)
+	int get_line_width(string line) const
+	{
+		int width = 0;
+
+		for (int k = 0; k < line.size(); ++k)
+		{
+			auto iter = m_Characters.find(line.at(k));
+
+			if (iter != m_Characters.end())
+			{
+				const Sprite& sprite = iter->second;
+				width += sprite.width;
+			}
+
+			width += m_Kerning;
+		}
+
+		return width - m_Kerning;
+	}
+
+	int get_line_height() const
+	{
+		return 12;
+	}
+
+	void display_line(string line, const Palette* palette)
 	{
 		mat_push();
 
@@ -1043,22 +1545,12 @@ public:
 			if (iter != m_Characters.end())
 			{
 				Sprite& sprite = iter->second;
-				display(sprite.key, color);
+				display(sprite.key, palette);
 				mat_translate(sprite.width + m_Kerning, 0.f, 0.f);
-			}
-			else
-			{
-				//cout << "Could not find '" << line.at(k) << "'.\n";
-				mat_translate(3.f, 0.f, 0.f);
 			}
 		}
 
 		mat_pop();
-	}
-
-	void display_paragraph(std::string text, const mat4x4f& color, int width)
-	{
-		// TODO
 	}
 };
 
@@ -1071,13 +1563,928 @@ Font* Font::load_sprite_font(const char* path)
 
 
 
-TextLineGraphic::TextLineGraphic(Font* font, string text, const mat4x4f& color) : text(text)
+TextGraphic::TextGraphic(Font* font, const Palette* palette, string text, int width)
 {
 	m_Font = font;
-	m_Color = color;
+	m_Palette = palette;
+	m_Width = width;
+
+	set_text(text);
 }
 
-void TextLineGraphic::display() const
+int TextGraphic::get_width() const
 {
-	m_Font->display_line(text, m_Color);
+	return m_Width;
+}
+
+int TextGraphic::get_height() const
+{
+	return m_Lines.size() * m_Font->get_line_height();
+}
+
+string TextGraphic::get_text() const
+{
+	string text;
+
+	for (auto iter = m_Lines.begin(); iter != m_Lines.end(); ++iter)
+	{
+		text += *iter + " ";
+	}
+
+	return text;
+}
+
+void TextGraphic::set_text(string text)
+{
+	string remainder = text;
+	string line;
+	int line_width = 0;
+
+	while (remainder.size() > 0)
+	{
+		size_t next_space = remainder.find_first_of(' ');
+		string word = remainder.substr(0, next_space);
+		remainder = next_space == string::npos ? "" : remainder.substr(next_space + 1);
+
+		string word_with_leading_space = " " + word;
+		int word_width = m_Font->get_line_width(word_with_leading_space);
+		if (line_width + word_width > m_Width)
+		{
+			m_Lines.push_back(line);
+			line = word;
+			line_width = m_Font->get_line_width(word);
+		}
+		else
+		{
+			if (line.empty())
+			{
+				line = word;
+				line_width = m_Font->get_line_width(word);
+			}
+			else
+			{
+				line += word_with_leading_space;
+				line_width += word_width;
+			}
+		}
+	}
+
+	if (!line.empty()) m_Lines.push_back(line);
+}
+
+void TextGraphic::display() const
+{
+	if (!m_Lines.empty())
+	{
+		mat_push();
+		mat_translate(0.f, -get_height(), 0.f);
+
+		auto iter = m_Lines.rbegin();
+		while (true)
+		{
+			m_Font->display_line(*iter, m_Palette);
+
+			if (++iter == m_Lines.rend())
+			{
+				break;
+			}
+			else
+			{
+				mat_translate(0.f, m_Font->get_line_height(), 0.f);
+			}
+		}
+
+		mat_pop();
+	}
+}
+
+
+
+
+
+
+
+
+/*
+*
+*
+*	FRAMES
+*
+*
+*/
+
+
+Frame::Frame()
+{
+	m_Parent = nullptr;
+}
+
+Frame::Frame(int x, int y, int width, int height)
+{
+	m_Parent = nullptr;
+	set_bounds(x, y, width, height);
+}
+
+const mat2x2i& Frame::get_bounds() const
+{
+	return m_Bounds;
+}
+
+mat2x2i Frame::get_absolute_bounds() const
+{
+	if (m_Parent)
+	{
+		mat2x2i pbounds = m_Parent->get_absolute_bounds();
+		int px = pbounds.get(0, 0);
+		int py = pbounds.get(1, 0);
+
+		return mat2x2i(m_Bounds.get(0, 0) + px, m_Bounds.get(0, 1) + px,
+			m_Bounds.get(1, 0) + py, m_Bounds.get(1, 1) + py);
+	}
+	else
+	{
+		return m_Bounds;
+	}
+}
+
+void Frame::set_bounds(int x, int y, int width, int height)
+{
+	m_Bounds.set(0, 0, x);
+	m_Bounds.set(1, 0, y);
+
+	m_Bounds.set(0, 1, x + width);
+	m_Bounds.set(1, 1, y + height);
+}
+
+int Frame::get_width() const
+{
+	return m_Bounds.get(0, 1) - m_Bounds.get(0, 0);
+}
+
+int Frame::get_height() const
+{
+	return m_Bounds.get(1, 1) - m_Bounds.get(1, 0);
+}
+
+void Frame::set_parent(Frame* parent)
+{
+	m_Parent = parent;
+}
+
+void Frame::__display() const {}
+
+void Frame::display() const
+{
+	// Set the clipping rectangle to the bounds of the frame
+	Buffer::set_clipping_rectangle(m_Bounds);
+
+	// Set up the transformation
+	mat_push();
+	mat_translate(m_Bounds.get(0, 0), m_Bounds.get(1, 0), 0.f);
+
+	// Display the contents of the frame
+	__display();
+
+	// Deconstruct the transformation
+	mat_pop();
+
+	// Set the clipping rectangle back to bounds of the parent
+	if (m_Parent)
+	{
+		Buffer::set_clipping_rectangle(m_Parent->get_bounds());
+	}
+	else
+	{
+		Buffer::set_clipping_rectangle(mat2x2f(0.f, 0.f, INFINITY, INFINITY));
+	}
+}
+
+
+
+void Button::highlight() {}
+void Button::unhighlight() {}
+void Button::click() {}
+
+int Button::trigger(const MouseMoveEvent& event_data)
+{
+	mat2x2i absbounds = get_absolute_bounds();
+
+	if (event_data.x >= absbounds.get(0, 0) && event_data.x < absbounds.get(0, 1)
+		&& event_data.y >= absbounds.get(1, 0) && event_data.y < absbounds.get(1, 1))
+	{
+		if (!m_Highlighted)
+		{
+			m_Highlighted = true;
+			highlight();
+		}
+
+		return EVENT_STOP;
+	}
+	else if (m_Highlighted)
+	{
+		m_Highlighted = false;
+		unhighlight();
+	}
+
+	return EVENT_CONTINUE;
+}
+
+int Button::trigger(const MousePressEvent& event_data)
+{
+	if (m_Highlighted)
+	{
+		click();
+		return EVENT_STOP;
+	}
+
+	return EVENT_CONTINUE;
+}
+
+void Button::freeze()
+{
+	MouseMoveListener::freeze();
+	MousePressListener::freeze();
+}
+
+void Button::unfreeze()
+{
+	MouseMoveListener::unfreeze();
+	MousePressListener::unfreeze();
+}
+
+
+
+TextInput::TextInput()
+{
+	m_CursorGraphic = nullptr;
+}
+
+TextInput::~TextInput()
+{
+	if (m_CursorGraphic)
+	{
+		delete m_CursorGraphic;
+	}
+}
+
+string TextInput::get_input() const
+{
+	return m_TextInput;
+}
+
+int TextInput::trigger(const MousePressEvent& event_data)
+{
+	mat2x2i absbounds = get_absolute_bounds();
+
+	if (event_data.x >= absbounds.get(0, 0) && event_data.x < absbounds.get(0, 1)
+		&& event_data.y >= absbounds.get(1, 0) && event_data.y < absbounds.get(1, 1))
+	{
+		// Start responding to keyboard inputs
+		if (m_TextFrozen)
+		{
+			m_TextFrozen = false;
+			KeyboardListener::unfreeze();
+		}
+
+		// Construct cursor object
+		if (!m_CursorGraphic)
+		{
+			m_CursorGraphic = SolidColorGraphic::generate(0, 0, 0, 255, 1, get_font()->get_line_height() + 1);
+		}
+
+		// Position cursor
+		// TODO
+
+		return EVENT_STOP;
+	}
+	else if (!m_TextFrozen)
+	{
+		m_TextFrozen = true;
+		KeyboardListener::freeze();
+	}
+
+	return EVENT_CONTINUE;
+}
+
+int TextInput::trigger(const UnicodeEvent& event_data)
+{
+	if (event_data.character == 0x08 && m_Cursor > 0) // Backspace
+	{
+		m_TextInput.erase(--m_Cursor, 1);
+	}
+	else if (event_data.character == 0x7f && m_Cursor < m_TextInput.size() - 1) // Delete
+	{
+		m_TextInput.erase(m_Cursor, 1);
+	}
+	else
+	{
+		m_TextInput.insert(m_Cursor++, 1, event_data.character);
+	}
+
+	return EVENT_STOP;
+}
+
+void TextInput::freeze()
+{
+	m_TextFrozen = true;
+	MousePressListener::freeze();
+	KeyboardListener::freeze();
+}
+
+void TextInput::unfreeze()
+{
+	MousePressListener::unfreeze();
+}
+
+void TextInput::display() const
+{
+	// Set up the transform
+	mat_push();
+	mat_translate(m_Bounds.get(0, 0), m_Bounds.get(1, 0), 0.f);
+
+	// Display the text input
+	get_font()->display_line(m_TextInput, get_font_palette());
+
+	// Display the cursor
+	if (!m_TextFrozen)
+	{
+		mat_translate(get_font()->get_line_width(m_TextInput.substr(0, m_Cursor)), 0.f, 0.f);
+		m_CursorGraphic->display();
+	}
+
+	// Clean up the transform
+	mat_pop();
+}
+
+
+
+ScrollBar::ScrollBar(Graphic* backgroundGraphic, Graphic* arrowGraphic, Graphic* scrollGraphic, int x, int y, bool horizontal)
+{
+	m_Background = backgroundGraphic;
+	m_Arrow = arrowGraphic;
+	m_Scroller = scrollGraphic;
+
+	if (horizontal)
+	{
+		m_Horizontal = true;
+		set_bounds(x, y, m_Background->get_width() + (m_Arrow->get_width() * 2), max(m_Background->get_height(), m_Arrow->get_height()));
+	}
+	else
+	{
+		m_Horizontal = false;
+		set_bounds(x, y, max(m_Background->get_width(), m_Arrow->get_width()), m_Background->get_height() + (m_Arrow->get_height() * 2));
+	}
+
+	m_Value = 0.f;
+}
+
+void ScrollBar::set_center_of_scroller(int dx, int dy)
+{
+	if (m_Horizontal)
+	{
+		set_value(
+			min(
+				max(dx - (m_Scroller->get_width() / 2), 0)
+				/ (float)(m_Background->get_width() - m_Scroller->get_width()),
+				1.f
+			)
+		);
+	}
+	else
+	{
+		set_value(
+			min(
+				max(dy - (m_Scroller->get_height() / 2), 0)
+				/ (float)(m_Background->get_height() - m_Scroller->get_height()),
+				1.f
+			)
+		);
+	}
+}
+
+float ScrollBar::get_value()
+{
+	return m_Value;
+}
+
+void ScrollBar::set_value(float value)
+{
+	m_Value = value;
+}
+
+int ScrollBar::trigger(const MousePressEvent& event_data)
+{
+	mat2x2i absbounds = get_absolute_bounds();
+	int dx = event_data.x - absbounds.get(0, 0);
+	int dy = event_data.y - absbounds.get(1, 0);
+
+	if (dx >= 0 && dx < get_width() && dy >= 0 && dy < get_height())
+	{
+		if (m_Horizontal)
+		{
+			if ((dx -= m_Arrow->get_width()) < 0)
+			{
+				// Click the left arrow
+				set_value(0.f);
+			}
+			else if (dx < m_Background->get_width())
+			{
+				// Click in the scroll area
+				set_center_of_scroller(dx, dy);
+				dragged = this;
+			}
+			else
+			{
+				// Click the right arrow
+				set_value(1.f);
+			}
+		}
+		else
+		{
+			if ((dy -= m_Arrow->get_height()) < 0)
+			{
+				// Click the bottom arrow
+				set_value(0.f);
+			}
+			else if (dy < m_Background->get_height())
+			{
+				// Click in the scroll area
+				set_center_of_scroller(dx, dy);
+				dragged = this;
+			}
+			else
+			{
+				// Click the top arrow
+				set_value(1.f);
+			}
+		}
+
+		return EVENT_STOP;
+	}
+
+	return EVENT_CONTINUE;
+}
+
+int ScrollBar::trigger(const MouseMoveEvent& event_data)
+{
+	if (dragged == this)
+	{
+		mat2x2i absbounds = get_absolute_bounds();
+		int dx = event_data.x - absbounds.get(0, 0) - m_Arrow->get_width();
+		int dy = event_data.y - absbounds.get(1, 0) - m_Arrow->get_height();
+
+		set_center_of_scroller(dx, dy);
+	}
+
+	return EVENT_CONTINUE;
+}
+
+void ScrollBar::display() const
+{
+	// Set up transformation
+	mat_push();
+	mat_translate(m_Bounds.get(0), m_Bounds.get(1), 0.f);
+
+	if (m_Horizontal)
+	{
+		// Draw the left arrow
+		m_Arrow->display();
+
+		// Draw the background
+		mat_translate(m_Arrow->get_width(), 0.f, 0.f);
+		m_Background->display();
+
+		// Draw the scroller
+		mat_push();
+		mat_translate(roundf(m_Value * (m_Background->get_width() - m_Scroller->get_width())), 0.f, -0.1f);
+		m_Scroller->display();
+		mat_pop();
+
+		// Draw the right arrow
+		mat_translate(m_Background->get_width() + m_Arrow->get_width(), 0.f, 0.f);
+		mat_scale(-1.f, 1.f, 1.f);
+		m_Arrow->display();
+	}
+	else
+	{
+		// Draw the bottom arrow
+		mat_translate(0.f, m_Arrow->get_height(), 0.f);
+
+		mat_push();
+		mat_scale(1.f, -1.f, 1.f);
+		m_Arrow->display();
+		mat_pop();
+
+		// Draw the background
+		m_Background->display();
+
+		// Draw the scroller
+		mat_push();
+		mat_translate(0.f, roundf(m_Value * (m_Background->get_height() - m_Scroller->get_height() - (0.5f * m_Arrow->get_height()))), -0.1f);
+		mat_scale(-1.f, 1.f, 1.f);
+		mat_rotatez(1.570796f);
+		m_Scroller->display();
+		mat_pop();
+
+		// Draw the top arrow
+		mat_translate(0.f, m_Background->get_height(), 0.f);
+		m_Arrow->display();
+	}
+
+	mat_pop();
+}
+
+
+
+ScrollableFrame::ScrollableFrame(Frame* frame, ScrollBar* horizontal, ScrollBar* vertical, int x, int y, int width, int height)
+{
+	m_Frame = frame;
+	m_HorizontalScrollBar = horizontal;
+	m_VerticalScrollBar = vertical;
+
+	m_Frame->set_parent(this);
+	if (m_HorizontalScrollBar) m_HorizontalScrollBar->set_parent(this);
+	if (m_VerticalScrollBar) m_VerticalScrollBar->set_parent(this);
+
+	set_bounds(x, y, width, height);
+}
+
+void ScrollableFrame::__update()
+{
+	int w = get_width() - m_Frame->get_width();
+	int h = get_height() - m_Frame->get_height();
+
+	m_ScrollDistance = vec2i(min(w, 0), h);
+}
+
+void ScrollableFrame::display() const
+{
+	// Set up the translation
+	mat_push();
+	mat_translate(m_Bounds.get(0, 0), m_Bounds.get(1, 0), 0.f);
+
+	// Draw the frame itself
+	mat_push();
+	int dx = m_HorizontalScrollBar ? m_HorizontalScrollBar->get_value() * m_ScrollDistance.get(0) : 0;
+	int dy = m_VerticalScrollBar ?
+		(m_ScrollDistance.get(1) < 0 ? m_VerticalScrollBar->get_value() * m_ScrollDistance.get(1) : m_ScrollDistance.get(1))
+		: 0;
+	mat_translate(dx, dy, 0.f);
+	m_Frame->display();
+	mat_pop();
+
+	// Draw the scroll bars
+	if (m_HorizontalScrollBar) m_HorizontalScrollBar->display();
+	if (m_VerticalScrollBar) m_VerticalScrollBar->display();
+
+	// Clean up the translation
+	mat_pop();
+}
+
+
+
+
+LayerFrame::LayerFrame()
+{
+	if (m_Parent)
+		set_bounds(0, 0, m_Parent->get_width(), m_Parent->get_height());
+	else
+		set_bounds(-1, -1, 2, 2);
+
+	insert_top(SolidColorGraphic::generate(rand() % 256, rand() % 256, rand() % 256, 255, 2, 2));
+}
+
+LayerFrame::LayerFrame(int x, int y, int width, int height)
+{
+	set_bounds(x, y, width, height);
+
+	insert_top(SolidColorGraphic::generate(rand() % 256, rand() % 256, rand() % 256, 255, width, height));
+}
+
+void LayerFrame::reset()
+{
+	static Application*& app = get_application_settings();
+
+	if (m_Sequence.empty())
+	{
+		m_ZScale = 1.f;
+	}
+	else
+	{
+		m_ZScale = 1.f / m_Sequence.size();
+	}
+
+	m_Transform.set(2, 2, m_ZScale);
+	m_Transform.set(2, 3, 1.f - m_ZScale);
+}
+
+void LayerFrame::insert_top(Graphic* graphic)
+{
+	m_Sequence.push_back(graphic);
+
+	if (Frame* frame = dynamic_cast<Frame*>(graphic))
+	{
+		frame->set_parent(this);
+	}
+
+	this->reset();
+}
+
+void LayerFrame::display() const
+{
+	// Set up the transformation
+	mat_push();
+	mat_custom_transform(m_Transform);
+
+	// Display the layers from back to front
+	float dz = -2.f * m_ZScale;
+	for (auto iter = m_Sequence.begin(); iter != m_Sequence.end(); ++iter)
+	{
+		(*iter)->display();
+		mat_translate(0.f, 0.f, dz);
+	}
+
+	mat_pop();
+}
+
+
+UIFrame::UIFrame()
+{
+	Application* app = get_application_settings();
+	set_bounds(0, 0, app->width, app->height);
+	reset();
+}
+
+void UIFrame::reset()
+{
+	LayerFrame::reset();
+
+	Application* app = get_application_settings();
+	float sx = 2.f / app->width;
+	float sy = 2.f / app->height;
+
+	m_Transform.set(0, 0, sx);
+	m_Transform.set(1, 1, sy);
+	m_Transform.set(0, 3, (sx * m_Bounds.get(0, 0)) - 1.f);
+	m_Transform.set(1, 3, (sy * m_Bounds.get(1, 0)) - 1.f);
+}
+
+
+
+
+vec2i WorldOrthographicFrame::Tool::get_tile(int dx, int dy)
+{
+	return vec2i(dx / TILE_WIDTH, dy / TILE_HEIGHT);
+}
+
+Object* WorldOrthographicFrame::Tool::get_object(int dx, int dy)
+{
+	return nullptr;
+}
+
+
+WorldOrthographicFrame::WorldOrthographicFrame(int x, int y, int width, int height, int tile_margin) : m_TileMargin(tile_margin)
+{
+	set_bounds(x, y, width, height);
+}
+
+void WorldOrthographicFrame::reset()
+{
+	// Calculate the world space area
+	m_Chunk = World::get_chunk();
+
+	int x = roundf(m_Camera.get(0));
+	int y = roundf(m_Camera.get(1));
+
+	int width = get_width();
+	int height = get_height();
+	int halfWidth = (width + 1) / 2;
+	int halfHeight = (height + 1) / 2;
+
+	m_DisplayArea.set(0, 0, x - halfWidth);
+	m_DisplayArea.set(0, 1, x + (width / 2) - 1);
+	m_DisplayArea.set(1, 0, y - halfHeight);
+	m_DisplayArea.set(1, 1, y + (height / 2) - 1);
+	clamp_display_area();
+
+	// Construct the transformation matrix
+	Application* app = get_application_settings();
+	float sx = 2.f / app->width; // The x-axis scale of the projection
+	float sy = 2.f / app->height; // The y-axis scale of the projection
+	float sz = 2.f / (TILE_HEIGHT * m_Chunk->height); // The z-scale of the projection
+
+	int mx = 1 + (width % 2);
+	int my = 1 + (height % 2);
+
+	int fx = -(m_DisplayArea.get(0, 0) + m_DisplayArea.get(0, 1) + mx) / 2;
+	int fy = -(m_DisplayArea.get(1, 0) + m_DisplayArea.get(1, 1) + my) / 2;
+
+	float cx = (sx * ((m_Bounds.get(0, 0) + halfWidth) + fx)) - 1.f;
+	float cy = (sy * ((m_Bounds.get(1, 0) + halfHeight) + fy)) - 1.f;
+
+	m_Transform = mat4x4f(
+		sx, 0.f, 0.f, cx,
+		0.f, sy, -sy, cy,
+		0.f, sz, sz, sz * fy
+	);
+
+	m_Tool = nullptr;
+}
+
+void WorldOrthographicFrame::clamp_display_area()
+{
+	int xmin = TILE_WIDTH * m_TileMargin;
+	int xmax = (m_Chunk->width * TILE_WIDTH) - (xmin + 1);
+	int xleft = xmin - m_DisplayArea.get(0, 0);
+	int xright = xmax - m_DisplayArea.get(0, 1);
+	if (xleft > 0)
+	{
+		m_DisplayArea(0, 1) += xleft;
+		m_DisplayArea.set(0, 0, xmin);
+	}
+	else if (xright < 0)
+	{
+		m_DisplayArea(0, 0) += xright;
+		m_DisplayArea.set(0, 1, xmax);
+	}
+
+	int ymin = TILE_HEIGHT * m_TileMargin;
+	int ymax = (m_Chunk->height * TILE_HEIGHT) - (ymin + 1);
+	int ybottom = ymin - m_DisplayArea.get(1, 0);
+	int ytop = ymax - m_DisplayArea.get(1, 1);
+	if (ybottom > 0)
+	{
+		m_DisplayArea(1, 1) += ybottom;
+		m_DisplayArea.set(1, 0, ymin);
+	}
+	else if (ytop < 0)
+	{
+		m_DisplayArea(1, 0) += ytop;
+		m_DisplayArea.set(1, 1, ymax);
+	}
+}
+
+void WorldOrthographicFrame::set_camera(float x, float y)
+{
+	m_Camera.set(0, 0, x);
+	m_Camera.set(1, 0, y);
+	reset();
+}
+
+void WorldOrthographicFrame::set_tool(WorldOrthographicFrame::Tool* tool)
+{
+	m_Tool = tool;
+}
+
+void WorldOrthographicFrame::adjust_camera(float dx, float dy)
+{
+	// Get camera coordinates
+	float& cx = m_Camera(0);
+	float& cy = m_Camera(1);
+
+	// Store original (integer) camera coordinates
+	int former_x = roundf(cx);
+	int former_y = roundf(cy);
+
+	// Adjust camera
+	cx += dx;
+	cy += dy;
+
+	// Calculate absolute change in x-coordinates of camera
+	int dcx = (int)roundf(cx) - former_x;
+	if (dcx)
+	{
+		int width = m_Bounds.get(0, 1) - m_Bounds.get(0, 0);
+
+		int xmin = TILE_WIDTH * m_TileMargin;
+		int xmax = (TILE_WIDTH * m_Chunk->width) - xmin - 1;
+
+		// Calculate displayed change in x-coordinates of camera
+		// (Which may be different from absolute change due to clamping of display)
+		if (dcx > 0)
+		{
+			int former_xmin = former_x - ((width + 1) / 2);
+
+			if (former_xmin < xmin)
+				dcx = max(0, dcx - xmin + former_xmin);
+			dcx = min(dcx, xmax - m_DisplayArea.get(0, 1));
+		}
+		else
+		{
+			int former_xmax = former_x + (width / 2) - 1;
+
+			if (former_xmax > xmax)
+				dcx = min(0, dcx - xmax + former_xmax);
+			dcx = max(dcx, xmin - m_DisplayArea.get(0, 0));
+		}
+
+		if (dcx)
+		{
+			m_DisplayArea(0, 0) += dcx;
+			m_DisplayArea(0, 1) += dcx;
+		}
+	}
+
+	// Calculate absolute change in y-coordinates of camera
+	int dcy = (int)roundf(cy) - former_y;
+	if (dcy)
+	{
+		int height = m_Bounds.get(1, 1) - m_Bounds.get(1, 0);
+
+		int ymin = TILE_HEIGHT * m_TileMargin;
+		int ymax = (TILE_HEIGHT * m_Chunk->width) - ymin - 1;
+
+		// Calculate displayed change in y-coordinates of camera
+		if (dcy > 0)
+		{
+			int former_ymin = former_y - ((height + 1) / 2);
+
+			if (former_ymin < ymin)
+				dcy = max(0, dcy - ymin + former_ymin);
+			dcy = min(dcy, ymax - m_DisplayArea.get(1, 1));
+		}
+		else
+		{
+			int former_ymax = former_y + (height / 2) - 1;
+
+			if (former_ymax > ymax)
+				dcy = min(0, dcy - ymax + former_ymax);
+			dcy = max(dcy, ymin - m_DisplayArea.get(1, 0));
+		}
+
+		if (dcy)
+		{
+			m_DisplayArea(1, 0) += dcy;
+			m_DisplayArea(1, 1) += dcy;
+		}
+	}
+
+	// If there was a change in the integer camera position, clamp the display and adjust the transformation
+	if (dcx || dcy)
+	{
+		// Calculate the change in the translation
+		float dtx = -m_Transform.get(0, 0) * dcx;
+		float dty = -m_Transform.get(1, 1) * dcy;
+		float dtz = -m_Transform.get(2, 2) * dcy;
+
+		// Adjust the transformation
+		m_Transform(0, 3) += dtx;
+		m_Transform(1, 3) += dty;
+		m_Transform(2, 3) += dtz;
+	}
+}
+
+void WorldOrthographicFrame::display() const
+{
+	// Set up transformation.
+	mat_push();
+	mat_custom_transform(m_Transform);
+
+	// Draw chunk
+	m_Chunk->display(
+		m_DisplayArea.get(0, 0), m_DisplayArea.get(1, 0),
+		m_DisplayArea.get(0, 1), m_DisplayArea.get(1, 1)
+	);
+
+	mat_pop();
+}
+
+int WorldOrthographicFrame::trigger(const MousePressEvent& event_data)
+{
+	if (m_Tool)
+	{
+		mat2x2i absbounds = get_absolute_bounds();
+		if (event_data.x >= absbounds.get(0, 0) && event_data.x < absbounds.get(0, 1)
+			&& event_data.y >= absbounds.get(1, 0) && event_data.y < absbounds.get(1, 1))
+		{
+			m_Tool->select();
+			dragged = this;
+			return EVENT_STOP;
+		}
+	}
+
+	return EVENT_CONTINUE;
+}
+
+int WorldOrthographicFrame::trigger(const MouseMoveEvent& event_data)
+{
+	if (m_Tool)
+	{
+		mat2x2i absbounds = get_absolute_bounds();
+		int dx = event_data.x - absbounds.get(0, 0);
+		int dy = event_data.y - absbounds.get(1, 0);
+		if (dx >= 0 && event_data.x < absbounds.get(0, 1)
+			&& dy >= 0 && dy < absbounds.get(1, 1))
+		{
+			// Call the tool highlight function
+			m_Tool->highlight(dx + m_DisplayArea.get(0, 0), dy + m_DisplayArea.get(1, 0));
+
+			// If mouse button is held down, call the tool select function
+			if (dragged == this) m_Tool->select();
+
+			return EVENT_STOP;
+		}
+	}
+
+	return EVENT_CONTINUE;
 }

@@ -75,7 +75,7 @@ SPRITE_KEY PaintSelectFrame::get_paint_key() const
 
 void PaintSelectFrame::display() const
 {
-	const mat4x4f palette = mat4x4f();
+	const SinglePalette palette(vec4i(255, 0, 0, 255), vec4i(0, 255, 0, 255), vec4i(0, 0, 255, 255));
 	const float dx = TILE_WIDTH + 2;
 	const float dy = TILE_HEIGHT + 2;
 
@@ -100,7 +100,7 @@ void PaintSelectFrame::display() const
 					mat_pop();
 				}
 
-				m_TileSpriteSheet->display(key, palette);
+				m_TileSpriteSheet->display(key, &palette);
 			}
 
 			mat_translate(dx, 0.f, 0.f);
@@ -132,9 +132,10 @@ PaintChunkTool::PaintChunkTool()
 	SpriteSheet* gui = get_gui_sprite_sheet();
 
 	// Construct the palette for the UI
-	mat4x4f palette = generate_palette_matrix(
-		230, 247, 251, 0,
-		38, 162, 221, 0
+	SinglePalette palette(
+		vec4i(230, 247, 251, 0),
+		vec4i(38, 162, 221, 0),
+		vec4i()
 	);
 
 	// Vertical scroll bar

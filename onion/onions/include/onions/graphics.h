@@ -5,35 +5,157 @@
 
 
 // The ID to an individual sprite
-#define SPRITE_ID int16_t
+#define SPRITE_ID std::string
 // The key to an individual sprite on a sprite sheet
 #define SPRITE_KEY int
 
+// The ID to an individual sprite texture
+#define TEXTURE_ID std::string
 
 
-/// <summary>Generates a palette matrix for use in graphics.</summary>
-/// <param name="rr">The red-value of the color that red maps to.</param>
-/// <param name="rg">The green-value of the color that red maps to.</param>
-/// <param name="rb">The blue-value of the color that red maps to.</param>
-/// <param name="ra">The alpha-value of the color that red maps to.</param>
-/// <param name="gr">The red-value of the color that green maps to.</param>
-/// <param name="gg">The green-value of the color that green maps to.</param>
-/// <param name="gb">The blue-value of the color that green maps to.</param>
-/// <param name="ga">The alpha-value of the color that green maps to.</param>
-/// <param name="br">The red-value of the color that blue maps to.</param>
-/// <param name="bg">The green-value of the color that blue maps to.</param>
-/// <param name="bb">The blue-value of the color that blue maps to.</param>
-/// <param name="ba">The alpha-value of the color that blue maps to.</param>
-/// <param name="ar">The red-value of the color that alpha maps to.</param>
-/// <param name="ag">The green-value of the color that alpha maps to.</param>
-/// <param name="ab">The blue-value of the color that alpha maps to.</param>
-/// <param name="aa">The alpha-value of the color that alpha maps to.</param>
-mat4x4f generate_palette_matrix(
-	int rr = 255, int rg = 0, int rb = 0, int ra = 0,
-	int gr = 0, int gg = 255, int gb = 0, int ga = 0,
-	int br = 0, int bg = 0, int bb = 255, int ba = 0,
-	int ar = 0, int ag = 0, int ab = 0, int aa = 255
-);
+#define PALETTE_MATRIX mat4x4f
+
+
+// Holds palette matrices for use by shaders. These matrices map pure red, pure green, etc. values to base colors, highlights, and shadows.
+class Palette
+{
+protected:
+	/// <summary>Generates a palette matrix using integer values.</summary>
+	/// <param name="red_maps_to">The color that the palette matrix should map RED to.</param>
+	/// <param name="green_maps_to">The color that the palette matrix should map GREEN to.</param>
+	/// <param name="blue_maps_to">The color that the palette matrix should map BLUE to.</param>
+	/// <param name="matrix">A reference to the matrix that will store the palette information.</param>
+	static void generate_palette_matrix(const vec4i& red_maps_to, const vec4i& green_maps_to, const vec4i& blue_maps_to, PALETTE_MATRIX& matrix);
+	
+	/// <summary>Generates a palette matrix using normalized values.</summary>
+	/// <param name="red_maps_to">The color that the palette matrix should map RED to.</param>
+	/// <param name="green_maps_to">The color that the palette matrix should map GREEN to.</param>
+	/// <param name="blue_maps_to">The color that the palette matrix should map BLUE to.</param>
+	/// <param name="matrix">A reference to the matrix that will store the palette information.</param>
+	static void generate_palette_matrix(const vec4f& red_maps_to, const vec4f& green_maps_to, const vec4f& blue_maps_to, PALETTE_MATRIX& matrix);
+
+public:
+	/// <summary>Retrieves a palette matrix. In a texture-mapped sprite, this will be the palette matrix mapped to by RED.</summary>
+	/// <returns>A constant reference to the palette matrix.</returns>
+	virtual const PALETTE_MATRIX& get_red_palette_matrix() const = 0;
+
+	/// <summary>Retrieves a palette matrix. In a texture-mapped sprite, this will be the palette matrix mapped to by GREEN.</summary>
+	/// <returns>A constant reference to the palette matrix.</returns>
+	virtual const PALETTE_MATRIX& get_green_palette_matrix() const = 0;
+
+	/// <summary>Retrieves a palette matrix. In a texture-mapped sprite, this will be the palette matrix mapped to by BLUE.</summary>
+	/// <returns>A constant reference to the palette matrix.</returns>
+	virtual const PALETTE_MATRIX& get_blue_palette_matrix() const = 0;
+};
+
+// A palette that always returns the same palette matrix.
+class SinglePalette : public Palette
+{
+private:
+	// The palette matrix
+	PALETTE_MATRIX m_Matrix;
+
+public:
+	/// <summary>Constructs a single palette matrix using integer values.</summary>
+	/// <param name="red_maps_to">The color that the palette matrix should map RED to.</param>
+	/// <param name="green_maps_to">The color that the palette matrix should map GREEN to.</param>
+	/// <param name="blue_maps_to">The color that the palette matrix should map BLUE to.</param>
+	SinglePalette(const vec4i& red_maps_to, const vec4i& green_maps_to, const vec4i& blue_maps_to);
+	
+	/// <summary>Constructs a single palette matrix using normalized values.</summary>
+	/// <param name="red_maps_to">The color that the palette matrix should map RED to.</param>
+	/// <param name="green_maps_to">The color that the palette matrix should map GREEN to.</param>
+	/// <param name="blue_maps_to">The color that the palette matrix should map BLUE to.</param>
+	SinglePalette(const vec4f& red_maps_to, const vec4f& green_maps_to, const vec4f& blue_maps_to);
+
+	/// <summary>Retrieves a palette matrix. In a texture-mapped sprite, this will be the palette mapped to by RED.</summary>
+	/// <returns>A constant reference to the palette matrix.</returns>
+	const PALETTE_MATRIX& get_red_palette_matrix() const;
+
+	/// <summary>Retrieves a palette matrix. In a texture-mapped sprite, this will be the palette mapped to by GREEN.</summary>
+	/// <returns>A constant reference to the palette matrix.</returns>
+	const PALETTE_MATRIX& get_green_palette_matrix() const;
+
+	/// <summary>Retrieves a palette matrix. In a texture-mapped sprite, this will be the palette mapped to by BLUE.</summary>
+	/// <returns>A constant reference to the palette matrix.</returns>
+	const PALETTE_MATRIX& get_blue_palette_matrix() const;
+};
+
+// A palette that returns different palette matrices. Mainly used for texture-mapped sprites.
+class MultiplePalette : public Palette
+{
+private:
+	// The palette matrix that a texture-mapping maps RED to.
+	PALETTE_MATRIX m_RedMatrix;
+
+	// The palette matrix that a texture-mapping maps GREEN to.
+	PALETTE_MATRIX m_GreenMatrix;
+
+	// The palette matrix that a texture-mapping maps BLUE to.
+	PALETTE_MATRIX m_BlueMatrix;
+
+public:
+	/// <summary>Constructs a blank palette matrix.</summary>
+	MultiplePalette();
+
+	/// <summary>Constructs a single palette matrix using integer values.</summary>
+	/// <param name="red_maps_red_maps_to">The color that the palette matrix mapped to from RED by a texture-mapping to should map RED to.</param>
+	/// <param name="red_maps_green_maps_to">The color that the palette matrix mapped to from RED by a texture-mapping should map GREEN to.</param>
+	/// <param name="red_maps_blue_maps_to">The color that the palette matrix mapped to from RED by a texture-mapping should map BLUE to.</param>
+	/// <param name="green_maps_red_maps_to">The color that the palette matrix mapped to from GREEN by a texture-mapping to should map RED to.</param>
+	/// <param name="green_maps_green_maps_to">The color that the palette matrix mapped to from GREEN by a texture-mapping should map GREEN to.</param>
+	/// <param name="green_maps_blue_maps_to">The color that the palette matrix mapped to from GREEN by a texture-mapping should map BLUE to.</param>
+	/// <param name="blue_maps_red_maps_to">The color that the palette matrix mapped to from BLUE by a texture-mapping to should map RED to.</param>
+	/// <param name="blue_maps_green_maps_to">The color that the palette matrix mapped to from BLUE by a texture-mapping should map GREEN to.</param>
+	/// <param name="blue_maps_blue_maps_to">The color that the palette matrix mapped to from BLUE by a texture-mapping should map BLUE to.</param>
+	MultiplePalette(const vec4i& red_maps_red_maps_to, const vec4i& red_maps_green_maps_to, const vec4i& red_maps_blue_maps_to,
+		const vec4i& green_maps_red_maps_to, const vec4i& green_maps_green_maps_to, const vec4i& green_maps_blue_maps_to,
+		const vec4i& blue_maps_red_maps_to, const vec4i& blue_maps_green_maps_to, const vec4i& blue_maps_blue_maps_to);
+
+	/// <summary>Constructs a single palette matrix using normalized values.</summary>
+	/// <param name="red_maps_red_maps_to">The color that the palette matrix mapped to from RED by a texture-mapping to should map RED to.</param>
+	/// <param name="red_maps_green_maps_to">The color that the palette matrix mapped to from RED by a texture-mapping should map GREEN to.</param>
+	/// <param name="red_maps_blue_maps_to">The color that the palette matrix mapped to from RED by a texture-mapping should map BLUE to.</param>
+	/// <param name="green_maps_red_maps_to">The color that the palette matrix mapped to from GREEN by a texture-mapping to should map RED to.</param>
+	/// <param name="green_maps_green_maps_to">The color that the palette matrix mapped to from GREEN by a texture-mapping should map GREEN to.</param>
+	/// <param name="green_maps_blue_maps_to">The color that the palette matrix mapped to from GREEN by a texture-mapping should map BLUE to.</param>
+	/// <param name="blue_maps_red_maps_to">The color that the palette matrix mapped to from BLUE by a texture-mapping to should map RED to.</param>
+	/// <param name="blue_maps_green_maps_to">The color that the palette matrix mapped to from BLUE by a texture-mapping should map GREEN to.</param>
+	/// <param name="blue_maps_blue_maps_to">The color that the palette matrix mapped to from BLUE by a texture-mapping should map BLUE to.</param>
+	MultiplePalette(const vec4f& red_maps_red_maps_to, const vec4f& red_maps_green_maps_to, const vec4f& red_maps_blue_maps_to,
+		const vec4f& green_maps_red_maps_to, const vec4f& green_maps_green_maps_to, const vec4f& green_maps_blue_maps_to,
+		const vec4f& blue_maps_red_maps_to, const vec4f& blue_maps_green_maps_to, const vec4f& blue_maps_blue_maps_to);
+
+	/// <summary>Retrieves a palette matrix. In a texture-mapped sprite, this will be the palette mapped to by RED.</summary>
+	/// <returns>A constant reference to the palette matrix.</returns>
+	const PALETTE_MATRIX& get_red_palette_matrix() const;
+
+	/// <summary>Sets the palette matrix that will be mapped to by RED in a texture-mapped sprite.</summary>
+	/// <param name="red_maps_to">The color mapped to by RED in the palette matrix.</param>
+	/// <param name="green_maps_to">The color mapped to by GREEN in the palette matrix.</param>
+	/// <param name="blue_maps_to">The color mapped to by BLUE in the palette matrix.</param>
+	void set_red_palette_matrix(const vec4i& red_maps_to, const vec4i& green_maps_to, const vec4i& blue_maps_to);
+
+	/// <summary>Retrieves a palette matrix. In a texture-mapped sprite, this will be the palette mapped to by GREEN.</summary>
+	/// <returns>A constant reference to the palette matrix.</returns>
+	const PALETTE_MATRIX& get_green_palette_matrix() const;
+
+	/// <summary>Sets the palette matrix that will be mapped to by GREEN in a texture-mapped sprite.</summary>
+	/// <param name="red_maps_to">The color mapped to by RED in the palette matrix.</param>
+	/// <param name="green_maps_to">The color mapped to by GREEN in the palette matrix.</param>
+	/// <param name="blue_maps_to">The color mapped to by BLUE in the palette matrix.</param>
+	void set_green_palette_matrix(const vec4i& red_maps_to, const vec4i& green_maps_to, const vec4i& blue_maps_to);
+
+	/// <summary>Retrieves a palette matrix. In a texture-mapped sprite, this will be the palette mapped to by BLUE.</summary>
+	/// <returns>A constant reference to the palette matrix.</returns>
+	const PALETTE_MATRIX& get_blue_palette_matrix() const;
+
+	/// <summary>Sets the palette matrix that will be mapped to by BLUE in a texture-mapped sprite.</summary>
+	/// <param name="red_maps_to">The color mapped to by RED in the palette matrix.</param>
+	/// <param name="green_maps_to">The color mapped to by GREEN in the palette matrix.</param>
+	/// <param name="blue_maps_to">The color mapped to by BLUE in the palette matrix.</param>
+	void set_blue_palette_matrix(const vec4i& red_maps_to, const vec4i& green_maps_to, const vec4i& blue_maps_to);
+};
 
 
 // Something visible on-screen.
@@ -184,9 +306,10 @@ public:
 
 	/// <summary>Draws a sprite from the sprite sheet.</summary>
 	/// <param name="sprite">The key of the sprite.</param>
-	/// <param name="color">The color tint matrix of the sprite.</param>
-	virtual void display(SPRITE_KEY sprite, const mat4x4f& color) = 0;
+	/// <param name="palette">The color palette of the sprite.</param>
+	virtual void display(SPRITE_KEY sprite, const Palette* palette) = 0;
 };
+
 
 
 // An individual sprite on a sprite sheet.
@@ -228,13 +351,13 @@ protected:
 	// A pointer to the sprite information
 	SpriteSheet* m_SpriteSheet;
 
-	// The color tint matrix for the sprite
-	mat4x4f m_TintMatrix;
+	// The color palette for the sprite
+	const Palette* m_Palette;
 
 	/// <summary>Constructs a graphic that draws sprites.</summary>
 	/// <param name="sprite_sheet">The sprite sheet.</param>
-	/// <param name="color">The color tint matrix for the sprites.</param>
-	SpriteGraphic(SpriteSheet* sprite_sheet, const mat4x4f& color);
+	/// <param name="palette">The color palette for the sprites.</param>
+	SpriteGraphic(SpriteSheet* sprite_sheet, const Palette* palette);
 
 	/// <summary>Retrieves the current sprite to be drawn.</summary>
 	/// <returns>The current sprite.</returns>
@@ -268,8 +391,8 @@ public:
 	/// <summary>Constructs a static sprite graphic.</summary>
 	/// <param name="sprite_sheet">The sprite sheet that the sprites are on.</param>
 	/// <param name="sprite">The sprite data.</param>
-	/// <param name="color">The color tint matrix for the sprites.</param>
-	StaticSpriteGraphic(SpriteSheet* sprite_sheet, Sprite* sprite, const mat4x4f& color);
+	/// <param name="palette">The color palette for the sprites.</param>
+	StaticSpriteGraphic(SpriteSheet* sprite_sheet, Sprite* sprite, const Palette* palette);
 };
 
 // A graphic that can swap between multiple frames of sprites.
@@ -289,8 +412,8 @@ private:
 public:
 	/// <summary>Constructs a static sprite graphic.</summary>
 	/// <param name="sprite_sheet">The sprite sheet that the sprites are on.</param>
-	/// <param name="color">The color tint matrix for the sprites.</param>
-	DynamicSpriteGraphic(SpriteSheet* sprite_sheet, const mat4x4f& color);
+	/// <param name="palette">The color palette for the sprites.</param>
+	DynamicSpriteGraphic(SpriteSheet* sprite_sheet, const Palette* palette);
 
 	/// <summary>Adds a new frame to the graphic.</summary>
 	/// <param name="sprite">The frame's sprite.</param>
@@ -299,6 +422,65 @@ public:
 	/// <summary>Sets the current frame.</summary>
 	/// <param name="frame">The index of the frame.</param>
 	void set_frame(int frame);
+};
+
+
+
+// A palette-setting texture that can be mapped onto a sprite.
+struct Texture
+{
+private:
+	static std::unordered_map<TEXTURE_ID, Texture*> m_Textures;
+
+public:
+	/// <summary>Retrieves the texture with the given ID.</summary>
+	/// <param name="id">The ID of the texture.</param>
+	static Texture* get_texture(TEXTURE_ID id);
+
+	/// <summary>Sets the texture with the given ID.</summary>
+	/// <param name="id">The ID of the texture.</param>
+	/// <param name="texture">The texture to set.</param>
+	static void set_texture(TEXTURE_ID id, Texture* texture);
+
+	// A matrix that projects a vec4f into a set of texture coordinates.
+	mat2x4f transform;
+
+	/// <summary></summary>
+	Texture(const mat2x4f& trans);
+};
+
+// A sprite sheet that maps textures onto sprites.
+class TextureMapSpriteSheet
+{
+protected:
+	// Protected so that it cannot be called from the outside.
+	TextureMapSpriteSheet();
+
+public:
+	/// <summary>Loads a sprite sheet from file.</summary>
+	/// <param name="path">The path to the image file, using the res/img/ folder as a base.</param>
+	/// <returns>A pointer to the loaded sprite sheet.</returns>
+	static TextureMapSpriteSheet* generate(const char* path);
+
+	/// <summary>Generates an empty sprite sheet.</summary>
+	/// <returns>A pointer to an empty sprite sheet.</returns>
+	static TextureMapSpriteSheet* generate_empty();
+
+	// The width of the sprite sheet in pixels.
+	int width;
+
+	// The height of the sprite sheet in pixels.
+	int height;
+
+	/// <summary>Loads sprite sheet from an image and meta file.</summary>
+	/// <param name="path">The path to the image file, using the res/img/ folder as a base. Note: The path to the meta file should be the same as the path to the image file, but with a .meta file extension instead.</param>
+	virtual void load_sprite_sheet(const char* path) = 0;
+
+	/// <summary>Draws a sprite from the sprite sheet.</summary>
+	/// <param name="sprite">The key of the sprite.</param>
+	/// <param name="palette">The color palette of the sprite.</param>
+	/// <param name="texture">The texture mapped onto the sprite.</param>
+	virtual void display(SPRITE_KEY sprite, const mat2x4f& texture, const Palette* palette) const = 0;
 };
 
 
@@ -318,38 +500,61 @@ public:
 	/// <param name="path">The path to the image file, from the res/img/ folder.</param>
 	static Font* load_sprite_font(const char* path);
 
+	/// <summary>Calculates the width of a line of text.</summary>
+	/// <param name="text">The line of text.</param>
+	/// <returns>The width of the line, as displayed in the font.</returns>
+	virtual int get_line_width(std::string line) const = 0;
+
+	/// <summary>Retrieves the height of the font.</summary>
+	/// <returns>The height of text, as displayed by the font.</returns>
+	virtual int get_line_height() const = 0;
+
 	/// <summary>Displays a line of text.</summary>
 	/// <param name="text">The line of text to display.</param>
-	/// <param name="color">The color palette of the text.</param>
-	virtual void display_line(std::string line, const mat4x4f& color) = 0;
-
-	/// <summary>Displays a string of text.</summary>
-	/// <param name="text">The text to display.</param>
-	/// <param name="color">The color palette of the text.</param>
-	/// <param name="width">The maximum width of the text.</param>
-	virtual void display_paragraph(std::string text, const mat4x4f& color, int width = INT16_MAX) = 0;
+	/// <param name="palette">The color palette of the text.</param>
+	virtual void display_line(std::string line, const Palette* palette) = 0;
 };
 
 
+
 // Displays a line of text.
-class TextLineGraphic : public Graphic
+class TextGraphic : public Graphic
 {
 private:
+	// The lines of text to display
+	std::vector<std::string> m_Lines;
+
+	// The maximum width of a line of text, in pixels
+	int m_Width;
+
 	// The font to use
 	Font* m_Font;
 
 	// The palette of the font
-	mat4x4f m_Color;
+	const Palette* m_Palette;
 
 public:
-	// The line of text to display
-	std::string text;
-
 	/// <summary>Constructs a graphic that displays text.</summary>
 	/// <param name="font">The font of the graphic.</param>
+	/// <param name="palette">The color palette of the graphic.</param>
 	/// <param name="text">The text of the graphic.</param>
-	/// <param name="color">The color palette of the graphic.</param>
-	TextLineGraphic(Font* font, std::string text, const mat4x4f& color);
+	TextGraphic(Font* font, const Palette* palette, std::string text, int width);
+
+	/// <summary>Retrieves the text of the graphic.</summary>
+	/// <returns>The text displayed by the graphic.</returns>
+	std::string get_text() const;
+
+	/// <summary>Sets the text to be displayed by the graphic.</summary>
+	/// <returns>The text to be displayed by the graphic.</returns>
+	void set_text(std::string text);
+
+	/// <summary>Retrieves the width of the graphic.</summary>
+	/// <returns>The width of the graphic.</returns>
+	int get_width() const;
+
+	/// <summary>Retrieves the height of the graphic.</summary>
+	/// <returns>The height of the graphic.</returns>
+	int get_height() const;
 
 	/// <summary>Displays the text.</summary>
 	void display() const;

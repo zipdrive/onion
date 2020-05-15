@@ -18,6 +18,9 @@ protected:
 
 	} m_ConfirmButton;
 
+	// The message displayed at the top of the dialog pane.
+	TextGraphic m_Message;
+
 	// Background of the dialog pane. TEMPORARY
 	SolidColorGraphic* m_Background;
 
@@ -27,8 +30,9 @@ protected:
 public:
 	/// <summary>Creates a dialog pane.</summary>
 	/// <param name="width">The width of the dialog pane.</param>
-	/// <param name="height">The height of the dialog pane.</param>
-	Dialog(int width, int height);
+	/// <param name="height">The height of the content within the dialog pane.</param>
+	/// <param name="message">The message displayed at the top of the dialog pane.</param>
+	Dialog(int width, int height, std::string message);
 
 	/// <summary>Displays the dialog pane.</summary>
 	void display() const;
@@ -66,8 +70,9 @@ protected:
 public:
 	/// <summary>Creates a dialog pane that can be canceled out of.</summary>
 	/// <param name="width">The width of the dialog pane.</param>
-	/// <param name="height">The height of the dialog pane.</param>
-	CancelableDialog(int width, int height);
+	/// <param name="height">The height of the content within the dialog pane.</param>
+	/// <param name="message">The message displayed at the top of the dialog pane.</param>
+	CancelableDialog(int width, int height, std::string message);
 
 	/// <summary>Freezes input for the dialog pane.</summary>
 	virtual void freeze();
@@ -77,6 +82,14 @@ public:
 
 	/// <summary>Cancels the dialog pane.</summary>
 	virtual void cancel();
+};
+
+
+// A dialog pane that asks the user for confirmation.
+class ConfirmationDialog : public CancelableDialog
+{
+public:
+	ConfirmationDialog(std::string message);
 };
 
 
@@ -92,6 +105,10 @@ protected:
 
 	public:
 		DialogTextInput();
+
+		Font* get_font() const;
+
+		const Palette* get_font_palette() const;
 
 		void display() const;
 

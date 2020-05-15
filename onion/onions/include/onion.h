@@ -5,5 +5,6 @@
 #include "onions/graphics.h"
 #include "onions/world.h"
 #include "onions/event.h"
+#include "onions/hune.h"
 #include "onions/frame.h"
 #include "onions/application.h"

@@ -14,6 +14,9 @@ protected:
 	// The frame boundaries on the screen
 	mat2x2i m_Bounds;
 
+	/// <summary>Displays the contents of the frame.</summary>
+	virtual void __display() const;
+
 public:
 	/// <summary>Creates an empty frame.</summary>
 	Frame();
@@ -51,6 +54,9 @@ public:
 	/// <summary>Sets the parent of the frame.</summary>
 	/// <param name="parent">The parent of the frame.</param>
 	void set_parent(Frame* parent);
+
+	/// <summary>Displays the frame.</summary>
+	void display() const;
 };
 
 
@@ -88,6 +94,7 @@ public:
 };
 
 
+// A frame that takes and displays a line of text input
 class TextInput : public Frame, public MousePressListener, public KeyboardListener
 {
 protected:
@@ -100,10 +107,25 @@ protected:
 	// The position of the cursor.
 	int m_Cursor = 0;
 
+	// The graphic that displays where the cursor is
+	SolidColorGraphic* m_CursorGraphic;
+
 public:
+	/// <summary>Constructs the TextInput object.</summary>
+	TextInput();
+
+	/// <summary>Destroys the TextInput object.</summary>
+	~TextInput();
+
 	/// <summary>Retrieves the text input.</summary>
 	/// <returns>The text inputted by the user.</returns>
 	std::string get_input() const;
+
+	/// <summary>Retrieves the font.</summary>
+	virtual Font* get_font() const = 0;
+
+	/// <summary>Retrieves the font palette.</summary>
+	virtual const Palette* get_font_palette() const = 0;
 
 	/// <summary>Triggers when a mouse button is pressed.</summary>
 	/// <param name="event_data">The data for the event.</param>
@@ -118,6 +140,9 @@ public:
 
 	/// <summary>Unfreezes reaction to inputs.</summary>
 	virtual void unfreeze();
+
+	/// <summary>Displays the text input.</summary>
+	virtual void display() const;
 };
 
 
