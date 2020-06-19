@@ -1,4 +1,5 @@
 #include <onion.h>
+#include "../include/charactercreator.h"
 
 
 mat4x4f g_Transform;
@@ -100,14 +101,17 @@ void test_hune_main()
 
 	g_TestHune->set_body_type("lean");
 	g_TestHune->set_head_shape("thin");
-	g_TestHune->set_snout_shape("nose short");
-	g_TestHune->set_ear_shape("pointed");
+	g_TestHune->set_snout_shape("nose long");
+	g_TestHune->set_ear_shape("small");
 
-	g_TestHune->set_textures("monochrome", "monochrome", "monochrome", "monochrome");
+	g_TestHune->set_textures("head striped", "monochrome", "monochrome", "monochrome");
 
-	g_TestHune->set_primary_color(vec4i(133, 76, 25, 255), vec4i(244, 243, 234, 255), vec4i(25, 2, 25, 255));
+	g_TestHune->set_primary_color(vec4i(244, 151, 31, 255), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
+	g_TestHune->set_secondary_color(vec4i(243, 236, 226, 255), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
+	g_TestHune->set_tertiary_color(vec4i(142, 108, 17, 255), vec4i(255, 255, 220, 255), vec4i(0, 0, 20, 255));
+	//g_TestHune->set_primary_color(vec4i(133, 76, 25, 255), vec4i(244, 243, 234, 255), vec4i(25, 2, 25, 255));
 
-	g_TestHune->facing = FACING_FRONT;
+	g_TestHune->facing = FACING_BACK;
 
 	// Construct transformation
 	Application* app = get_application_settings();
@@ -132,7 +136,6 @@ void test_hune_main()
 int main()
 {
 	onion_init("settings.ini");
-
-	test_hune_main();
+	character_creator_setup();
 	return 0;
 }

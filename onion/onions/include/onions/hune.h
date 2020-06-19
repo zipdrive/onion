@@ -258,3 +258,86 @@ public:
 	virtual void display() const;
 };
 
+
+
+class HuneCreator : public HuneGraphic
+{
+protected:
+	// The index of the skull type
+	int m_HeadIndex = 0;
+
+	// The index of the snout type
+	int m_SnoutIndex = 0;
+
+	// The index of the ear type
+	int m_EarIndex = 0;
+
+	// The index of the body type
+	int m_BodyIndex = 0;
+
+	// The index of the primary color of the body
+	int m_PrimaryBodyColorIndex = 0;
+
+	// The index of the secondary color of the body
+	int m_SecondaryBodyColorIndex = 0;
+
+	// The index of the tertiary color of the body
+	int m_TertiaryBodyColorIndex = 0;
+
+public:
+	HuneCreator();
+
+	/// <summary>Play the animation of the hune walking.</summary>
+	void start_walking();
+
+	/// <summary>Stop the animation of the hune walking.</summary>
+	void stop_walking();
+
+	/// <summary>Rotate the hune counter-clockwise.</summary>
+	void rotate_right();
+
+	/// <summary>Rotate the hune clockwise.</summary>
+	void rotate_left();
+
+	/// <summary>Increment what head shape the hune has.</summary>
+	void increment_head();
+
+	/// <summary>Decrement what head shape the hune has.</summary>
+	void decrement_head();
+
+	/// <summary>Increment what snout shape the hune has.</summary>
+	void increment_snout();
+
+	/// <summary>Decrement what snout shape the hune has.</summary>
+	void decrement_snout();
+
+	/// <summary>Increment the shape of the ears the hune has.</summary>
+	void increment_ears();
+
+	/// <summary>Decrement the shape of the ears the hune has.</summary>
+	void decrement_ears();
+
+	/// <summary>Increment what body type the hune has.</summary>
+	void increment_body();
+
+	/// <summary>Decrement what body type the hune has.</summary>
+	void decrement_body();
+
+	/// <summary>Increment what the primary color of the hune's body is.</summary>
+	void increment_primary_body_color();
+
+	/// <summary>Decrement what the primary color of the hune's body is.</summary>
+	void decrement_primary_body_color();
+
+	/// <summary>Increment what the secondary color of the hune's body is.</summary>
+	void increment_secondary_body_color();
+
+	/// <summary>Decrement what the secondary color of the hune's body is.</summary>
+	void decrement_secondary_body_color();
+
+	/// <summary>Increment what the tertiary color of the hune's body is.</summary>
+	void increment_tertiary_body_color();
+
+	/// <summary>Decrement what the tertiary color of the hune's body is.</summary>
+	void decrement_tertiary_body_color();
+};

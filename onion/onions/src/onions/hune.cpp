@@ -480,14 +480,218 @@ HuneAnimation* generate_hune_walking_animation()
 
 
 
+const vector<string> g_BodyTypes = { "stocky", "lean" };
+
+const vector<string> g_SkullTypes = { "large", "furry", "thin", "flared" };
+
+const vector<string> g_SnoutTypes = { "nose short", "nose long", "nostrils short", "nostrils long" };
+
+const vector<string> g_EarTypes = { "peaked", "small", "round", "pointed", "tall" };
+
+const vector<vec3i> g_ColorsRGB =
+{
+	// Reds (Hue 12)
+	vec3i(246, 131, 100),
+	vec3i(246, 107, 69),
+	vec3i(244, 74, 31),
+	vec3i(208, 54, 13),
+	vec3i(169, 42, 8),
+
+	// Oranges (Hue 24)
+	vec3i(246, 159, 100),
+	vec3i(246, 140, 69),
+	vec3i(243, 111, 24),
+	vec3i(208, 91, 13),
+	vec3i(169, 72, 8),
+
+	// Golds (Hue 36)
+	vec3i(246, 188, 100),
+	vec3i(246, 175, 69),
+	vec3i(243, 155, 24),
+	vec3i(208, 130, 13),
+	vec3i(169, 105, 8),
+
+	// Yellows (Hue 48)
+	vec3i(246, 217, 100),
+	vec3i(246, 211, 69),
+	vec3i(243, 199, 24),
+	vec3i(208, 169, 13),
+	vec3i(169, 137, 8),
+
+	/*
+	// Yellows (Hue 48)
+	vec3i(),
+	vec3i(),
+	vec3i(),
+	vec3i(),
+	vec3i(),
+
+	vec3i(244, 151, 31),
+	vec3i(243, 236, 226),
+	vec3i(142, 108, 17)
+*/
+};
+
+const vector<vec3i> g_Colors =
+{
+	// Reds
+	vec3i(12, 59, 96),
+	vec3i(12, 72, 96),
+	vec3i(12, 90, 95),
+	vec3i(12, 94, 82),
+	vec3i(12, 95, 66),
+
+	// Oranges
+	vec3i(24, 59, 96),
+	vec3i(24, 72, 96),
+	vec3i(24, 90, 95),
+	vec3i(24, 94, 82),
+	vec3i(24, 95, 66),
+
+	// Golds
+	vec3i(36, 59, 96),
+	vec3i(36, 72, 96),
+	vec3i(36, 90, 95),
+	vec3i(36, 94, 82),
+	vec3i(36, 95, 66),
+
+	// Yellows
+	vec3i(48, 59, 96),
+	vec3i(48, 72, 96),
+	vec3i(48, 90, 95),
+	vec3i(48, 94, 82),
+	vec3i(48, 95, 66),
+
+	// Yellow-greens
+	vec3i(72, 59, 96),
+	vec3i(72, 72, 96),
+	vec3i(72, 90, 95),
+	vec3i(72, 94, 82),
+	vec3i(72, 95, 66),
+
+	// Greens
+	vec3i(96, 59, 96),
+	vec3i(96, 72, 96),
+	vec3i(96, 90, 95),
+	vec3i(96, 94, 82),
+	vec3i(96, 95, 66),
+
+	// Sea-foam greens
+	vec3i(156, 59, 96),
+	vec3i(156, 72, 96),
+	vec3i(156, 90, 95),
+	vec3i(156, 94, 82),
+	vec3i(156, 95, 66),
+
+	// Cyans
+	vec3i(168, 59, 96),
+	vec3i(168, 72, 96),
+	vec3i(168, 90, 95),
+	vec3i(168, 94, 82),
+	vec3i(168, 95, 66),
+
+	// Ceruleans
+	vec3i(192, 59, 96),
+	vec3i(192, 72, 96),
+	vec3i(192, 90, 95),
+	vec3i(192, 94, 82),
+	vec3i(192, 95, 66),
+
+	// Blues
+	vec3i(204, 59, 96),
+	vec3i(204, 72, 96),
+	vec3i(204, 90, 95),
+	vec3i(204, 94, 82),
+	vec3i(204, 95, 66),
+
+	// Indigos*
+	vec3i(252, 59, 96),
+	vec3i(252, 72, 96),
+	vec3i(252, 90, 95),
+
+	// Violets*
+	vec3i(264, 59, 96),
+	vec3i(264, 72, 96),
+	vec3i(264, 90, 95),
+
+	// Purples*
+	vec3i(278, 59, 96),
+	vec3i(278, 72, 96),
+	vec3i(278, 90, 95),
+	vec3i(278, 94, 82),
+
+	// Pinks
+	vec3i(312, 59, 96),
+	vec3i(312, 72, 96),
+	vec3i(312, 90, 95),
+	vec3i(312, 94, 82),
+	vec3i(312, 95, 66),
+
+	// Pinkish-reds
+	vec3i(336, 59, 96),
+	vec3i(336, 72, 96),
+	vec3i(336, 90, 95),
+	vec3i(336, 94, 82),
+	vec3i(336, 95, 66),
+
+	// Neutrals
+	vec3i(36, 7, 95)
+};
+
+
+vec4i hsv_to_rgb(vec3i hsv)
+{
+	int kr = (300 + hsv.get(0)) % 360;
+	if (kr > 60)
+	{
+		if (240 - kr < 60)
+			kr = 240 - kr;
+		else
+			kr = 60;
+	}
+	if (kr < 0)
+		kr = 0;
+
+	int kg = (180 + hsv.get(0)) % 360;
+	if (kg > 60)
+	{
+		if (240 - kg < 60)
+			kg = 240 - kg;
+		else
+			kg = 60;
+	}
+	if (kg < 0)
+		kg = 0;
+
+	int kb = (60 + hsv.get(0)) % 360;
+	if (kb > 60)
+	{
+		if (240 - kb < 60)
+			kb = 240 - kb;
+		else
+			kb = 60;
+	}
+	if (kb < 0)
+		kb = 0;
+
+	vec4i rgb;
+	rgb.set(0, 0, 255 * hsv.get(2) * (6000 - (hsv.get(1) * kr)) / 600000);
+	rgb.set(1, 0, 255 * hsv.get(2) * (6000 - (hsv.get(1) * kg)) / 600000);
+	rgb.set(2, 0, 255 * hsv.get(2) * (6000 - (hsv.get(1) * kb)) / 600000);
+	rgb.set(3, 0, 255);
+
+	return rgb;
+}
+
+
+
 HuneGraphic::HuneGraphic()
 {
 	if (!HuneSprite::sprite_sheet)
 	{
 		HuneSprite::sprite_sheet = TextureMapSpriteSheet::generate("sprites/hune.png");
 
-		vector<string> body_types = { "stocky", "lean" };
-		for (auto iter = body_types.begin(); iter != body_types.end(); ++iter)
+		for (auto iter = g_BodyTypes.cbegin(); iter != g_BodyTypes.cend(); ++iter)
 		{
 			string body_type = *iter;
 			HuneShading::set_shading(body_type + " left arm", LEFT_ARM, body_type);
@@ -497,16 +701,17 @@ HuneGraphic::HuneGraphic()
 			HuneShading::set_shading(body_type + " right leg", RIGHT_LEG, body_type);
 		}
 
-		vector<string> head_types = { "skull large", "skull furry", "skull thin", "skull flared", "nose short", "nose long", "nostrils short", "nostrils long" };
-		for (auto iter = head_types.begin(); iter != head_types.end(); ++iter)
+		for (auto iter = g_SkullTypes.cbegin(); iter != g_SkullTypes.cend(); ++iter)
+			HuneShading::set_shading("skull " + *iter, HEAD, "skull " + *iter);
+
+		for (auto iter = g_SnoutTypes.cbegin(); iter != g_SnoutTypes.cend(); ++iter)
 			HuneShading::set_shading(*iter, HEAD, *iter);
 
-		vector<string> ear_types = { "ear peaked", "ear small", "ear round", "ear pointed", "ear tall" };
-		for (auto iter = ear_types.begin(); iter != ear_types.end(); ++iter)
+		for (auto iter = g_EarTypes.cbegin(); iter != g_EarTypes.cend(); ++iter)
 		{
 			string ear_type = *iter;
-			HuneShading::set_shading("left " + ear_type, LEFT_EAR, ear_type);
-			HuneShading::set_shading("right " + ear_type, RIGHT_EAR, ear_type);
+			HuneShading::set_shading("left ear " + ear_type, LEFT_EAR, "ear " + ear_type);
+			HuneShading::set_shading("right ear " + ear_type, RIGHT_EAR, "ear " + ear_type);
 		}
 	}
 
@@ -674,4 +879,122 @@ void HuneGraphic::display() const
 	}
 
 	mat_pop();
+}
+
+
+
+HuneCreator::HuneCreator()
+{
+	set_head_shape(g_SkullTypes[0]);
+	set_snout_shape(g_SnoutTypes[0]);
+	set_ear_shape(g_EarTypes[0]);
+	set_body_type(g_BodyTypes[0]);
+
+	set_primary_color(hsv_to_rgb(g_Colors[0]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
+	set_secondary_color(hsv_to_rgb(g_Colors[0]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
+	set_tertiary_color(hsv_to_rgb(g_Colors[0]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
+}
+
+void HuneCreator::start_walking()
+{
+	set_animation(generate_hune_walking_animation());
+}
+
+void HuneCreator::stop_walking()
+{
+	set_animation(generate_hune_standing_animation());
+}
+
+void HuneCreator::rotate_right()
+{
+	facing = (HuneDirection)(((int)facing + HUNE_NUM_DIRECTIONS - 1) % HUNE_NUM_DIRECTIONS);
+}
+
+void HuneCreator::rotate_left()
+{
+	facing = (HuneDirection)(((int)facing + 1) % HUNE_NUM_DIRECTIONS);
+}
+
+void HuneCreator::increment_head()
+{
+	m_HeadIndex = (m_HeadIndex + 1) % g_SkullTypes.size();
+	set_head_shape(g_SkullTypes[m_HeadIndex]);
+}
+
+void HuneCreator::decrement_head()
+{
+	m_HeadIndex = (m_HeadIndex + g_SkullTypes.size() - 1) % g_SkullTypes.size();
+	set_head_shape(g_SkullTypes[m_HeadIndex]);
+}
+
+void HuneCreator::increment_snout()
+{
+	m_SnoutIndex = (m_SnoutIndex + 1) % g_SnoutTypes.size();
+	set_snout_shape(g_SnoutTypes[m_SnoutIndex]);
+}
+
+void HuneCreator::decrement_snout()
+{
+	m_SnoutIndex = (m_SnoutIndex + g_SnoutTypes.size() - 1) % g_SnoutTypes.size();
+	set_snout_shape(g_SnoutTypes[m_SnoutIndex]);
+}
+
+void HuneCreator::increment_ears()
+{
+	m_EarIndex = (m_EarIndex + 1) % g_EarTypes.size();
+	set_ear_shape(g_EarTypes[m_EarIndex]);
+}
+
+void HuneCreator::decrement_ears()
+{
+	m_EarIndex = (m_EarIndex + g_EarTypes.size() - 1) % g_EarTypes.size();
+	set_ear_shape(g_EarTypes[m_EarIndex]);
+}
+
+void HuneCreator::increment_body()
+{
+	m_BodyIndex = (m_BodyIndex + 1) % g_BodyTypes.size();
+	set_body_type(g_BodyTypes[m_BodyIndex]);
+}
+
+void HuneCreator::decrement_body()
+{
+	m_BodyIndex = (m_BodyIndex + g_BodyTypes.size() - 1) % g_BodyTypes.size();
+	set_body_type(g_BodyTypes[m_BodyIndex]);
+}
+
+void HuneCreator::increment_primary_body_color()
+{
+	m_PrimaryBodyColorIndex = (m_PrimaryBodyColorIndex + 1) % g_Colors.size();
+	set_primary_color(hsv_to_rgb(g_Colors[m_PrimaryBodyColorIndex]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
+}
+
+void HuneCreator::decrement_primary_body_color()
+{
+	m_PrimaryBodyColorIndex = (m_PrimaryBodyColorIndex + g_Colors.size() - 1) % g_Colors.size();
+	set_primary_color(hsv_to_rgb(g_Colors[m_PrimaryBodyColorIndex]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
+}
+
+void HuneCreator::increment_secondary_body_color()
+{
+	m_SecondaryBodyColorIndex = (m_SecondaryBodyColorIndex + 1) % g_Colors.size();
+	set_secondary_color(hsv_to_rgb(g_Colors[m_SecondaryBodyColorIndex]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
+}
+
+void HuneCreator::decrement_secondary_body_color()
+{
+	m_SecondaryBodyColorIndex = (m_SecondaryBodyColorIndex + g_Colors.size() - 1) % g_Colors.size();
+	set_secondary_color(hsv_to_rgb(g_Colors[m_SecondaryBodyColorIndex]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
+}
+
+void HuneCreator::increment_tertiary_body_color()
+{
+	m_TertiaryBodyColorIndex = (m_TertiaryBodyColorIndex + 1) % g_Colors.size();
+	set_tertiary_color(hsv_to_rgb(g_Colors[m_TertiaryBodyColorIndex]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
+}
+
+void HuneCreator::decrement_tertiary_body_color()
+{
+	m_TertiaryBodyColorIndex = (m_TertiaryBodyColorIndex + g_Colors.size() - 1) % g_Colors.size();
+	set_tertiary_color(hsv_to_rgb(g_Colors[m_TertiaryBodyColorIndex]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
 }

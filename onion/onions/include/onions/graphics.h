@@ -485,15 +485,34 @@ public:
 
 
 
+struct FontSprite : public Sprite
+{
+	// The x-distance to draw lowercase letters at, so they are flush with F, J, T.
+	int flush_width;
+
+	/// <summary>Constructs sprite information.</summary>
+	/// <param name="key">The key of the sprite.</param>
+	/// <param name="width">The width of the sprite.</param>
+	/// <param name="height">The height of the sprite.</param>
+	/// <param name="flush_width">The flush width of the sprite.</param>
+	FontSprite(SPRITE_KEY key, int width, int height, int flush_width);
+};
+
 // A font that displays text
 class Font
 {
 protected:
 	// A map from individual characters to the sprite for that character.
-	std::unordered_map<char, Sprite> m_Characters;
+	std::unordered_map<char, FontSprite> m_Characters;
 
 	// The separation between individual characters.
-	int m_Kerning = -1;
+	int m_Kerning = 0;
+
+	// The width of spaces between words.
+	int m_Spacing = 0;
+
+	// The height of the line.
+	int m_LineHeight;
 
 public:
 	/// <summary>Loads a font from an image and meta file.</summary>
@@ -507,7 +526,7 @@ public:
 
 	/// <summary>Retrieves the height of the font.</summary>
 	/// <returns>The height of text, as displayed by the font.</returns>
-	virtual int get_line_height() const = 0;
+	int get_line_height() const;
 
 	/// <summary>Displays a line of text.</summary>
 	/// <param name="text">The line of text to display.</param>
@@ -517,15 +536,31 @@ public:
 
 
 
+enum TextAlignment
+{
+	TEXT_LEFT,
+	TEXT_RIGHT,
+	TEXT_CENTER
+};
+
 // Displays a line of text.
 class TextGraphic : public Graphic
 {
-private:
+protected:
+	struct Line
+	{
+		std::string text;
+		int xpos;
+	};
+
 	// The lines of text to display
-	std::vector<std::string> m_Lines;
+	std::vector<Line> m_Lines;
 
 	// The maximum width of a line of text, in pixels
 	int m_Width;
+
+	// The alignment of text.
+	TextAlignment m_Alignment;
 
 	// The font to use
 	Font* m_Font;
@@ -538,7 +573,7 @@ public:
 	/// <param name="font">The font of the graphic.</param>
 	/// <param name="palette">The color palette of the graphic.</param>
 	/// <param name="text">The text of the graphic.</param>
-	TextGraphic(Font* font, const Palette* palette, std::string text, int width);
+	TextGraphic(Font* font, const Palette* palette, std::string text, int width, TextAlignment alignment = TEXT_LEFT);
 
 	/// <summary>Retrieves the text of the graphic.</summary>
 	/// <returns>The text displayed by the graphic.</returns>

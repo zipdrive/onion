@@ -3,6 +3,7 @@
 #include <regex>
 #include <unordered_map>
 #include <thread>
+#include <ctime>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "../../include/onions/application.h"
@@ -67,7 +68,7 @@ typedef StackEventListener<MouseReleaseEvent> StackMouseReleaseListener;
 
 
 int UpdateEvent::frame{ 1 };
-int UpdateEvent::frames_per_second{ 480 };
+int UpdateEvent::frames_per_second{ 60 };
 
 class StackUpdateListener : public UpdateListener
 {
@@ -779,18 +780,25 @@ void onion_main(onion_display_func display_callback)
 	// Core loop
 	while (!glfwWindowShouldClose(g_Window))
 	{
-		// Clear the screen
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		// Calculate next frame
+		int new_frame = clock() * UpdateEvent::frames_per_second / CLOCKS_PER_SEC;
 
-		// Update everything
-		++UpdateEvent::frame;
-		g_UpdateManager.update();
+		// Update if it is a new frame
+		if (new_frame != UpdateEvent::frame)
+		{
+			// Update everything
+			UpdateEvent::frame = new_frame;
+			g_UpdateManager.update();
 
-		// Draw everything
-		display_callback();
+			// Clear the screen
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Swap buffers
-		glfwSwapBuffers(g_Window);
+			// Draw everything
+			display_callback();
+
+			// Swap buffers
+			glfwSwapBuffers(g_Window);
+		}
 
 		// TODO wait until frame interval has passed
 		glfwPollEvents();// temporary

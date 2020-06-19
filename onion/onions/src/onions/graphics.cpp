@@ -1398,8 +1398,41 @@ Texture::Texture(const mat2x4f& trans) : transform(trans) {}
 
 
 
+FontSprite::FontSprite(SPRITE_KEY key, int width, int height, int flush_width) : Sprite(key, width, height), flush_width(flush_width) {}
+
+
+int Font::get_line_height() const
+{
+	return m_LineHeight;
+}
+
+
 class SpriteFont : public Font, protected SSpriteSheet
 {
+protected:
+	int get_character_dx(char prev, char current) const
+	{
+		if (prev == ' ') return m_Spacing + m_Kerning;
+
+		auto iter = m_Characters.find(prev);
+		if (iter == m_Characters.end()) return 0;
+
+		if (current == 'a' || current == 'c' || current == 'e' ||
+			current == 'g' || current == 'i' || current == 'j' ||
+			current == 'm' || current == 'n' || current == 'o' ||
+			current == 'p' || current == 'q' || current == 'r' ||
+			current == 's' || current == 'u' || current == 'v' || 
+			current == 'w' || current == 'x' || current == 'y' || 
+			current == 'z' || current == ',' || current == '.' ||
+			current == '+' || current == '=' || current == '-' ||
+			current == '_') 
+		{
+			return iter->second.flush_width + m_Kerning;
+		}
+
+		return iter->second.width + m_Kerning;
+	}
+
 public:
 	void load_sprite_sheet(const char* path)
 	{
@@ -1415,89 +1448,104 @@ public:
 		fpath = regex_replace(fpath, fext_finder, "$1.meta");
 
 		// Load data about sprites from meta file
-		std::vector<float> spriteData;
+		std::vector<float> sprite_data;
 
-		ifstream meta(fpath.c_str(), ios::in | ios::binary);
-		char buffer[9];
+		// Load the file
+		LoadFile meta(fpath.c_str());
+		regex height_finder("height\\s*=\\s*(\\d+)");
+		regex kerning_finder("kerning\\s*=\\s*(\\-?\\d+)");
+		regex spacing_finder("spacing\\s*=\\s*(\\-?\\d+)");
 
 		while (meta.good())
 		{
-			// Pull information about the sprite from file
-			meta.read(buffer, 9);
+			unordered_map<string, int> file_data;
+			string id = meta.load_data(file_data);
 
-			// The key for the sprite.
-			char character = buffer[0];
+			smatch idmatch;
+			if (regex_match(id, idmatch, height_finder))
+			{
+				m_LineHeight = stoi(idmatch[1].str());
+			}
+			else if (regex_match(id, idmatch, kerning_finder))
+			{
+				m_Kerning = stoi(idmatch[1].str());
+			}
+			else if (regex_match(id, idmatch, spacing_finder))
+			{
+				m_Spacing = stoi(idmatch[1].str());
+			}
+			else if (id.size() > 0)
+			{
+				char character = id[0];
 
-			// The distance from the left side of the sprite sheet to the left side of the sprite.
-			uint16_t left = (unsigned char)buffer[1] | ((uint16_t)(unsigned char)buffer[2] << 8);
-			// The distance from the top side of the sprite sheet to the top side of the sprite.
-			uint16_t top = (unsigned char)buffer[3] | ((uint16_t)(unsigned char)buffer[4] << 8);
-			// The width of the sprite.
-			uint16_t sprite_width = (unsigned char)buffer[5] | ((uint16_t)(unsigned char)buffer[6] << 8);
-			// The height of the sprite.
-			uint16_t sprite_height = (unsigned char)buffer[7] | ((uint16_t)(unsigned char)buffer[8] << 8);
+				int sprite_width = file_data["width"];
+				int left = file_data["left"];
+				int top = file_data["top"];
 
-			// Calculate texcoord numbers
-			float l = (float)left / width; // left texcoord
-			float r = (float)(left + sprite_width) / width; // right texcoord
-			float w = (float)sprite_width;
+				int flush = sprite_width;
+				auto flush_iter = file_data.find("flush");
+				if (flush_iter != file_data.end())
+					flush = flush_iter->second;
 
-			float t = (float)top / height; // top texcoord
-			float b = (float)(top + sprite_height) / height; // bottom texcoord
-			float h = (float)sprite_height;
+				// Calculate texcoord numbers
+				float l = (float)left / width; // left texcoord
+				float r = (float)(left + sprite_width) / width; // right texcoord
+				float w = (float)sprite_width;
 
-			// Set the sprite data
-			m_Characters.emplace(character, Sprite(spriteData.size() / 4, sprite_width, sprite_height));
+				float t = (float)top / height; // top texcoord
+				float b = (float)(top + m_LineHeight) / height; // bottom texcoord
+				float h = (float)m_LineHeight;
 
-			// First triangle: bottom-left, bottom-right, top-right
-			// Bottom-left corner, vertices
-			spriteData.push_back(0.0f);
-			spriteData.push_back(0.0f);
-			// Bottom-left corner, tex coord
-			spriteData.push_back(l);
-			spriteData.push_back(b);
-			// Bottom-right corner, vertices
-			spriteData.push_back(w);
-			spriteData.push_back(0.0f);
-			// Bottom-right corner, tex coord
-			spriteData.push_back(r);
-			spriteData.push_back(b);
-			// Top-right corner, vertices
-			spriteData.push_back(w);
-			spriteData.push_back(h);
-			// Top-right corner, tex coord
-			spriteData.push_back(r);
-			spriteData.push_back(t);
+				// Set the sprite data
+				m_Characters.emplace(character, FontSprite(sprite_data.size() / 4, sprite_width, m_LineHeight, flush));
 
-			// Second triangle: bottom-left, top-left, top-right
-			// Bottom-left corner, vertices
-			spriteData.push_back(0.0f);
-			spriteData.push_back(0.0f);
-			// Bottom-left corner, tex coord
-			spriteData.push_back(l);
-			spriteData.push_back(b);
-			// Top-left corner, vertices
-			spriteData.push_back(0.0f);
-			spriteData.push_back(h);
-			// Top-left corner, tex coord
-			spriteData.push_back(l);
-			spriteData.push_back(t);
-			// Top-right corner, vertices
-			spriteData.push_back(w);
-			spriteData.push_back(h);
-			// Top-right corner, tex coord
-			spriteData.push_back(r);
-			spriteData.push_back(t);
+				// First triangle: bottom-left, bottom-right, top-right
+				// Bottom-left corner, vertices
+				sprite_data.push_back(0.0f);
+				sprite_data.push_back(0.0f);
+				// Bottom-left corner, tex coord
+				sprite_data.push_back(l);
+				sprite_data.push_back(b);
+				// Bottom-right corner, vertices
+				sprite_data.push_back(w);
+				sprite_data.push_back(0.0f);
+				// Bottom-right corner, tex coord
+				sprite_data.push_back(r);
+				sprite_data.push_back(b);
+				// Top-right corner, vertices
+				sprite_data.push_back(w);
+				sprite_data.push_back(h);
+				// Top-right corner, tex coord
+				sprite_data.push_back(r);
+				sprite_data.push_back(t);
+
+				// Second triangle: bottom-left, top-left, top-right
+				// Bottom-left corner, vertices
+				sprite_data.push_back(0.0f);
+				sprite_data.push_back(0.0f);
+				// Bottom-left corner, tex coord
+				sprite_data.push_back(l);
+				sprite_data.push_back(b);
+				// Top-left corner, vertices
+				sprite_data.push_back(0.0f);
+				sprite_data.push_back(h);
+				// Top-left corner, tex coord
+				sprite_data.push_back(l);
+				sprite_data.push_back(t);
+				// Top-right corner, vertices
+				sprite_data.push_back(w);
+				sprite_data.push_back(h);
+				// Top-right corner, tex coord
+				sprite_data.push_back(r);
+				sprite_data.push_back(t);
+			}
 		}
-
-		// Close the meta file
-		meta.close();
 
 		// Bind the sprite data to a buffer
 		GLuint buf;
 		glGenBuffers(1, &buf);
 		glBindBuffer(GL_ARRAY_BUFFER, buf);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * spriteData.size(), spriteData.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * sprite_data.size(), sprite_data.data(), GL_STATIC_DRAW);
 
 		// If the buffer already exists, free it
 		if (m_Buffer)
@@ -1511,43 +1559,44 @@ public:
 
 	int get_line_width(string line) const
 	{
+		if (line.size() == 0)
+			return 0;
+
 		int width = 0;
+		char prev = line.at(0);
 
-		for (int k = 0; k < line.size(); ++k)
+		for (int k = 1; k < line.size(); ++k)
 		{
-			auto iter = m_Characters.find(line.at(k));
-
-			if (iter != m_Characters.end())
-			{
-				const Sprite& sprite = iter->second;
-				width += sprite.width;
-			}
-
-			width += m_Kerning;
+			char current = line.at(k);
+			width += get_character_dx(prev, current);
+			prev = current;
 		}
 
-		return width - m_Kerning;
-	}
-
-	int get_line_height() const
-	{
-		return 12;
+		return width + get_character_dx(prev, '\0');
 	}
 
 	void display_line(string line, const Palette* palette)
 	{
-		mat_push();
+		if (line.size() == 0)
+			return;
 
-		for (int k = 0; k < line.size(); ++k)
+		mat_push();
+		char prev = line.at(0);
+
+		for (int k = 1; k <= line.size(); ++k)
 		{
-			auto iter = m_Characters.find(line.at(k));
+			auto iter = m_Characters.find(prev);
 
 			if (iter != m_Characters.end())
 			{
-				Sprite& sprite = iter->second;
+				FontSprite& sprite = iter->second;
 				display(sprite.key, palette);
-				mat_translate(sprite.width + m_Kerning, 0.f, 0.f);
 			}
+
+			char current = (k == line.size() ? '\0' : line.at(k));
+			int dx = get_character_dx(prev, current);
+			prev = current;
+			mat_translate(dx, 0.f, 0.f);
 		}
 
 		mat_pop();
@@ -1563,11 +1612,13 @@ Font* Font::load_sprite_font(const char* path)
 
 
 
-TextGraphic::TextGraphic(Font* font, const Palette* palette, string text, int width)
+TextGraphic::TextGraphic(Font* font, const Palette* palette, string text, int width, TextAlignment alignment)
 {
 	m_Font = font;
 	m_Palette = palette;
 	m_Width = width;
+
+	m_Alignment = alignment;
 
 	set_text(text);
 }
@@ -1588,7 +1639,7 @@ string TextGraphic::get_text() const
 
 	for (auto iter = m_Lines.begin(); iter != m_Lines.end(); ++iter)
 	{
-		text += *iter + " ";
+		text += iter->text + " ";
 	}
 
 	return text;
@@ -1610,7 +1661,21 @@ void TextGraphic::set_text(string text)
 		int word_width = m_Font->get_line_width(word_with_leading_space);
 		if (line_width + word_width > m_Width)
 		{
-			m_Lines.push_back(line);
+			int xpos;
+			switch (m_Alignment)
+			{
+			case TEXT_LEFT:
+				xpos = 0;
+				break;
+			case TEXT_RIGHT:
+				xpos = m_Width - line_width;
+				break;
+			case TEXT_CENTER:
+				xpos = (m_Width - line_width) / 2;
+				break;
+			}
+
+			m_Lines.push_back({ line, xpos });
 			line = word;
 			line_width = m_Font->get_line_width(word);
 		}
@@ -1628,8 +1693,25 @@ void TextGraphic::set_text(string text)
 			}
 		}
 	}
+	
+	if (!line.empty())
+	{
+		int xpos;
+		switch (m_Alignment)
+		{
+		case TEXT_LEFT:
+			xpos = 0;
+			break;
+		case TEXT_RIGHT:
+			xpos = m_Width - line_width;
+			break;
+		case TEXT_CENTER:
+			xpos = (m_Width - line_width) / 2;
+			break;
+		}
 
-	if (!line.empty()) m_Lines.push_back(line);
+		m_Lines.push_back({ line, xpos });
+	}
 }
 
 void TextGraphic::display() const
@@ -1642,7 +1724,10 @@ void TextGraphic::display() const
 		auto iter = m_Lines.rbegin();
 		while (true)
 		{
-			m_Font->display_line(*iter, m_Palette);
+			mat_push();
+			mat_translate(iter->xpos, 0.f, 0.f);
+			m_Font->display_line(iter->text, m_Palette);
+			mat_pop();
 
 			if (++iter == m_Lines.rend())
 			{
