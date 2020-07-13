@@ -1,12 +1,45 @@
 #include <string>
+#include <regex>
 #include <algorithm>
+#include <set>
 #include "../../include/onions/hune.h"
 #include "../../include/onions/application.h"
+#include "../../include/onions/fileio.h"
 
 
 #include <iostream>
 
 using namespace std;
+
+
+
+vector<string> g_BodyTypes = { "lean", "stocky" };
+vector<string> g_TorsoTypes;
+vector<string> g_LegTypes;
+vector<string> g_ArmTypes;
+vector<string> g_SkullTypes;
+vector<string> g_SnoutTypes;
+vector<string> g_UpperHeadTypes;
+
+
+vector<string> g_HeadMarkingTextures;
+vector<string> g_BodyMarkingTextures;
+vector<string> g_TopTextures = { "nude none" };
+vector<string> g_JacketTextures = { "nude none" };
+vector<string> g_BottomTextures = { "nude none" };
+vector<string> g_ShoesTextures = { "nude none" };
+
+
+bool vector_contains(vector<string>* v, string s)
+{
+	for (auto iter = v->rbegin(); iter != v->rend(); ++iter)
+	{
+		if (s.compare(*iter) == 0)
+			return true;
+	}
+
+	return false;
+}
 
 
 
@@ -198,69 +231,79 @@ public:
 		switch (body_part)
 		{
 		case TORSO:
+			prefix = "torso " + prefix;
+
 			// Load front sprites
-			load_symmetric(FACING_FRONT, prefix + " front torso ");
+			load_symmetric(FACING_FRONT, prefix + " front ");
 
 			// Load back sprites
-			load_symmetric(FACING_BACK, prefix + " back torso ");
+			load_symmetric(FACING_BACK, prefix + " back ");
 
 			// Load left sprites
-			load_semi_asymmetric(FACING_LEFT, prefix + " right torso ", true, false);
+			load_semi_asymmetric(FACING_LEFT, prefix + " right ", true, false);
 
 			// Load right sprites
-			load_semi_asymmetric(FACING_RIGHT, prefix + " right torso ", false, false);
+			load_semi_asymmetric(FACING_RIGHT, prefix + " right ", false, false);
 			break;
 		case RIGHT_LEG:
+			prefix = "leg " + prefix;
+
 			// Load front sprites
-			load_asymmetric(FACING_FRONT, prefix + " front leg ", false, true);
+			load_asymmetric(FACING_FRONT, prefix + " front ", false, true);
 
 			// Load back sprites
-			load_asymmetric(FACING_BACK, prefix + " back leg ", true, true);
+			load_asymmetric(FACING_BACK, prefix + " back ", true, true);
 
 			// Load left sprites
-			load_asymmetric(FACING_LEFT, prefix + " right back_leg ", true, false, 1);
+			load_asymmetric(FACING_LEFT, prefix + " right_back ", true, false, 1);
 
 			// Load right sprites
-			load_asymmetric(FACING_RIGHT, prefix + " right front_leg ", false, false, 1);
+			load_asymmetric(FACING_RIGHT, prefix + " right_front ", false, false, 1);
 			break;
 		case LEFT_LEG:
+			prefix = "leg " + prefix;
+
 			// Load front sprites
-			load_asymmetric(FACING_FRONT, prefix + " front leg ", true, false);
+			load_asymmetric(FACING_FRONT, prefix + " front ", true, false);
 
 			// Load back sprites
-			load_asymmetric(FACING_BACK, prefix + " back leg ", false, false);
+			load_asymmetric(FACING_BACK, prefix + " back ", false, false);
 
 			// Load left sprites
-			load_asymmetric(FACING_LEFT, prefix + " right front_leg ", true, false, 1);
+			load_asymmetric(FACING_LEFT, prefix + " right_front ", true, false, 1);
 
 			// Load right sprites
-			load_asymmetric(FACING_RIGHT, prefix + " right back_leg ", false, false, 1);
+			load_asymmetric(FACING_RIGHT, prefix + " right_back ", false, false, 1);
 			break;
 		case RIGHT_ARM:
+			prefix = "arm " + prefix;
+
 			// Load front sprites
-			load_semi_asymmetric(FACING_FRONT, prefix + " front arm ", false, false);
+			load_semi_asymmetric(FACING_FRONT, prefix + " front ", false, false);
 
 			// Load back sprites
-			load_semi_asymmetric(FACING_BACK, prefix + " back arm ", true, false);
+			load_semi_asymmetric(FACING_BACK, prefix + " back ", true, false);
 
 			// Load left sprites
-			load_semi_asymmetric(FACING_LEFT, prefix + " right back_arm ", true, true);
+			load_semi_asymmetric(FACING_LEFT, prefix + " right_back ", true, true);
 
 			// Load right sprites
-			load_semi_asymmetric(FACING_RIGHT, prefix + " right front_arm ", false, true);
+			load_semi_asymmetric(FACING_RIGHT, prefix + " right_front ", false, true);
 			break;
 		case LEFT_ARM:
+			prefix = "arm " + prefix;
+
 			// Load front sprites
-			load_semi_asymmetric(FACING_FRONT, prefix + " front arm ", true, true);
+			load_semi_asymmetric(FACING_FRONT, prefix + " front ", true, true);
 
 			// Load back sprites
-			load_semi_asymmetric(FACING_BACK, prefix + " back arm ", false, true);
+			load_semi_asymmetric(FACING_BACK, prefix + " back ", false, true);
 
 			// Load left sprites
-			load_semi_asymmetric(FACING_LEFT, prefix + " right front_arm ", true, true);
+			load_semi_asymmetric(FACING_LEFT, prefix + " right_front ", true, true);
 
 			// Load right sprites
-			load_semi_asymmetric(FACING_RIGHT, prefix + " right back_arm ", false, true);
+			load_semi_asymmetric(FACING_RIGHT, prefix + " right_back ", false, true);
 			break;
 		}
 	}
@@ -325,27 +368,31 @@ int HuneLowerBody::display(HuneDirection facing, int frame) const
 	switch (facing)
 	{
 	case FACING_FRONT:
+		height -= 1;
+
 		mat_translate(0.f, -1.f, 0.02f);
 		left->display(texture, palette);
 		mat_translate(-8.f, 0.f, frame < HUNE_WALKING_INDEX + (HUNE_WALKING_SIZE / 2) ? -0.01f : 0.01f);
 		right->display(texture, palette);
 		break;
 	case FACING_BACK:
+		height -= 1;
+
 		mat_translate(0.f, -1.f, 0.02f);
 		right->display(texture, palette);
 		mat_translate(-8.f, 0.f, frame < HUNE_WALKING_INDEX + (HUNE_WALKING_SIZE / 2) ? -0.01f : 0.01f);
 		left->display(texture, palette);
 		break;
 	case FACING_LEFT:
-		mat_translate(12 - left->get_width(), height - left->get_height() - 1, 0.01f);
+		mat_translate(12 - left->get_width(), 0.f, 0.01f);
 		left->display(texture, palette);
-		mat_translate(left->get_width() - right->get_width(), left->get_height() - right->get_height(), 0.01f);
+		mat_translate(left->get_width() - right->get_width(), 0.f, 0.01f);
 		right->display(texture, palette);
 		break;
 	case FACING_RIGHT:
-		mat_translate(-10.f, height - right->get_height() - 1, 0.01f);
+		mat_translate(-10.f, 0.f, 0.01f);
 		right->display(texture, palette);
-		mat_translate(0.f, right->get_height() - left->get_height(), 0.01f);
+		mat_translate(0.f, 0.f, 0.01f);
 		left->display(texture, palette);
 		break;
 	}
@@ -373,11 +420,12 @@ int HuneUpperBody::display(HuneDirection facing, int frame) const
 
 		// Display the arms
 		mat_push();
-		mat_translate(4 - right->get_width(), 22 - right->get_height(), -left_dz);
-		right->display(arm_texture, palette);
-		mat_pop();
-		mat_translate(9.f, 22 - left->get_height(), left_dz);
+		mat_translate(mid->get_width() - 4, 20 - left->get_height(), left_dz);
 		left->display(arm_texture, palette);
+		mat_pop();
+		mat_translate(4 - right->get_width(), 20 - right->get_height(), -left_dz);
+		right->display(arm_texture, palette);
+
 		break;
 	}
 	case FACING_BACK:
@@ -390,10 +438,10 @@ int HuneUpperBody::display(HuneDirection facing, int frame) const
 
 		// Display the arms
 		mat_push();
-		mat_translate(9.f, 22 - right->get_height(), -left_dz);
+		mat_translate(mid->get_width() - 4, 20 - right->get_height(), -left_dz);
 		right->display(arm_texture, palette);
 		mat_pop();
-		mat_translate(4 - left->get_width(), 22 - left->get_height(), left_dz);
+		mat_translate(4 - left->get_width(), 20 - left->get_height(), left_dz);
 		left->display(arm_texture, palette);
 		break;
 	}
@@ -401,12 +449,12 @@ int HuneUpperBody::display(HuneDirection facing, int frame) const
 	{
 		// Display the torso
 		mat_push();
-		mat_translate(-5.f, 0.f, 0.f);
+		mat_translate(-6.f, 0.f, 0.f);
 		mid->display(torso_texture, palette);
 		mat_pop();
 
 		// Display the arms
-		mat_translate(-9.f, 22 - right->get_height(), -0.01f);
+		mat_translate(-9.f, 20 - right->get_height(), -0.01f);
 		right->display(arm_texture, palette);
 		mat_translate(0.f, right->get_height() - left->get_height(), 0.02f);
 		left->display(arm_texture, palette);
@@ -421,7 +469,7 @@ int HuneUpperBody::display(HuneDirection facing, int frame) const
 		mat_pop();
 
 		// Display the arms
-		mat_translate(11 - right->get_width(), 22 - right->get_height(), 0.01f);
+		mat_translate(11 - right->get_width(), 20 - right->get_height(), 0.01f);
 		right->display(arm_texture, palette);
 		mat_translate(right->get_width() - left->get_width(), right->get_height() - left->get_height(), -0.02f);
 		left->display(arm_texture, palette);
@@ -480,13 +528,6 @@ HuneAnimation* generate_hune_walking_animation()
 
 
 
-const vector<string> g_BodyTypes = { "stocky", "lean" };
-
-const vector<string> g_SkullTypes = { "large", "furry", "thin", "flared" };
-
-const vector<string> g_SnoutTypes = { "nose short", "nose long", "nostrils short", "nostrils long" };
-
-const vector<string> g_EarTypes = { "peaked", "small", "round", "pointed", "tall" };
 
 const vector<vec3i> g_ColorsRGB =
 {
@@ -532,7 +573,7 @@ const vector<vec3i> g_ColorsRGB =
 */
 };
 
-const vector<vec3i> g_Colors =
+vector<vec3i> g_Colors =
 {
 	// Reds
 	vec3i(12, 59, 96),
@@ -689,34 +730,153 @@ HuneGraphic::HuneGraphic()
 {
 	if (!HuneSprite::sprite_sheet)
 	{
+		cout << "Now loading [res/img/sprites/hune.png]...\n";
 		HuneSprite::sprite_sheet = TextureMapSpriteSheet::generate("sprites/hune.png");
+		cout << "Finished loading [res/img/sprites/hune.png].\n";
 
-		for (auto iter = g_BodyTypes.cbegin(); iter != g_BodyTypes.cend(); ++iter)
+		LoadFile meta("res/img/sprites/hune.meta");
+		regex word_separator("(\\S+)\\s+(\\S.*)");
+
+		while (meta.good())
 		{
-			string body_type = *iter;
-			HuneShading::set_shading(body_type + " left arm", LEFT_ARM, body_type);
-			HuneShading::set_shading(body_type + " right arm", RIGHT_ARM, body_type);
-			HuneShading::set_shading(body_type + " torso", TORSO, body_type);
-			HuneShading::set_shading(body_type + " left leg", LEFT_LEG, body_type);
-			HuneShading::set_shading(body_type + " right leg", RIGHT_LEG, body_type);
+			unordered_map<string, int> file_data;
+			string words = meta.load_data(file_data);
+
+			smatch wordmatch;
+			if (regex_match(words, wordmatch, word_separator))
+			{
+				string word = wordmatch[1].str();
+				words = wordmatch[2].str();
+
+				if (word.compare("texture") == 0)
+				{
+					if (regex_match(words, wordmatch, word_separator))
+					{
+						word = wordmatch[1].str();
+						words = wordmatch[2].str();
+
+						vector<string>* opts = nullptr;
+
+						if (word.compare("jacket") == 0)																	opts = &g_JacketTextures;
+						else if (word.compare("top") == 0)																	opts = &g_TopTextures;
+						else if (word.compare("bottom") == 0)																opts = &g_BottomTextures;
+						else if (word.compare("shoe") == 0)																	opts = &g_ShoesTextures;
+						else if (word.compare("head") == 0)																	opts = &g_HeadMarkingTextures;
+						else if (word.compare("torso") == 0 || word.compare("arm") == 0 || word.compare("leg") == 0)		opts = &g_BodyMarkingTextures;
+
+						if (opts)
+						{
+							while (regex_match(words, wordmatch, word_separator))
+							{
+								word = wordmatch[1].str();
+
+								if (word.compare("torso") == 0 || word.compare("arm") == 0 || word.compare("leg") == 0)
+								{
+									words = wordmatch[2].str();
+								}
+								else
+								{
+									break;
+								}
+							}
+
+							if (!vector_contains(opts, words))
+							{
+								opts->push_back(words);
+							}
+						}
+					}
+				}
+				else
+				{
+					vector<string>* opts = nullptr;
+
+					if (word.compare("torso") == 0)				opts = &g_TorsoTypes;
+					else if (word.compare("leg") == 0)			opts = &g_LegTypes;
+					else if (word.compare("arm") == 0)			opts = &g_ArmTypes;
+					else if (word.compare("skull") == 0)		opts = &g_SkullTypes;
+					else if (word.compare("snout") == 0)		opts = &g_SnoutTypes;
+					else if (word.compare("upper_head") == 0)	opts = &g_UpperHeadTypes;
+
+					if (opts)
+					{
+						string id;
+
+						while (regex_match(words, wordmatch, word_separator))
+						{
+							word = wordmatch[1].str();
+							words = wordmatch[2].str();
+
+							if (word.compare("front") == 0 || word.compare("back") == 0 || word.compare("right") == 0 || word.compare("right_front") == 0 || word.compare("right_back") == 0)
+							{
+								break;
+							}
+							else
+							{
+								id += (id.empty() ? "" : " ") + word;
+							}
+						}
+
+						if (!vector_contains(opts, id))
+						{
+							opts->push_back(id);
+						}
+					}
+				}
+			}
 		}
 
-		for (auto iter = g_SkullTypes.cbegin(); iter != g_SkullTypes.cend(); ++iter)
-			HuneShading::set_shading("skull " + *iter, HEAD, "skull " + *iter);
 
-		for (auto iter = g_SnoutTypes.cbegin(); iter != g_SnoutTypes.cend(); ++iter)
-			HuneShading::set_shading(*iter, HEAD, *iter);
-
-		for (auto iter = g_EarTypes.cbegin(); iter != g_EarTypes.cend(); ++iter)
+		// Construct sprite collections for all types of torsos
+		for (auto iter = g_TorsoTypes.begin(); iter != g_TorsoTypes.end(); ++iter)
 		{
-			string ear_type = *iter;
-			HuneShading::set_shading("left ear " + ear_type, LEFT_EAR, "ear " + ear_type);
-			HuneShading::set_shading("right ear " + ear_type, RIGHT_EAR, "ear " + ear_type);
+			HuneShading::set_shading("torso " + *iter, TORSO, *iter);
+		}
+
+		// Construct sprite collections for all types of legs
+		for (auto iter = g_LegTypes.begin(); iter != g_LegTypes.end(); ++iter)
+		{
+			HuneShading::set_shading("left leg " + *iter, LEFT_LEG, *iter);
+			HuneShading::set_shading("right leg " + *iter, RIGHT_LEG, *iter);
+		}
+
+		// Construct sprite collections for all types of arms
+		for (auto iter = g_ArmTypes.begin(); iter != g_ArmTypes.end(); ++iter)
+		{
+			HuneShading::set_shading("left arm " + *iter, LEFT_ARM, *iter);
+			HuneShading::set_shading("right arm " + *iter, RIGHT_ARM, *iter);
+		}
+
+		// Construct sprite collections for all types of skulls
+		for (auto iter = g_SkullTypes.begin(); iter != g_SkullTypes.end(); ++iter)
+		{
+			string id = "skull " + *iter;
+			HuneShading::set_shading(id, HEAD, id);
+		}
+
+		// Construct sprite collections for all types of snouts
+		for (auto iter = g_SnoutTypes.begin(); iter != g_SnoutTypes.end(); ++iter)
+		{
+			string id = "snout " + *iter;
+			HuneShading::set_shading(id, HEAD, id);
+		}
+
+		// Construct sprite collections for all types of upper head features
+		for (auto iter = g_UpperHeadTypes.begin(); iter != g_UpperHeadTypes.end(); ++iter)
+		{
+			string id = "upper_head " + *iter;
+			HuneShading::set_shading("left " + id, LEFT_EAR, id);
+			HuneShading::set_shading("right " + id, RIGHT_EAR, id);
 		}
 	}
 
 	m_BaseLowerBody.palette = &m_BodyPalette;
 	m_BaseUpperBody.palette = &m_BodyPalette;
+
+	m_Jacket.palette = &m_JacketPalette;
+	m_Top.palette = &m_TopPalette;
+	m_Bottom.palette = &m_BottomPalette;
+	m_Shoes.palette = &m_ShoesPalette;
 
 	facing = FACING_FRONT;
 
@@ -725,13 +885,19 @@ HuneGraphic::HuneGraphic()
 
 void HuneGraphic::set_body_type(string body_type)
 {
-	m_BaseLowerBody.left_leg = HuneShading::get_shading(body_type + " left leg");
-	m_BaseLowerBody.right_leg = HuneShading::get_shading(body_type + " right leg");
-	m_BaseUpperBody.torso = HuneShading::get_shading(body_type + " torso");
-	m_BaseUpperBody.left_arm = HuneShading::get_shading(body_type + " left arm");
-	m_BaseUpperBody.right_arm = HuneShading::get_shading(body_type + " right arm");
+	m_BodyType = body_type;
+
+	m_BaseLowerBody.left_leg = HuneShading::get_shading("left leg " + body_type + " nude");
+	m_BaseLowerBody.right_leg = HuneShading::get_shading("right leg " + body_type + " nude");
+	m_BaseUpperBody.torso = HuneShading::get_shading("torso " + body_type + " nude");
 
 	// TODO change textures?
+}
+
+void HuneGraphic::set_arm_type(string arm_type)
+{
+	m_BaseUpperBody.left_arm = m_Top.left_arm = m_Jacket.left_arm = HuneShading::get_shading("left arm " + arm_type);
+	m_BaseUpperBody.right_arm = m_Top.right_arm = m_Jacket.right_arm = HuneShading::get_shading("right arm " + arm_type);
 }
 
 void HuneGraphic::set_head_shape(string head_shape)
@@ -741,13 +907,13 @@ void HuneGraphic::set_head_shape(string head_shape)
 
 void HuneGraphic::set_snout_shape(string snout_shape)
 {
-	m_Snout = HuneShading::get_shading(snout_shape);
+	m_Snout = HuneShading::get_shading("snout " + snout_shape);
 }
 
-void HuneGraphic::set_ear_shape(string ear_shape)
+void HuneGraphic::set_upper_head_feature(string upper_head_feature)
 {
-	m_LeftEar = HuneShading::get_shading("left ear " + ear_shape);
-	m_RightEar = HuneShading::get_shading("right ear " + ear_shape);
+	m_LeftUpperHead = HuneShading::get_shading("left upper_head " + upper_head_feature);
+	m_RightUpperHead = HuneShading::get_shading("right upper_head " + upper_head_feature);
 }
 
 void HuneGraphic::set_textures(string head, string arms, string torso, string legs)
@@ -756,6 +922,24 @@ void HuneGraphic::set_textures(string head, string arms, string torso, string le
 	if (!arms.empty()) m_BaseUpperBody.arm_texture = Texture::get_texture(arms);
 	if (!torso.empty()) m_BaseUpperBody.torso_texture = Texture::get_texture(torso);
 	if (!legs.empty()) m_BaseLowerBody.texture = Texture::get_texture(legs);
+}
+
+void HuneGraphic::set_head_texture(string texture)
+{
+	Texture* temp = Texture::get_texture("head " + texture);
+	m_HeadTexture = temp ? temp : Texture::get_texture("monochrome");
+}
+
+void HuneGraphic::set_body_texture(string texture)
+{
+	Texture* temp = Texture::get_texture("torso " + texture);
+	m_BaseUpperBody.torso_texture = temp ? temp : Texture::get_texture("monochrome");
+
+	temp = Texture::get_texture("arm " + texture);
+	m_BaseUpperBody.arm_texture = temp ? temp : Texture::get_texture("monochrome");
+
+	temp = Texture::get_texture("leg " + texture);
+	m_BaseLowerBody.texture = temp ? temp : Texture::get_texture("monochrome");
 }
 
 void HuneGraphic::set_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
@@ -771,6 +955,114 @@ void HuneGraphic::set_secondary_color(const vec4i& color, const vec4i& highlight
 void HuneGraphic::set_tertiary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
 {
 	m_BodyPalette.set_blue_palette_matrix(color, highlight, shading);
+}
+
+void HuneGraphic::set_top_texture(string texture)
+{
+	regex word_separator("(\\S+)\\s+(\\S.*)");
+	smatch match;
+
+	if (regex_match(texture, match, word_separator))
+	{
+		string type = match[1];
+		m_Top.torso = HuneShading::get_shading("torso " + m_BodyType + " " + type);
+
+		Texture* temp = Texture::get_texture("top torso " + texture);
+		m_Top.torso_texture = temp ? temp : Texture::get_texture("top torso nude none");
+
+		temp = Texture::get_texture("top arm " + texture);
+		m_Top.arm_texture = temp ? temp : Texture::get_texture("top arm nude none");
+	}
+}
+
+void HuneGraphic::set_top_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+{
+	m_TopPalette.set_red_palette_matrix(color, highlight, shading);
+}
+
+void HuneGraphic::set_top_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+{
+	m_TopPalette.set_green_palette_matrix(color, highlight, shading);
+}
+
+void HuneGraphic::set_jacket_texture(string texture)
+{
+	regex word_separator("(\\S+)\\s+(\\S.*)");
+	smatch match;
+
+	if (regex_match(texture, match, word_separator))
+	{
+		string type = match[1];
+		m_Jacket.torso = HuneShading::get_shading("torso " + m_BodyType + " " + type);
+
+		Texture* temp = Texture::get_texture("jacket torso " + texture);
+		m_Jacket.torso_texture = temp ? temp : Texture::get_texture("jacket torso nude none");
+
+		temp = Texture::get_texture("jacket arm " + texture);
+		m_Jacket.arm_texture = temp ? temp : Texture::get_texture("jacket arm nude none");
+	}
+}
+
+void HuneGraphic::set_jacket_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+{
+	m_JacketPalette.set_red_palette_matrix(color, highlight, shading);
+}
+
+void HuneGraphic::set_jacket_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+{
+	m_JacketPalette.set_green_palette_matrix(color, highlight, shading);
+}
+
+void HuneGraphic::set_bottom_texture(string texture)
+{
+	regex word_separator("(\\S+)\\s+(\\S.*)");
+	smatch match;
+
+	if (regex_match(texture, match, word_separator))
+	{
+		string type = match[1];
+		m_Bottom.left_leg = HuneShading::get_shading("left leg " + m_BodyType + " " + type);
+		m_Bottom.right_leg = HuneShading::get_shading("right leg " + m_BodyType + " " + type);
+
+		Texture* temp = Texture::get_texture("bottom leg " + texture);
+		m_Bottom.texture = temp ? temp : Texture::get_texture("bottom leg nude none");
+	}
+}
+
+void HuneGraphic::set_bottom_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+{
+	m_BottomPalette.set_red_palette_matrix(color, highlight, shading);
+}
+
+void HuneGraphic::set_bottom_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+{
+	m_BottomPalette.set_green_palette_matrix(color, highlight, shading);
+}
+
+void HuneGraphic::set_shoe_texture(string texture)
+{
+	regex word_separator("(\\S+)\\s+(\\S.*)");
+	smatch match;
+
+	if (regex_match(texture, match, word_separator))
+	{
+		string type = match[1];
+		m_Shoes.left_leg = HuneShading::get_shading("left leg " + m_BodyType + " " + type);
+		m_Shoes.right_leg = HuneShading::get_shading("right leg " + m_BodyType + " " + type);
+
+		Texture* temp = Texture::get_texture("shoe leg " + texture);
+		m_Shoes.texture = temp ? temp : Texture::get_texture("shoe leg nude none");
+	}
+}
+
+void HuneGraphic::set_shoe_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+{
+	m_ShoesPalette.set_red_palette_matrix(color, highlight, shading);
+}
+
+void HuneGraphic::set_shoe_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+{
+	m_ShoesPalette.set_green_palette_matrix(color, highlight, shading);
 }
 
 void HuneGraphic::set_animation(HuneAnimation* animation)
@@ -801,13 +1093,29 @@ void HuneGraphic::display() const
 	int frame = m_Animation->get_frame();
 
 	mat_push();
-	mat_translate(0.f, m_BaseLowerBody.display(facing, frame) - 4, 0.f);
-	mat_translate(0.f, m_BaseUpperBody.display(facing, frame) - 2, 0.f);
+
+	int trans = m_BaseLowerBody.display(facing, frame) - 4;
+	mat_push();
+	mat_translate(0.f, 0.f, -0.001f);
+	m_Shoes.display(facing, frame);
+	mat_translate(0.f, 0.f, -0.001f);
+	m_Bottom.display(facing, frame);
+	mat_pop();
+	mat_translate(0.f, trans, 0.f);
+
+	trans = m_BaseUpperBody.display(facing, frame) - 2;
+	mat_push();
+	mat_translate(0.f, 0.f, -0.001f);
+	m_Top.display(facing, frame);
+	mat_translate(0.f, 0.f, -0.001f);
+	m_Jacket.display(facing, frame);
+	mat_pop();
+	mat_translate(0.f, trans, 0.f);
 
 	const HuneSprite* skull_sprite = m_Skull->get_frame(facing, frame);
 	const HuneSprite* snout_sprite = m_Snout->get_frame(facing, frame);
-	const HuneSprite* left_ear_sprite = m_LeftEar->get_frame(facing, frame);
-	const HuneSprite* right_ear_sprite = m_RightEar->get_frame(facing, frame);
+	const HuneSprite* left_upper_head_sprite = m_LeftUpperHead->get_frame(facing, frame);
+	const HuneSprite* right_upper_head_sprite = m_RightUpperHead->get_frame(facing, frame);
 
 	switch (facing)
 	{
@@ -826,11 +1134,11 @@ void HuneGraphic::display() const
 
 		// Display right ear
 		mat_translate(half_snout_width, 8.f, -0.01f);
-		right_ear_sprite->display(m_HeadTexture, &m_BodyPalette);
+		right_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 
 		// Display left ear
-		mat_translate(1 - left_ear_sprite->get_width(), 0.f, 0.f);
-		left_ear_sprite->display(m_HeadTexture, &m_BodyPalette);
+		mat_translate(1 - left_upper_head_sprite->get_width(), 0.f, 0.f);
+		left_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 		break;
 	}
 	case FACING_BACK:
@@ -843,11 +1151,11 @@ void HuneGraphic::display() const
 
 		// Display left ear
 		mat_translate(half_skull_width, 8.f, -0.01f);
-		left_ear_sprite->display(m_HeadTexture, &m_BodyPalette);
+		left_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 
 		// Display right ear
-		mat_translate(1 - right_ear_sprite->get_width(), 0.f, 0.f);
-		right_ear_sprite->display(m_HeadTexture, &m_BodyPalette);
+		mat_translate(1 - right_upper_head_sprite->get_width(), 0.f, 0.f);
+		right_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 		break;
 	}
 	case FACING_RIGHT:
@@ -860,8 +1168,8 @@ void HuneGraphic::display() const
 		snout_sprite->display(m_HeadTexture, &m_BodyPalette);
 
 		// Display right ear
-		mat_translate(-3 - right_ear_sprite->get_width(), 8.f, -0.01f);
-		right_ear_sprite->display(m_HeadTexture, &m_BodyPalette);
+		mat_translate(-3 - right_upper_head_sprite->get_width(), 8.f, -0.01f);
+		right_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 		break;
 	case FACING_LEFT:
 		// Display skull
@@ -870,7 +1178,7 @@ void HuneGraphic::display() const
 
 		// Display left ear
 		mat_translate(5.f, 8.f, -0.01f);
-		left_ear_sprite->display(m_HeadTexture, &m_BodyPalette);
+		left_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 
 		// Display snout
 		mat_translate(-3 - snout_sprite->get_width(), -8.f, -0.01f);
@@ -883,16 +1191,169 @@ void HuneGraphic::display() const
 
 
 
+template <typename T>
+class VectorIndex : public HuneCreator::Index
+{
+protected:
+	// The possible values for the index.
+	std::vector<T>& m_Values;
+
+public:
+	/// <summary>Constructs the index.</summary>
+	/// <param name="hune">The hune graphic to change whenever the index changes.</param>
+	/// <param name="values">The possible values for the index to take.</param>
+	VectorIndex(HuneGraphic* hune, std::vector<T>& values) : HuneCreator::Index(hune), m_Values(values) {}
+
+	/// <summary>Increments the index value.</summary>
+	void increment()
+	{
+		set((m_Index + 1) % m_Values.size());
+	}
+
+	/// <summary>Decrements the index value.</summary>
+	void decrement()
+	{
+		set((m_Index + m_Values.size() - 1) % m_Values.size());
+	}
+
+	/// <summary>Retrieves the current value pointed to by the index.</summary>
+	/// <returns>A reference to the current value of the index.</returns>
+	const T& get_value()
+	{
+		return m_Values[m_Index];
+	}
+};
+
+class StrFuncIndex : public VectorIndex<std::string>
+{
+protected:
+	// The function to call whenever the index changes.
+	void (HuneGraphic::*m_ValueFunc)(std::string);
+
+	/// <summary>Sets the index value.</summary>
+	/// <param name="index">The value to set the index to.</param>
+	void set(int index)
+	{
+		m_Index = index;
+		(m_HuneGraphic->*m_ValueFunc)(get_value());
+	}
+
+public:
+	/// <summary>Constructs the index.</summary>
+	/// <param name="hune">The hune graphic to change whenever the index changes.</param>
+	/// <param name="values">The possible values for the index to take.</param>
+	/// <param name="value_func">The function to call whenever the index changes.</param>
+	StrFuncIndex(HuneGraphic* hune, std::vector<std::string>& values, void (HuneGraphic::*value_func)(std::string)) : VectorIndex<string>(hune, values)
+	{
+		m_ValueFunc = value_func;
+		set(0);
+	}
+};
+
+class StrFuncIndexWithDependents : public StrFuncIndex
+{
+protected:
+	// List of feature indices that are dependent on this index.
+	vector<Index*> m_Dependents;
+
+	/// <summary>Sets the index value.</summary>
+	/// <param name="index">The value to set the index to.</param>
+	void set(int index)
+	{
+		StrFuncIndex::set(index);
+
+		for (auto iter = m_Dependents.begin(); iter != m_Dependents.end(); ++iter)
+		{
+			(*iter)->increment();
+			(*iter)->decrement();
+		}
+	}
+
+public:
+	/// <summary>Constructs the index.</summary>
+	/// <param name="hune">The hune graphic to change whenever the index changes.</param>
+	/// <param name="values">The possible values for the index to take.</param>
+	/// <param name="value_func">The function to call whenever the index changes.</param>
+	StrFuncIndexWithDependents(HuneGraphic* hune, std::vector<std::string>& values, void (HuneGraphic::*value_func)(std::string), vector<Index*> dependents) : StrFuncIndex(hune, values, value_func)
+	{
+		m_Dependents = dependents;
+		set(0);
+	}
+};
+
+class ColorFuncIndex : public VectorIndex<vec3i>
+{
+protected:
+	// The function to call whenever the index changes.
+	void (HuneGraphic::*m_ValueFunc)(const vec4i&, const vec4i&, const vec4i&);
+
+	/// <summary>Sets the index value.</summary>
+	/// <param name="index">The value to set the index to.</param>
+	void set(int index)
+	{
+		m_Index = index;
+		(m_HuneGraphic->*m_ValueFunc)(hsv_to_rgb(get_value()), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
+	}
+
+public:
+	/// <summary>Constructs the index.</summary>
+	/// <param name="hune">The hune graphic to change whenever the index changes.</param>
+	/// <param name="values">The possible values for the index to take.</param>
+	/// <param name="value_func">The function to call whenever the index changes.</param>
+	ColorFuncIndex(HuneGraphic* hune, void (HuneGraphic::*value_func)(const vec4i&, const vec4i&, const vec4i&)) : VectorIndex<vec3i>(hune, g_Colors)
+	{
+		m_ValueFunc = value_func;
+		set(0);
+	}
+};
+
+
 HuneCreator::HuneCreator()
 {
-	set_head_shape(g_SkullTypes[0]);
-	set_snout_shape(g_SnoutTypes[0]);
-	set_ear_shape(g_EarTypes[0]);
-	set_body_type(g_BodyTypes[0]);
+	Index* jacket_index = nullptr;
+	m_Features.emplace("jacket style", jacket_index = new StrFuncIndex(this, g_JacketTextures, &HuneGraphic::set_jacket_texture));
+	m_Features.emplace("jacket primary_color", new ColorFuncIndex(this, &HuneGraphic::set_jacket_primary_color));
+	m_Features.emplace("jacket secondary_color", new ColorFuncIndex(this, &HuneGraphic::set_jacket_secondary_color));
 
-	set_primary_color(hsv_to_rgb(g_Colors[0]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
-	set_secondary_color(hsv_to_rgb(g_Colors[0]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
-	set_tertiary_color(hsv_to_rgb(g_Colors[0]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
+	Index* top_index = nullptr;
+	m_Features.emplace("top style", top_index = new StrFuncIndex(this, g_TopTextures, &HuneGraphic::set_top_texture));
+	m_Features.emplace("top primary_color", new ColorFuncIndex(this, &HuneGraphic::set_top_primary_color));
+	m_Features.emplace("top secondary_color", new ColorFuncIndex(this, &HuneGraphic::set_top_secondary_color));
+
+	Index* bottom_index = nullptr;
+	m_Features.emplace("bottoms style", bottom_index = new StrFuncIndex(this, g_BottomTextures, &HuneGraphic::set_bottom_texture));
+	m_Features.emplace("bottoms primary_color", new ColorFuncIndex(this, &HuneGraphic::set_bottom_primary_color));
+	m_Features.emplace("bottoms secondary_color", new ColorFuncIndex(this, &HuneGraphic::set_bottom_secondary_color));
+
+	Index* shoes_index = nullptr;
+	m_Features.emplace("shoes style", shoes_index = new StrFuncIndex(this, g_ShoesTextures, &HuneGraphic::set_shoe_texture));
+	m_Features.emplace("shoes primary_color", new ColorFuncIndex(this, &HuneGraphic::set_shoe_primary_color));
+	m_Features.emplace("shoes secondary_color", new ColorFuncIndex(this, &HuneGraphic::set_shoe_secondary_color));
+
+	m_Features.emplace("skull", new StrFuncIndex(this, g_SkullTypes, &HuneGraphic::set_head_shape));
+	m_Features.emplace("snout", new StrFuncIndex(this, g_SnoutTypes, &HuneGraphic::set_snout_shape));
+	m_Features.emplace("upper_head", new StrFuncIndex(this, g_UpperHeadTypes, &HuneGraphic::set_upper_head_feature));
+	m_Features.emplace("body", new StrFuncIndexWithDependents(this, g_BodyTypes, &HuneGraphic::set_body_type, 
+		{ jacket_index, top_index, bottom_index, shoes_index }
+	));
+	m_Features.emplace("arms", new StrFuncIndexWithDependents(this, g_ArmTypes, &HuneGraphic::set_arm_type,
+		{ jacket_index, top_index }
+	));
+
+	m_Features.emplace("head markings", new StrFuncIndex(this, g_HeadMarkingTextures, &HuneGraphic::set_head_texture));
+	m_Features.emplace("body markings", new StrFuncIndex(this, g_BodyMarkingTextures, &HuneGraphic::set_body_texture));
+
+	m_Features.emplace("body primary_color", new ColorFuncIndex(this, &HuneGraphic::set_primary_color));
+	m_Features.emplace("body secondary_color", new ColorFuncIndex(this, &HuneGraphic::set_secondary_color));
+	m_Features.emplace("body tertiary_color", new ColorFuncIndex(this, &HuneGraphic::set_tertiary_color));
+}
+
+HuneCreator::~HuneCreator()
+{
+	for (auto iter = m_Features.begin(); iter != m_Features.end(); ++iter)
+	{
+		delete iter->second;
+	}
 }
 
 void HuneCreator::start_walking()
@@ -915,86 +1376,18 @@ void HuneCreator::rotate_left()
 	facing = (HuneDirection)(((int)facing + 1) % HUNE_NUM_DIRECTIONS);
 }
 
-void HuneCreator::increment_head()
+HuneCreator::Index* HuneCreator::get_feature(string id)
 {
-	m_HeadIndex = (m_HeadIndex + 1) % g_SkullTypes.size();
-	set_head_shape(g_SkullTypes[m_HeadIndex]);
+	auto iter = m_Features.find(id);
+	if (iter != m_Features.end())
+		return iter->second;
+	return nullptr;
 }
 
-void HuneCreator::decrement_head()
+
+HuneCreator::Index::Index(HuneGraphic* hune)
 {
-	m_HeadIndex = (m_HeadIndex + g_SkullTypes.size() - 1) % g_SkullTypes.size();
-	set_head_shape(g_SkullTypes[m_HeadIndex]);
+	m_HuneGraphic = hune;
 }
 
-void HuneCreator::increment_snout()
-{
-	m_SnoutIndex = (m_SnoutIndex + 1) % g_SnoutTypes.size();
-	set_snout_shape(g_SnoutTypes[m_SnoutIndex]);
-}
-
-void HuneCreator::decrement_snout()
-{
-	m_SnoutIndex = (m_SnoutIndex + g_SnoutTypes.size() - 1) % g_SnoutTypes.size();
-	set_snout_shape(g_SnoutTypes[m_SnoutIndex]);
-}
-
-void HuneCreator::increment_ears()
-{
-	m_EarIndex = (m_EarIndex + 1) % g_EarTypes.size();
-	set_ear_shape(g_EarTypes[m_EarIndex]);
-}
-
-void HuneCreator::decrement_ears()
-{
-	m_EarIndex = (m_EarIndex + g_EarTypes.size() - 1) % g_EarTypes.size();
-	set_ear_shape(g_EarTypes[m_EarIndex]);
-}
-
-void HuneCreator::increment_body()
-{
-	m_BodyIndex = (m_BodyIndex + 1) % g_BodyTypes.size();
-	set_body_type(g_BodyTypes[m_BodyIndex]);
-}
-
-void HuneCreator::decrement_body()
-{
-	m_BodyIndex = (m_BodyIndex + g_BodyTypes.size() - 1) % g_BodyTypes.size();
-	set_body_type(g_BodyTypes[m_BodyIndex]);
-}
-
-void HuneCreator::increment_primary_body_color()
-{
-	m_PrimaryBodyColorIndex = (m_PrimaryBodyColorIndex + 1) % g_Colors.size();
-	set_primary_color(hsv_to_rgb(g_Colors[m_PrimaryBodyColorIndex]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
-}
-
-void HuneCreator::decrement_primary_body_color()
-{
-	m_PrimaryBodyColorIndex = (m_PrimaryBodyColorIndex + g_Colors.size() - 1) % g_Colors.size();
-	set_primary_color(hsv_to_rgb(g_Colors[m_PrimaryBodyColorIndex]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
-}
-
-void HuneCreator::increment_secondary_body_color()
-{
-	m_SecondaryBodyColorIndex = (m_SecondaryBodyColorIndex + 1) % g_Colors.size();
-	set_secondary_color(hsv_to_rgb(g_Colors[m_SecondaryBodyColorIndex]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
-}
-
-void HuneCreator::decrement_secondary_body_color()
-{
-	m_SecondaryBodyColorIndex = (m_SecondaryBodyColorIndex + g_Colors.size() - 1) % g_Colors.size();
-	set_secondary_color(hsv_to_rgb(g_Colors[m_SecondaryBodyColorIndex]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
-}
-
-void HuneCreator::increment_tertiary_body_color()
-{
-	m_TertiaryBodyColorIndex = (m_TertiaryBodyColorIndex + 1) % g_Colors.size();
-	set_tertiary_color(hsv_to_rgb(g_Colors[m_TertiaryBodyColorIndex]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
-}
-
-void HuneCreator::decrement_tertiary_body_color()
-{
-	m_TertiaryBodyColorIndex = (m_TertiaryBodyColorIndex + g_Colors.size() - 1) % g_Colors.size();
-	set_tertiary_color(hsv_to_rgb(g_Colors[m_TertiaryBodyColorIndex]), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
-}
+HuneCreator::Index::~Index() {}

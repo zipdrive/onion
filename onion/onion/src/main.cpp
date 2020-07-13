@@ -102,7 +102,7 @@ void test_hune_main()
 	g_TestHune->set_body_type("lean");
 	g_TestHune->set_head_shape("thin");
 	g_TestHune->set_snout_shape("nose long");
-	g_TestHune->set_ear_shape("small");
+	g_TestHune->set_upper_head_feature("small");
 
 	g_TestHune->set_textures("head striped", "monochrome", "monochrome", "monochrome");
 

@@ -170,11 +170,41 @@ protected:
 	// The palette for the whole body.
 	MultiplePalette m_BodyPalette;
 
+	// The textures, palettes, and sprites of the upper body.
+	HuneUpperBody m_BaseUpperBody;
+
 	// The textures, palettes, and sprites of the lower body.
 	HuneLowerBody m_BaseLowerBody;
 
-	// The textures, palettes, and sprites of the upper body.
-	HuneUpperBody m_BaseUpperBody;
+	// The body type of the hune.
+	std::string m_BodyType;
+
+
+
+	// The palette for the jacket.
+	MultiplePalette m_JacketPalette;
+	
+	// The textures, palettes, and sprites of the jacket.
+	HuneUpperBody m_Jacket;
+
+	// The palette for the top.
+	MultiplePalette m_TopPalette;
+
+	// The textures, palettes, and sprites of the top (shirt/sweater/etc).
+	HuneUpperBody m_Top;
+
+	// The palette for the bottoms.
+	MultiplePalette m_BottomPalette;
+
+	// The textures, palettes, and sprites of the bottoms (pants/shorts/skirt/etc).
+	HuneLowerBody m_Bottom;
+
+	// The palette for the shoes.
+	MultiplePalette m_ShoesPalette;
+
+	// The textures, palettes, and sprites of the shoes.
+	HuneLowerBody m_Shoes;
+
 
 
 	// The base shading for the head.
@@ -183,11 +213,11 @@ protected:
 	// The base shading for the snout.
 	HuneShading* m_Snout;
 
-	// The base shading for the right ear.
-	HuneShading* m_RightEar;
+	// The base shading for the right upper head.
+	HuneShading* m_RightUpperHead;
 
-	// The base shading for the left ear.
-	HuneShading* m_LeftEar;
+	// The base shading for the left upper head.
+	HuneShading* m_LeftUpperHead;
 
 	// The texture for the head.
 	Texture* m_HeadTexture;
@@ -207,6 +237,10 @@ public:
 	/// <param name="body_type">A string identifier for the body type.</param>
 	void set_body_type(std::string body_type);
 
+	/// <summary>Sets the arm type.</summary>
+	/// <param name="body_type">A string identifier for the arm type.</param>
+	void set_arm_type(std::string arm_type);
+
 	/// <summary>Sets the shape of the head.</summary>
 	/// <param name="body_type">A string identifier for the head shape.</param>
 	void set_head_shape(std::string head_shape);
@@ -215,9 +249,9 @@ public:
 	/// <param name="body_type">A string identifier for the shape of the snout.</param>
 	void set_snout_shape(std::string head_shape);
 
-	/// <summary>Sets the shape of the ears.</summary>
+	/// <summary>Sets the type of upper head feature.</summary>
 	/// <param name="body_type">A string identifier for the shape of the ears.</param>
-	void set_ear_shape(std::string ear_shape);
+	void set_upper_head_feature(std::string upper_head_feature);
 
 	/// <summary>Sets the textures for the body.</summary>
 	/// <param name="head">The texture ID of the head. Set to "" for no change.</param>
@@ -225,6 +259,14 @@ public:
 	/// <param name="torso">The texture ID of the torso. Set to "" for no change.</param>
 	/// <param name="legs">The texture ID of the legs. Set to "" for no change.</param>
 	void set_textures(std::string head, std::string arms, std::string torso, std::string legs);
+
+	/// <summary>Sets the textures for the head.</summary>
+	/// <param name="texture">The texture ID for the head.</param>
+	void set_head_texture(std::string texture);
+	
+	/// <summary>Sets the textures for the body.</summary>
+	/// <param name="texture">The texture ID for the body.</param>
+	void set_body_texture(std::string texture);
 
 	/// <summary>Sets the primary color for the body. (Mapped to by red in the texture.)</summary>
 	/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
@@ -244,6 +286,70 @@ public:
 	/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
 	void set_tertiary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
 
+	/// <summary>Sets the textures for the top.</summary>
+	/// <param name="texture">The texture ID for the body.</param>
+	void set_top_texture(std::string texture);
+
+	/// <summary>Sets the primary color for the top. (Mapped to by red in the texture.)</summary>
+	/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
+	/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
+	/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
+	void set_top_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+
+	/// <summary>Sets the secondary color for the top. (Mapped to by green in the texture.)</summary>
+	/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
+	/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
+	/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
+	void set_top_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+
+	/// <summary>Sets the textures for the jacket.</summary>
+	/// <param name="texture">The texture ID for the body.</param>
+	void set_jacket_texture(std::string texture);
+
+	/// <summary>Sets the primary color for the jacket. (Mapped to by red in the texture.)</summary>
+	/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
+	/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
+	/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
+	void set_jacket_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+
+	/// <summary>Sets the secondary color for the jacket. (Mapped to by green in the texture.)</summary>
+	/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
+	/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
+	/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
+	void set_jacket_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+
+	/// <summary>Sets the textures for the bottoms.</summary>
+	/// <param name="texture">The texture ID for the body.</param>
+	void set_bottom_texture(std::string texture);
+
+	/// <summary>Sets the primary color for the bottoms. (Mapped to by red in the texture.)</summary>
+	/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
+	/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
+	/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
+	void set_bottom_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+
+	/// <summary>Sets the secondary color for the bottoms. (Mapped to by green in the texture.)</summary>
+	/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
+	/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
+	/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
+	void set_bottom_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+
+	/// <summary>Sets the textures for the shoes.</summary>
+	/// <param name="texture">The texture ID for the body.</param>
+	void set_shoe_texture(std::string texture);
+
+	/// <summary>Sets the primary color for the shoes. (Mapped to by red in the texture.)</summary>
+	/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
+	/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
+	/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
+	void set_shoe_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+
+	/// <summary>Sets the secondary color for the shoes. (Mapped to by green in the texture.)</summary>
+	/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
+	/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
+	/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
+	void set_shoe_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+
 	/// <summary>Sets the animation of the hune graphic.</summary>
 	/// <param name="animation">The animation to play.</param>
 	void set_animation(HuneAnimation* animation);
@@ -262,30 +368,44 @@ public:
 
 class HuneCreator : public HuneGraphic
 {
+public:
+	class Index
+	{
+	protected:
+		// The current index value held.
+		int m_Index = 0;
+
+		// The hune graphic to change whenever the index changes.
+		HuneGraphic* m_HuneGraphic;
+
+		/// <summary>Sets the index value.</summary>
+		/// <param name="index">The value to set the index to.</param>
+		virtual void set(int index) = 0;
+
+	public:
+		/// <summary>Constructs the index.</summary>
+		/// <param name="hune">The hune graphic to change whenever the index changes.</param>
+		/// <param name="values">The possible values for the index to take.</param>
+		Index(HuneGraphic* hune);
+
+		virtual ~Index();
+
+		/// <summary>Increments the index value.</summary>
+		virtual void increment() = 0;
+
+		/// <summary>Decrements the index value.</summary>
+		virtual void decrement() = 0;
+	};
+
 protected:
-	// The index of the skull type
-	int m_HeadIndex = 0;
-
-	// The index of the snout type
-	int m_SnoutIndex = 0;
-
-	// The index of the ear type
-	int m_EarIndex = 0;
-
-	// The index of the body type
-	int m_BodyIndex = 0;
-
-	// The index of the primary color of the body
-	int m_PrimaryBodyColorIndex = 0;
-
-	// The index of the secondary color of the body
-	int m_SecondaryBodyColorIndex = 0;
-
-	// The index of the tertiary color of the body
-	int m_TertiaryBodyColorIndex = 0;
-
+	// A mapping from a string ID to a feature that can be altered.
+	std::unordered_map<std::string, Index*> m_Features;
+	
 public:
 	HuneCreator();
+
+	~HuneCreator();
+
 
 	/// <summary>Play the animation of the hune walking.</summary>
 	void start_walking();
@@ -293,51 +413,16 @@ public:
 	/// <summary>Stop the animation of the hune walking.</summary>
 	void stop_walking();
 
+
 	/// <summary>Rotate the hune counter-clockwise.</summary>
 	void rotate_right();
 
 	/// <summary>Rotate the hune clockwise.</summary>
 	void rotate_left();
 
-	/// <summary>Increment what head shape the hune has.</summary>
-	void increment_head();
-
-	/// <summary>Decrement what head shape the hune has.</summary>
-	void decrement_head();
-
-	/// <summary>Increment what snout shape the hune has.</summary>
-	void increment_snout();
-
-	/// <summary>Decrement what snout shape the hune has.</summary>
-	void decrement_snout();
-
-	/// <summary>Increment the shape of the ears the hune has.</summary>
-	void increment_ears();
-
-	/// <summary>Decrement the shape of the ears the hune has.</summary>
-	void decrement_ears();
-
-	/// <summary>Increment what body type the hune has.</summary>
-	void increment_body();
-
-	/// <summary>Decrement what body type the hune has.</summary>
-	void decrement_body();
-
-	/// <summary>Increment what the primary color of the hune's body is.</summary>
-	void increment_primary_body_color();
-
-	/// <summary>Decrement what the primary color of the hune's body is.</summary>
-	void decrement_primary_body_color();
-
-	/// <summary>Increment what the secondary color of the hune's body is.</summary>
-	void increment_secondary_body_color();
-
-	/// <summary>Decrement what the secondary color of the hune's body is.</summary>
-	void decrement_secondary_body_color();
-
-	/// <summary>Increment what the tertiary color of the hune's body is.</summary>
-	void increment_tertiary_body_color();
-
-	/// <summary>Decrement what the tertiary color of the hune's body is.</summary>
-	void decrement_tertiary_body_color();
+	
+	/// <summary>Retrieves an alterable feature of the hune graphic.</summary>
+	/// <param name="id">The string ID of the feature to retrieve.</param>
+	/// <returns>The index of the feature. NULL if the feature does not exist.</returns>
+	Index* get_feature(std::string id);
 };
