@@ -311,6 +311,9 @@ arm paw right_back walk4                    width = 5     height = 23    shading
 
 
 
+texture torso monochrome                                    width = 1     height = 1     left = 526     top = 1
+texture arm monochrome                                      width = 1     height = 1     left = 526     top = 1
+
 texture torso neck_chest_stomach                            width = 25    height = 23    left = 577     top = 0
 texture arm neck_chest_stomach                              width = 9     height = 24    left = 165     top = 211
 
@@ -353,6 +356,8 @@ texture top torso clothed thick striped sweater             width = 25    height
 texture top arm clothed thick striped sweater               width = 9     height = 24    left = 185     top = 211
 texture top torso clothed patterned sweater                 width = 25    height = 23    left = 577     top = 24
 texture top arm clothed patterned sweater                   width = 9     height = 24    left = 175     top = 211
+texture top torso clothed collar and tie                    width = 25    height = 23    left = 655     top = 24
+texture top arm clothed collar and tie                      width = 9     height = 24    left = 175     top = 211
 
 texture jacket torso nude none                              width = 1     height = 1     left = 15      top = 23
 texture jacket arm nude none                                width = 1     height = 1     left = 15      top = 23
@@ -360,6 +365,12 @@ texture jacket torso hooded zipped hoodie                   width = 25    height
 texture jacket arm hooded zipped hoodie                     width = 9     height = 24    left = 175     top = 211
 texture jacket torso hooded unzipped hoodie                 width = 25    height = 23    left = 629     top = 24
 texture jacket arm hooded unzipped hoodie                   width = 9     height = 24    left = 175     top = 211
+texture jacket torso clothed zipped overcoat                width = 25    height = 23    left = 681     top = 24
+texture jacket arm clothed zipped overcoat                  width = 9     height = 24    left = 175     top = 211
+texture jacket torso clothed unzipped overcoat              width = 25    height = 23    left = 707     top = 24
+texture jacket arm clothed unzipped overcoat                width = 9     height = 24    left = 175     top = 211
+texture jacket torso clothed blazer                         width = 25    height = 23    left = 733     top = 24
+texture jacket arm clothed blazer                           width = 9     height = 24    left = 175     top = 211
 
 texture bottom leg nude none                                width = 1     height = 1     left = 15      top = 23
 
@@ -368,57 +379,87 @@ texture shoe leg nude none                                  width = 1     height
 
 
 
-skull large front                           width = 13    height = 12    shading_left = 0     shading_top = 236   mapping_left = 115    mapping_top = 236
-skull large back                            width = 13    height = 12    shading_left = 40    shading_top = 236   mapping_left = 155    mapping_top = 236
-skull large right                           width = 11    height = 12    shading_left = 80    shading_top = 236   mapping_left = 195    mapping_top = 236
+skull thin front                            width = 11    height = 12    shading_left = 14    shading_top = 236   mapping_left = 89     mapping_top = 236
+skull thin back                             width = 11    height = 12    shading_left = 40    shading_top = 236   mapping_left = 101    mapping_top = 236
+skull thin right                            width = 10    height = 12    shading_left = 64    shading_top = 236   mapping_left = 115    mapping_top = 236
 
-skull furry front                           width = 13    height = 12    shading_left = 14    shading_top = 236   mapping_left = 129    mapping_top = 236
-skull furry back                            width = 13    height = 12    shading_left = 54    shading_top = 236   mapping_left = 169    mapping_top = 236
-skull furry right                           width = 11    height = 12    shading_left = 92    shading_top = 236   mapping_left = 210    mapping_top = 236
-
-skull thin front                            width = 11    height = 12    shading_left = 28    shading_top = 236   mapping_left = 143    mapping_top = 236
-skull thin back                             width = 11    height = 12    shading_left = 68    shading_top = 236   mapping_left = 183    mapping_top = 236
-skull thin right                            width = 10    height = 12    shading_left = 104   shading_top = 236   mapping_left = 225    mapping_top = 236
+skull large front                           width = 13    height = 12    shading_left = 0     shading_top = 236   mapping_left = 75     mapping_top = 236
+skull large back                            width = 13    height = 12    shading_left = 26    shading_top = 236   mapping_left = 101    mapping_top = 236
+skull large right                           width = 11    height = 12    shading_left = 52    shading_top = 236   mapping_left = 115    mapping_top = 236
 
 
 
 
-snout short nose front                      width = 7     height = 7     shading_left = 0     shading_top = 249   mapping_left = 145    mapping_top = 241
-snout short nose right                      width = 4     height = 7     shading_left = 29    shading_top = 249   mapping_left = 205    mapping_top = 241
+snout short nose front                      width = 7     height = 7     shading_left = 0     shading_top = 249   mapping_left = 78     mapping_top = 241
+snout short nose right                      width = 4     height = 7     shading_left = 29    shading_top = 249   mapping_left = 125    mapping_top = 241
 
-snout long nose front                       width = 7     height = 7     shading_left = 7     shading_top = 249   mapping_left = 145    mapping_top = 241
-snout long nose right                       width = 5     height = 7     shading_left = 34    shading_top = 249   mapping_left = 204    mapping_top = 241
+snout long nose front                       width = 7     height = 7     shading_left = 7     shading_top = 249   mapping_left = 78     mapping_top = 241
+snout long nose right                       width = 5     height = 7     shading_left = 34    shading_top = 249   mapping_left = 124    mapping_top = 241
 
-snout short nostrils front                  width = 7     height = 7     shading_left = 14    shading_top = 249   mapping_left = 145    mapping_top = 241
-snout short nostrils right                  width = 4     height = 7     shading_left = 40    shading_top = 249   mapping_left = 205    mapping_top = 241
+snout short nostrils front                  width = 7     height = 7     shading_left = 14    shading_top = 249   mapping_left = 78     mapping_top = 241
+snout short nostrils right                  width = 4     height = 7     shading_left = 40    shading_top = 249   mapping_left = 125    mapping_top = 241
 
-snout long nostrils front                   width = 7     height = 7     shading_left = 21    shading_top = 249   mapping_left = 145    mapping_top = 241
-snout long nostrils right                   width = 5     height = 7     shading_left = 45    shading_top = 249   mapping_left = 204    mapping_top = 241
-
-
-
-
-upper_head peaked ears front                width = 7     height = 8     shading_left = 0     shading_top = 256
-upper_head peaked ears back                 width = 7     height = 8     shading_left = 7     shading_top = 256
-upper_head peaked ears right                width = 4     height = 8     shading_left = 14    shading_top = 256
-
-upper_head small ears front                 width = 7     height = 8     shading_left = 0     shading_top = 264
-upper_head small ears back                  width = 7     height = 8     shading_left = 7     shading_top = 264
-upper_head small ears right                 width = 5     height = 8     shading_left = 14    shading_top = 264
-
-upper_head round ears front                 width = 7     height = 8     shading_left = 0     shading_top = 272
-upper_head round ears back                  width = 7     height = 8     shading_left = 7     shading_top = 272
-upper_head round ears right                 width = 6     height = 8     shading_left = 14    shading_top = 272
-
-upper_head pointed ears front               width = 7     height = 8     shading_left = 0     shading_top = 280
-upper_head pointed ears back                width = 7     height = 8     shading_left = 7     shading_top = 280
-upper_head pointed ears right               width = 6     height = 8     shading_left = 14    shading_top = 280
-
-upper_head long ears front                  width = 7     height = 8     shading_left = 0     shading_top = 288
-upper_head long ears back                   width = 7     height = 8     shading_left = 7     shading_top = 288
-upper_head long ears right                  width = 6     height = 8     shading_left = 14    shading_top = 288
+snout long nostrils front                   width = 7     height = 7     shading_left = 21    shading_top = 249   mapping_left = 78     mapping_top = 241
+snout long nostrils right                   width = 5     height = 7     shading_left = 45    shading_top = 249   mapping_left = 124    mapping_top = 241
 
 
 
 
-texture head monochrome                     width = 1     height = 1     left = 526           top = 1
+upper_head none front                       width = 1     height = 1     shading_left = 15    shading_top = 23
+upper_head none back                        width = 1     height = 1     shading_left = 15    shading_top = 23
+upper_head none right                       width = 1     height = 1     shading_left = 15    shading_top = 23
+
+upper_head peaked ears front                width = 7     height = 8     shading_left = 0     shading_top = 257   mapping_left = 20     mapping_top = 257
+upper_head peaked ears back                 width = 7     height = 8     shading_left = 7     shading_top = 257   mapping_left = 28     mapping_top = 257
+upper_head peaked ears right                width = 4     height = 8     shading_left = 14    shading_top = 257   mapping_left = 36     mapping_top = 257
+
+upper_head small ears front                 width = 7     height = 8     shading_left = 0     shading_top = 266   mapping_left = 20     mapping_top = 266
+upper_head small ears back                  width = 7     height = 8     shading_left = 7     shading_top = 266   mapping_left = 28     mapping_top = 257
+upper_head small ears right                 width = 5     height = 8     shading_left = 14    shading_top = 266   mapping_left = 36     mapping_top = 266
+
+upper_head round ears front                 width = 7     height = 8     shading_left = 0     shading_top = 275   mapping_left = 20     mapping_top = 275
+upper_head round ears back                  width = 7     height = 8     shading_left = 7     shading_top = 275   mapping_left = 28     mapping_top = 257
+upper_head round ears right                 width = 6     height = 8     shading_left = 14    shading_top = 275   mapping_left = 36     mapping_top = 275
+
+upper_head pointed ears front               width = 7     height = 8     shading_left = 0     shading_top = 284   mapping_left = 20     mapping_top = 284
+upper_head pointed ears back                width = 7     height = 8     shading_left = 7     shading_top = 284   mapping_left = 28     mapping_top = 257
+upper_head pointed ears right               width = 6     height = 8     shading_left = 14    shading_top = 284   mapping_left = 36     mapping_top = 284
+
+upper_head long ears front                  width = 7     height = 8     shading_left = 43    shading_top = 257   mapping_left = 66     mapping_top = 257
+upper_head long ears back                   width = 7     height = 8     shading_left = 51    shading_top = 257   mapping_left = 28     mapping_top = 257
+upper_head long ears right                  width = 6     height = 8     shading_left = 59    shading_top = 257   mapping_left = 84     mapping_top = 257
+
+upper_head steer horns front                width = 8     height = 8     shading_left = 43    shading_top = 266   mapping_left = 66     mapping_top = 266
+upper_head steer horns back                 width = 8     height = 8     shading_left = 51    shading_top = 266   mapping_left = 75     mapping_top = 266
+upper_head steer horns right                width = 6     height = 8     shading_left = 59    shading_top = 266   mapping_left = 84     mapping_top = 266
+
+upper_head double horns front               width = 7     height = 8     shading_left = 43    shading_top = 275   mapping_left = 66     mapping_top = 266
+upper_head double horns back                width = 7     height = 8     shading_left = 51    shading_top = 275   mapping_left = 75     mapping_top = 266
+upper_head double horns right               width = 6     height = 8     shading_left = 59    shading_top = 275   mapping_left = 84     mapping_top = 266
+
+upper_head pointed horns front              width = 7     height = 8     shading_left = 43    shading_top = 284   mapping_left = 66     mapping_top = 266
+upper_head pointed horns back               width = 7     height = 8     shading_left = 51    shading_top = 284   mapping_left = 75     mapping_top = 266
+upper_head pointed horns right              width = 6     height = 8     shading_left = 59    shading_top = 284   mapping_left = 84     mapping_top = 266
+
+
+
+
+lower_head none front                       width = 1     height = 1     shading_left = 15    shading_top = 23
+lower_head none back                        width = 1     height = 1     shading_left = 15    shading_top = 23
+lower_head none right                       width = 1     height = 1     shading_left = 15    shading_top = 23
+
+lower_head tufts front                      width = 4     height = 8     shading_left = 0     shading_top = 302   mapping_left = 20     mapping_top = 293
+lower_head tufts back                       width = 4     height = 8     shading_left = 7     shading_top = 302   mapping_left = 28     mapping_top = 293
+lower_head tufts right                      width = 4     height = 8     shading_left = 14    shading_top = 302   mapping_left = 36     mapping_top = 293
+
+lower_head scales front                     width = 4     height = 8     shading_left = 0     shading_top = 293   mapping_left = 20     mapping_top = 293
+lower_head scales back                      width = 4     height = 8     shading_left = 7     shading_top = 293   mapping_left = 28     mapping_top = 293
+lower_head scales right                     width = 4     height = 8     shading_left = 14    shading_top = 293   mapping_left = 36     mapping_top = 293
+
+
+
+
+texture head monochrome                                     width = 1     height = 1     left = 526     top = 1
+texture head snout_underside                                width = 23    height = 13    left = 130     top = 236
+texture head snout_underside slight                         width = 23    height = 13    left = 178     top = 236
+texture head stripes                                        width = 23    height = 13    left = 154     top = 236

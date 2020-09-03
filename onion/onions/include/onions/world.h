@@ -11,103 +11,111 @@
 #define TILE_HEIGHT 16
 
 
-
-// A thing within the game world.
-class Object
+namespace onion
 {
-public:
-	/// <summary>Display the object.</summary>
-	virtual void display() = 0;
-};
 
 
 
-//typedef void(*tileClickCallbackFunc)(int x, int y);
+	// A thing within the game world.
+	class Object
+	{
+	public:
+		/// <summary>Display the object.</summary>
+		virtual void display() = 0;
+	};
 
-// A block of static information about the world.
-class Chunk
-{
-private:
-	// A collection of all chunks
-	static std::unordered_map<CHUNK_KEY, Chunk*> m_Chunks;
 
-	// The sprite sheet for the tiles
-	static SpriteSheet* m_TileSprites;
 
-	// Tiles on the ground
-	SPRITE_KEY* m_Tiles;
+	//typedef void(*tileClickCallbackFunc)(int x, int y);
 
-	// Objects in the chunk that don't move
-	Object** m_Objects;
+	// A block of static information about the world.
+	class Chunk
+	{
+	private:
+		// A collection of all chunks
+		static std::unordered_map<CHUNK_KEY, Chunk*> m_Chunks;
 
-public:
-	/// <summary>Retrieves the chunk with the given key.</summary>
-	/// <param name="key">The key of the chunk</param>
-	/// <returns>A pointer to the chunk with the given key</returns>
-	static Chunk* get_chunk(CHUNK_KEY key);
+		// The sprite sheet for the tiles
+		static SpriteSheet* m_TileSprites;
 
-	/// <summary>Creates a chunk with the given key and file path.</summary>
-	/// <param name="key">The key of the chunk</param>
-	/// <param name="path">The path to the file containing the chunk's data</param>
-	/// <returns>A pointer to the created chunk</returns>
-	static Chunk* set_chunk(CHUNK_KEY key, const char* path);
+		// Tiles on the ground
+		SPRITE_KEY* m_Tiles;
 
-	/// <summary>Retrieves the sprite sheet of tiles.</summary>
-	/// <returns>A pointer to the tile sprite sheet.</returns>
-	static SpriteSheet* get_tile_sprite_sheet();
+		// Objects in the chunk that don't move
+		Object** m_Objects;
 
-	// The name of the chunk
-	const char* name;
+	public:
+		/// <summary>Retrieves the chunk with the given key.</summary>
+		/// <param name="key">The key of the chunk</param>
+		/// <returns>A pointer to the chunk with the given key</returns>
+		static Chunk* get_chunk(CHUNK_KEY key);
 
-	// The width of the chunk, in tiles.
-	int width;
+		/// <summary>Creates a chunk with the given key and file path.</summary>
+		/// <param name="key">The key of the chunk</param>
+		/// <param name="path">The path to the file containing the chunk's data</param>
+		/// <returns>A pointer to the created chunk</returns>
+		static Chunk* set_chunk(CHUNK_KEY key, const char* path);
 
-	// The height of the chunk, in tiles.
-	int height;
+		/// <summary>Retrieves the sprite sheet of tiles.</summary>
+		/// <returns>A pointer to the tile sprite sheet.</returns>
+		static SpriteSheet* get_tile_sprite_sheet();
 
-	/// <summary>Creates a chunk that uses data from the given file.</summary>
-	/// <param name="name">The name of the chunk.</param>
-	Chunk(const char* name);
+		// The name of the chunk
+		const char* name;
 
-	/// <summary>Loads the chunk into memory.</summary>
-	void load();
+		// The width of the chunk, in tiles.
+		int width;
 
-	/// <summary>Unloads the chunk from memory.</summary>
-	void unload();
+		// The height of the chunk, in tiles.
+		int height;
 
-	/// <summary>Sets the sprite of the tile at the given coordinates.</summary>
-	/// <param name="x">The x-coordinate of the tile.</param>
-	/// <param name="y">The y-coordinate of the tile.</param>
-	/// <param name="tile">The key of the tile.</param>
-	void set_tile(int x, int y, SPRITE_KEY tile);
+		/// <summary>Creates a chunk that uses data from the given file.</summary>
+		/// <param name="name">The name of the chunk.</param>
+		Chunk(const char* name);
 
-	/// <summary>Draws the tiles of the chunk to the screen.</summary>
-	/// <param name="xmin">The leftmost x-coordinate to draw.</param>
-	/// <param name="xmax">The rightmost x-coordinate to draw.</param>
-	/// <param name="ymin">The bottommost y-coordinate to draw.</param>
-	/// <param name="ymax">The topmost y-coordinate to draw.</param>
-	void display(int xmin, int ymin, int xmax, int ymax);
-};
+		/// <summary>Loads the chunk into memory.</summary>
+		void load();
 
-// All currently loaded information about the world.
-class World
-{
-private:
-	// The singleton world object
-	static World* m_World;
+		/// <summary>Unloads the chunk from memory.</summary>
+		void unload();
 
-	// The current chunk
-	Chunk* m_Chunk;
+		/// <summary>Sets the sprite of the tile at the given coordinates.</summary>
+		/// <param name="x">The x-coordinate of the tile.</param>
+		/// <param name="y">The y-coordinate of the tile.</param>
+		/// <param name="tile">The key of the tile.</param>
+		void set_tile(int x, int y, SPRITE_KEY tile);
 
-	/// <summary>Loads the world.</summary>
-	World();
+		/// <summary>Draws the tiles of the chunk to the screen.</summary>
+		/// <param name="xmin">The leftmost x-coordinate to draw.</param>
+		/// <param name="xmax">The rightmost x-coordinate to draw.</param>
+		/// <param name="ymin">The bottommost y-coordinate to draw.</param>
+		/// <param name="ymax">The topmost y-coordinate to draw.</param>
+		void display(int xmin, int ymin, int xmax, int ymax);
+	};
 
-public:
-	/// <summary>Retrieves the world information.</summary>
-	/// <returns>A pointer to the singleton world object.</summary>
-	static World* get_world();
+	// All currently loaded information about the world.
+	class World
+	{
+	private:
+		// The singleton world object
+		static World* m_World;
 
-	/// <summary>Retrieves a pointer to the current chunk.</summary>
-	/// <returns>A pointer to the current chunk.</returns>
-	static Chunk* get_chunk();
-};
+		// The current chunk
+		Chunk* m_Chunk;
+
+		/// <summary>Loads the world.</summary>
+		World();
+
+	public:
+		/// <summary>Retrieves the world information.</summary>
+		/// <returns>A pointer to the singleton world object.</summary>
+		static World* get_world();
+
+		/// <summary>Retrieves a pointer to the current chunk.</summary>
+		/// <returns>A pointer to the current chunk.</returns>
+		static Chunk* get_chunk();
+	};
+
+
+
+}

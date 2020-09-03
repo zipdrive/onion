@@ -1,8 +1,86 @@
 #include <onion.h>
 #include "../include/charactercreator.h"
 
+#include <iostream>
+
+using namespace onion;
+
+
+#define CONTROL_DEBUG 0
+
+class KeyboardControlTester : public KeyboardListener
+{
+public:
+	int trigger(const KeyEvent& event_data)
+	{
+		if (event_data.pressed)
+		{
+			if (event_data.control == CONTROL_DEBUG)
+			{
+				std::cout << "Debug key pressed.\n";
+			}
+			else
+			{
+				std::cout << "Unknown key pressed.\n";
+			}
+		}
+		return EVENT_CONTINUE;
+	}
+} g_KeyboardTester;
+
+void test_key_main()
+{
+	register_keyboard_control(CONTROL_DEBUG);
+	assign_key(CONTROL_DEBUG);
+
+	g_KeyboardTester.unfreeze();
+}
+
+
 
 mat4x4f g_Transform;
+
+
+SpriteSheet* g_TestAlphaSpriteSheet;
+Palette* g_TestAlphaPalette;
+
+void test_alpha_display()
+{
+	g_TestAlphaSpriteSheet->display(0, g_TestAlphaPalette);
+
+	mat_push();
+	mat_translate(-64.f, 64.f, -0.01f);
+	g_TestAlphaSpriteSheet->display(12, g_TestAlphaPalette);
+	mat_pop();
+}
+
+void test_alpha_main()
+{
+	// Load sprite sheet
+	g_TestAlphaSpriteSheet = SpriteSheet::generate_empty();
+	g_TestAlphaSpriteSheet->load_partitioned_sprite_sheet("test/alpha.png", 128, 128);
+
+	// Load palette
+	g_TestAlphaPalette = new SinglePalette(
+		vec4i(255, 0, 0, 0), vec4i(0, 255, 0, 0), vec4i(0, 0, 255, 0)
+	);
+
+	// Construct transformation
+	Application* app = get_application_settings();
+	g_Transform.set(0, 0, 2.f / app->width);
+	g_Transform.set(1, 1, 2.f / app->height);
+
+	mat_push();
+	mat_custom_transform(g_Transform);
+
+	// Call the main function
+	main(test_alpha_display);
+
+	// Clean up
+	delete g_TestAlphaSpriteSheet;
+	g_TestAlphaSpriteSheet = nullptr;
+	mat_pop();
+}
 
 
 SpriteSheet* g_TestSpriteSheet;
@@ -34,7 +112,7 @@ void test_sprite_main()
 	mat_custom_transform(g_Transform);
 
 	// Call the main function
-	onion_main(test_sprite_display);
+	main(test_sprite_display);
 
 	// Clean up
 	delete g_TestSpriteSheet;
@@ -77,7 +155,7 @@ void test_texmap_main()
 	mat_custom_transform(g_Transform);
 
 	// Call the main function
-	onion_main(test_texmap_display);
+	main(test_texmap_display);
 
 	// Clean up
 	delete g_TestTexmapSpriteSheet;
@@ -122,7 +200,7 @@ void test_hune_main()
 	mat_custom_transform(g_Transform);
 
 	// Call the main function
-	onion_main(test_hune_display);
+	main(test_hune_display);
 
 	// Clean up
 	delete g_TestHune;
@@ -135,7 +213,9 @@ void test_hune_main()
 // The entry point for the program.
 int main()
 {
-	onion_init("settings.ini");
-	character_creator_setup();
+	init("settings.ini");
+	//character_creator_setup();
+	test_key_main();
+	test_alpha_main();
 	return 0;
 }

@@ -18,27 +18,33 @@
 
 
 using namespace std;
+using namespace onion;
 
 
+
+#define RGB_INT_TO_FLOAT	0.00392157f
 
 void Palette::generate_palette_matrix(const vec4i& red_maps_to, const vec4i& green_maps_to, const vec4i& blue_maps_to, PALETTE_MATRIX& matrix)
 {
-	static float scale = 0.00392157f;
+	matrix.set(0, 0, RGB_INT_TO_FLOAT * red_maps_to.get(0));
+	matrix.set(1, 0, RGB_INT_TO_FLOAT * red_maps_to.get(1));
+	matrix.set(2, 0, RGB_INT_TO_FLOAT * red_maps_to.get(2));
+	matrix.set(3, 0, RGB_INT_TO_FLOAT * red_maps_to.get(3));
 
-	matrix.set(0, 0, scale * red_maps_to.get(0));
-	matrix.set(1, 0, scale * red_maps_to.get(1));
-	matrix.set(2, 0, scale * red_maps_to.get(2));
-	matrix.set(3, 0, scale * red_maps_to.get(3));
+	matrix.set(0, 1, RGB_INT_TO_FLOAT * green_maps_to.get(0));
+	matrix.set(1, 1, RGB_INT_TO_FLOAT * green_maps_to.get(1));
+	matrix.set(2, 1, RGB_INT_TO_FLOAT * green_maps_to.get(2));
+	matrix.set(3, 1, RGB_INT_TO_FLOAT * green_maps_to.get(3));
 
-	matrix.set(0, 1, scale * green_maps_to.get(0));
-	matrix.set(1, 1, scale * green_maps_to.get(1));
-	matrix.set(2, 1, scale * green_maps_to.get(2));
-	matrix.set(3, 1, scale * green_maps_to.get(3));
+	matrix.set(0, 2, RGB_INT_TO_FLOAT * blue_maps_to.get(0));
+	matrix.set(1, 2, RGB_INT_TO_FLOAT * blue_maps_to.get(1));
+	matrix.set(2, 2, RGB_INT_TO_FLOAT * blue_maps_to.get(2));
+	matrix.set(3, 2, RGB_INT_TO_FLOAT * blue_maps_to.get(3));
 
-	matrix.set(0, 2, scale * blue_maps_to.get(0));
-	matrix.set(1, 2, scale * blue_maps_to.get(1));
-	matrix.set(2, 2, scale * blue_maps_to.get(2));
-	matrix.set(3, 2, scale * blue_maps_to.get(3));
+	matrix.set(0, 3, 0.f);
+	matrix.set(1, 3, 0.f);
+	matrix.set(2, 3, 0.f);
+	matrix.set(3, 3, 1.f);
 }
 
 void Palette::generate_palette_matrix(const vec4f& red_maps_to, const vec4f& green_maps_to, const vec4f& blue_maps_to, PALETTE_MATRIX& matrix)
@@ -57,6 +63,11 @@ void Palette::generate_palette_matrix(const vec4f& red_maps_to, const vec4f& gre
 	matrix.set(1, 2, blue_maps_to.get(1));
 	matrix.set(2, 2, blue_maps_to.get(2));
 	matrix.set(3, 2, blue_maps_to.get(3));
+
+	matrix.set(0, 3, 0.f);
+	matrix.set(1, 3, 0.f);
+	matrix.set(2, 3, 0.f);
+	matrix.set(3, 3, 1.f);
 }
 
 
@@ -86,13 +97,52 @@ const PALETTE_MATRIX& SinglePalette::get_blue_palette_matrix() const
 	return m_Matrix;
 }
 
+void SinglePalette::set_red_maps_to(const vec4i& red_maps_to)
+{
+	set_red_maps_to(vec4f(RGB_INT_TO_FLOAT * vec4f(red_maps_to)));
+}
+
+void SinglePalette::set_red_maps_to(const vec4f& red_maps_to)
+{
+	m_Matrix.set(0, 0, red_maps_to.get(0));
+	m_Matrix.set(1, 0, red_maps_to.get(1));
+	m_Matrix.set(2, 0, red_maps_to.get(2));
+	m_Matrix.set(3, 0, red_maps_to.get(3));
+}
+
+void SinglePalette::set_green_maps_to(const vec4i& green_maps_to)
+{
+	set_green_maps_to(vec4f(RGB_INT_TO_FLOAT * vec4f(green_maps_to)));
+}
+
+void SinglePalette::set_green_maps_to(const vec4f& green_maps_to)
+{
+	m_Matrix.set(0, 1, green_maps_to.get(0));
+	m_Matrix.set(1, 1, green_maps_to.get(1));
+	m_Matrix.set(2, 1, green_maps_to.get(2));
+	m_Matrix.set(3, 1, green_maps_to.get(3));
+}
+
+void SinglePalette::set_blue_maps_to(const vec4i& blue_maps_to)
+{
+	set_blue_maps_to(vec4f(RGB_INT_TO_FLOAT * vec4f(blue_maps_to)));
+}
+
+void SinglePalette::set_blue_maps_to(const vec4f& blue_maps_to)
+{
+	m_Matrix.set(0, 2, blue_maps_to.get(0));
+	m_Matrix.set(1, 2, blue_maps_to.get(1));
+	m_Matrix.set(2, 2, blue_maps_to.get(2));
+	m_Matrix.set(3, 2, blue_maps_to.get(3));
+}
+
 
 
 MultiplePalette::MultiplePalette()
 {
-	generate_palette_matrix(vec4i(255, 0, 0, 255), vec4i(255, 255, 255, 255), vec4i(0, 0, 0, 255), m_RedMatrix);
-	generate_palette_matrix(vec4i(0, 255, 0, 255), vec4i(255, 255, 255, 255), vec4i(0, 0, 0, 255), m_GreenMatrix);
-	generate_palette_matrix(vec4i(0, 0, 255, 255), vec4i(255, 255, 255, 255), vec4i(0, 0, 0, 255), m_BlueMatrix);
+	generate_palette_matrix(vec4i(255, 0, 0, 0), vec4i(255, 255, 255, 0), vec4i(0, 0, 0, 0), m_RedMatrix);
+	generate_palette_matrix(vec4i(0, 255, 0, 0), vec4i(255, 255, 255, 0), vec4i(0, 0, 0, 0), m_GreenMatrix);
+	generate_palette_matrix(vec4i(0, 0, 255, 0), vec4i(255, 255, 255, 0), vec4i(0, 0, 0, 0), m_BlueMatrix);
 }
 
 MultiplePalette::MultiplePalette(const vec4i& red_maps_red_maps_to, const vec4i& red_maps_green_maps_to, const vec4i& red_maps_blue_maps_to,
@@ -812,8 +862,8 @@ public:
 		GLuint tex = load_raw_sprite_sheet(fpath.c_str());
 
 		// Figure out how many sprites are across each row and column
-		int num_rows = height / partition_height;
-		int num_cols = width / partition_width;
+		int num_cols = height / partition_height;
+		int num_rows = width / partition_width;
 
 		// Construct the raw sprite data
 		float* spriteData = new float[24 * num_rows * num_cols];
@@ -898,7 +948,7 @@ public:
 	/// <summary>Draws a sprite on the sprite sheet.</summary>
 	/// <param name="sprite">The key of the sprite.</param>
 	/// <param name="palette">The color palette of the sprite.</param>
-	void display(SPRITE_KEY sprite, const Palette* palette)
+	void display(SPRITE_KEY sprite, const Palette* palette) const
 	{
 		// Activate the shader program
 		m_Shader->activate(palette);
@@ -960,7 +1010,8 @@ const char* texmapSpriteFragmentShaderText =
 "   vec4 fragPalette = texture(tex2D, fragMapping);\n"
 "   if (fragPalette.a < 0.1) discard;\n"
 "   mat4 fragPaletteMatrix = (fragPalette.r * redPaletteMatrix) + (fragPalette.g * greenPaletteMatrix) + (fragPalette.b * bluePaletteMatrix);\n"
-"   vec4 fragColor = fragPalette.a * fragPaletteMatrix * fragShading;\n"
+"   fragPaletteMatrix[3][3] *= fragPalette.a;\n"
+"   vec4 fragColor = fragPaletteMatrix * fragShading;\n"
 "	gl_FragColor = fragColor;\n"
 "}";
 
@@ -1628,6 +1679,12 @@ int TextGraphic::get_width() const
 	return m_Width;
 }
 
+void TextGraphic::set_width(int width)
+{
+	m_Width = width;
+	set_text(m_Text);
+}
+
 int TextGraphic::get_height() const
 {
 	return m_Lines.size() * m_Font->get_line_height();
@@ -1647,6 +1704,9 @@ string TextGraphic::get_text() const
 
 void TextGraphic::set_text(string text)
 {
+	m_Text = text;
+	m_Lines.clear();
+
 	string remainder = text;
 	string line;
 	int line_width = 0;
@@ -1792,6 +1852,8 @@ mat2x2i Frame::get_absolute_bounds() const
 	}
 }
 
+void Frame::__set_bounds() {}
+
 void Frame::set_bounds(int x, int y, int width, int height)
 {
 	m_Bounds.set(0, 0, x);
@@ -1799,6 +1861,8 @@ void Frame::set_bounds(int x, int y, int width, int height)
 
 	m_Bounds.set(0, 1, x + width);
 	m_Bounds.set(1, 1, y + height);
+
+	__set_bounds();
 }
 
 int Frame::get_width() const
@@ -2194,7 +2258,7 @@ ScrollableFrame::ScrollableFrame(Frame* frame, ScrollBar* horizontal, ScrollBar*
 	set_bounds(x, y, width, height);
 }
 
-void ScrollableFrame::__update()
+void ScrollableFrame::__update(int frames_passed)
 {
 	int w = get_width() - m_Frame->get_width();
 	int h = get_height() - m_Frame->get_height();

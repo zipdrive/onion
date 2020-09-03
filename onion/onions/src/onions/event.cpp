@@ -2,6 +2,7 @@
 #include <fstream>
 #include <regex>
 #include <unordered_map>
+#include <unordered_set>
 #include <thread>
 #include <ctime>
 #include <GL/glew.h>
@@ -11,6 +12,7 @@
 
 
 using namespace std;
+using namespace onion;
 
 
 
@@ -22,33 +24,55 @@ private:
 	// The stack of event listeners to call.
 	std::vector<EventListener<EventType>*> m_Stack;
 
+	// A queue of event listeners to add before the next trigger pass.
+	std::vector<EventListener<EventType>*> m_QueuedToAdd;
+
+	// An array of event listeners to remove before the next trigger pass.
+	std::unordered_set<EventListener<EventType>*> m_QueuedToRemove;
+
 public:
 	/// <summary>Pops a listener from the stack.</summary>
 	/// <param name="listener">The listener to remove from the stack.</param>
 	void pop(EventListener<EventType>* listener)
 	{
-		for (auto iter = m_Stack.begin(); iter != m_Stack.end(); ++iter)
-		{
-			if (*iter == listener)
-			{
-				m_Stack.erase(iter);
-				break;
-			}
-		}
+		m_QueuedToRemove.insert(listener);
 	}
 
 	/// <summary>Pushes a listener on top of the stack.</summary>
 	/// <param name="listener">The listener to add to the stack.</param>
 	void push(EventListener<EventType>* listener)
 	{
-		pop(listener);
-		m_Stack.push_back(listener);
+		m_QueuedToRemove.insert(listener);
+		m_QueuedToAdd.push_back(listener);
 	}
 
 	/// <summary>Responds to an event.</summary>
 	/// <param name="event_data">The data for the event.</param>
 	virtual int trigger(const EventType& event_data)
 	{
+		// Remove any listeners queued for removal
+		for (auto iter = m_Stack.begin(); iter != m_Stack.end(); ++iter)
+		{
+			if (m_QueuedToRemove.find(*iter) != m_QueuedToRemove.end())
+			{
+				if (iter == m_Stack.begin())
+				{
+					m_Stack.erase(iter);
+					iter = m_Stack.begin();
+				}
+				else
+				{
+					m_Stack.erase(iter--);
+				}
+			}
+		}
+		m_QueuedToRemove.clear();
+
+		// Add any listeners queued to add
+		m_Stack.insert(m_Stack.end(), m_QueuedToAdd.begin(), m_QueuedToAdd.end());
+		m_QueuedToAdd.clear();
+
+		// Trigger all listeners
 		for (auto iter = m_Stack.rbegin(); iter != m_Stack.rend(); ++iter)
 		{
 			if ((*iter)->trigger(event_data) == EVENT_STOP)
@@ -79,9 +103,38 @@ private:
 	// The stack of event listeners to update.
 	vector<UpdateListener*> m_Stack;
 
+	// A queue of event listeners to add before the next update pass.
+	std::vector<UpdateListener*> m_QueuedToAdd;
+
+	// An array of event listeners to remove before the next update pass.
+	std::unordered_set<UpdateListener*> m_QueuedToRemove;
+
 protected:
-	void __update()
+	void __update(int frames_passed)
 	{
+		// Remove any listeners queued for removal
+		for (auto iter = m_Stack.begin(); iter != m_Stack.end(); ++iter)
+		{
+			if (m_QueuedToRemove.find(*iter) != m_QueuedToRemove.end())
+			{
+				if (iter == m_Stack.begin())
+				{
+					m_Stack.erase(iter);
+					iter = m_Stack.begin();
+				}
+				else
+				{
+					m_Stack.erase(iter--);
+				}
+			}
+		}
+		m_QueuedToRemove.clear();
+
+		// Add any listeners queued to add
+		m_Stack.insert(m_Stack.end(), m_QueuedToAdd.begin(), m_QueuedToAdd.end());
+		m_QueuedToAdd.clear();
+
+		// Trigger all subordinate updates
 		for (auto iter = m_Stack.rbegin(); iter != m_Stack.rend(); ++iter)
 		{
 			(*iter)->update();
@@ -105,22 +158,16 @@ public:
 	/// <param name="listener">The listener to remove from the stack.</param>
 	void pop(UpdateListener* listener)
 	{
-		for (auto iter = m_Stack.begin(); iter != m_Stack.end(); ++iter)
-		{
-			if (*iter == listener)
-			{
-				m_Stack.erase(iter);
-				break;
-			}
-		}
+		if (listener != this)
+			m_QueuedToRemove.insert(listener);
 	}
 
 	/// <summary>Pushes a listener on top of the stack.</summary>
 	/// <param name="listener">The listener to add to the stack.</param>
 	void push(UpdateListener* listener)
 	{
-		pop(listener);
-		m_Stack.push_back(listener);
+		m_QueuedToRemove.insert(listener);
+		m_QueuedToAdd.push_back(listener);
 	}
 
 } g_UpdateManager;
@@ -134,7 +181,7 @@ UpdateListener::~UpdateListener()
 
 void UpdateListener::update()
 {
-	__update();
+	__update(UpdateEvent::frame - m_LastFrameUpdated);
 	m_LastFrameUpdated = UpdateEvent::frame;
 }
 
@@ -150,6 +197,7 @@ void UpdateListener::freeze()
 
 void UpdateListener::unfreeze()
 {
+	m_LastFrameUpdated = UpdateEvent::frame;
 	g_UpdateManager.push(this);
 }
 
@@ -202,11 +250,24 @@ public:
 			auto prev = m_KeyboardControls.find(key);
 			if (prev == m_KeyboardControls.end())
 			{
-				for (auto iter = m_KeyboardControls.begin(); iter != m_KeyboardControls.end(); ++iter)
+				auto iter = m_KeyboardControls.begin();
+				while (iter != m_KeyboardControls.end())
 				{
 					if (iter->second == control)
 					{
-						m_KeyboardControls.erase(iter);
+						if (iter == m_KeyboardControls.begin())
+						{
+							m_KeyboardControls.erase(iter);
+							iter = m_KeyboardControls.begin();
+						}
+						else
+						{
+							m_KeyboardControls.erase(iter++);
+						}
+					}
+					else
+					{
+						++iter;
 					}
 				}
 
@@ -219,7 +280,7 @@ public:
 			while (true)
 			{
 				auto prev = m_KeyboardControls.find(k);
-				if (prev != m_KeyboardControls.end())
+				if (prev == m_KeyboardControls.end())
 				{
 					m_KeyboardControls.emplace(k, control);
 					break;
@@ -331,19 +392,21 @@ int KeyboardListener::trigger(const UnicodeEvent& event_data)
 
 
 
-void register_keyboard_control(int control)
+void onion::register_keyboard_control(int control, int key)
 {
-	g_KeyboardManager.assign_key_to_control(control);
+	g_KeyboardManager.assign_key_to_control(control, key);
 }
 
-string get_assigned_key(int control)
+string onion::get_assigned_key(int control)
 {
 	return g_KeyboardManager.get_key_from_control(control);
 }
 
-void assign_key(int control)
+int g_AssigningKeyToControl = -1;
+
+void onion::assign_key(int control)
 {
-	// TODO
+	g_AssigningKeyToControl = control;
 }
 
 
@@ -578,7 +641,7 @@ void save_settings()
 }
 
 
-Application*& get_application_settings()
+Application*& onion::get_application_settings()
 {
 	if (!g_Application)
 	{
@@ -588,7 +651,7 @@ Application*& get_application_settings()
 	return g_Application;
 }
 
-void set_application_settings(Application* app)
+void onion::set_application_settings(Application* app)
 {
 	g_Application = app;
 	g_Application->display();
@@ -665,10 +728,24 @@ void onion_unicode_callback(GLFWwindow* window, unsigned int codepoint)
 /// <param name="mods">Bit field of which modifier keys were held down.</param>
 void onion_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+	// Check if currently assigning a key to a control
+	if (g_AssigningKeyToControl >= 0)
+	{
+		g_KeyboardManager.assign_key_to_control(g_AssigningKeyToControl, key);
+		g_AssigningKeyToControl = -1;
+		return;
+	}
+
 	// Call key
+	int control = g_KeyboardManager.convert_key_to_control(key);
+	if (control != -1 && action != GLFW_REPEAT)
+	{
+		KeyEvent event_data = { control, action == GLFW_PRESS };
+		g_KeyboardManager.trigger(event_data);
+	}
 
 	// Call unicode callback
-	if (action == GLFW_PRESS)
+	if (action == GLFW_PRESS || action == GLFW_REPEAT)
 	{
 		if (key == GLFW_KEY_BACKSPACE)
 		{
@@ -721,7 +798,7 @@ void onion_mouse_click_callback(GLFWwindow* window, int button, int action, int 
 
 
 
-int onion_init(const char* settings_file)
+int onion::init(const char* settings_file)
 {
 	// Initialize the GLFW library.
 	if (!glfwInit())
@@ -765,7 +842,7 @@ int onion_init(const char* settings_file)
 	return 0;
 }
 
-void onion_main(onion_display_func display_callback)
+void onion::main(display_func display_callback)
 {
 	// Set the blend function
 	glEnable(GL_BLEND);
@@ -775,7 +852,7 @@ void onion_main(onion_display_func display_callback)
 	// TEMP? Enable depth testing
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	glClearColor(1.f, 1.f, 1.f, 1.f);
+	glClearColor(0.f, 0.f, 0.f, 1.f);
 
 	// Core loop
 	while (!glfwWindowShouldClose(g_Window))

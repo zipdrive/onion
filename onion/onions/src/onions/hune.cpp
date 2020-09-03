@@ -10,6 +10,7 @@
 #include <iostream>
 
 using namespace std;
+using namespace onion;
 
 
 
@@ -20,6 +21,7 @@ vector<string> g_ArmTypes;
 vector<string> g_SkullTypes;
 vector<string> g_SnoutTypes;
 vector<string> g_UpperHeadTypes;
+vector<string> g_LowerHeadTypes;
 
 
 vector<string> g_HeadMarkingTextures;
@@ -515,12 +517,12 @@ public:
 	}
 };
 
-HuneAnimation* generate_hune_standing_animation()
+HuneAnimation* onion::generate_hune_standing_animation()
 {
 	return new HuneBasicAnimation(HUNE_STANDING_INDEX, HUNE_STANDING_SIZE);
 }
 
-HuneAnimation* generate_hune_walking_animation()
+HuneAnimation* onion::generate_hune_walking_animation()
 {
 	return new HuneBasicAnimation(HUNE_WALKING_INDEX, HUNE_WALKING_SIZE);
 }
@@ -575,6 +577,63 @@ const vector<vec3i> g_ColorsRGB =
 
 vector<vec3i> g_Colors =
 {
+	/*
+	*	NEUTRAL TONES
+	*/
+
+	// Neutral browns (cool undertones)
+	vec3i(30, 11, 100),
+	vec3i(29, 20, 99),
+	vec3i(29, 28, 95),
+	vec3i(29, 36, 93),
+	vec3i(28, 39, 83),
+	vec3i(27, 43, 80),
+	vec3i(25, 48, 79),
+	vec3i(25, 48, 69),
+	vec3i(25, 54, 67),
+	vec3i(23, 57, 62),
+	vec3i(23, 59, 57),
+	vec3i(21, 61, 53),
+	vec3i(21, 65, 48),
+	vec3i(21, 70, 46),
+	vec3i(21, 63, 40),
+
+	// Neutral greens (cool undertones)
+	vec3i(100, 24, 89),
+	vec3i(100, 30, 85),
+	vec3i(100, 31, 75),
+	vec3i(96, 38, 67),
+	vec3i(92, 41, 68),
+	vec3i(88, 34, 56),
+	vec3i(85, 33, 51),
+	vec3i(81, 40, 47),
+	vec3i(77, 50, 44),
+	vec3i(76, 40, 40),
+	vec3i(73, 42, 35),
+	vec3i(71, 50, 31),
+	vec3i(68, 53, 27),
+
+	// Neutral pinks
+	vec3i(350, 10, 91),
+	vec3i(350, 16, 89),
+	vec3i(350, 24, 85),
+	vec3i(350, 29, 83),
+	vec3i(350, 32, 80),
+	vec3i(350, 34, 72),
+	vec3i(350, 37, 69),
+	vec3i(350, 37, 62),
+	vec3i(350, 44, 59),
+	vec3i(350, 44, 53),
+	vec3i(348, 45, 49),
+	vec3i(348, 44, 44),
+	vec3i(350, 46, 41),
+
+
+
+	/*
+	*	JEWEL TONES
+	*/
+
 	// Reds
 	vec3i(12, 59, 96),
 	vec3i(12, 72, 96),
@@ -673,10 +732,7 @@ vector<vec3i> g_Colors =
 	vec3i(336, 72, 96),
 	vec3i(336, 90, 95),
 	vec3i(336, 94, 82),
-	vec3i(336, 95, 66),
-
-	// Neutrals
-	vec3i(36, 7, 95)
+	vec3i(336, 95, 66)
 };
 
 
@@ -719,7 +775,7 @@ vec4i hsv_to_rgb(vec3i hsv)
 	rgb.set(0, 0, 255 * hsv.get(2) * (6000 - (hsv.get(1) * kr)) / 600000);
 	rgb.set(1, 0, 255 * hsv.get(2) * (6000 - (hsv.get(1) * kg)) / 600000);
 	rgb.set(2, 0, 255 * hsv.get(2) * (6000 - (hsv.get(1) * kb)) / 600000);
-	rgb.set(3, 0, 255);
+	rgb.set(3, 0, 0);
 
 	return rgb;
 }
@@ -797,6 +853,7 @@ HuneGraphic::HuneGraphic()
 					else if (word.compare("skull") == 0)		opts = &g_SkullTypes;
 					else if (word.compare("snout") == 0)		opts = &g_SnoutTypes;
 					else if (word.compare("upper_head") == 0)	opts = &g_UpperHeadTypes;
+					else if (word.compare("lower_head") == 0)	opts = &g_LowerHeadTypes;
 
 					if (opts)
 					{
@@ -868,6 +925,14 @@ HuneGraphic::HuneGraphic()
 			HuneShading::set_shading("left " + id, LEFT_EAR, id);
 			HuneShading::set_shading("right " + id, RIGHT_EAR, id);
 		}
+
+		// Construct sprite collections for all types of lower head features
+		for (auto iter = g_LowerHeadTypes.begin(); iter != g_LowerHeadTypes.end(); ++iter)
+		{
+			string id = "lower_head " + *iter;
+			HuneShading::set_shading("left " + id, LEFT_EAR, id);
+			HuneShading::set_shading("right " + id, RIGHT_EAR, id);
+		}
 	}
 
 	m_BaseLowerBody.palette = &m_BodyPalette;
@@ -914,6 +979,12 @@ void HuneGraphic::set_upper_head_feature(string upper_head_feature)
 {
 	m_LeftUpperHead = HuneShading::get_shading("left upper_head " + upper_head_feature);
 	m_RightUpperHead = HuneShading::get_shading("right upper_head " + upper_head_feature);
+}
+
+void HuneGraphic::set_lower_head_feature(string lower_head_feature)
+{
+	m_LeftLowerHead = HuneShading::get_shading("left lower_head " + lower_head_feature);
+	m_RightLowerHead = HuneShading::get_shading("right lower_head " + lower_head_feature);
 }
 
 void HuneGraphic::set_textures(string head, string arms, string torso, string legs)
@@ -1116,6 +1187,8 @@ void HuneGraphic::display() const
 	const HuneSprite* snout_sprite = m_Snout->get_frame(facing, frame);
 	const HuneSprite* left_upper_head_sprite = m_LeftUpperHead->get_frame(facing, frame);
 	const HuneSprite* right_upper_head_sprite = m_RightUpperHead->get_frame(facing, frame);
+	const HuneSprite* left_lower_head_sprite = m_LeftLowerHead->get_frame(facing, frame);
+	const HuneSprite* right_lower_head_sprite = m_RightLowerHead->get_frame(facing, frame);
 
 	switch (facing)
 	{
@@ -1132,13 +1205,23 @@ void HuneGraphic::display() const
 		mat_translate(half_skull_width - half_snout_width, 0.f, -0.01f);
 		snout_sprite->display(m_HeadTexture, &m_BodyPalette);
 
-		// Display right ear
+		// Display right upper head
+		mat_push();
 		mat_translate(half_snout_width, 8.f, -0.01f);
 		right_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 
-		// Display left ear
+		// Display left upper head
 		mat_translate(1 - left_upper_head_sprite->get_width(), 0.f, 0.f);
 		left_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
+		mat_pop();
+
+		// Display right lower head
+		mat_translate(half_snout_width + half_skull_width - 2, 0.f, -0.02f);
+		right_lower_head_sprite->display(m_HeadTexture, &m_BodyPalette);
+
+		// Display left lower head
+		mat_translate(6 - skull_sprite->get_width() - left_lower_head_sprite->get_width(), 0.f, 0.f);
+		left_lower_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 		break;
 	}
 	case FACING_BACK:
@@ -1150,33 +1233,57 @@ void HuneGraphic::display() const
 		skull_sprite->display(m_HeadTexture, &m_BodyPalette);
 
 		// Display left ear
+		mat_push();
 		mat_translate(half_skull_width, 8.f, -0.01f);
 		left_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 
 		// Display right ear
 		mat_translate(1 - right_upper_head_sprite->get_width(), 0.f, 0.f);
 		right_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
+		mat_pop();
+
+		// Display right lower head
+		mat_push();
+		mat_translate(3 - right_lower_head_sprite->get_width(), 0.f, -0.02f);
+		right_lower_head_sprite->display(m_HeadTexture, &m_BodyPalette);
+		mat_pop();
+
+		// Display left lower head
+		mat_translate(skull_sprite->get_width() - 3, 0.f, -0.02f);
+		left_lower_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 		break;
 	}
 	case FACING_RIGHT:
-		// Display skull
-		mat_translate(-5.f, 0.f, -0.01f);
-		skull_sprite->display(m_HeadTexture, &m_BodyPalette);
-
 		// Display snout
-		mat_translate(9.f, 0.f, -0.01f);
+		mat_push();
+		mat_translate(3.f, 0.f, -0.02f);
 		snout_sprite->display(m_HeadTexture, &m_BodyPalette);
 
-		// Display right ear
+		// Display right upper head
 		mat_translate(-3 - right_upper_head_sprite->get_width(), 8.f, -0.01f);
 		right_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
+		mat_pop();
+		
+		// Display skull
+		mat_translate(5 - skull_sprite->get_width(), 0.f, -0.01f);
+		skull_sprite->display(m_HeadTexture, &m_BodyPalette);
+
+		// Display right lower head
+		mat_translate(2 - right_lower_head_sprite->get_width(), 0.f, -0.03f);
+		right_lower_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 		break;
 	case FACING_LEFT:
 		// Display skull
 		mat_translate(-4.f, 0.f, -0.01f);
 		skull_sprite->display(m_HeadTexture, &m_BodyPalette);
 
-		// Display left ear
+		// Display left lower head
+		mat_push();
+		mat_translate(skull_sprite->get_width() - 2, 0.f, -0.03f);
+		left_lower_head_sprite->display(m_HeadTexture, &m_BodyPalette);
+		mat_pop();
+
+		// Display left upper head
 		mat_translate(5.f, 8.f, -0.01f);
 		left_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 
@@ -1292,7 +1399,7 @@ protected:
 	void set(int index)
 	{
 		m_Index = index;
-		(m_HuneGraphic->*m_ValueFunc)(hsv_to_rgb(get_value()), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
+		(m_HuneGraphic->*m_ValueFunc)(hsv_to_rgb(get_value()), vec4i(255, 255, 220, 0), vec4i(0, 0, 25, 0));
 	}
 
 public:
@@ -1333,6 +1440,7 @@ HuneCreator::HuneCreator()
 	m_Features.emplace("skull", new StrFuncIndex(this, g_SkullTypes, &HuneGraphic::set_head_shape));
 	m_Features.emplace("snout", new StrFuncIndex(this, g_SnoutTypes, &HuneGraphic::set_snout_shape));
 	m_Features.emplace("upper_head", new StrFuncIndex(this, g_UpperHeadTypes, &HuneGraphic::set_upper_head_feature));
+	m_Features.emplace("lower_head", new StrFuncIndex(this, g_LowerHeadTypes, &HuneGraphic::set_lower_head_feature));
 	m_Features.emplace("body", new StrFuncIndexWithDependents(this, g_BodyTypes, &HuneGraphic::set_body_type, 
 		{ jacket_index, top_index, bottom_index, shoes_index }
 	));

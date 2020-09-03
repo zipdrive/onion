@@ -2,6 +2,7 @@
 #include "../include/onions/fileio.h"
 
 using namespace std;
+using namespace onion;
 
 SaveFile::SaveFile(string path) : m_File(path) {}
 
@@ -65,15 +66,33 @@ string LoadFile::load_string()
 string LoadFile::load_data(unordered_map<string, int>& data)
 {
 	string line;
-	regex line_data("(.*\\S)\\s+(\\S+)\\s*=\\s*(\\d+)");
+	regex line_data("((.*\\S)\\s)?\\s*(\\S+)\\s*=\\s*(\\d+)");
 
 	if (getline(m_File, line))
 	{
 		smatch match;
 		while (regex_match(line, match, line_data))
 		{
-			data.emplace(match[2].str(), stoi(match[3].str()));
-			line = match[1].str();
+			data.emplace(match[3].str(), stoi(match[4].str()));
+			line = match[2].str();
+		}
+	}
+
+	return line;
+}
+
+string LoadFile::load_data(unordered_map<string, string>& data)
+{
+	string line;
+	regex line_data("((.*\\S)\\s)?\\s*(\\S+)\\s*=\\s*\"(.*)\"\\s*$");
+
+	if (getline(m_File, line))
+	{
+		smatch match;
+		while (regex_match(line, match, line_data))
+		{
+			data.emplace(match[3].str(), match[4].str());
+			line = match[2].str();
 		}
 	}
 

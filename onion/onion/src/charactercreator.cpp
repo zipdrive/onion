@@ -4,6 +4,7 @@
 #include <iostream>
 
 using namespace std;
+using namespace onion;
 
 
 Font* get_label_font()
@@ -154,6 +155,14 @@ protected:
 	// The label for the feature.
 	TextGraphic* m_Label;
 
+	void __set_bounds()
+	{
+		int width = get_width();
+
+		m_RightButton.set_bounds(width - m_RightButton.get_width(), 0, m_RightButton.get_width(), m_RightButton.get_height());
+		m_Label->set_width(width - m_LeftButton.get_width() - m_RightButton.get_width());
+	}
+
 	void __display() const
 	{
 		m_LeftButton.display();
@@ -166,48 +175,351 @@ protected:
 	}
 
 public:
-	HuneCreatorFeature(string label, StaticSpriteGraphic* left_arrow, StaticSpriteGraphic* right_arrow, HuneCreator::Index* index, int width) :
+	HuneCreatorFeature(string label, StaticSpriteGraphic* left_arrow, StaticSpriteGraphic* right_arrow, HuneCreator::Index* index) :
 		m_LeftButton(left_arrow, index, &HuneCreator::Index::decrement),
 		m_RightButton(right_arrow, index, &HuneCreator::Index::increment)
 	{
 		m_LeftButton.set_bounds(0, 0, left_arrow->get_width(), left_arrow->get_height());
 		m_LeftButton.set_parent(this);
-		m_LeftButton.unfreeze();
 
-		m_RightButton.set_bounds(width - right_arrow->get_width(), 0, right_arrow->get_width(), right_arrow->get_height());
+		m_RightButton.set_bounds(0, 0, right_arrow->get_width(), right_arrow->get_height());
 		m_RightButton.set_parent(this);
-		m_RightButton.unfreeze();
 
 		Font* font = get_label_font();
-		m_Label = new TextGraphic(font, get_label_font_palette(), label, width - left_arrow->get_width() - right_arrow->get_width(), TEXT_CENTER);
+		m_Label = new TextGraphic(font, get_label_font_palette(), label, INT_MAX, TEXT_CENTER);
+	}
+
+	void freeze()
+	{
+		m_LeftButton.freeze();
+		m_RightButton.freeze();
+	}
+
+	void unfreeze()
+	{
+		m_LeftButton.unfreeze();
+		m_RightButton.unfreeze();
 	}
 };
 
-HuneCreatorFeature* g_HeadFeature;
-HuneCreatorFeature* g_SnoutFeature;
-HuneCreatorFeature* g_UpperHeadFeature;
-HuneCreatorFeature* g_HeadMarkings;
 
-HuneCreatorFeature* g_BodyTypeFeature;
-HuneCreatorFeature* g_BodyMarkings;
 
-HuneCreatorFeature* g_JacketStyle;
-HuneCreatorFeature* g_TopStyle;
-HuneCreatorFeature* g_BottomsStyle;
-HuneCreatorFeature* g_ShoesStyle;
 
-HuneCreatorFeature* g_PrimaryBodyColorFeature;
-HuneCreatorFeature* g_SecondaryBodyColorFeature;
-HuneCreatorFeature* g_TertiaryBodyColorFeature;
+class HuneCreatorColumn : public Frame
+{
+protected:
+	vector<HuneCreatorFeature*> m_Features;
 
-HuneCreatorFeature* g_PrimaryJacketColorFeature;
-HuneCreatorFeature* g_SecondaryJacketColorFeature;
-HuneCreatorFeature* g_PrimaryTopColorFeature;
-HuneCreatorFeature* g_SecondaryTopColorFeature;
-HuneCreatorFeature* g_PrimaryBottomsColorFeature;
-HuneCreatorFeature* g_SecondaryBottomsColorFeature;
-HuneCreatorFeature* g_PrimaryShoesColorFeature;
-HuneCreatorFeature* g_SecondaryShoesColorFeature;
+	void __set_bounds()
+	{
+		if (m_Features.size() > 0)
+		{
+			int width = get_width();
+			int height = m_Features[0]->get_height();
+
+			int dy = 0;
+			if (m_Features.size() > 1)
+				dy = (get_height() - height) / (m_Features.size() - 1);
+			if (dy > 40)
+				dy = 40;
+
+			int y = (get_height() - height - (dy * (m_Features.size() - 1))) / 2;
+
+			for (auto iter = m_Features.rbegin(); iter != m_Features.rend(); ++iter)
+			{
+				(*iter)->set_bounds(0, y, width, height);
+				y += dy;
+			}
+		}
+	}
+
+	void __display() const
+	{
+		for (auto iter = m_Features.begin(); iter != m_Features.end(); ++iter)
+			(*iter)->display();
+	}
+
+public:
+	~HuneCreatorColumn()
+	{
+		for (auto iter = m_Features.begin(); iter != m_Features.end(); ++iter)
+			delete *iter;
+	}
+
+	void add(HuneCreatorFeature* setting)
+	{
+		m_Features.push_back(setting);
+		setting->set_parent(this);
+
+		__set_bounds();
+	}
+
+	void freeze()
+	{
+		for (auto iter = m_Features.begin(); iter != m_Features.end(); ++iter)
+			(*iter)->freeze();
+	}
+
+	void unfreeze()
+	{
+		for (auto iter = m_Features.begin(); iter != m_Features.end(); ++iter)
+			(*iter)->unfreeze();
+	}
+};
+
+class HuneCreatorPage : public Frame
+{
+protected:
+	vector<HuneCreatorColumn*> m_Columns;
+
+	void __set_bounds()
+	{
+		int padding = 20;
+
+#define MAX_COLUMN_WIDTH 300
+
+		int column_width = (get_width() - (padding * (m_Columns.size() - 1))) / m_Columns.size();
+		column_width = column_width > MAX_COLUMN_WIDTH ? MAX_COLUMN_WIDTH : column_width;
+
+		int x = (get_width() - (m_Columns.size() * column_width) - (padding * (m_Columns.size() - 1))) / 2;
+
+		for (auto iter = m_Columns.begin(); iter != m_Columns.end(); ++iter)
+		{
+			(*iter)->set_bounds(x, 0, column_width, get_height());
+			x += column_width + padding;
+		}
+	}
+
+	void __display() const
+	{
+		for (auto iter = m_Columns.begin(); iter != m_Columns.end(); ++iter)
+			(*iter)->display();
+	}
+
+public:
+	string name;
+
+	HuneCreatorPage(string name) : name(name) {}
+
+	~HuneCreatorPage()
+	{
+		for (auto iter = m_Columns.begin(); iter != m_Columns.end(); ++iter)
+			delete *iter;
+	}
+
+	void add(int column, HuneCreatorFeature* setting)
+	{
+		if (column >= 0)
+		{
+			while (column >= m_Columns.size())
+			{
+				HuneCreatorColumn* c = new HuneCreatorColumn();
+				c->set_parent(this);
+				m_Columns.push_back(c);
+			}
+
+			m_Columns[column]->add(setting);
+		}
+	}
+
+	void freeze()
+	{
+		for (auto iter = m_Columns.begin(); iter != m_Columns.end(); ++iter)
+			(*iter)->freeze();
+	}
+
+	void unfreeze()
+	{
+		for (auto iter = m_Columns.begin(); iter != m_Columns.end(); ++iter)
+			(*iter)->unfreeze();
+	}
+};
+
+class HuneCreatorPageContainer : public Frame
+{
+protected:
+	class PageSwapper : public Frame
+	{
+	protected:
+		class PageButton : public Button
+		{
+		protected:
+			Graphic* m_Graphic;
+
+			HuneCreatorPageContainer* m_Pages;
+
+			void (HuneCreatorPageContainer::*m_ClickFunc)();
+
+			void click()
+			{
+				(m_Pages->*m_ClickFunc)();
+			}
+
+			void __display() const
+			{
+				m_Graphic->display();
+			}
+
+		public:
+			PageButton(Graphic* graphic, HuneCreatorPageContainer* pages, void (HuneCreatorPageContainer::*click_func)())
+			{
+				m_Graphic = graphic;
+				m_Pages = pages;
+				m_ClickFunc = click_func;
+			}
+		};
+
+		// Button that decrements the feature.
+		PageButton m_LeftButton;
+
+		// Button that increments the feature.
+		PageButton m_RightButton;
+
+		// The label for the feature.
+		TextGraphic* m_Label;
+
+		void __set_bounds()
+		{
+			int width = get_width();
+
+			m_RightButton.set_bounds(width - m_RightButton.get_width(), 0, m_RightButton.get_width(), m_RightButton.get_height());
+			m_Label->set_width(width - m_LeftButton.get_width() - m_RightButton.get_width());
+
+			if (get_height() != m_Label->get_height())
+			{
+				set_bounds(m_Bounds.get(0, 0), m_Bounds.get(1, 0), width, m_Label->get_height());
+			}
+		}
+
+		void __display() const
+		{
+			m_LeftButton.display();
+			m_RightButton.display();
+
+			mat_push();
+			mat_translate(m_LeftButton.get_width(), m_Label->get_height() - 2, 0.f);
+			m_Label->display();
+			mat_pop();
+		}
+
+	public:
+		PageSwapper(HuneCreatorPageContainer* pages, StaticSpriteGraphic* left_arrow, StaticSpriteGraphic* right_arrow) :
+			m_LeftButton(left_arrow, pages, &HuneCreatorPageContainer::decrement),
+			m_RightButton(right_arrow, pages, &HuneCreatorPageContainer::increment)
+		{
+			set_parent(pages);
+
+			m_LeftButton.set_bounds(0, 0, left_arrow->get_width(), left_arrow->get_height());
+			m_LeftButton.set_parent(this);
+			m_LeftButton.unfreeze();
+
+			m_RightButton.set_bounds(0, 0, right_arrow->get_width(), right_arrow->get_height());
+			m_RightButton.set_parent(this);
+			m_RightButton.unfreeze();
+
+			Font* font = get_label_font();
+			m_Label = new TextGraphic(font, get_label_font_palette(), "", INT_MAX, TEXT_CENTER);
+		}
+
+		void set_label(string label)
+		{
+			m_Label->set_text(label);
+		}
+	} m_PageSwapper;
+
+	HuneCreator* m_Hune;
+
+	StaticSpriteGraphic* m_LeftArrow;
+
+	StaticSpriteGraphic* m_RightArrow;
+
+	vector<HuneCreatorPage*> m_Pages;
+
+	int m_Index;
+
+	void __set_bounds()
+	{
+		int w = get_width();
+		m_PageSwapper.set_bounds(0, 0, w, 0);
+
+		int h = get_height() - m_PageSwapper.get_height();
+		m_PageSwapper.set_bounds(0, h, w, m_PageSwapper.get_height());
+
+		for (auto iter = m_Pages.begin(); iter != m_Pages.end(); ++iter)
+			(*iter)->set_bounds(0, 0, w, h);
+	}
+
+	void __display() const
+	{
+		m_PageSwapper.display();
+
+		m_Pages[m_Index]->display();
+	}
+
+public:
+	HuneCreatorPageContainer(HuneCreator* hune, StaticSpriteGraphic* left_arrow, StaticSpriteGraphic* right_arrow) :
+		m_PageSwapper(this, left_arrow, right_arrow)
+	{
+		m_Hune = hune;
+
+		m_LeftArrow = left_arrow;
+		m_RightArrow = right_arrow;
+
+		m_Index = 0;
+	}
+
+	~HuneCreatorPageContainer()
+	{
+		for (auto iter = m_Pages.begin(); iter != m_Pages.end(); ++iter)
+			delete *iter;
+	}
+
+	void increment()
+	{
+		m_Pages[m_Index]->freeze();
+		m_Index = (m_Index + 1) % m_Pages.size();
+		m_PageSwapper.set_label(m_Pages[m_Index]->name);
+		m_Pages[m_Index]->unfreeze();
+	}
+
+	void decrement()
+	{
+		m_Pages[m_Index]->freeze();
+		m_Index = (m_Index + m_Pages.size() - 1) % m_Pages.size();
+		m_PageSwapper.set_label(m_Pages[m_Index]->name);
+		m_Pages[m_Index]->unfreeze();
+	}
+
+	void add(string page)
+	{
+		HuneCreatorPage* p = new HuneCreatorPage(page);
+		p->set_parent(this);
+		m_Pages.push_back(p);
+
+		if (m_Pages.size() == 1)
+		{
+			m_PageSwapper.set_label(page);
+			p->unfreeze();
+		}
+	}
+
+	void add(string page, int column, string label, string feature)
+	{
+		HuneCreatorFeature* setting = new HuneCreatorFeature(label, m_LeftArrow, m_RightArrow, m_Hune->get_feature(feature));
+
+		for (auto iter = m_Pages.begin(); iter != m_Pages.end(); ++iter)
+		{
+			if ((*iter)->name.compare(page) == 0)
+			{
+				(*iter)->add(column, setting);
+			}
+		}
+	}
+};
+
+
+
+HuneCreatorPageContainer* g_Pages;
 
 
 void character_creator_setup()
@@ -246,82 +558,46 @@ void character_creator_setup()
 	StaticSpriteGraphic* left_arrow = new StaticSpriteGraphic(ui, Sprite::get_sprite("arrow left"), ui_palette);
 	StaticSpriteGraphic* right_arrow = new StaticSpriteGraphic(ui, Sprite::get_sprite("arrow right"), ui_palette);
 
-	const int left_column_features = 10; // Number of features in the left column
-	const int left_column_width = 160;
-	int y = 60;
-	int dy = (app->height - (2 * y)) / (left_column_features - 1);
+	g_Pages = new HuneCreatorPageContainer(g_HuneCreator, left_arrow, right_arrow);
 
-	g_ShoesStyle = new HuneCreatorFeature("Shoes", left_arrow, right_arrow, g_HuneCreator->get_feature("shoes style"), left_column_width);
-	g_ShoesStyle->set_bounds(200, y, left_column_width, left_arrow->get_height());
+	g_Pages->add("Body");
+	g_Pages->add("Body", 0, "Weight", "body");
+	g_Pages->add("Body", 0, "Markings", "body markings");
+	g_Pages->add("Body", 0, "Primary Color", "body primary_color");
+	g_Pages->add("Body", 0, "Secondary Color", "body secondary_color");
+	g_Pages->add("Body", 0, "Tertiary Color", "body tertiary_color");
 
-	g_BottomsStyle = new HuneCreatorFeature("Bottoms", left_arrow, right_arrow, g_HuneCreator->get_feature("bottoms style"), left_column_width);
-	g_BottomsStyle->set_bounds(200, y += dy, left_column_width, left_arrow->get_height());
+	g_Pages->add("Head");
+	g_Pages->add("Head", 0, "Head", "skull");
+	g_Pages->add("Head", 0, "Snout", "snout");
+	g_Pages->add("Head", 0, "Top of the Head", "upper_head");
+	g_Pages->add("Head", 0, "Sides of the Head", "lower_head");
+	g_Pages->add("Head", 0, "Markings", "head markings");
 
-	g_TopStyle = new HuneCreatorFeature("Top", left_arrow, right_arrow, g_HuneCreator->get_feature("top style"), left_column_width);
-	g_TopStyle->set_bounds(200, y += dy, left_column_width, left_arrow->get_height());
+	g_Pages->add("Top");
+	g_Pages->add("Top", 0, "Top", "top style");
+	g_Pages->add("Top", 0, "Primary Color", "top primary_color");
+	g_Pages->add("Top", 0, "Secondary Color", "top secondary_color");
 
-	g_JacketStyle = new HuneCreatorFeature("Jacket", left_arrow, right_arrow, g_HuneCreator->get_feature("jacket style"), left_column_width);
-	g_JacketStyle->set_bounds(200, y += dy, left_column_width, left_arrow->get_height());
+	g_Pages->add("Jacket");
+	g_Pages->add("Jacket", 0, "Jacket", "jacket style");
+	g_Pages->add("Jacket", 0, "Primary Color", "jacket primary_color");
+	g_Pages->add("Jacket", 0, "Secondary Color", "jacket secondary_color");
 
-	g_HeadMarkings = new HuneCreatorFeature("Head Markings", left_arrow, right_arrow, g_HuneCreator->get_feature("head markings"), left_column_width);
-	g_HeadMarkings->set_bounds(200, y += dy, left_column_width, left_arrow->get_height());
+	g_Pages->add("Bottoms");
+	g_Pages->add("Bottoms", 0, "Bottoms", "bottoms style");
+	g_Pages->add("Bottoms", 0, "Primary Color", "bottoms primary_color");
+	g_Pages->add("Bottoms", 0, "Secondary Color", "bottoms secondary_color");
 
-	g_UpperHeadFeature = new HuneCreatorFeature("Upper Head", left_arrow, right_arrow, g_HuneCreator->get_feature("upper_head"), left_column_width);
-	g_UpperHeadFeature->set_bounds(200, y += dy, left_column_width, left_arrow->get_height());
+	g_Pages->add("Shoes");
+	g_Pages->add("Shoes", 0, "Shoes", "shoes style");
+	g_Pages->add("Shoes", 0, "Primary Color", "shoes primary_color");
+	g_Pages->add("Shoes", 0, "Secondary Color", "shoes secondary_color");
 
-	g_SnoutFeature = new HuneCreatorFeature("Snout", left_arrow, right_arrow, g_HuneCreator->get_feature("snout"), left_column_width);
-	g_SnoutFeature->set_bounds(200, y += dy, left_column_width, left_arrow->get_height());
-
-	g_HeadFeature = new HuneCreatorFeature("Head", left_arrow, right_arrow, g_HuneCreator->get_feature("skull"), left_column_width);
-	g_HeadFeature->set_bounds(200, y += dy, left_column_width, left_arrow->get_height());
-
-	g_BodyMarkings = new HuneCreatorFeature("Body Markings", left_arrow, right_arrow, g_HuneCreator->get_feature("body markings"), left_column_width);
-	g_BodyMarkings->set_bounds(200, y += dy, left_column_width, left_arrow->get_height());
-
-	g_BodyTypeFeature = new HuneCreatorFeature("Body", left_arrow, right_arrow, g_HuneCreator->get_feature("body"), left_column_width);
-	g_BodyTypeFeature->set_bounds(200, y += dy, left_column_width, left_arrow->get_height());
-
-	const int right_column_features = 11; // Number of features in the right column
-	const int right_column_left = 230 + left_column_width;
-	const int right_column_width = 220;
-	y = 40;
-	dy = (app->height - (2 * y)) / (right_column_features - 1);
-
-	g_SecondaryShoesColorFeature = new HuneCreatorFeature("Secondary Shoe Color", left_arrow, right_arrow, g_HuneCreator->get_feature("shoes secondary_color"), right_column_width);
-	g_SecondaryShoesColorFeature->set_bounds(right_column_left, y, right_column_width, left_arrow->get_height());
-
-	g_PrimaryShoesColorFeature = new HuneCreatorFeature("Primary Shoe Color", left_arrow, right_arrow, g_HuneCreator->get_feature("shoes primary_color"), right_column_width);
-	g_PrimaryShoesColorFeature->set_bounds(right_column_left, y += dy, right_column_width, left_arrow->get_height());
-
-	g_SecondaryBottomsColorFeature = new HuneCreatorFeature("Secondary Bottoms Color", left_arrow, right_arrow, g_HuneCreator->get_feature("bottoms secondary_color"), right_column_width);
-	g_SecondaryBottomsColorFeature->set_bounds(right_column_left, y += dy, right_column_width, left_arrow->get_height());
-
-	g_PrimaryBottomsColorFeature = new HuneCreatorFeature("Primary Bottoms Color", left_arrow, right_arrow, g_HuneCreator->get_feature("bottoms primary_color"), right_column_width);
-	g_PrimaryBottomsColorFeature->set_bounds(right_column_left, y += dy, right_column_width, left_arrow->get_height());
-
-	g_SecondaryTopColorFeature = new HuneCreatorFeature("Secondary Top Color", left_arrow, right_arrow, g_HuneCreator->get_feature("top secondary_color"), right_column_width);
-	g_SecondaryTopColorFeature->set_bounds(right_column_left, y += dy, right_column_width, left_arrow->get_height());
-
-	g_PrimaryTopColorFeature = new HuneCreatorFeature("Primary Top Color", left_arrow, right_arrow, g_HuneCreator->get_feature("top primary_color"), right_column_width);
-	g_PrimaryTopColorFeature->set_bounds(right_column_left, y += dy, right_column_width, left_arrow->get_height());
-
-	g_SecondaryJacketColorFeature = new HuneCreatorFeature("Secondary Jacket Color", left_arrow, right_arrow, g_HuneCreator->get_feature("jacket secondary_color"), right_column_width);
-	g_SecondaryJacketColorFeature->set_bounds(right_column_left, y += dy, right_column_width, left_arrow->get_height());
-
-	g_PrimaryJacketColorFeature = new HuneCreatorFeature("Primary Jacket Color", left_arrow, right_arrow, g_HuneCreator->get_feature("jacket primary_color"), right_column_width);
-	g_PrimaryJacketColorFeature->set_bounds(right_column_left, y += dy, right_column_width, left_arrow->get_height());
-
-	g_TertiaryBodyColorFeature = new HuneCreatorFeature("Tertiary Body Color", left_arrow, right_arrow, g_HuneCreator->get_feature("body tertiary_color"), right_column_width);
-	g_TertiaryBodyColorFeature->set_bounds(right_column_left, y += dy, right_column_width, left_arrow->get_height());
-
-	g_SecondaryBodyColorFeature = new HuneCreatorFeature("Secondary Body Color", left_arrow, right_arrow, g_HuneCreator->get_feature("body secondary_color"), right_column_width);
-	g_SecondaryBodyColorFeature->set_bounds(right_column_left, y += dy, right_column_width, left_arrow->get_height());
-
-	g_PrimaryBodyColorFeature = new HuneCreatorFeature("Primary Body Color", left_arrow, right_arrow, g_HuneCreator->get_feature("body primary_color"), right_column_width);
-	g_PrimaryBodyColorFeature->set_bounds(right_column_left, y += dy, right_column_width, left_arrow->get_height());
+	g_Pages->set_bounds(200, 40, app->width - 240, app->height - 80);
 
 	// Run the main function
-	onion_main(character_creator_display_func);
+	main(character_creator_display_func);
 }
 
 void character_creator_display_func()
@@ -377,28 +653,7 @@ void character_creator_display_func()
 	g_PlayStopButton->display();
 	g_RotateRightButton->display();
 
-	g_BodyTypeFeature->display();
-	g_BodyMarkings->display();
-	g_HeadFeature->display();
-	g_SnoutFeature->display();
-	g_UpperHeadFeature->display();
-	g_HeadMarkings->display();
-	g_JacketStyle->display();
-	g_TopStyle->display();
-	g_BottomsStyle->display();
-	g_ShoesStyle->display();
-
-	g_PrimaryBodyColorFeature->display();
-	g_SecondaryBodyColorFeature->display();
-	g_TertiaryBodyColorFeature->display();
-	g_PrimaryJacketColorFeature->display();
-	g_SecondaryJacketColorFeature->display();
-	g_PrimaryTopColorFeature->display();
-	g_SecondaryTopColorFeature->display();
-	g_PrimaryBottomsColorFeature->display();
-	g_SecondaryBottomsColorFeature->display();
-	g_PrimaryShoesColorFeature->display();
-	g_SecondaryShoesColorFeature->display();
+	g_Pages->display();
 
 	mat_pop();
 }

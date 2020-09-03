@@ -113,6 +113,34 @@ public:
 
 
 
+	/// <summary>Multiplies a scalar to this one and returns the result.</summary>
+	/// <param name="scalar">The scalar value.</param>
+	/// <returns>The multiplication of this matrix and the scalar.</returns>
+	matrix<T, _Rows, _Columns> operator*(int scalar) const
+	{
+		matrix<T, _Rows, _Columns> result;
+
+		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+			result.mat[k] = scalar * mat[k];
+
+		return result;
+	}
+
+	/// <summary>Multiplies a scalar to this one and returns the result.</summary>
+	/// <param name="scalar">The scalar value.</param>
+	/// <returns>The multiplication of this matrix and the scalar.</returns>
+	matrix<T, _Rows, _Columns> operator*(float scalar) const
+	{
+		matrix<T, _Rows, _Columns> result;
+
+		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+			result.mat[k] = scalar * mat[k];
+
+		return result;
+	}
+
+
+
 	/// <summary>Adds another matrix to this one in-place.</summary>
 	/// <param name="other">The other matrix.</param>
 	/// <returns>A reference to this matrix.</returns>
@@ -139,6 +167,32 @@ public:
 		return *this;
 	}
 
+	/// <summary>Multiplies a scalar value to this matrix in-place.</summary>
+	/// <param name="scalar">The scalar value.</param>
+	/// <returns>A reference to this matrix.</returns>
+	matrix<T, _Rows, _Columns>& operator*=(int scalar)
+	{
+		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+		{
+			mat[k] *= scalar;
+		}
+
+		return *this;
+	}
+	
+	/// <summary>Multiplies a scalar value to this matrix in-place.</summary>
+	/// <param name="scalar">The scalar value.</param>
+	/// <returns>A reference to this matrix.</returns>
+	matrix<T, _Rows, _Columns>& operator*=(float scalar)
+	{
+		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+		{
+			mat[k] *= scalar;
+		}
+
+		return *this;
+	}
+
 
 	/// <summary>Sets this matrix equal to another one.</summary>
 	/// <param name="other">The other matrix.</param>
@@ -151,6 +205,35 @@ public:
 		}
 
 		return *this;
+	}
+
+
+	/// <summary>Checks whether this matrix is equal to another one.</summary>
+	/// <param name="other">The other matrix.</param>
+	/// <returns>True if both matrices are equal, false otherwise.</returns>
+	bool operator==(const matrix<T, _Rows, _Columns>& other)
+	{
+		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+		{
+			if (mat[k] != other.get(k))
+				return false;
+		}
+
+		return true;
+	}
+
+	/// <summary>Checks whether this matrix is not equal to another one.</summary>
+	/// <param name="other">The other matrix.</param>
+	/// <returns>True if the matrices are not equal, false if they are.</returns>
+	bool operator!=(const matrix<T, _Rows, _Columns>& other)
+	{
+		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+		{
+			if (mat[k] != other.get(k))
+				return true;
+		}
+
+		return false;
 	}
 
 
@@ -169,6 +252,27 @@ public:
 		}
 	}
 };
+
+
+/// <summary>Multiplies a scalar to a matrix and returns the result.</summary>
+/// <param name="scalar">The scalar value.</param>
+/// <param name="matrix">The matrix.</param>
+/// <returns>The multiplication of this matrix and the scalar.</returns>
+template <typename T, int _Rows, int _Columns>
+matrix<T, _Rows, _Columns> operator*(int scalar, matrix<T, _Rows, _Columns> matrix)
+{
+	return matrix * scalar;
+}
+
+/// <summary>Multiplies a scalar to a matrix and returns the result.</summary>
+/// <param name="scalar">The scalar value.</param>
+/// <param name="matrix">The matrix.</param>
+/// <returns>The multiplication of this matrix and the scalar.</returns>
+template <typename T, int _Rows, int _Columns>
+matrix<T, _Rows, _Columns> operator*(float scalar, matrix<T, _Rows, _Columns> matrix)
+{
+	return matrix * scalar;
+}
 
 
 /// <summary>Multiplies two matrices.</summary>
@@ -208,6 +312,13 @@ public:
 	{
 		set(0, 0, a1);
 		set(1, 0, a2);
+	}
+
+	template <typename U, int _Rows>
+	vec2(const matrix<U, _Rows, 1>& m)
+	{
+		set(0, 0, m.get(0));
+		set(1, 0, m.get(1));
 	}
 
 	template <typename U>
@@ -251,6 +362,14 @@ public:
 		set(0, 0, a1);
 		set(1, 0, a2);
 		set(2, 0, a3);
+	}
+
+	template <typename U, int _Rows>
+	vec3(const matrix<U, _Rows, 1>& m)
+	{
+		set(0, 0, m.get(0));
+		set(1, 0, m.get(1));
+		set(2, 0, m.get(2));
 	}
 
 	template <typename U>
@@ -298,6 +417,15 @@ public:
 		set(1, 0, a2);
 		set(2, 0, a3);
 		set(3, 0, a4);
+	}
+
+	template <typename U, int _Rows>
+	vec4(const matrix<U, _Rows, 1>& m)
+	{
+		set(0, 0, m.get(0));
+		set(1, 0, m.get(1));
+		set(2, 0, m.get(2));
+		set(3, 0, m.get(3));
 	}
 
 	template <typename U>
