@@ -6,10 +6,9 @@
 using namespace std;
 using namespace onion;
 
-
 Font* get_label_font()
 {
-	static Font* font = Font::load_sprite_font("outline11.png");
+	static Font* font = new SpriteFont("outline11.png");
 	return font;
 }
 
@@ -20,9 +19,9 @@ Palette* get_label_font_palette()
 }
 
 
-SpriteSheet* get_ui_sprite_sheet()
+SimplePixelSpriteSheet* get_ui_sprite_sheet()
 {
-	static SpriteSheet* sprite_sheet = SpriteSheet::generate("ui/basic.png");
+	static SimplePixelSpriteSheet* sprite_sheet = new SimplePixelSpriteSheet("ui/basic.png");
 	return sprite_sheet;
 }
 
@@ -35,7 +34,7 @@ Palette* get_ui_palette()
 
 Sprite* get_bg_diamonds()
 {
-	static Sprite* sprite = Sprite::get_sprite("bg diamonds");
+	static Sprite* sprite = get_ui_sprite_sheet()->get_sprite("bg diamonds");
 	return sprite;
 }
 
@@ -76,7 +75,11 @@ HuneCreatorButton* g_RotateRightButton;
 class HunePlayStopButton : public Button
 {
 protected:
-	DynamicSpriteGraphic* m_Graphic;
+	// The sprite when the button plays the animation.
+	Sprite* m_PlayButton;
+
+	// The sprite when the button stops the animation.
+	Sprite* m_StopButton;
 
 	bool m_Playing;
 
@@ -84,12 +87,10 @@ protected:
 	{
 		if (m_Playing)
 		{
-			m_Graphic->set_frame(1);
 			g_HuneCreator->stop_walking();
 		}
 		else
 		{
-			m_Graphic->set_frame(0);
 			g_HuneCreator->start_walking();
 		}
 
@@ -98,16 +99,16 @@ protected:
 
 	void __display() const
 	{
-		m_Graphic->display();
+		get_ui_sprite_sheet()->display(m_Playing ? m_StopButton : m_PlayButton, get_ui_palette());
 	}
 
 public:
-	HunePlayStopButton(DynamicSpriteGraphic* graphic)
+	HunePlayStopButton(Sprite* play_button, Sprite* stop_button)
 	{
 		m_Playing = true;
 
-		m_Graphic = graphic;
-		m_Graphic->set_frame(0);
+		m_PlayButton = play_button;
+		m_StopButton = stop_button;
 	}
 };
 
@@ -175,7 +176,7 @@ protected:
 	}
 
 public:
-	HuneCreatorFeature(string label, StaticSpriteGraphic* left_arrow, StaticSpriteGraphic* right_arrow, HuneCreator::Index* index) :
+	HuneCreatorFeature(string label, Graphic* left_arrow, Graphic* right_arrow, HuneCreator::Index* index) :
 		m_LeftButton(left_arrow, index, &HuneCreator::Index::decrement),
 		m_RightButton(right_arrow, index, &HuneCreator::Index::increment)
 	{
@@ -186,7 +187,8 @@ public:
 		m_RightButton.set_parent(this);
 
 		Font* font = get_label_font();
-		m_Label = new TextGraphic(font, get_label_font_palette(), label, INT_MAX, TEXT_CENTER);
+		m_Label = new TextGraphic(font, get_label_font_palette(), TEXT_HORIZONTAL_CENTER, TEXT_VERTICAL_TOP, INT_MAX, 0);
+		m_Label->set_text(label);
 	}
 
 	void freeze()
@@ -403,7 +405,7 @@ protected:
 		}
 
 	public:
-		PageSwapper(HuneCreatorPageContainer* pages, StaticSpriteGraphic* left_arrow, StaticSpriteGraphic* right_arrow) :
+		PageSwapper(HuneCreatorPageContainer* pages, Graphic* left_arrow, Graphic* right_arrow) :
 			m_LeftButton(left_arrow, pages, &HuneCreatorPageContainer::decrement),
 			m_RightButton(right_arrow, pages, &HuneCreatorPageContainer::increment)
 		{
@@ -418,7 +420,7 @@ protected:
 			m_RightButton.unfreeze();
 
 			Font* font = get_label_font();
-			m_Label = new TextGraphic(font, get_label_font_palette(), "", INT_MAX, TEXT_CENTER);
+			m_Label = new TextGraphic(font, get_label_font_palette(), TEXT_HORIZONTAL_CENTER, TEXT_VERTICAL_TOP, INT_MAX, 0);
 		}
 
 		void set_label(string label)
@@ -429,9 +431,9 @@ protected:
 
 	HuneCreator* m_Hune;
 
-	StaticSpriteGraphic* m_LeftArrow;
+	SimpleStaticSpriteGraphic* m_LeftArrow;
 
-	StaticSpriteGraphic* m_RightArrow;
+	SimpleStaticSpriteGraphic* m_RightArrow;
 
 	vector<HuneCreatorPage*> m_Pages;
 
@@ -457,7 +459,7 @@ protected:
 	}
 
 public:
-	HuneCreatorPageContainer(HuneCreator* hune, StaticSpriteGraphic* left_arrow, StaticSpriteGraphic* right_arrow) :
+	HuneCreatorPageContainer(HuneCreator* hune, SimpleStaticSpriteGraphic* left_arrow, SimpleStaticSpriteGraphic* right_arrow) :
 		m_PageSwapper(this, left_arrow, right_arrow)
 	{
 		m_Hune = hune;
@@ -530,33 +532,30 @@ void character_creator_setup()
 	g_HuneCreator = new HuneCreator();
 
 	// Set up buttons
-	SpriteSheet* ui = get_ui_sprite_sheet();
+	SimplePixelSpriteSheet* ui = get_ui_sprite_sheet();
 	SinglePalette* ui_palette = new SinglePalette(vec4i(255, 255, 255, 0), vec4i(0, 0, 0, 0), vec4i(0, 0, 0, 0));
 
 	g_RotateLeftButton = new HuneCreatorButton(
-		new StaticSpriteGraphic(ui, Sprite::get_sprite("rotate left"), ui_palette), 
+		new SimpleStaticSpriteGraphic(ui, "rotate left", &ui_palette->get_red_palette_matrix()), 
 		&HuneCreator::rotate_left
 	);
 	g_RotateLeftButton->set_bounds(71, 149, 18, 15);
 	g_RotateLeftButton->unfreeze();
 
 	g_RotateRightButton = new HuneCreatorButton(
-		new StaticSpriteGraphic(ui, Sprite::get_sprite("rotate right"), ui_palette), 
+		new SimpleStaticSpriteGraphic(ui, "rotate right", &ui_palette->get_red_palette_matrix()), 
 		&HuneCreator::rotate_right
 	);
 	g_RotateRightButton->set_bounds(111, 149, 18, 15);
 	g_RotateRightButton->unfreeze();
 
-	DynamicSpriteGraphic* play_stop = new DynamicSpriteGraphic(ui, ui_palette);
-	play_stop->add_frame(Sprite::get_sprite("pause"));
-	play_stop->add_frame(Sprite::get_sprite("play"));
-	g_PlayStopButton = new HunePlayStopButton(play_stop);
+	g_PlayStopButton = new HunePlayStopButton(ui->get_sprite("play"), ui->get_sprite("pause"));
 	g_PlayStopButton->set_bounds(95, 150, 11, 12);
 	g_PlayStopButton->unfreeze();
 
 
-	StaticSpriteGraphic* left_arrow = new StaticSpriteGraphic(ui, Sprite::get_sprite("arrow left"), ui_palette);
-	StaticSpriteGraphic* right_arrow = new StaticSpriteGraphic(ui, Sprite::get_sprite("arrow right"), ui_palette);
+	SimpleStaticSpriteGraphic* left_arrow = new SimpleStaticSpriteGraphic(ui, "arrow left", &ui_palette->get_red_palette_matrix());
+	SimpleStaticSpriteGraphic* right_arrow = new SimpleStaticSpriteGraphic(ui, "arrow right", &ui_palette->get_red_palette_matrix());
 
 	g_Pages = new HuneCreatorPageContainer(g_HuneCreator, left_arrow, right_arrow);
 
@@ -607,7 +606,7 @@ void character_creator_display_func()
 
 	static Palette* bg_palette = new SinglePalette(vec4i(219, 152, 152, 255), vec4i(212, 143, 143, 255), vec4i());
 
-	static SpriteSheet* ui = get_ui_sprite_sheet();
+	static SimplePixelSpriteSheet* ui = get_ui_sprite_sheet();
 	static Sprite* bg = get_bg_diamonds();
 
 	static int last_frame = UpdateEvent::frame;
@@ -636,7 +635,7 @@ void character_creator_display_func()
 		mat_push();
 		for (int y = -dy; y < app->height; y += bg->height)
 		{
-			ui->display(bg->key, bg_palette);
+			ui->display(bg, bg_palette);
 			mat_translate(0.f, bg->height, 0.f);
 		}
 		mat_pop();

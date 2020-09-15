@@ -19,7 +19,7 @@
 namespace onion
 {
 
-
+	/*
 
 	// Holds palette matrices for use by shaders. These matrices map pure red, pure green, etc. values to base colors, highlights, and shadows.
 	class Palette
@@ -84,6 +84,18 @@ namespace onion
 		/// <summary>Retrieves a palette matrix. In a texture-mapped sprite, this will be the palette mapped to by BLUE.</summary>
 		/// <returns>A constant reference to the palette matrix.</returns>
 		const PALETTE_MATRIX& get_blue_palette_matrix() const;
+
+		/// <summary>Retrieves the color that the palette maps RED to.</summary>
+		/// <param name="color">To be filled with the color that the palette maps RED to.</param>
+		void get_red_maps_to(vec4f& color) const;
+
+		/// <summary>Retrieves the color that the palette maps GREEN to.</summary>
+		/// <param name="color">To be filled with the color that the palette maps GREEN to.</param>
+		void get_green_maps_to(vec4f& color) const;
+
+		/// <summary>Retrieves the color that the palette maps BLUE to.</summary>
+		/// <param name="color">To be filled with the color that the palette maps BLUE to.</param>
+		void get_blue_maps_to(vec4f& color) const;
 
 		/// <summary>Sets the color that the palette maps RED to.</summary>
 		/// <param name="red_maps_to">The color that the palette maps RED to.</param>
@@ -341,38 +353,6 @@ namespace onion
 
 
 
-	// An individual sprite on a sprite sheet.
-	struct Sprite
-	{
-	private:
-		static std::unordered_map<SPRITE_ID, Sprite*> m_Sprites;
-
-	public:
-		/// <summary>Retrieves the sprite with the given ID.</summary>
-		/// <param name="id">The ID of the sprite.</param>
-		static Sprite* get_sprite(SPRITE_ID id);
-
-		/// <summary>Sets the sprite with the given ID.</summary>
-		/// <param name="id">The ID of the sprite.</param>
-		/// <param name="sprite">The sprite to set.</param>
-		static void set_sprite(SPRITE_ID id, Sprite* sprite);
-
-
-		// The key of the sprite
-		SPRITE_KEY key;
-
-		// The width of the sprite
-		int width;
-
-		// The height of the sprite
-		int height;
-
-		/// <summary>Constructs sprite information.</summary>
-		/// <param name="key">The key of the sprite.</param>
-		/// <param name="width">The width of the sprite.</param>
-		/// <param name="height">The height of the sprite.</param>
-		Sprite(SPRITE_KEY key, int width, int height);
-	};
 
 	class SpriteGraphic : public Graphic
 	{
@@ -459,7 +439,7 @@ namespace onion
 	struct Texture
 	{
 	private:
-		static std::unordered_map<TEXTURE_ID, Texture*> m_Textures;
+		static std::unordered_map<TEXTURE_ID, Texture*> m_Images;
 
 	public:
 		/// <summary>Retrieves the texture with the given ID.</summary>
@@ -632,5 +612,6 @@ namespace onion
 	};
 
 
+	*/
 
 }

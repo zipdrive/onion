@@ -624,10 +624,18 @@ public:
 
 
 typedef mat2x2<int> mat2x2i;
+#define mat2i mat2x2i
+typedef mat3x3<int> mat3x3i;
+#define mat3i mat3x3i
+typedef mat4x4<int> mat4x4i;
+#define mat4i mat4x4i
 
 typedef mat2x2<float> mat2x2f;
+#define mat2f mat2x2f
 typedef mat3x3<float> mat3x3f;
+#define mat3f mat3x3f
 typedef mat4x4<float> mat4x4f;
+#define mat4f mat4x4f
 
 typedef mat2x4<float> mat2x4f;
 
@@ -640,61 +648,66 @@ typedef vec3<float> vec3f;
 typedef vec4<float> vec4f;
 
 
-/// <summary>Pushes a copy of the current matrix to the top of the stack.</summary>
-void mat_push();
+namespace onion
+{
 
-/// <summary>Pops the current matrix from the top of the stack.</summary>
-void mat_pop();
+	/// <summary>Pushes a copy of the current matrix to the top of the stack.</summary>
+	void mat_push();
 
-
-/// <summary>Gets the current matrix transform.</summary>
-mat4x4f& mat_get();
-
-/// <summary>Gets the value array of the current matrix transform.</summary>
-/// <returns>The value array of the current matrix transform.</returns>
-const float* mat_get_values();
+	/// <summary>Pops the current matrix from the top of the stack.</summary>
+	void mat_pop();
 
 
+	/// <summary>Gets the current matrix transform.</summary>
+	mat4x4f& mat_get();
 
-/// <summary>Sets the current matrix transform to the identity.</summary>
-void mat_identity();
-
-
-/// <summary>Clears the stack and sets the projection to orthogonal.</summary>
-/// <param name="left">The left side of the projection.</param>
-/// <param name="right">The right side of the projection.</param>
-/// <param name="bottom">The bottom side of the projection.<param>
-/// <param name="top">The top side of the projection.</param>
-void mat_ortho(float left, float right, float bottom, float top, float near, float far);
+	/// <summary>Gets the value array of the current matrix transform.</summary>
+	/// <returns>The value array of the current matrix transform.</returns>
+	const float* mat_get_values();
 
 
-/// <summary>Adds a translation to the current transformation.</summary>
-/// <param name="dx">The translation along the x-axis.</param>
-/// <param name="dy">The translation along the y-axis.</param>
-/// <param name="dz">The translation along the z-axis.</param>
-void mat_translate(float dx, float dy, float dz);
+
+	/// <summary>Sets the current matrix transform to the identity.</summary>
+	void mat_identity();
 
 
-/// <summary>Adds a scale transform to the current transformation.</summary>
-/// <param name="sx">The scaling factor for the x-axis.</param>
-/// <param name="sy">The scaling factor for the y-axis.</param>
-/// <param name="sz">The scaling factor for the z-axis.</param>
-void mat_scale(float sx, float sy, float sz);
+	/// <summary>Clears the stack and sets the projection to orthogonal.</summary>
+	/// <param name="left">The left side of the projection.</param>
+	/// <param name="right">The right side of the projection.</param>
+	/// <param name="bottom">The bottom side of the projection.<param>
+	/// <param name="top">The top side of the projection.</param>
+	void mat_ortho(float left, float right, float bottom, float top, float near, float far);
 
 
-/// <summary>Adds a rotation transform around the x-axis to the current transformation.</summary>
-/// <param name="angle">The angle of rotation.</param>
-void mat_rotatex(float angle);
-
-/// <summary>Adds a rotation transform around the y-axis to the current transformation.</summary>
-/// <param name="angle">The angle of rotation.</param>
-void mat_rotatey(float angle);
-
-/// <summary>Adds a rotation transform around the z-axis to the current transformation.</summary>
-/// <param name="angle">The angle of rotation.</param>
-void mat_rotatez(float angle);
+	/// <summary>Adds a translation to the current transformation.</summary>
+	/// <param name="dx">The translation along the x-axis.</param>
+	/// <param name="dy">The translation along the y-axis.</param>
+	/// <param name="dz">The translation along the z-axis.</param>
+	void mat_translate(float dx, float dy, float dz);
 
 
-/// <summary>Adds a custom transformation to the current transformation.</summary>
-/// <param name="transform">The matrix of the transformation.</summary>
-void mat_custom_transform(const mat4x4f& transform);
+	/// <summary>Adds a scale transform to the current transformation.</summary>
+	/// <param name="sx">The scaling factor for the x-axis.</param>
+	/// <param name="sy">The scaling factor for the y-axis.</param>
+	/// <param name="sz">The scaling factor for the z-axis.</param>
+	void mat_scale(float sx, float sy, float sz);
+
+
+	/// <summary>Adds a rotation transform around the x-axis to the current transformation.</summary>
+	/// <param name="angle">The angle of rotation.</param>
+	void mat_rotatex(float angle);
+
+	/// <summary>Adds a rotation transform around the y-axis to the current transformation.</summary>
+	/// <param name="angle">The angle of rotation.</param>
+	void mat_rotatey(float angle);
+
+	/// <summary>Adds a rotation transform around the z-axis to the current transformation.</summary>
+	/// <param name="angle">The angle of rotation.</param>
+	void mat_rotatez(float angle);
+
+
+	/// <summary>Adds a custom transformation to the current transformation.</summary>
+	/// <param name="transform">The matrix of the transformation.</summary>
+	void mat_custom_transform(const mat4x4f& transform);
+
+}

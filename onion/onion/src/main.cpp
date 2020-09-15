@@ -1,5 +1,6 @@
 #include <onion.h>
 #include "../include/charactercreator.h"
+#include "../include/graphictest.h"
 
 #include <iostream>
 
@@ -37,28 +38,40 @@ void test_key_main()
 }
 
 
+class UpdateTester : public UpdateListener
+{
+protected:
+	void __update(int frames_passed) {}
+} g_UpdateTester;
+
+void test_update_main()
+{
+	g_UpdateTester.unfreeze();
+}
+
+
 
 mat4x4f g_Transform;
 
 
-SpriteSheet* g_TestAlphaSpriteSheet;
+SimplePixelSpriteSheet* g_TestAlphaSpriteSheet;
 Palette* g_TestAlphaPalette;
 
 void test_alpha_display()
 {
-	g_TestAlphaSpriteSheet->display(0, g_TestAlphaPalette);
+	g_TestAlphaSpriteSheet->display(0, &g_TestAlphaPalette->get_red_palette_matrix());
 
 	mat_push();
 	mat_translate(-64.f, 64.f, -0.01f);
-	g_TestAlphaSpriteSheet->display(12, g_TestAlphaPalette);
+	g_TestAlphaSpriteSheet->display(12, &g_TestAlphaPalette->get_red_palette_matrix());
 	mat_pop();
 }
 
 void test_alpha_main()
 {
 	// Load sprite sheet
-	g_TestAlphaSpriteSheet = SpriteSheet::generate_empty();
-	g_TestAlphaSpriteSheet->load_partitioned_sprite_sheet("test/alpha.png", 128, 128);
+	g_TestAlphaSpriteSheet = new SimplePixelSpriteSheet();
+	g_TestAlphaSpriteSheet->load("test/alpha.png", 128, 128);
 
 	// Load palette
 	g_TestAlphaPalette = new SinglePalette(
@@ -74,7 +87,7 @@ void test_alpha_main()
 	mat_custom_transform(g_Transform);
 
 	// Call the main function
-	main(test_alpha_display);
+	onion::main(test_alpha_display);
 
 	// Clean up
 	delete g_TestAlphaSpriteSheet;
@@ -83,20 +96,20 @@ void test_alpha_main()
 }
 
 
-SpriteSheet* g_TestSpriteSheet;
+SimplePixelSpriteSheet* g_TestSpriteSheet;
 Sprite* g_TestSprite;
 Palette* g_TestSpritePalette;
 
 void test_sprite_display()
 {
-	g_TestSpriteSheet->display(g_TestSprite->key, g_TestSpritePalette);
+	g_TestSpriteSheet->display(g_TestSprite, g_TestSpritePalette);
 }
 
 void test_sprite_main()
 {
 	// Load sprites
-	g_TestSpriteSheet = SpriteSheet::generate("test/texmap.png");
-	g_TestSprite = Sprite::get_sprite("test");
+	g_TestSpriteSheet = new SimplePixelSpriteSheet("test/texmap.png");
+	g_TestSprite = g_TestSpriteSheet->get_sprite("test");
 
 	// Load palette
 	g_TestSpritePalette = new SinglePalette(
@@ -112,7 +125,7 @@ void test_sprite_main()
 	mat_custom_transform(g_Transform);
 
 	// Call the main function
-	main(test_sprite_display);
+	onion::main(test_sprite_display);
 
 	// Clean up
 	delete g_TestSpriteSheet;
@@ -122,22 +135,22 @@ void test_sprite_main()
 
 
 
-TextureMapSpriteSheet* g_TestTexmapSpriteSheet;
+ShadedTexturePixelSpriteSheet* g_TestTexmapSpriteSheet;
 Sprite* g_TestTexmapSprite;
 Texture* g_TestTexmapTexture;
 Palette* g_TestTexmapPalette;
 
 void test_texmap_display()
 {
-	g_TestTexmapSpriteSheet->display(g_TestTexmapSprite->key, g_TestTexmapTexture->transform, g_TestTexmapPalette);
+	g_TestTexmapSpriteSheet->display(g_TestTexmapSprite, false, g_TestTexmapTexture, g_TestTexmapPalette);
 }
 
 void test_texmap_main()
 {
 	// Load sprites
-	g_TestTexmapSpriteSheet = TextureMapSpriteSheet::generate("test/texmap.png");
-	g_TestTexmapSprite = Sprite::get_sprite("test");
-	g_TestTexmapTexture = Texture::get_texture("test");
+	g_TestTexmapSpriteSheet = new ShadedTexturePixelSpriteSheet("test/texmap.png");
+	g_TestTexmapSprite = g_TestTexmapSpriteSheet->get_sprite("test");
+	g_TestTexmapTexture = g_TestTexmapSpriteSheet->get_texture("test");
 
 	// Load palette
 	g_TestTexmapPalette = new MultiplePalette(
@@ -155,7 +168,7 @@ void test_texmap_main()
 	mat_custom_transform(g_Transform);
 
 	// Call the main function
-	main(test_texmap_display);
+	onion::main(test_texmap_display);
 
 	// Clean up
 	delete g_TestTexmapSpriteSheet;
@@ -200,11 +213,45 @@ void test_hune_main()
 	mat_custom_transform(g_Transform);
 
 	// Call the main function
-	main(test_hune_display);
+	onion::main(test_hune_display);
 
 	// Clean up
 	delete g_TestHune;
 	g_TestHune = nullptr;
+	mat_pop();
+}
+
+
+Font* g_TestFont;
+Palette* g_TestFontPalette;
+
+void test_font_display()
+{
+	g_TestFont->display_line("djskfdjsldfkb", g_TestFontPalette);
+}
+
+void test_font_main()
+{
+	// Create the font
+	g_TestFont = new SpriteFont("outline11.png");
+
+	// Create the palette
+	g_TestFontPalette = new SinglePalette(vec4i(255, 0, 0, 0), vec4i(0, 255, 0, 0), vec4i(0, 0, 255, 0));
+
+	// Construct transformation
+	Application* app = get_application_settings();
+	g_Transform.set(0, 0, 2.f / app->width);
+	g_Transform.set(1, 1, 2.f / app->height);
+
+	mat_push();
+	mat_custom_transform(g_Transform);
+
+	// Call the main function
+	onion::main(test_font_display);
+
+	// Clean up
+	delete g_TestFont;
+	delete g_TestFontPalette;
 	mat_pop();
 }
 
@@ -214,8 +261,6 @@ void test_hune_main()
 int main()
 {
 	init("settings.ini");
-	//character_creator_setup();
-	test_key_main();
-	test_alpha_main();
+	character_creator_setup();
 	return 0;
 }

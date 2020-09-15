@@ -51,7 +51,8 @@ public:
 	virtual int trigger(const EventType& event_data)
 	{
 		// Remove any listeners queued for removal
-		for (auto iter = m_Stack.begin(); iter != m_Stack.end(); ++iter)
+		auto iter = m_Stack.begin();
+		while (iter != m_Stack.end())
 		{
 			if (m_QueuedToRemove.find(*iter) != m_QueuedToRemove.end())
 			{
@@ -62,8 +63,12 @@ public:
 				}
 				else
 				{
-					m_Stack.erase(iter--);
+					m_Stack.erase(iter);
 				}
+			}
+			else
+			{
+				++iter;
 			}
 		}
 		m_QueuedToRemove.clear();
@@ -101,7 +106,7 @@ private:
 	bool m_Frozen;
 
 	// The stack of event listeners to update.
-	vector<UpdateListener*> m_Stack;
+	std::vector<UpdateListener*> m_Stack;
 
 	// A queue of event listeners to add before the next update pass.
 	std::vector<UpdateListener*> m_QueuedToAdd;
@@ -113,7 +118,8 @@ protected:
 	void __update(int frames_passed)
 	{
 		// Remove any listeners queued for removal
-		for (auto iter = m_Stack.begin(); iter != m_Stack.end(); ++iter)
+		std::vector<UpdateListener*>::iterator iter = m_Stack.begin();
+		while (iter != m_Stack.end())
 		{
 			if (m_QueuedToRemove.find(*iter) != m_QueuedToRemove.end())
 			{
@@ -125,7 +131,12 @@ protected:
 				else
 				{
 					m_Stack.erase(iter--);
+					++iter;
 				}
+			}
+			else
+			{
+				++iter;
 			}
 		}
 		m_QueuedToRemove.clear();
@@ -216,6 +227,43 @@ private:
 	// The stack of listeners
 	std::vector<KeyboardListener*> m_Stack;
 
+	// A queue of event listeners to add before the next trigger pass.
+	std::vector<KeyboardListener*> m_QueuedToAdd;
+
+	// An array of event listeners to remove before the next trigger pass.
+	std::unordered_set<KeyboardListener*> m_QueuedToRemove;
+
+	/// <summary>Removes any listeners queued for removal, and adds any listeners queued to add.</summary>
+	void flush_queue()
+	{
+		// Remove any listeners queued for removal
+		auto iter = m_Stack.begin();
+		while (iter != m_Stack.end())
+		{
+			if (m_QueuedToRemove.find(*iter) != m_QueuedToRemove.end())
+			{
+				if (iter == m_Stack.begin())
+				{
+					m_Stack.erase(iter);
+					iter = m_Stack.begin();
+				}
+				else
+				{
+					m_Stack.erase(iter);
+				}
+			}
+			else
+			{
+				++iter;
+			}
+		}
+		m_QueuedToRemove.clear();
+
+		// Add any listeners queued to add
+		m_Stack.insert(m_Stack.end(), m_QueuedToAdd.begin(), m_QueuedToAdd.end());
+		m_QueuedToAdd.clear();
+	}
+
 public:
 	/// <summary>Converts a key input to the associated keyboard control. Returns -1 if no control is assigned.</summary>
 	/// <param name="key">The key received.</param>
@@ -292,34 +340,32 @@ public:
 	}
 
 
-	/// <summary>Pushes a listener on top of the stack.</summary>
-	/// <param name="listener">The listener to add to the stack.</param>
-	void push(KeyboardListener* listener)
-	{
-		m_Stack.push_back(listener);
-	}
-
 	/// <summary>Pops a listener from the stack.</summary>
 	/// <param name="listener">The listener to remove from the stack.</param>
 	void pop(KeyboardListener* listener)
 	{
-		for (auto iter = m_Stack.begin(); iter != m_Stack.end(); ++iter)
-		{
-			if (*iter == listener)
-			{
-				m_Stack.erase(iter);
-				break;
-			}
-		}
+		// TODO
+		m_QueuedToRemove.insert(listener);
 	}
 
+	/// <summary>Pushes a listener on top of the stack.</summary>
+	/// <param name="listener">The listener to add to the stack.</param>
+	void push(KeyboardListener* listener)
+	{
+		m_QueuedToRemove.insert(listener);
+		m_QueuedToAdd.push_back(listener);
+	}
 
+	
 	/// <summary>Responds to an event.</summary>
 	/// <param name="event_data">The data for the event.</param>
-	int trigger(const KeyEvent& event_data)
+	virtual int trigger(const KeyEvent& event_data)
 	{
 		if (!m_Frozen)
 		{
+			flush_queue();
+
+			// Trigger all listeners
 			for (auto iter = m_Stack.rbegin(); iter != m_Stack.rend(); ++iter)
 			{
 				if ((*iter)->trigger(event_data) == EVENT_STOP)
@@ -338,6 +384,8 @@ public:
 	{
 		if (!m_Frozen)
 		{
+			flush_queue();
+
 			for (auto iter = m_Stack.rbegin(); iter != m_Stack.rend(); ++iter)
 			{
 				if ((*iter)->trigger(event_data) == EVENT_STOP)

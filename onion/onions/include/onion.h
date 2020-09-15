@@ -1,11 +1,16 @@
 #pragma once
 
+// Helpful functions
 #include "onions/matrix.h"
+#include "onions/error.h"
 #include "onions/fileio.h"
-#include "onions/graphics.h"
-#include "onions/world.h"
+
+// Essentials
 #include "onions/event.h"
-#include "onions/hune.h"
-#include "onions/frame.h"
 #include "onions/application.h"
 #include "onions/state.h"
+
+// Graphics
+#include "onions/graphics/font.h"
+#include "onions/graphics/hune.h"
+#include "onions/graphics/frame.h"

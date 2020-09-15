@@ -6,7 +6,7 @@
 #include <SOIL.h>
 #include "../../include/onions/fileio.h"
 #include "../../include/onions/graphics.h"
-#include "../../include/onions/frame.h"
+#include "../../include/onions/graphics/frame.h"
 #include "../../include/onions/application.h"
 
 #include <iostream>
@@ -21,6 +21,8 @@ using namespace std;
 using namespace onion;
 
 
+
+/*
 
 #define RGB_INT_TO_FLOAT	0.00392157f
 
@@ -95,6 +97,36 @@ const PALETTE_MATRIX& SinglePalette::get_green_palette_matrix() const
 const PALETTE_MATRIX& SinglePalette::get_blue_palette_matrix() const
 {
 	return m_Matrix;
+}
+
+void SinglePalette::get_red_maps_to(vec4f& color) const
+{
+	color = vec4f(
+		m_Matrix.get(0, 0),
+		m_Matrix.get(1, 0),
+		m_Matrix.get(2, 0),
+		m_Matrix.get(3, 0)
+	);
+}
+
+void SinglePalette::get_green_maps_to(vec4f& color) const
+{
+	color = vec4f(
+		m_Matrix.get(0, 1),
+		m_Matrix.get(1, 1),
+		m_Matrix.get(2, 1),
+		m_Matrix.get(3, 1)
+	);
+}
+
+void SinglePalette::get_blue_maps_to(vec4f& color) const
+{
+	color = vec4f(
+		m_Matrix.get(0, 2),
+		m_Matrix.get(1, 2),
+		m_Matrix.get(2, 2),
+		m_Matrix.get(3, 2)
+	);
 }
 
 void SinglePalette::set_red_maps_to(const vec4i& red_maps_to)
@@ -659,7 +691,7 @@ protected:
 	{
 	private:
 		// The OpenGL ID for the texture.
-		GLuint m_Texture;
+		GLuint m_Image;
 
 	public:
 		/// <summary>Constructs a sprite buffer.</summary>
@@ -667,14 +699,14 @@ protected:
 		/// <param name="textureID">The OpenGL texture ID.</param>
 		SpriteBuffer(GLuint buffer, GLuint texture) : Buffer(buffer)
 		{
-			m_Texture = texture;
+			m_Image = texture;
 		}
 
 		/// <summary>Frees the buffer and texture.</summary>
 		~SpriteBuffer()
 		{
 			glDeleteBuffers(1, &m_Buffer);
-			glDeleteTextures(1, &m_Texture);
+			glDeleteTextures(1, &m_Image);
 		}
 
 		/// <summary>Activates the buffer.</summary>
@@ -683,7 +715,7 @@ protected:
 			if (!is_buffer_active())
 			{
 				// Change the texture being drawn from.
-				glBindTexture(GL_TEXTURE_2D, m_Texture);
+				glBindTexture(GL_TEXTURE_2D, m_Image);
 
 				// Change the buffer being used.
 				glBindBuffer(GL_ARRAY_BUFFER, m_Buffer);
@@ -1028,7 +1060,7 @@ protected:
 		GLuint m_MVP;
 
 		// The OpenGL ID for the matrix that maps an RGBA color into texture coordinates.
-		GLuint m_TextureMapping;
+		GLuint m_ImageMapping;
 
 		// The OpenGL ID for the color palette matrix that the texture-mapping maps RED to in the sprite shader program.
 		GLuint m_RedMatrix;
@@ -1044,7 +1076,7 @@ protected:
 		{
 			// Determine the location of the uniforms
 			m_MVP = glGetUniformLocation(m_Shader, "MVP");
-			m_TextureMapping = glGetUniformLocation(m_Shader, "mappingMatrix");
+			m_ImageMapping = glGetUniformLocation(m_Shader, "mappingMatrix");
 			m_RedMatrix = glGetUniformLocation(m_Shader, "redPaletteMatrix");
 			m_GreenMatrix = glGetUniformLocation(m_Shader, "greenPaletteMatrix");
 			m_BlueMatrix = glGetUniformLocation(m_Shader, "bluePaletteMatrix");
@@ -1059,7 +1091,7 @@ protected:
 			glUniformMatrix4fv(m_MVP, 1, GL_FALSE, mat_get_values());
 
 			// Set the texture mapping transformation
-			glUniformMatrix4x2fv(m_TextureMapping, 1, GL_FALSE, texture.matrix_values());
+			glUniformMatrix4x2fv(m_ImageMapping, 1, GL_FALSE, texture.matrix_values());
 
 			// Set the color palette matrices
 			glUniformMatrix4fv(m_RedMatrix, 1, GL_FALSE, palette->get_red_palette_matrix().matrix_values());
@@ -1073,7 +1105,7 @@ protected:
 	{
 	private:
 		// The OpenGL ID for the texture.
-		GLuint m_Texture;
+		GLuint m_Image;
 
 	public:
 		/// <summary>Constructs a sprite buffer.</summary>
@@ -1081,14 +1113,14 @@ protected:
 		/// <param name="textureID">The OpenGL texture ID.</param>
 		TextureMapSpriteBuffer(GLuint buffer, GLuint texture) : Buffer(buffer)
 		{
-			m_Texture = texture;
+			m_Image = texture;
 		}
 
 		/// <summary>Frees the buffer and texture.</summary>
 		~TextureMapSpriteBuffer()
 		{
 			glDeleteBuffers(1, &m_Buffer);
-			glDeleteTextures(1, &m_Texture);
+			glDeleteTextures(1, &m_Image);
 		}
 
 		/// <summary>Activates the buffer.</summary>
@@ -1097,7 +1129,7 @@ protected:
 			if (!is_buffer_active())
 			{
 				// Change the texture being drawn from.
-				glBindTexture(GL_TEXTURE_2D, m_Texture);
+				glBindTexture(GL_TEXTURE_2D, m_Image);
 
 				// Change the buffer being used.
 				glBindBuffer(GL_ARRAY_BUFFER, m_Buffer);
@@ -1423,25 +1455,25 @@ void DynamicSpriteGraphic::set_frame(int frame)
 
 
 
-unordered_map<TEXTURE_ID, Texture*> Texture::m_Textures{};
+unordered_map<TEXTURE_ID, Texture*> Texture::m_Images{};
 
 Texture* Texture::get_texture(TEXTURE_ID id)
 {
-	auto iter = m_Textures.find(id);
-	return iter != m_Textures.end() ? iter->second : nullptr;
+	auto iter = m_Images.find(id);
+	return iter != m_Images.end() ? iter->second : nullptr;
 }
 
 void Texture::set_texture(TEXTURE_ID id, Texture* texture)
 {
-	auto iter = m_Textures.find(id);
-	if (iter != m_Textures.end())
+	auto iter = m_Images.find(id);
+	if (iter != m_Images.end())
 	{
-		m_Textures.erase(iter);
-		m_Textures.emplace_hint(iter, id, texture);
+		m_Images.erase(iter);
+		m_Images.emplace_hint(iter, id, texture);
 	}
 	else
 	{
-		m_Textures.emplace(id, texture);
+		m_Images.emplace(id, texture);
 	}
 }
 
@@ -1818,7 +1850,7 @@ void TextGraphic::display() const
 *
 */
 
-
+/*
 Frame::Frame()
 {
 	m_Parent = nullptr;
@@ -2637,3 +2669,5 @@ int WorldOrthographicFrame::trigger(const MouseMoveEvent& event_data)
 
 	return EVENT_CONTINUE;
 }
+
+*/
