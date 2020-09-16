@@ -1,0 +1,68 @@
+height = 15
+kerning = -1
+spacing = 8
+
+A   left = 0    top = 0     width = 8
+B   left = 9    top = 0     width = 8
+C   left = 18   top = 0     width = 8
+D   left = 27   top = 0     width = 8
+E   left = 36   top = 0     width = 8
+F   left = 45   top = 0     width = 8   flush = 7
+G   left = 54   top = 0     width = 9
+H   left = 64   top = 0     width = 8
+I   left = 73   top = 0     width = 9
+J   left = 83   top = 0     width = 11  flush = 9
+K   left = 95   top = 0     width = 8
+L   left = 104  top = 0     width = 8
+M   left = 113  top = 0     width = 9
+N   left = 123  top = 0     width = 8
+O   left = 132  top = 0     width = 9
+P   left = 142  top = 0     width = 8
+Q   left = 151  top = 0     width = 9
+R   left = 161  top = 0     width = 8
+S   left = 170  top = 0     width = 8
+T   left = 179  top = 0     width = 9   flush = 8
+U   left = 189  top = 0     width = 10
+V   left = 200  top = 0     width = 9
+W   left = 210  top = 0     width = 9
+X   left = 220  top = 0     width = 9
+Y   left = 230  top = 0     width = 9
+Z   left = 240  top = 0     width = 8
+
+a   left = 0    top = 15    width = 8
+b   left = 9    top = 15    width = 8
+c   left = 18   top = 15    width = 8
+d   left = 27   top = 15    width = 9
+e   left = 36   top = 15    width = 8
+f   left = 45   top = 15    width = 8
+g   left = 54   top = 15    width = 8
+h   left = 64   top = 15    width = 8
+i   left = 73   top = 15    width = 4
+j   left = 83   top = 15    width = 4
+k   left = 95   top = 15    width = 8
+l   left = 104  top = 15    width = 4
+m   left = 113  top = 15    width = 9
+n   left = 123  top = 15    width = 8
+o   left = 132  top = 15    width = 8
+p   left = 142  top = 15    width = 8
+q   left = 151  top = 15    width = 9   flush = 8
+r   left = 161  top = 15    width = 7
+s   left = 170  top = 15    width = 8
+t   left = 179  top = 15    width = 7
+u   left = 189  top = 15    width = 9
+v   left = 200  top = 15    width = 8
+w   left = 210  top = 15    width = 9
+x   left = 220  top = 15    width = 7
+y   left = 230  top = 15    width = 8
+z   left = 240  top = 15    width = 7
+
+1   left = 0    top = 30    width = 8
+2   left = 9    top = 30    width = 8
+3   left = 18   top = 30    width = 9
+4   left = 28   top = 30    width = 8
+5   left = 37   top = 30    width = 8
+6   left = 46   top = 30    width = 8
+7   left = 55   top = 30    width = 8
+8   left = 64   top = 30    width = 8
+9   left = 73   top = 30    width = 8
+0   left = 82   top = 30    width = 8

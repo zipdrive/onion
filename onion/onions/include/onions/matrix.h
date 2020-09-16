@@ -113,6 +113,34 @@ public:
 
 
 
+	/// <summary>Multiplies a scalar to this one and returns the result.</summary>
+	/// <param name="scalar">The scalar value.</param>
+	/// <returns>The multiplication of this matrix and the scalar.</returns>
+	matrix<T, _Rows, _Columns> operator*(int scalar) const
+	{
+		matrix<T, _Rows, _Columns> result;
+
+		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+			result.mat[k] = scalar * mat[k];
+
+		return result;
+	}
+
+	/// <summary>Multiplies a scalar to this one and returns the result.</summary>
+	/// <param name="scalar">The scalar value.</param>
+	/// <returns>The multiplication of this matrix and the scalar.</returns>
+	matrix<T, _Rows, _Columns> operator*(float scalar) const
+	{
+		matrix<T, _Rows, _Columns> result;
+
+		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+			result.mat[k] = scalar * mat[k];
+
+		return result;
+	}
+
+
+
 	/// <summary>Adds another matrix to this one in-place.</summary>
 	/// <param name="other">The other matrix.</param>
 	/// <returns>A reference to this matrix.</returns>
@@ -139,6 +167,32 @@ public:
 		return *this;
 	}
 
+	/// <summary>Multiplies a scalar value to this matrix in-place.</summary>
+	/// <param name="scalar">The scalar value.</param>
+	/// <returns>A reference to this matrix.</returns>
+	matrix<T, _Rows, _Columns>& operator*=(int scalar)
+	{
+		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+		{
+			mat[k] *= scalar;
+		}
+
+		return *this;
+	}
+	
+	/// <summary>Multiplies a scalar value to this matrix in-place.</summary>
+	/// <param name="scalar">The scalar value.</param>
+	/// <returns>A reference to this matrix.</returns>
+	matrix<T, _Rows, _Columns>& operator*=(float scalar)
+	{
+		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+		{
+			mat[k] *= scalar;
+		}
+
+		return *this;
+	}
+
 
 	/// <summary>Sets this matrix equal to another one.</summary>
 	/// <param name="other">The other matrix.</param>
@@ -151,6 +205,35 @@ public:
 		}
 
 		return *this;
+	}
+
+
+	/// <summary>Checks whether this matrix is equal to another one.</summary>
+	/// <param name="other">The other matrix.</param>
+	/// <returns>True if both matrices are equal, false otherwise.</returns>
+	bool operator==(const matrix<T, _Rows, _Columns>& other)
+	{
+		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+		{
+			if (mat[k] != other.get(k))
+				return false;
+		}
+
+		return true;
+	}
+
+	/// <summary>Checks whether this matrix is not equal to another one.</summary>
+	/// <param name="other">The other matrix.</param>
+	/// <returns>True if the matrices are not equal, false if they are.</returns>
+	bool operator!=(const matrix<T, _Rows, _Columns>& other)
+	{
+		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+		{
+			if (mat[k] != other.get(k))
+				return true;
+		}
+
+		return false;
 	}
 
 
@@ -169,6 +252,27 @@ public:
 		}
 	}
 };
+
+
+/// <summary>Multiplies a scalar to a matrix and returns the result.</summary>
+/// <param name="scalar">The scalar value.</param>
+/// <param name="matrix">The matrix.</param>
+/// <returns>The multiplication of this matrix and the scalar.</returns>
+template <typename T, int _Rows, int _Columns>
+matrix<T, _Rows, _Columns> operator*(int scalar, matrix<T, _Rows, _Columns> matrix)
+{
+	return matrix * scalar;
+}
+
+/// <summary>Multiplies a scalar to a matrix and returns the result.</summary>
+/// <param name="scalar">The scalar value.</param>
+/// <param name="matrix">The matrix.</param>
+/// <returns>The multiplication of this matrix and the scalar.</returns>
+template <typename T, int _Rows, int _Columns>
+matrix<T, _Rows, _Columns> operator*(float scalar, matrix<T, _Rows, _Columns> matrix)
+{
+	return matrix * scalar;
+}
 
 
 /// <summary>Multiplies two matrices.</summary>
@@ -208,6 +312,13 @@ public:
 	{
 		set(0, 0, a1);
 		set(1, 0, a2);
+	}
+
+	template <typename U, int _Rows>
+	vec2(const matrix<U, _Rows, 1>& m)
+	{
+		set(0, 0, m.get(0));
+		set(1, 0, m.get(1));
 	}
 
 	template <typename U>
@@ -251,6 +362,14 @@ public:
 		set(0, 0, a1);
 		set(1, 0, a2);
 		set(2, 0, a3);
+	}
+
+	template <typename U, int _Rows>
+	vec3(const matrix<U, _Rows, 1>& m)
+	{
+		set(0, 0, m.get(0));
+		set(1, 0, m.get(1));
+		set(2, 0, m.get(2));
 	}
 
 	template <typename U>
@@ -298,6 +417,15 @@ public:
 		set(1, 0, a2);
 		set(2, 0, a3);
 		set(3, 0, a4);
+	}
+
+	template <typename U, int _Rows>
+	vec4(const matrix<U, _Rows, 1>& m)
+	{
+		set(0, 0, m.get(0));
+		set(1, 0, m.get(1));
+		set(2, 0, m.get(2));
+		set(3, 0, m.get(3));
 	}
 
 	template <typename U>
@@ -467,11 +595,79 @@ public:
 };
 
 
+
+// A matrix with 3 rows and 2 columns.
+template <typename T>
+class mat3x2 : public matrix<T, 3, 2>
+{
+public:
+	mat3x2() {}
+
+	mat3x2(T a11, T a12,
+		T a21, T a22,
+		T a31, T a32)
+	{
+		set(0, 0, a11);
+		set(0, 1, a12);
+
+		set(1, 0, a21);
+		set(1, 1, a22);
+
+		set(2, 0, a31);
+		set(2, 1, a32);
+	}
+
+	mat3x2& operator=(const matrix<T, 3, 2>& other)
+	{
+		matrix<T, 3, 2>::operator=(other);
+		return *this;
+	}
+};
+
+// A matrix with 2 rows and 4 columns.
+template <typename T>
+class mat2x4 : public matrix<T, 2, 4>
+{
+public:
+	mat2x4(T a11, T a12, T a13, T a14,
+		T a21, T a22, T a23, T a24)
+	{
+		set(0, 0, a11);
+		set(0, 1, a12);
+		set(0, 2, a13);
+		set(0, 3, a14);
+
+		set(1, 0, a21);
+		set(1, 1, a22);
+		set(1, 2, a23);
+		set(1, 3, a24);
+	}
+
+	mat2x4& operator=(const matrix<T, 2, 4>& other)
+	{
+		matrix<T, 2, 4>::operator=(other);
+		return *this;
+	}
+};
+
+
 typedef mat2x2<int> mat2x2i;
+#define mat2i mat2x2i
+typedef mat3x3<int> mat3x3i;
+#define mat3i mat3x3i
+typedef mat4x4<int> mat4x4i;
+#define mat4i mat4x4i
 
 typedef mat2x2<float> mat2x2f;
+#define mat2f mat2x2f
 typedef mat3x3<float> mat3x3f;
+#define mat3f mat3x3f
 typedef mat4x4<float> mat4x4f;
+#define mat4f mat4x4f
+
+typedef mat3x2<int> mat3x2i;
+
+typedef mat2x4<float> mat2x4f;
 
 typedef vec2<int> vec2i;
 typedef vec3<int> vec3i;
@@ -482,61 +678,66 @@ typedef vec3<float> vec3f;
 typedef vec4<float> vec4f;
 
 
-/// <summary>Pushes a copy of the current matrix to the top of the stack.</summary>
-void mat_push();
+namespace onion
+{
 
-/// <summary>Pops the current matrix from the top of the stack.</summary>
-void mat_pop();
+	/// <summary>Pushes a copy of the current matrix to the top of the stack.</summary>
+	void mat_push();
 
-
-/// <summary>Gets the current matrix transform.</summary>
-mat4x4f& mat_get();
-
-/// <summary>Gets the value array of the current matrix transform.</summary>
-/// <returns>The value array of the current matrix transform.</returns>
-const float* mat_get_values();
+	/// <summary>Pops the current matrix from the top of the stack.</summary>
+	void mat_pop();
 
 
+	/// <summary>Gets the current matrix transform.</summary>
+	mat4x4f& mat_get();
 
-/// <summary>Sets the current matrix transform to the identity.</summary>
-void mat_identity();
-
-
-/// <summary>Clears the stack and sets the projection to orthogonal.</summary>
-/// <param name="left">The left side of the projection.</param>
-/// <param name="right">The right side of the projection.</param>
-/// <param name="bottom">The bottom side of the projection.<param>
-/// <param name="top">The top side of the projection.</param>
-void mat_ortho(float left, float right, float bottom, float top, float near, float far);
+	/// <summary>Gets the value array of the current matrix transform.</summary>
+	/// <returns>The value array of the current matrix transform.</returns>
+	const float* mat_get_values();
 
 
-/// <summary>Adds a translation to the current transformation.</summary>
-/// <param name="dx">The translation along the x-axis.</param>
-/// <param name="dy">The translation along the y-axis.</param>
-/// <param name="dz">The translation along the z-axis.</param>
-void mat_translate(float dx, float dy, float dz);
+
+	/// <summary>Sets the current matrix transform to the identity.</summary>
+	void mat_identity();
 
 
-/// <summary>Adds a scale transform to the current transformation.</summary>
-/// <param name="sx">The scaling factor for the x-axis.</param>
-/// <param name="sy">The scaling factor for the y-axis.</param>
-/// <param name="sz">The scaling factor for the z-axis.</param>
-void mat_scale(float sx, float sy, float sz);
+	/// <summary>Clears the stack and sets the projection to orthogonal.</summary>
+	/// <param name="left">The left side of the projection.</param>
+	/// <param name="right">The right side of the projection.</param>
+	/// <param name="bottom">The bottom side of the projection.<param>
+	/// <param name="top">The top side of the projection.</param>
+	void mat_ortho(float left, float right, float bottom, float top, float near, float far);
 
 
-/// <summary>Adds a rotation transform around the x-axis to the current transformation.</summary>
-/// <param name="angle">The angle of rotation.</param>
-void mat_rotatex(float angle);
-
-/// <summary>Adds a rotation transform around the y-axis to the current transformation.</summary>
-/// <param name="angle">The angle of rotation.</param>
-void mat_rotatey(float angle);
-
-/// <summary>Adds a rotation transform around the z-axis to the current transformation.</summary>
-/// <param name="angle">The angle of rotation.</param>
-void mat_rotatez(float angle);
+	/// <summary>Adds a translation to the current transformation.</summary>
+	/// <param name="dx">The translation along the x-axis.</param>
+	/// <param name="dy">The translation along the y-axis.</param>
+	/// <param name="dz">The translation along the z-axis.</param>
+	void mat_translate(float dx, float dy, float dz);
 
 
-/// <summary>Adds a custom transformation to the current transformation.</summary>
-/// <param name="transform">The matrix of the transformation.</summary>
-void mat_custom_transform(const mat4x4f& transform);
+	/// <summary>Adds a scale transform to the current transformation.</summary>
+	/// <param name="sx">The scaling factor for the x-axis.</param>
+	/// <param name="sy">The scaling factor for the y-axis.</param>
+	/// <param name="sz">The scaling factor for the z-axis.</param>
+	void mat_scale(float sx, float sy, float sz);
+
+
+	/// <summary>Adds a rotation transform around the x-axis to the current transformation.</summary>
+	/// <param name="angle">The angle of rotation.</param>
+	void mat_rotatex(float angle);
+
+	/// <summary>Adds a rotation transform around the y-axis to the current transformation.</summary>
+	/// <param name="angle">The angle of rotation.</param>
+	void mat_rotatey(float angle);
+
+	/// <summary>Adds a rotation transform around the z-axis to the current transformation.</summary>
+	/// <param name="angle">The angle of rotation.</param>
+	void mat_rotatez(float angle);
+
+
+	/// <summary>Adds a custom transformation to the current transformation.</summary>
+	/// <param name="transform">The matrix of the transformation.</summary>
+	void mat_custom_transform(const mat4x4f& transform);
+
+}

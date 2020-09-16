@@ -10,11 +10,11 @@
 
 SpriteSheet* get_gui_sprite_sheet();
 
-const mat4x4f& get_gui_palette();
+const Palette* get_gui_palette();
 
 Font* get_gui_font();
 
-const mat4x4f& get_gui_font_palette();
+const Palette* get_gui_font_palette();
 
 
 SlicedGraphic* get_gui_pane();

@@ -1,6 +1,8 @@
+#include <regex>
 #include "../include/onions/fileio.h"
 
 using namespace std;
+using namespace onion;
 
 SaveFile::SaveFile(string path) : m_File(path) {}
 
@@ -59,4 +61,40 @@ string LoadFile::load_string()
 	buffer[len] = '\0';
 
 	return string(buffer);
+}
+
+string LoadFile::load_data(_IntegerData& data)
+{
+	string line;
+	regex line_data("((.*\\S)\\s)?\\s*(\\S+)\\s*=\\s*(-?\\d+)");
+
+	if (getline(m_File, line))
+	{
+		smatch match;
+		while (regex_match(line, match, line_data))
+		{
+			data.set(match[3].str(), stoi(match[4].str()));
+			line = match[2].str();
+		}
+	}
+
+	return line;
+}
+
+string LoadFile::load_data(_StringData& data)
+{
+	string line;
+	regex line_data("((.*\\S)\\s)?\\s*(\\S+)\\s*=\\s*\"(.*)\"\\s*$");
+
+	if (getline(m_File, line))
+	{
+		smatch match;
+		while (regex_match(line, match, line_data))
+		{
+			data.set(match[3].str(), match[4].str());
+			line = match[2].str();
+		}
+	}
+
+	return line;
 }

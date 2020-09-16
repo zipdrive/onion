@@ -12,11 +12,12 @@ SpriteSheet* get_gui_sprite_sheet()
 	return gui;
 }
 
-const mat4x4f& get_gui_palette()
+const Palette* get_gui_palette()
 {
-	static mat4x4f palette = generate_palette_matrix(
-		230, 247, 251, 0,
-		38, 162, 221, 0
+	static Palette* palette = new SinglePalette(
+		vec4i(230, 247, 251, 255),
+		vec4i(38, 162, 221, 0),
+		vec4i()
 	);
 
 	return palette;
@@ -29,13 +30,12 @@ Font* get_gui_font()
 	return guiFont;
 }
 
-const mat4x4f& get_gui_font_palette()
+const Palette* get_gui_font_palette()
 {
-	static mat4x4f palette = generate_palette_matrix(
-		0, 0, 0, 255,
-		0, 0, 0, 32,
-		0, 0, 0, 0,
-		0, 0, 0, 0
+	static Palette* palette = new SinglePalette(
+		vec4i(0, 0, 0, 255),
+		vec4i(0, 0, 0, 32),
+		vec4i(0, 0, 0, 0)
 	);
 
 	return palette;
