@@ -34,19 +34,20 @@ void test_key_main()
 	register_keyboard_control(CONTROL_DEBUG);
 	assign_key(CONTROL_DEBUG);
 
-	g_KeyboardTester.unfreeze();
+	g_KeyboardTester.unfreeze(0);
 }
 
 
 class UpdateTester : public UpdateListener
 {
 protected:
-	void __update(int frames_passed) {}
+	void update(int frames_passed) {}
+
 } g_UpdateTester;
 
 void test_update_main()
 {
-	g_UpdateTester.unfreeze();
+	g_UpdateTester.unfreeze(0);
 }
 
 

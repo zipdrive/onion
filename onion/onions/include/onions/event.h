@@ -7,26 +7,31 @@
 #define EVENT_STOP 1
 
 
+#define EVENT_PRIORITY int
+
+
 namespace onion
 {
 
 
 	// An interface that responds to an event.
-	template <typename EventType>
+	template <typename... _EventType>
 	class EventListener
 	{
 	public:
+		/// <summary>Destroys the listener.</summary>
 		virtual ~EventListener() {}
 
 		/// <summary>Freezes the listener.</summary>
 		virtual void freeze() = 0;
 
 		/// <summary>Unfreezes the listener.</summary>
-		virtual void unfreeze() = 0;
+		/// <param name="priority">The priority for the listener. High numbers trigger in response to events before low numbers.</param>
+		virtual void unfreeze(EVENT_PRIORITY priority) = 0;
 
 		/// <summary>Responds to an event.</summary>
 		/// <param name="event_data">The data for the event.</param>
-		virtual int trigger(const EventType& event_data) = 0;
+		virtual int trigger(_EventType... event_data) = 0;
 	};
 
 
@@ -40,7 +45,7 @@ namespace onion
 		static int frames_per_second;
 	};
 
-	class UpdateListener
+	class UpdateListener : public EventListener<>
 	{
 	private:
 		// The last frame that the listener updated.
@@ -49,7 +54,7 @@ namespace onion
 	protected:
 		/// <summary>Updates the listener. This is the function that should be overridden by subclasses.</summary>
 		/// <param name="frames_passed">The number of frames that have passed since the last update.</param>
-		virtual void __update(int frames_passed) = 0;
+		virtual void update(int frames_passed) = 0;
 
 	public:
 		/// <summary>Destroys the listener.</summary>
@@ -62,10 +67,11 @@ namespace onion
 		virtual void freeze();
 
 		/// <summary>Causes the listener to update.</summary>
-		virtual void unfreeze();
+		/// <param name="priority">The priority for the listener. High numbers trigger in response to events before low numbers.</param>
+		virtual void unfreeze(EVENT_PRIORITY priority);
 
 		/// <summary>Updates the listener, including frame data.</summary>
-		void update();
+		int trigger();
 	};
 
 
@@ -86,7 +92,7 @@ namespace onion
 	};
 
 	// A listener that responds to key presses and text input.
-	class KeyboardListener : public EventListener<KeyEvent>, public EventListener<UnicodeEvent>
+	class KeyboardListener : public EventListener<const KeyEvent&>, public EventListener<const UnicodeEvent&>
 	{
 	public:
 		/// <summary>Destroys the listener.</summary>
@@ -96,7 +102,8 @@ namespace onion
 		virtual void freeze();
 
 		/// <summary>Unfreezes the listener.</summary>
-		virtual void unfreeze();
+		/// <param name="priority">The priority for the listener. High numbers trigger in response to events before low numbers.</param>
+		virtual void unfreeze(EVENT_PRIORITY priority);
 
 		/// <summary>Responds to a keyboard control being pressed.</summary>
 		/// <param name="event_data">The data for the event.</param>
@@ -136,7 +143,7 @@ namespace onion
 	};
 
 	// A listener that responds to mouse movements.
-	class MouseMoveListener : public EventListener<MouseMoveEvent>
+	class MouseMoveListener : public EventListener<const MouseMoveEvent&>
 	{
 	public:
 		/// <summary>Destroys the listener.</summary>
@@ -146,7 +153,8 @@ namespace onion
 		virtual void freeze();
 
 		/// <summary>Unfreezes the listener.</summary>
-		virtual void unfreeze();
+		/// <param name="priority">The priority for the listener. High numbers trigger in response to events before low numbers.</param>
+		virtual void unfreeze(EVENT_PRIORITY priority);
 	};
 
 
@@ -166,7 +174,7 @@ namespace onion
 	};
 
 	// A listener that responds to mouse button pressing.
-	class MousePressListener : public EventListener<MousePressEvent>
+	class MousePressListener : public EventListener<const MousePressEvent&>
 	{
 	public:
 		/// <summary>Destroys the listener.</summary>
@@ -176,7 +184,8 @@ namespace onion
 		virtual void freeze();
 
 		/// <summary>Unfreezes the listener.</summary>
-		virtual void unfreeze();
+		/// <param name="priority">The priority for the listener. High numbers trigger in response to events before low numbers.</param>
+		virtual void unfreeze(EVENT_PRIORITY priority);
 	};
 
 
@@ -193,7 +202,7 @@ namespace onion
 	};
 
 	// A listener that responds to mouse movements.
-	class MouseReleaseListener : public EventListener<MouseReleaseEvent>
+	class MouseReleaseListener : public EventListener<const MouseReleaseEvent&>
 	{
 	public:
 		/// <summary>Destroys the listener.</summary>
@@ -203,7 +212,8 @@ namespace onion
 		virtual void freeze();
 
 		/// <summary>Unfreezes the listener.</summary>
-		virtual void unfreeze();
+		/// <param name="priority">The priority for the listener. High numbers trigger in response to events before low numbers.</param>
+		virtual void unfreeze(EVENT_PRIORITY priority);
 	};
 
 
@@ -222,7 +232,8 @@ namespace onion
 		virtual void freeze();
 
 		/// <summary>Unfreezes the listener.</summary>
-		virtual void unfreeze();
+		/// <param name="priority">The priority for the listener. High numbers trigger in response to events before low numbers.</param>
+		virtual void unfreeze(EVENT_PRIORITY priority);
 	};
 
 

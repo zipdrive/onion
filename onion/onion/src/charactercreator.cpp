@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <onion.h>
 #include "../include/charactercreator.h"
 
@@ -14,7 +15,7 @@ Font* get_label_font()
 
 Palette* get_label_font_palette()
 {
-	static Palette* palette = new SinglePalette(vec4i(255, 255, 255, 255), vec4i(0, 0, 0, 255), vec4i(0, 0, 0, 255));
+	static Palette* palette = new SinglePalette(vec4i(255, 255, 255, 0), vec4i(0, 0, 0, 0), vec4i(0, 0, 0, 0));
 	return palette;
 }
 
@@ -160,7 +161,7 @@ protected:
 	{
 		int width = get_width();
 
-		m_RightButton.set_bounds(width - m_RightButton.get_width(), 0, m_RightButton.get_width(), m_RightButton.get_height());
+		m_RightButton.set_bounds(width - m_RightButton.get_width(), 0, 0, m_RightButton.get_width(), m_RightButton.get_height(), 0);
 		m_Label->set_width(width - m_LeftButton.get_width() - m_RightButton.get_width());
 	}
 
@@ -180,14 +181,14 @@ public:
 		m_LeftButton(left_arrow, index, &HuneCreator::Index::decrement),
 		m_RightButton(right_arrow, index, &HuneCreator::Index::increment)
 	{
-		m_LeftButton.set_bounds(0, 0, left_arrow->get_width(), left_arrow->get_height());
+		m_LeftButton.set_bounds(0, 0, 0, left_arrow->get_width(), left_arrow->get_height(), 0);
 		m_LeftButton.set_parent(this);
 
-		m_RightButton.set_bounds(0, 0, right_arrow->get_width(), right_arrow->get_height());
+		m_RightButton.set_bounds(0, 0, 0, right_arrow->get_width(), right_arrow->get_height(), 0);
 		m_RightButton.set_parent(this);
 
 		Font* font = get_label_font();
-		m_Label = new TextGraphic(font, get_label_font_palette(), TEXT_HORIZONTAL_CENTER, TEXT_VERTICAL_TOP, INT_MAX, 0);
+		m_Label = new TextGraphic(font, get_label_font_palette(), TEXT_HORIZONTAL_CENTER, TEXT_VERTICAL_TOP, 0, 0);
 		m_Label->set_text(label);
 	}
 
@@ -229,7 +230,7 @@ protected:
 
 			for (auto iter = m_Features.rbegin(); iter != m_Features.rend(); ++iter)
 			{
-				(*iter)->set_bounds(0, y, width, height);
+				(*iter)->set_bounds(0, y, 0, width, height, 0);
 				y += dy;
 			}
 		}
@@ -287,7 +288,7 @@ protected:
 
 		for (auto iter = m_Columns.begin(); iter != m_Columns.end(); ++iter)
 		{
-			(*iter)->set_bounds(x, 0, column_width, get_height());
+			(*iter)->set_bounds(x, 0, 0, column_width, get_height(), 0);
 			x += column_width + padding;
 		}
 	}
@@ -384,12 +385,12 @@ protected:
 		{
 			int width = get_width();
 
-			m_RightButton.set_bounds(width - m_RightButton.get_width(), 0, m_RightButton.get_width(), m_RightButton.get_height());
+			m_RightButton.set_bounds(width - m_RightButton.get_width(), 0, 0, m_RightButton.get_width(), m_RightButton.get_height(), 0);
 			m_Label->set_width(width - m_LeftButton.get_width() - m_RightButton.get_width());
 
 			if (get_height() != m_Label->get_height())
 			{
-				set_bounds(m_Bounds.get(0, 0), m_Bounds.get(1, 0), width, m_Label->get_height());
+				set_bounds(m_Bounds.get(0, 0), m_Bounds.get(1, 0), m_Bounds.get(2, 0), width, m_Label->get_height(), get_depth());
 			}
 		}
 
@@ -411,16 +412,16 @@ protected:
 		{
 			set_parent(pages);
 
-			m_LeftButton.set_bounds(0, 0, left_arrow->get_width(), left_arrow->get_height());
+			m_LeftButton.set_bounds(0, 0, 0, left_arrow->get_width(), left_arrow->get_height(), 0);
 			m_LeftButton.set_parent(this);
 			m_LeftButton.unfreeze();
 
-			m_RightButton.set_bounds(0, 0, right_arrow->get_width(), right_arrow->get_height());
+			m_RightButton.set_bounds(0, 0, 0, right_arrow->get_width(), right_arrow->get_height(), 0);
 			m_RightButton.set_parent(this);
 			m_RightButton.unfreeze();
 
 			Font* font = get_label_font();
-			m_Label = new TextGraphic(font, get_label_font_palette(), TEXT_HORIZONTAL_CENTER, TEXT_VERTICAL_TOP, INT_MAX, 0);
+			m_Label = new TextGraphic(font, get_label_font_palette(), TEXT_HORIZONTAL_CENTER, TEXT_VERTICAL_TOP, 0, 0);
 		}
 
 		void set_label(string label)
@@ -442,13 +443,13 @@ protected:
 	void __set_bounds()
 	{
 		int w = get_width();
-		m_PageSwapper.set_bounds(0, 0, w, 0);
+		m_PageSwapper.set_bounds(0, 0, 0, w, 0, 0);
 
 		int h = get_height() - m_PageSwapper.get_height();
-		m_PageSwapper.set_bounds(0, h, w, m_PageSwapper.get_height());
+		m_PageSwapper.set_bounds(0, h, 0, w, m_PageSwapper.get_height(), 0);
 
 		for (auto iter = m_Pages.begin(); iter != m_Pages.end(); ++iter)
-			(*iter)->set_bounds(0, 0, w, h);
+			(*iter)->set_bounds(0, 0, 0, w, h, 0);
 	}
 
 	void __display() const
@@ -539,18 +540,18 @@ void character_creator_setup()
 		new SimpleStaticSpriteGraphic(ui, "rotate left", &ui_palette->get_red_palette_matrix()), 
 		&HuneCreator::rotate_left
 	);
-	g_RotateLeftButton->set_bounds(71, 149, 18, 15);
+	g_RotateLeftButton->set_bounds(71, 149, -1, 18, 15, 0);
 	g_RotateLeftButton->unfreeze();
 
 	g_RotateRightButton = new HuneCreatorButton(
 		new SimpleStaticSpriteGraphic(ui, "rotate right", &ui_palette->get_red_palette_matrix()), 
 		&HuneCreator::rotate_right
 	);
-	g_RotateRightButton->set_bounds(111, 149, 18, 15);
+	g_RotateRightButton->set_bounds(111, 149, -1, 18, 15, 0);
 	g_RotateRightButton->unfreeze();
 
 	g_PlayStopButton = new HunePlayStopButton(ui->get_sprite("play"), ui->get_sprite("pause"));
-	g_PlayStopButton->set_bounds(95, 150, 11, 12);
+	g_PlayStopButton->set_bounds(95, 150, -1, 11, 12, 0);
 	g_PlayStopButton->unfreeze();
 
 
@@ -593,7 +594,7 @@ void character_creator_setup()
 	g_Pages->add("Shoes", 0, "Primary Color", "shoes primary_color");
 	g_Pages->add("Shoes", 0, "Secondary Color", "shoes secondary_color");
 
-	g_Pages->set_bounds(200, 40, app->width - 240, app->height - 80);
+	g_Pages->set_bounds(200, 40, -1, app->width - 240, app->height - 80, 0);
 
 	// Run the main function
 	main(character_creator_display_func);
@@ -615,7 +616,7 @@ void character_creator_display_func()
 	Application* app = get_application_settings();
 	mat_push();
 	mat_translate(-1.f, -1.f, 0.f);
-	mat_scale(2.f / app->width, 2.f / app->height, 1.f);
+	mat_scale(2.f / app->width, 2.f / app->height, 2.f / max(app->width, app->height));
 
 	int frame_diff = UpdateEvent::frame - last_frame;
 
@@ -629,7 +630,7 @@ void character_creator_display_func()
 
 	mat_push();
 	mat_scale(-1.f, 1.f, 1.f);
-	mat_translate(-(app->width + dx), -dy, 0.999f);
+	mat_translate(-(app->width + dx), -dy, 1.f);
 	for (int x = -dx; x < app->width; x += bg->width)
 	{
 		mat_push();

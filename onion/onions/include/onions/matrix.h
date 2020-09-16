@@ -596,6 +596,34 @@ public:
 
 
 
+// A matrix with 3 rows and 2 columns.
+template <typename T>
+class mat3x2 : public matrix<T, 3, 2>
+{
+public:
+	mat3x2() {}
+
+	mat3x2(T a11, T a12,
+		T a21, T a22,
+		T a31, T a32)
+	{
+		set(0, 0, a11);
+		set(0, 1, a12);
+
+		set(1, 0, a21);
+		set(1, 1, a22);
+
+		set(2, 0, a31);
+		set(2, 1, a32);
+	}
+
+	mat3x2& operator=(const matrix<T, 3, 2>& other)
+	{
+		matrix<T, 3, 2>::operator=(other);
+		return *this;
+	}
+};
+
 // A matrix with 2 rows and 4 columns.
 template <typename T>
 class mat2x4 : public matrix<T, 2, 4>
@@ -636,6 +664,8 @@ typedef mat3x3<float> mat3x3f;
 #define mat3f mat3x3f
 typedef mat4x4<float> mat4x4f;
 #define mat4f mat4x4f
+
+typedef mat3x2<int> mat3x2i;
 
 typedef mat2x4<float> mat2x4f;
 

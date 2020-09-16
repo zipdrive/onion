@@ -15,7 +15,7 @@ namespace onion
 		Frame* m_Parent;
 
 		// The frame boundaries on the screen
-		mat2x2i m_Bounds;
+		mat3x2i m_Bounds;
 
 		/// <summary>Adjusts the position and dimensions of the frame.</summary>
 		virtual void __set_bounds();
@@ -28,34 +28,42 @@ namespace onion
 		Frame();
 
 		/// <summary>Creates an empty frame with the given boundaries.</summary>
-		/// <param name="x">The x-coordinate of the frame.</param>
-		/// <param name="y">The y-coordinate of the frame.</param>
-		/// <param name="width">The width of the frame.</param>
-		/// <param name="height">The height of the frame.</param>
-		Frame(int x, int y, int width, int height);
+		/// <param name="x">The leftmost x-coordinate of the frame.</param>
+		/// <param name="y">The bottommost y-coordinate of the frame.</param>
+		/// <param name="z">The deepest z-coordinate of the frame.</param>
+		/// <param name="width">The x-axis width of the frame.</param>
+		/// <param name="height">The y-axis height of the frame.</param>
+		/// <param name="depth">The z-axis depth of the frame.</param>
+		Frame(int x, int y, int z, int width, int height, int depth);
 
 		/// <summary>Retrieves the boundaries of the frame on the screen.</summary>
 		/// <returns>A const reference to the boundaries. The first column represents minimum values, and the second column represents maximum values.</returns>
-		const mat2x2i& get_bounds() const;
+		const mat3x2i& get_bounds() const;
 
 		/// <summary>Retrieves the absolute boundaries of the frame.</summary>
 		/// <returns>The absolute boundaries of the frame.</returns>
-		mat2x2i get_absolute_bounds() const;
+		mat3x2i get_absolute_bounds() const;
 
 		/// <summary>Sets the boundaries of the frame on the screen.</summary>
-		/// <param name="x">The x-coordinate of the frame.</param>
-		/// <param name="y">The y-coordinate of the frame.</param>
-		/// <param name="width">The width of the frame.</param>
-		/// <param name="height">The height of the frame.</param>
-		virtual void set_bounds(int x, int y, int width, int height);
+		/// <param name="x">The leftmost x-coordinate of the frame.</param>
+		/// <param name="y">The bottommost y-coordinate of the frame.</param>
+		/// <param name="z">The deepest z-coordinate of the frame.</param>
+		/// <param name="width">The x-axis width of the frame.</param>
+		/// <param name="height">The y-axis height of the frame.</param>
+		/// <param name="depth">The z-axis depth of the frame.</param>
+		virtual void set_bounds(int x, int y, int z, int width, int height, int depth);
 
-		/// <summary>Retrieves the width of the frame.</summary>
+		/// <summary>Retrieves the x-axis width of the frame.</summary>
 		/// <returns>The width of the frame.</returns>
 		int get_width() const;
 
-		/// <summary>Retrieves the height of the frame.</summary>
+		/// <summary>Retrieves the y-axis height of the frame.</summary>
 		/// <returns>The height of the frame.</returns>
 		int get_height() const;
+
+		/// <summary>Retrieves the z-axis depth of the frame.</summary>
+		/// <returns>The depth of the frame.</returns>
+		int get_depth() const;
 
 		/// <summary>Sets the parent of the frame.</summary>
 		/// <param name="parent">The parent of the frame.</param>
@@ -116,6 +124,9 @@ namespace onion
 		// The graphic that displays where the cursor is
 		SolidColorGraphic* m_CursorGraphic;
 
+		/// <summary>Displays the contents of the frame.</summary>
+		virtual void __display() const;
+
 	public:
 		/// <summary>Constructs the TextInput object.</summary>
 		TextInput();
@@ -146,9 +157,6 @@ namespace onion
 
 		/// <summary>Unfreezes reaction to inputs.</summary>
 		virtual void unfreeze();
-
-		/// <summary>Displays the text input.</summary>
-		virtual void display() const;
 	};
 
 
@@ -177,6 +185,9 @@ namespace onion
 		/// <param name="dy">The distance from the bottom side to the y-coordinate.</param>
 		void set_center_of_scroller(int dx, int dy);
 
+		/// <summary>Displays the contents of the frame.</summary>
+		virtual void __display() const;
+
 	public:
 		/// <summary>Constructs a scroll bar.</summary>
 		/// <param name="background_graphic">A graphic to display as the background for the scrolling area.</param>
@@ -184,8 +195,9 @@ namespace onion
 		/// <param name="scroll_graphic">A graphic to display to show the current value of the scroll bar.</param>
 		/// <param name="x">The x-coordinate of the left side.</param>
 		/// <param name="y">The y-coordinate of the bottom side.</param>
+		/// <param name="z">The z-coordinate of the deepest side.</param>
 		/// <param name="horizontal">True if the scroll bar is horizontal, false if vertical.</param>
-		ScrollBar(Graphic* background_graphic, Graphic* arrow_graphic, Graphic* scroll_graphic, int x, int y, bool horizontal);
+		ScrollBar(Graphic* background_graphic, Graphic* arrow_graphic, Graphic* scroll_graphic, int x, int y, int z, bool horizontal);
 
 		/// <summary>Retrieves the current value of the scroll bar.</summary>
 		/// <returns>The current value of the scroll bar.</returns>
@@ -202,9 +214,6 @@ namespace onion
 		/// <summary>Triggers in response to the mouse being moved.</summary>
 		/// <param name="event_data">The data for the event.</param>
 		int trigger(const MouseMoveEvent& event_data);
-
-		/// <summary>Displays the contents of the frame.</summary>
-		void display() const;
 	};
 
 
@@ -227,19 +236,21 @@ namespace onion
 		/// <param name="frames_passed">The number of frames that have passed since the last update.</param>
 		void __update(int frames_passed);
 
+		/// <summary>Displays the frame.</summary>
+		void __display() const;
+
 	public:
 		/// <summary></summary>
 		/// <param name="frame">The frame to be scrolled.</param>
 		/// <param name="horizontal">The horizontal scroll bar. NULL if it is not horizontally scrolled.</param>
 		/// <param name="vertical">The vertical scroll bar. NULL if it is not vertically scrolled.</param>
-		/// <param name="x">The x-coordinate of the frame.</param>
-		/// <param name="y">The y-coordinate of the frame.</param>
-		/// <param name="width">The width of the frame.</param>
-		/// <param name="height">The height of the frame.</param>
-		ScrollableFrame(Frame* frame, ScrollBar* horizontal, ScrollBar* vertical, int x, int y, int width, int height);
-
-		/// <summary>Displays the frame.</summary>
-		void display() const;
+		/// <param name="x">The leftmost x-coordinate of the frame.</param>
+		/// <param name="y">The bottommost y-coordinate of the frame.</param>
+		/// <param name="z">The deepest z-coordinate of the frame.</param>
+		/// <param name="width">The x-axis width of the frame.</param>
+		/// <param name="height">The y-axis height of the frame.</param>
+		/// <param name="depth">The z-axis depth of the frame.</param>
+		ScrollableFrame(Frame* frame, ScrollBar* horizontal, ScrollBar* vertical, int x, int y, int z, int width, int height, int depth);
 	};
 
 

@@ -320,11 +320,13 @@ namespace onion
 	void TextGraphic::set_width(int width)
 	{
 		m_Width = width;
+		set_text(m_Text);
 	}
 
 	int TextGraphic::get_height() const
 	{
-		return (m_Lines.size() * (m_Font->get_line_height() + m_LineSpacing)) - m_LineSpacing;
+		int h = (m_Lines.size() * (m_Font->get_line_height() + m_LineSpacing)) - m_LineSpacing;
+		return h;
 	}
 
 	void TextGraphic::display() const

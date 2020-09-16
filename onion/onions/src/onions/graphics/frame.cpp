@@ -12,27 +12,29 @@ namespace onion
 		m_Parent = nullptr;
 	}
 
-	Frame::Frame(int x, int y, int width, int height)
+	Frame::Frame(int x, int y, int z, int width, int height, int depth)
 	{
 		m_Parent = nullptr;
-		set_bounds(x, y, width, height);
+		set_bounds(x, y, z, width, height, depth);
 	}
 
-	const mat2x2i& Frame::get_bounds() const
+	const mat3x2i& Frame::get_bounds() const
 	{
 		return m_Bounds;
 	}
 
-	mat2x2i Frame::get_absolute_bounds() const
+	mat3x2i Frame::get_absolute_bounds() const
 	{
 		if (m_Parent)
 		{
-			mat2x2i pbounds = m_Parent->get_absolute_bounds();
+			mat3x2i pbounds = m_Parent->get_absolute_bounds();
 			int px = pbounds.get(0, 0);
 			int py = pbounds.get(1, 0);
+			int pz = pbounds.get(2, 0);
 
-			return mat2x2i(m_Bounds.get(0, 0) + px, m_Bounds.get(0, 1) + px,
-				m_Bounds.get(1, 0) + py, m_Bounds.get(1, 1) + py);
+			return mat3x2i(m_Bounds.get(0, 0) + px, m_Bounds.get(0, 1) + px,
+				m_Bounds.get(1, 0) + py, m_Bounds.get(1, 1) + py,
+				m_Bounds.get(2, 0) + pz, m_Bounds.get(2, 1) + pz);
 		}
 		else
 		{
@@ -42,13 +44,15 @@ namespace onion
 
 	void Frame::__set_bounds() {}
 
-	void Frame::set_bounds(int x, int y, int width, int height)
+	void Frame::set_bounds(int x, int y, int z, int width, int height, int depth)
 	{
 		m_Bounds.set(0, 0, x);
 		m_Bounds.set(1, 0, y);
+		m_Bounds.set(2, 0, z);
 
 		m_Bounds.set(0, 1, x + width);
 		m_Bounds.set(1, 1, y + height);
+		m_Bounds.set(2, 1, z + depth);
 
 		__set_bounds();
 	}
@@ -61,6 +65,11 @@ namespace onion
 	int Frame::get_height() const
 	{
 		return m_Bounds.get(1, 1) - m_Bounds.get(1, 0);
+	}
+
+	int Frame::get_depth() const
+	{
+		return m_Bounds.get(2, 1) - m_Bounds.get(2, 0);
 	}
 
 	void Frame::set_parent(Frame* parent)
@@ -78,7 +87,7 @@ namespace onion
 
 		// Set up the transformation
 		mat_push();
-		mat_translate(m_Bounds.get(0, 0), m_Bounds.get(1, 0), 0.f);
+		mat_translate(m_Bounds.get(0, 0), m_Bounds.get(1, 0), m_Bounds.get(2, 0));
 
 		// Display the contents of the frame
 		__display();
@@ -107,7 +116,7 @@ namespace onion
 
 	int Button::trigger(const MouseMoveEvent& event_data)
 	{
-		mat2x2i absbounds = get_absolute_bounds();
+		mat3x2i absbounds = get_absolute_bounds();
 
 		if (event_data.x >= absbounds.get(0, 0) && event_data.x < absbounds.get(0, 1)
 			&& event_data.y >= absbounds.get(1, 0) && event_data.y < absbounds.get(1, 1))
@@ -148,8 +157,8 @@ namespace onion
 
 	void Button::unfreeze()
 	{
-		MouseMoveListener::unfreeze();
-		MousePressListener::unfreeze();
+		MouseMoveListener::unfreeze(m_Bounds.get(2, 0));
+		MousePressListener::unfreeze(m_Bounds.get(2, 0));
 	}
 
 
@@ -174,7 +183,7 @@ namespace onion
 
 	int TextInput::trigger(const MousePressEvent& event_data)
 	{
-		mat2x2i absbounds = get_absolute_bounds();
+		mat3x2i absbounds = get_absolute_bounds();
 
 		if (event_data.x >= absbounds.get(0, 0) && event_data.x < absbounds.get(0, 1)
 			&& event_data.y >= absbounds.get(1, 0) && event_data.y < absbounds.get(1, 1))
@@ -183,7 +192,7 @@ namespace onion
 			if (m_TextFrozen)
 			{
 				m_TextFrozen = false;
-				KeyboardListener::unfreeze();
+				KeyboardListener::unfreeze(absbounds.get(2, 0));
 			}
 
 			// Construct cursor object
@@ -233,10 +242,10 @@ namespace onion
 
 	void TextInput::unfreeze()
 	{
-		MousePressListener::unfreeze();
+		MousePressListener::unfreeze(m_Bounds.get(2, 0));
 	}
 
-	void TextInput::display() const
+	void TextInput::__display() const
 	{
 		// Set up the transform
 		mat_push();
@@ -258,7 +267,7 @@ namespace onion
 
 
 
-	ScrollBar::ScrollBar(Graphic* backgroundGraphic, Graphic* arrowGraphic, Graphic* scrollGraphic, int x, int y, bool horizontal)
+	ScrollBar::ScrollBar(Graphic* backgroundGraphic, Graphic* arrowGraphic, Graphic* scrollGraphic, int x, int y, int z, bool horizontal)
 	{
 		m_Background = backgroundGraphic;
 		m_Arrow = arrowGraphic;
@@ -267,12 +276,12 @@ namespace onion
 		if (horizontal)
 		{
 			m_Horizontal = true;
-			set_bounds(x, y, m_Background->get_width() + (m_Arrow->get_width() * 2), max(m_Background->get_height(), m_Arrow->get_height()));
+			set_bounds(x, y, z, m_Background->get_width() + (m_Arrow->get_width() * 2), max(m_Background->get_height(), m_Arrow->get_height()), 0);
 		}
 		else
 		{
 			m_Horizontal = false;
-			set_bounds(x, y, max(m_Background->get_width(), m_Arrow->get_width()), m_Background->get_height() + (m_Arrow->get_height() * 2));
+			set_bounds(x, y, z, max(m_Background->get_width(), m_Arrow->get_width()), m_Background->get_height() + (m_Arrow->get_height() * 2), 0);
 		}
 
 		m_Value = 0.f;
@@ -314,7 +323,7 @@ namespace onion
 
 	int ScrollBar::trigger(const MousePressEvent& event_data)
 	{
-		mat2x2i absbounds = get_absolute_bounds();
+		mat3x2i absbounds = get_absolute_bounds();
 		int dx = event_data.x - absbounds.get(0, 0);
 		int dy = event_data.y - absbounds.get(1, 0);
 
@@ -369,7 +378,7 @@ namespace onion
 	{
 		if (dragged == this)
 		{
-			mat2x2i absbounds = get_absolute_bounds();
+			mat3x2i absbounds = get_absolute_bounds();
 			int dx = event_data.x - absbounds.get(0, 0) - m_Arrow->get_width();
 			int dy = event_data.y - absbounds.get(1, 0) - m_Arrow->get_height();
 
@@ -379,12 +388,8 @@ namespace onion
 		return EVENT_CONTINUE;
 	}
 
-	void ScrollBar::display() const
+	void ScrollBar::__display() const
 	{
-		// Set up transformation
-		mat_push();
-		mat_translate(m_Bounds.get(0), m_Bounds.get(1), 0.f);
-
 		if (m_Horizontal)
 		{
 			// Draw the left arrow
@@ -430,13 +435,11 @@ namespace onion
 			mat_translate(0.f, m_Background->get_height(), 0.f);
 			m_Arrow->display();
 		}
-
-		mat_pop();
 	}
 
 
 
-	ScrollableFrame::ScrollableFrame(Frame* frame, ScrollBar* horizontal, ScrollBar* vertical, int x, int y, int width, int height)
+	ScrollableFrame::ScrollableFrame(Frame* frame, ScrollBar* horizontal, ScrollBar* vertical, int x, int y, int z, int width, int height, int depth)
 	{
 		m_Frame = frame;
 		m_HorizontalScrollBar = horizontal;
@@ -446,7 +449,7 @@ namespace onion
 		if (m_HorizontalScrollBar) m_HorizontalScrollBar->set_parent(this);
 		if (m_VerticalScrollBar) m_VerticalScrollBar->set_parent(this);
 
-		set_bounds(x, y, width, height);
+		set_bounds(x, y, z, width, height, depth);
 	}
 
 	void ScrollableFrame::__update(int frames_passed)
@@ -457,12 +460,8 @@ namespace onion
 		m_ScrollDistance = vec2i(min(w, 0), h);
 	}
 
-	void ScrollableFrame::display() const
+	void ScrollableFrame::__display() const
 	{
-		// Set up the translation
-		mat_push();
-		mat_translate(m_Bounds.get(0, 0), m_Bounds.get(1, 0), 0.f);
-
 		// Draw the frame itself
 		mat_push();
 		int dx = m_HorizontalScrollBar ? m_HorizontalScrollBar->get_value() * m_ScrollDistance.get(0) : 0;
@@ -476,9 +475,6 @@ namespace onion
 		// Draw the scroll bars
 		if (m_HorizontalScrollBar) m_HorizontalScrollBar->display();
 		if (m_VerticalScrollBar) m_VerticalScrollBar->display();
-
-		// Clean up the translation
-		mat_pop();
 	}
 
 }
