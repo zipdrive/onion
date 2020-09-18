@@ -1,33 +1,50 @@
+#include <algorithm>
 #include "../../include/onion.h"
 
-using namespace onion;
-
-State::~State() {}
-
-
-State* g_State = nullptr;
-
-
-State* onion::get_state()
+namespace onion
 {
-	return g_State;
-}
 
-void onion::set_state(State* state)
-{
-	if (g_State)
-		delete g_State;
-	g_State = state;
-}
+	State::~State() {}
+
+	void State::display() const
+	{
+		static Application*& app = get_application_settings();
+
+		int depth = std::max(app->width, app->height);
+
+		MatrixStack& c = camera();
+		c.reset();
+		c.ortho(0, app->width, 0, app->height, -depth, depth);
+
+		__display();
+	}
 
 
-void onion_state_display_func()
-{
-	if (g_State)
-		g_State->display();
-}
+	State* g_State = nullptr;
 
-void onion::state_main()
-{
-	main(onion_state_display_func);
+
+	State* get_state()
+	{
+		return g_State;
+	}
+
+	void set_state(State* state)
+	{
+		if (g_State)
+			delete g_State;
+		g_State = state;
+	}
+
+
+	void state_display_func()
+	{
+		if (g_State)
+			g_State->display();
+	}
+
+	void state_main()
+	{
+		main(state_display_func);
+	}
+
 }

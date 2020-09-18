@@ -200,7 +200,8 @@ namespace onion
 			return;
 
 		// Display the characters of the string
-		mat_push();
+		MatrixStack& m = model();
+		m.push();
 		char prev = line.at(0);
 
 		for (int k = 1; k <= line.size(); ++k)
@@ -208,7 +209,7 @@ namespace onion
 			if (const SpriteFont::Character* c = m_CharacterManager.get(prev))
 			{
 				// Activate the shader
-				SimplePixelSpriteSheet::get_shader()->activate(&mat_get(), &palette->get_red_palette_matrix());
+				SimplePixelSpriteSheet::get_shader()->activate(camera(), m, &palette->get_red_palette_matrix());
 
 				// Display the buffer
 				m_Displayer->display(c->key);
@@ -217,10 +218,10 @@ namespace onion
 			char current = (k == line.size() ? '\0' : line.at(k));
 			int dx = get_character_dx(prev, current);
 			prev = current;
-			mat_translate(dx, 0.f, 0.f);
+			m.translate(dx);
 		}
 
-		mat_pop();
+		m.pop();
 	}
 
 
@@ -333,19 +334,20 @@ namespace onion
 	{
 		if (!m_Lines.empty())
 		{
-			mat_push();
+			MatrixStack& m = model();
+			m.push();
 			if (m_VerticalAlignment == TEXT_VERTICAL_TOP)
-				mat_translate(0.f, -get_height(), 0.f);
+				m.translate(0.f, -get_height());
 			else if (m_VerticalAlignment == TEXT_VERTICAL_CENTER)
-				mat_translate(0.f, -(get_height() / 2), 0.f);
+				m.translate(0.f, -(get_height() / 2));
 
 			auto iter = m_Lines.rbegin();
 			while (true)
 			{
-				mat_push();
-				mat_translate(iter->xpos, 0.f, 0.f);
+				m.push();
+				m.translate(iter->xpos);
 				m_Font->display_line(iter->text, m_Palette);
-				mat_pop();
+				m.pop();
 
 				if (++iter == m_Lines.rend())
 				{
@@ -353,11 +355,11 @@ namespace onion
 				}
 				else
 				{
-					mat_translate(0.f, m_Font->get_line_height() + m_LineSpacing, 0.f);
+					m.translate(0.f, m_Font->get_line_height() + m_LineSpacing);
 				}
 			}
 
-			mat_pop();
+			m.pop();
 		}
 	}
 }

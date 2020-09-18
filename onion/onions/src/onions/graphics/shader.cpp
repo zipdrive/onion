@@ -126,45 +126,51 @@ namespace onion
 		}
 
 		template <>
-		void _Shader::set_uniform(_Location* loc, const vec2f* value)
+		void _Shader::set_uniform(_Location* loc, const vec2f& value)
 		{
-			glUniform2fv(loc->loc, 1, value->matrix_values());
+			glUniform2fv(loc->loc, 1, value.matrix_values());
 		}
 
 		template <>
-		void _Shader::set_uniform(_Location* loc, const vec3f* value)
+		void _Shader::set_uniform(_Location* loc, const vec3f& value)
 		{
-			glUniform3fv(loc->loc, 1, value->matrix_values());
+			glUniform3fv(loc->loc, 1, value.matrix_values());
 		}
 
 		template <>
-		void _Shader::set_uniform(_Location* loc, const vec4f* value)
+		void _Shader::set_uniform(_Location* loc, const vec4f& value)
 		{
-			glUniform4fv(loc->loc, 1, value->matrix_values());
+			glUniform4fv(loc->loc, 1, value.matrix_values());
 		}
 
 		template <>
-		void _Shader::set_uniform(_Location* loc, const mat2f* value)
+		void _Shader::set_uniform(_Location* loc, const mat2f& value)
 		{
-			glUniformMatrix2fv(loc->loc, 1, GL_FALSE, value->matrix_values());
+			glUniformMatrix2fv(loc->loc, 1, GL_FALSE, value.matrix_values());
 		}
 
 		template <>
-		void _Shader::set_uniform(_Location* loc, const mat3f* value)
+		void _Shader::set_uniform(_Location* loc, const mat3f& value)
 		{
-			glUniformMatrix3fv(loc->loc, 1, GL_FALSE, value->matrix_values());
+			glUniformMatrix3fv(loc->loc, 1, GL_FALSE, value.matrix_values());
 		}
 
 		template <>
-		void _Shader::set_uniform(_Location* loc, const mat4f* value)
+		void _Shader::set_uniform(_Location* loc, const mat4f& value)
 		{
-			glUniformMatrix4fv(loc->loc, 1, GL_FALSE, value->matrix_values());
+			glUniformMatrix4fv(loc->loc, 1, GL_FALSE, value.matrix_values());
 		}
 
 		template <>
-		void _Shader::set_uniform(_Location* loc, const mat2x4f* value)
+		void _Shader::set_uniform(_Location* loc, const mat2x4f& value)
 		{
-			glUniformMatrix4x2fv(loc->loc, 1, GL_FALSE, value->matrix_values());
+			glUniformMatrix4x2fv(loc->loc, 1, GL_FALSE, value.matrix_values());
+		}
+
+		template <>
+		void _Shader::set_uniform(_Location* loc, const onion::MatrixStack& stack)
+		{
+			glUniformMatrix4fv(loc->loc, 1, GL_FALSE, stack.get_values());
 		}
 
 		template <>
@@ -379,29 +385,13 @@ namespace onion
 		}
 
 
-		void _SquareBufferDisplayer::display(BUFFER_KEY key) const
+		void _SquareBufferDisplayer::display(BUFFER_KEY start, int count) const
 		{
 			// Bind the buffer
 			m_Buffer->activate();
 
 			// Display the sprite using information from buffer
-			glDrawArrays(GL_TRIANGLES, key, 6);
-		}
-
-
-		void _SequentialSquareBufferDisplayer::set_display_count(int count)
-		{
-			if (count > 0)
-				m_Count = count;
-		}
-
-		void _SequentialSquareBufferDisplayer::display(BUFFER_KEY key) const
-		{
-			// Bind the buffer
-			m_Buffer->activate();
-
-			// Display a number of sequential squares in the buffer equal to m_Count
-			glDrawArrays(GL_TRIANGLES, key, 6 * m_Count);
+			glDrawArrays(GL_TRIANGLES, start, 6 * count);
 		}
 
 	}

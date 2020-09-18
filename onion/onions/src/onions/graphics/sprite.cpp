@@ -702,11 +702,6 @@ namespace onion
 	{
 		if (flip_horizontally)
 		{
-			// Flip the sprite with a transformation
-			mat4x4f trans;
-			trans.set(0, 0, -1.f);
-			trans.set(0, 3, sprite->width);
-
 			// Flip where red and green map to on the texture
 			const mat2x4f& tex = texture->tex;
 			mat2x4f trans_tex(
@@ -714,11 +709,13 @@ namespace onion
 				-tex.get(1, 0), -tex.get(1, 1), tex.get(1, 2), tex.get(1, 3)
 			);
 
-			// Display the textured sprite
-			mat_push();
-			mat_custom_transform(trans);
+			// Flip and display the textured sprite
+			MatrixStack& m = model();
+			m.push();
+			m.translate(sprite->width);
+			m.scale(-1.f);
 			display(sprite, &texture->tex, &palette->get_red_palette_matrix(), &palette->get_green_palette_matrix(), &palette->get_blue_palette_matrix());
-			mat_pop();
+			m.pop();
 		}
 		else
 		{
