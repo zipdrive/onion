@@ -4,129 +4,191 @@
 namespace onion
 {
 
-	// The matrix stack.
-	std::forward_list<mat4x4f> g_MatrixStack;
-
-	mat4x4f& mat_get()
+	TRANSFORM_MATRIX& MatrixStack::get()
 	{
-		if (g_MatrixStack.empty())
-		{
-			g_MatrixStack.emplace_front();
-		}
-
-		return g_MatrixStack.front();
+		return m_Stack.top();
 	}
 
-	const float* mat_get_values()
+	const TRANSFORM_MATRIX& MatrixStack::get() const
 	{
-		return mat_get().matrix_values();
+		return m_Stack.top();
+	}
+	
+	void MatrixStack::push()
+	{
+		m_Stack.push(get());
 	}
 
-
-	void mat_push()
+	void MatrixStack::pop()
 	{
-		if (g_MatrixStack.empty())
-		{
-			g_MatrixStack.emplace_front();
-		}
-		else
-		{
-			g_MatrixStack.push_front(g_MatrixStack.front());
-		}
+		if (!m_Stack.empty())
+			m_Stack.pop();
 	}
 
-	void mat_pop()
+	void MatrixStack::translate(float tx)
 	{
-		g_MatrixStack.pop_front();
+		TRANSFORM_MATRIX& m = get();
+		for (int k = 2; k >= 0; --k)
+			m(k, 3) += (tx * m.get(k, 0));
 	}
 
-
-	void mat_identity()
+	void MatrixStack::translate(float tx, float ty)
 	{
-		g_MatrixStack.front() = mat4x4f();
+		TRANSFORM_MATRIX& m = get();
+		for (int k = 2; k >= 0; --k)
+			m(k, 3) += (tx * m.get(k, 0)) + (ty * m.get(k, 1));
+	}
+	
+	void MatrixStack::translate(float tx, float ty, float tz)
+	{
+		TRANSFORM_MATRIX& m = get();
+		for (int k = 2; k >= 0; --k)
+			m(k, 3) += (tx * m.get(k, 0)) + (ty * m.get(k, 1)) + (tz * m.get(k, 2));
 	}
 
-	void mat_custom_transform(const mat4x4f& transform)
+	void MatrixStack::scale(float sx)
 	{
-		g_MatrixStack.front() *= transform;
+		TRANSFORM_MATRIX& m = get();
+		for (int k = 2; k >= 0; --k)
+			m(k, 0) *= sx;
 	}
 
-	void mat_ortho(float left, float right, float bottom, float top, float near, float far)
+	void MatrixStack::scale(float sx, float sy)
 	{
-		g_MatrixStack.clear();
-
-		mat4x4f mat;
-		mat.set(0, 0, 2.f / (right - left));
-		mat.set(1, 1, 2.f / (top - bottom));
-		mat.set(2, 2, 2.f / (far - near));
-		mat.set(0, 3, (left + right) / (left - right));
-		mat.set(1, 3, (bottom + top) / (bottom - top));
-		mat.set(2, 3, (near + far) / (near - far));
-
-		g_MatrixStack.push_front(mat);
-	}
-
-	void mat_translate(float dx, float dy, float dz)
-	{
-		mat4x4f trans;
-		trans.set(0, 3, dx);
-		trans.set(1, 3, dy);
-		trans.set(2, 3, dz);
-
-		mat_custom_transform(trans);
-	}
-
-	void mat_scale(float sx, float sy, float sz)
-	{
-		mat4x4f& top = mat_get();
+		TRANSFORM_MATRIX& m = get();
 		for (int k = 2; k >= 0; --k)
 		{
-			top(k, 0) *= sx;
-			top(k, 1) *= sy;
-			top(k, 2) *= sz;
+			m(k, 0) *= sx;
+			m(k, 1) *= sy;
 		}
 	}
 
-	void mat_rotatex(float angle)
+	void MatrixStack::scale(float sx, float sy, float sz)
 	{
+		TRANSFORM_MATRIX& m = get();
+		for (int k = 2; k >= 0; --k)
+		{
+			m(k, 0) *= sx;
+			m(k, 1) *= sy;
+			m(k, 2) *= sz;
+		}
+	}
+	
+	void MatrixStack::rotatex(float angle)
+	{
+		TRANSFORM_MATRIX& m = get();
+
 		float s = sinf(angle);
 		float c = cosf(angle);
 
-		mat4x4f rot;
-		rot.set(1, 1, c);
-		rot.set(1, 2, -s);
-		rot.set(2, 1, s);
-		rot.set(2, 2, c);
+		for (int k = 2; k >= 0; --k)
+		{
+			float& r1 = m(k, 1);
+			float& r2 = m(k, 2);
 
-		mat_custom_transform(rot);
+			float a1 = (r2 * s) + (r1 * c);
+			r2 = (r2 * c) - (r1 * s);
+			r1 = a1;
+		}
 	}
 
-	void mat_rotatey(float angle)
+	void MatrixStack::rotatey(float angle)
 	{
+		TRANSFORM_MATRIX& m = get();
+
 		float s = sinf(angle);
 		float c = cosf(angle);
 
-		mat4x4f rot;
-		rot.set(0, 0, c);
-		rot.set(0, 2, s);
-		rot.set(2, 0, -s);
-		rot.set(2, 2, c);
+		for (int k = 2; k >= 0; --k)
+		{
+			float& r0 = m(k, 0);
+			float& r2 = m(k, 2);
 
-		mat_custom_transform(rot);
+			float a0 = (r0 * c) - (r2 * s);
+			r2 = (r0 * s) + (r2 * c);
+			r0 = a0;
+		}
 	}
 
-	void mat_rotatez(float angle)
+	void MatrixStack::rotatez(float angle)
 	{
+		TRANSFORM_MATRIX& m = get();
+
 		float s = sinf(angle);
 		float c = cosf(angle);
 
-		mat4x4f rot;
-		rot.set(0, 0, c);
-		rot.set(0, 1, -s);
-		rot.set(1, 0, s);
-		rot.set(1, 1, c);
+		for (int k = 2; k >= 0; --k)
+		{
+			float& r0 = m(k, 0);
+			float& r1 = m(k, 1);
 
-		mat_custom_transform(rot);
+			float a0 = (r1 * s) + (r0 * c);
+			r1 = (r1 * c) - (r0 * s);
+			r0 = a0;
+		}
+	}
+
+	void MatrixStack::reset()
+	{
+		// Dump the stack
+		while (!m_Stack.empty())
+			m_Stack.pop();
+
+		// Push the identity onto the stack
+		m_Stack.push(
+			TRANSFORM_MATRIX(
+				1.f, 0.f, 0.f, 0.f,
+				0.f, 1.f, 0.f, 0.f,
+				0.f, 0.f, 1.f, 0.f
+			)
+		);
+	}
+
+	void MatrixStack::identity()
+	{
+		m_Stack.top() = TRANSFORM_MATRIX(
+			1.f, 0.f, 0.f, 0.f,
+			0.f, 1.f, 0.f, 0.f,
+			0.f, 0.f, 1.f, 0.f
+		);
+	}
+	
+	void MatrixStack::ortho(float left, float right, float bottom, float top, float near, float far)
+	{
+		TRANSFORM_MATRIX& m = get();
+
+		float a00 = 2.f / (right - left);
+		float a03 = (left + right) / (left - right);
+		float a11 = 2.f / (top - bottom);
+		float a13 = (bottom + top) / (bottom - top);
+		float a22 = 2.f / (far - near);
+		float a23 = (near + far) / (near - far);
+
+		for (int k = 2; k >= 0; --k)
+		{
+			m(k, 3) += (m.get(k, 0) * a03) + (m.get(k, 1) * a13) + (m.get(k, 2) * a23);
+			m(k, 0) *= a00;
+			m(k, 1) *= a11;
+			m(k, 2) *= a22;
+		}
+	}
+
+	void MatrixStack::custom(const TRANSFORM_MATRIX& matrix)
+	{
+		get() *= matrix;
+	}
+
+
+	MatrixStack& model()
+	{
+		static MatrixStack m;
+		return m;
+	}
+
+	MatrixStack& camera()
+	{
+		static MatrixStack c;
+		return c;
 	}
 
 }

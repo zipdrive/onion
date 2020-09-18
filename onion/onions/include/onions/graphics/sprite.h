@@ -374,7 +374,7 @@ namespace onion
 	class SpriteSheet : public _SpriteSheet
 	{
 	protected:
-		typedef Shader<const mat4f*, _Args...> _SpriteShader;
+		typedef Shader<const MatrixStack&, const MatrixStack&, _Args...> _SpriteShader;
 
 		// The shader used for the sprite sheet.
 		_SpriteShader* m_Shader;
@@ -395,7 +395,7 @@ namespace onion
 		void display(SPRITE_KEY key, _Args... args) const
 		{
 			// Activate the shader
-			m_Shader->activate(&mat_get(), args...);
+			m_Shader->activate(camera(), model(), args...);
 
 			// Display the sprite
 			m_Displayer->display(key);

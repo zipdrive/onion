@@ -85,10 +85,11 @@ namespace onion
 		m_Shader->activate(&color);
 
 		// Display the rectangle
-		mat_push();
-		mat_scale(width, height, 1.f);
+		MatrixStack& m = model();
+		m.push();
+		m.scale(width, height);
 		m_Displayer->display(0);
-		mat_pop();
+		m.pop();
 	}
 
 

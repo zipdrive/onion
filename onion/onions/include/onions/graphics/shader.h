@@ -172,8 +172,9 @@ namespace onion
 
 		public:
 			/// <summary>Displays using the currently bound shader and information from the buffer.</summary>
-			/// <param name="key">A pointer to a location in the buffer.</param>
-			virtual void display(BUFFER_KEY key) const = 0;
+			/// <param name="start">A pointer to the start location in the buffer.</param>
+			/// <param name="count">The number of sequential shapes to display.</param>
+			virtual void display(BUFFER_KEY start, int count = 1) const = 0;
 
 			/// <summary>Sets the buffer to use.</summary>
 			/// <param name="buffer">The new buffer to use.</param>
@@ -185,25 +186,9 @@ namespace onion
 		{
 		public:
 			/// <summary>Displays using the currently bound shader and information from the buffer.</summary>
-			/// <param name="key">A pointer to a location in the buffer.</param>
-			virtual void display(BUFFER_KEY key) const;
-		};
-
-		// Displays consecutive squares in the buffer. More efficient than making multiple display() calls to _SquareBufferDisplayer.
-		class _SequentialSquareBufferDisplayer : public _SquareBufferDisplayer
-		{
-		protected:
-			// The number of squares to display.
-			int m_Count = 1;
-
-		public:
-			/// <summary>Sets how many sequential squares in the buffer to display.</summary>
-			/// <param name="number">The number of sequential squares in the buffer to display.</param>
-			void set_display_count(int count);
-
-			/// <summary>Displays using the currently bound shader and information from the buffer.</summary>
-			/// <param name="key">A pointer to a location in the buffer.</param>
-			void display(BUFFER_KEY key) const;
+			/// <param name="start">A pointer to the start location in the buffer.</param>
+			/// <param name="count">The number of sequential shapes to display.</param>
+			virtual void display(BUFFER_KEY start, int count = 1) const;
 		};
 
 	}

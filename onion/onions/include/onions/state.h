@@ -8,11 +8,15 @@ namespace onion
 
 	class State
 	{
+	protected:
+		/// <summary>Displays the state.</summary>
+		virtual void __display() const = 0;
+
 	public:
 		virtual ~State();
 
 		/// <summary>Displays the state.</summary>
-		virtual void display() const = 0;
+		void display() const;
 	};
 
 
