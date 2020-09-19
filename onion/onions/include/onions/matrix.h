@@ -298,13 +298,27 @@ void mat_mul(const matrix<T, _Rows, _Middle>& lhs, const matrix<T, _Middle, _Col
 
 
 
+// A vector of numeric values
+template <typename T, int N>
+class vec : public matrix<T, N, 1>
+{
+public:
+	T square_sum() const
+	{
+		T sum = 0;
+		for (int k = N - 1; k >= 0; --k)
+			sum += get(k) * get(k);
+		return sum;
+	}
+};
+
 template <typename T> class vec2;
 template <typename T> class vec3;
 template <typename T> class vec4;
 
 // A 2-by-1 vector of numeric values
 template <typename T>
-class vec2 : public matrix<T, 2, 1>
+class vec2 : public vec<T, 2>
 {
 public:
 	vec2() {}
@@ -353,7 +367,7 @@ public:
 
 // A 3-by-1 vector of numeric values
 template <typename T>
-class vec3 : public matrix<T, 3, 1>
+class vec3 : public vec<T, 3>
 {
 public:
 	vec3() {}
@@ -407,7 +421,7 @@ public:
 
 // A 4-by-1 vector of numeric values
 template <typename T>
-class vec4 : public matrix<T, 4, 1>
+class vec4 : public vec<T, 4>
 {
 public:
 	vec4() {}
