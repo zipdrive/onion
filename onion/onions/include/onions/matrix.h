@@ -714,25 +714,122 @@ typedef vec3<float> vec3f;
 typedef vec4<float> vec4f;
 
 
+
+class TransformMatrix : public mat4f
+{
+public:
+	/// <summary>Constructs a matrix transformation.</summary>
+	/// <param name="a11">The element in the first row and first column.</param>
+	/// <param name="a12">The element in the first row and second column.</param>
+	/// <param name="a13">The element in the first row and third column.</param>
+	/// <param name="a14">The element in the first row and fourth column.</param>
+	/// <param name="a21">The element in the second row and first column.</param>
+	/// <param name="a22">The element in the second row and second column.</param>
+	/// <param name="a23">The element in the second row and third column.</param>
+	/// <param name="a24">The element in the second row and fourth column.</param>
+	/// <param name="a31">The element in the third row and first column.</param>
+	/// <param name="a32">The element in the third row and second column.</param>
+	/// <param name="a33">The element in the third row and third column.</param>
+	/// <param name="a34">The element in the third row and fourth column.</param>
+	/// <param name="a41">The element in the fourth row and first column.</param>
+	/// <param name="a42">The element in the fourth row and second column.</param>
+	/// <param name="a43">The element in the fourth row and third column.</param>
+	/// <param name="a44">The element in the fourth row and fourth column.</param>
+	TransformMatrix(
+		float a11 = 1.f, float a12 = 0.f, float a13 = 0.f, float a14 = 0.f,
+		float a21 = 0.f, float a22 = 1.f, float a23 = 0.f, float a24 = 0.f,
+		float a31 = 0.f, float a32 = 0.f, float a33 = 1.f, float a34 = 0.f,
+		float a41 = 0.f, float a42 = 0.f, float a43 = 0.f, float a44 = 1.f
+	);
+
+	/// <summary>Adds a translation to the current transformation.</summary>
+	/// <param name="dx">The translation along the x-axis.</param>
+	void translate(float tx);
+
+	/// <summary>Adds a translation to the current transformation.</summary>
+	/// <param name="dx">The translation along the x-axis.</param>
+	/// <param name="dy">The translation along the y-axis.</param>
+	void translate(float tx, float ty);
+
+	/// <summary>Adds a translation to the current transformation.</summary>
+	/// <param name="dx">The translation along the x-axis.</param>
+	/// <param name="dy">The translation along the y-axis.</param>
+	/// <param name="dz">The translation along the z-axis.</param>
+	void translate(float tx, float ty, float tz);
+
+
+	/// <summary>Adds a scale transform to the current transformation.</summary>
+	/// <param name="sx">The scaling factor for the x-axis.</param>
+	void scale(float sx);
+
+	/// <summary>Adds a scale transform to the current transformation.</summary>
+	/// <param name="sx">The scaling factor for the x-axis.</param>
+	/// <param name="sy">The scaling factor for the y-axis.</param>
+	void scale(float sx, float sy);
+
+	/// <summary>Adds a scale transform to the current transformation.</summary>
+	/// <param name="sx">The scaling factor for the x-axis.</param>
+	/// <param name="sy">The scaling factor for the y-axis.</param>
+	/// <param name="sz">The scaling factor for the z-axis.</param>
+	void scale(float sx, float sy, float sz);
+
+
+	/// <summary>Adds a rotation transform around the x-axis to the current transformation.</summary>
+	/// <param name="angle">The angle of rotation, in radians.</param>
+	void rotatex(float angle);
+
+	/// <summary>Adds a rotation transform around the y-axis to the current transformation.</summary>
+	/// <param name="angle">The angle of rotation, in radians.</param>
+	void rotatey(float angle);
+
+	/// <summary>Adds a rotation transform around the z-axis to the current transformation.</summary>
+	/// <param name="angle">The angle of rotation, in radians.</param>
+	void rotatez(float angle);
+
+
+	/// <summary>Sets the current transformation to the identity matrix.</summary>
+	void identity();
+
+	/// <summary>Creates an orthogonal projection.</summary>
+	/// <param name="left">The left side of the projection.</param>
+	/// <param name="right">The right side of the projection.</param>
+	/// <param name="bottom">The bottom side of the projection.</param>
+	/// <param name="top">The top side of the projection.</param>
+	/// <param name="near">The near side of the projection.</param>
+	/// <param name="far">The far side of the projection.</param>
+	void ortho(float left, float right, float bottom, float top, float near, float far);
+
+
+	/// <summary>Sets this matrix equal to the right-hand side of the operator.</summary>
+	/// <param name="other">The matrix to set this one equal to.</param>
+	/// <returns>A reference to this matrix.</returns>
+	TransformMatrix& operator=(const matrix<float, 4, 4>& other);
+
+	/// <summary>Multiplies this matrix by another one, in place.</summary>
+	/// <param name="other">The matrix to multiply this one by.</param>
+	/// <returns>A reference to this matrix.</returns>
+	TransformMatrix& operator*=(const matrix<float, 4, 4>& other);
+};
+
+
+
 namespace onion
 {
-
-#define TRANSFORM_MATRIX mat4f
 
 	class MatrixStack
 	{
 	private:
 		// A FIFO stack of matrix transformations.
-		std::stack<TRANSFORM_MATRIX> m_Stack;
+		std::stack<TransformMatrix> m_Stack;
 
 	public:
 		/// <summary>Retrieves the current matrix transformation.</summary>
 		/// <returns>The current matrix transformation.</returns>
-		TRANSFORM_MATRIX& get();
+		TransformMatrix& get();
 
 		/// <summary>Retrieves the current matrix transformation.</summary>
 		/// <returns>The current matrix transformation.</returns>
-		const TRANSFORM_MATRIX& get() const;
+		const TransformMatrix& get() const;
 
 
 		/// <summary>Retrieves the current matrix transformation as a raw array.</summary>
@@ -810,7 +907,7 @@ namespace onion
 
 		/// <summary>Multiplies the current matrix by a custom transformation.</summary>
 		/// <param name="matrix">The custom transformation matrix.</param>
-		void custom(const TRANSFORM_MATRIX& matrix);
+		void custom(const TransformMatrix& matrix);
 	};
 
 
