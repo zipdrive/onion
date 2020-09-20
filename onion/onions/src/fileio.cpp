@@ -8,10 +8,21 @@ namespace onion
 
 	bool _StringData::get(string key, int& value) const
 	{
-		string v;
-		if (get(key, v))
+		string string_value;
+		if (get(key, string_value))
 		{
-			value = stoi(v);
+			value = stoi(string_value);
+			return true;
+		}
+		return false;
+	}
+
+	bool _StringData::get(string key, bool& value) const
+	{
+		string string_value;
+		if (get(key, string_value))
+		{
+			value = (string_value.compare("true") == 0);
 			return true;
 		}
 		return false;
@@ -20,6 +31,11 @@ namespace onion
 	void _StringData::set(string key, const int& value)
 	{
 		set(key, to_string(value));
+	}
+
+	void _StringData::set(string key, const bool& value)
+	{
+		set(key, value ? "true" : "false");
 	}
 
 

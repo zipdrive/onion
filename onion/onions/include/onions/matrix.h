@@ -303,12 +303,34 @@ template <typename T, int N>
 class vec : public matrix<T, N, 1>
 {
 public:
+	/// <summary>Computes the dot product of two vectors.</summary>
+	/// <param name="other">The other vector.</param>
+	/// <returns>The dot product of the two vectors.</returns>
+	T operator*(const matrix<T, N, 1>& other) const
+	{
+		T sum = 0;
+		for (int k = N - 1; k >= 0; --k)
+			sum += get(k) * other.get(k);
+		return sum;
+	}
+
+	/// <summary>Calculates the sum of all squared elements in the vector.</summary>
+	/// <returns>The square of the magnitude of the vector.</returns>
 	T square_sum() const
 	{
 		T sum = 0;
 		for (int k = N - 1; k >= 0; --k)
 			sum += get(k) * get(k);
 		return sum;
+	}
+
+	/// <summary>Normalizes the vector.</summary>
+	/// <param name="normalized">Outputs the normalized vector.</param>
+	void normalize(matrix<float, N, 1>& normalized) const
+	{
+		float mag = sqrt(square_sum());
+		for (int k = N - 1; k >= 0; --k)
+			normalized.set(k, 0, get(k) / mag);
 	}
 };
 
@@ -416,6 +438,17 @@ public:
 	{
 		matrix<T, 3, 1>::operator=(other);
 		return *this;
+	}
+
+
+	/// <summary>Computes the cross product of this three-dimensional vector with another.</summary>
+	/// <param name="other">The vector on the right-hand side of the cross product.</param>
+	/// <param name="result">Outputs the cross product of the two vectors.</param>
+	void cross(const matrix<T, 3, 1>& other, matrix<T, 3, 1>& result)
+	{
+		result.set(0, 0, (get(1) * other.get(2)) - (get(2) * other.get(1)));
+		result.set(1, 0, (get(2) * other.get(0)) - (get(0) * other.get(2)));
+		result.set(2, 0, (get(0) * other.get(1)) - (get(1) * other.get(0)));
 	}
 };
 

@@ -91,5 +91,29 @@ namespace onion
 			virtual void display() const;
 		};
 
+
+
+		class ObjectGenerator
+		{
+		private:
+			// All generators.
+			static std::unordered_map<std::string, ObjectGenerator*> m_Generators;
+
+		protected:
+			/// <summary>Constructs a generator with the given ID.</summary>
+			/// <param name="id">The ID of the generator.</param>
+			ObjectGenerator(std::string id);
+
+		public:
+			/// <summary>Uses the generator with the given ID to generate an object.</summary>
+			/// <param name="id">The ID of the generator to use.</param>
+			/// <returns>An Object created with new by the generator with the given ID.</returns>
+			static Object* generate(std::string id);
+
+			/// <summary>Generates an object.</summary>
+			/// <returns>An Object created with new.</returns>
+			virtual Object* generate() const = 0;
+		};
+
 	}
 }

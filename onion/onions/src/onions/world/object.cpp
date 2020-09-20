@@ -79,5 +79,22 @@ namespace onion
 
 		void Object::display() const {}
 
+
+
+		std::unordered_map<std::string, ObjectGenerator*> ObjectGenerator::m_Generators{};
+
+		ObjectGenerator::ObjectGenerator(std::string id)
+		{
+			m_Generators.emplace(id, this);
+		}
+
+		Object* ObjectGenerator::generate(std::string id)
+		{
+			auto iter = m_Generators.find(id);
+			if (iter != m_Generators.end())
+				return iter->second->generate();
+			return nullptr;
+		}
+
 	}
 }

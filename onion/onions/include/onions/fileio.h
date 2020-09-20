@@ -61,12 +61,23 @@ namespace onion
 		/// <returns>True if the key exists, false otherwise.</returns>
 		bool get(std::string key, int& value) const;
 
+		/// <summary>Retrieves the value associated with a key.</summary>
+		/// <param name="key">The key to retrieve the value of.</param>
+		/// <param name="value">Outputs the value associated with the given key, converted to boolean.</param>
+		/// <returns>True if the key exists, false otherwise.</returns>
+		bool get(std::string key, bool& value) const;
+
 		using _Data<std::string, std::string>::set;
 
 		/// <summary>Sets the value to the key.</summary>
 		/// <param name="key">The key to set the value of.</param>
 		/// <param name="value">The value to assign to the given key.</param>
 		void set(std::string key, const int& value);
+
+		/// <summary>Sets the value to the key.</summary>
+		/// <param name="key">The key to set the value of.</param>
+		/// <param name="value">The value to assign to the given key.</param>
+		void set(std::string key, const bool& value);
 	};
 
 	typedef _Data<std::string, int> _IntegerData;
