@@ -86,15 +86,15 @@ namespace onion
 		//Buffer::set_clipping_rectangle(m_Bounds);
 
 		// Set up the transformation
-		MatrixStack& c = camera();
-		c.push();
-		c.translate(m_Bounds.get(0, 0), m_Bounds.get(1, 0), m_Bounds.get(2, 0));
+		MatrixStack& p = projection();
+		p.push();
+		p.translate(m_Bounds.get(0, 0), m_Bounds.get(1, 0), m_Bounds.get(2, 0));
 
 		// Display the contents of the frame
 		__display();
 
 		// Deconstruct the transformation
-		c.pop();
+		p.pop();
 
 		// Set the clipping rectangle back to bounds of the parent
 		if (m_Parent)
@@ -127,8 +127,6 @@ namespace onion
 				m_Highlighted = true;
 				highlight();
 			}
-
-			return EVENT_STOP;
 		}
 		else if (m_Highlighted)
 		{

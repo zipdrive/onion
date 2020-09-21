@@ -209,7 +209,7 @@ namespace onion
 			if (const SpriteFont::Character* c = m_CharacterManager.get(prev))
 			{
 				// Activate the shader
-				SimplePixelSpriteSheet::get_shader()->activate(camera(), m, &palette->get_red_palette_matrix());
+				SimplePixelSpriteSheet::get_shader()->activate(projection(), m, palette->get_red_palette_matrix());
 
 				// Display the buffer
 				m_Displayer->display(c->key);
@@ -218,7 +218,7 @@ namespace onion
 			char current = (k == line.size() ? '\0' : line.at(k));
 			int dx = get_character_dx(prev, current);
 			prev = current;
-			m.translate(dx);
+			m.translate(dx, 0.f, -0.001f);
 		}
 
 		m.pop();

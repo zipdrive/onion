@@ -82,7 +82,7 @@ namespace onion
 	void SolidColorGraphic::display() const
 	{
 		// Activate the shader
-		m_Shader->activate(&color);
+		m_Shader->activate(color);
 
 		// Display the rectangle
 		MatrixStack& m = model();

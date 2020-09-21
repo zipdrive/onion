@@ -12,9 +12,9 @@ namespace onion
 
 		int depth = std::max(app->width, app->height);
 
-		MatrixStack& c = camera();
-		c.reset();
-		c.ortho(0, app->width, 0, app->height, -depth, depth);
+		MatrixStack& p = projection();
+		p.reset();
+		p.ortho(0, app->width, 0, app->height, -depth, depth);
 
 		__display();
 	}

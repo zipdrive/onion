@@ -213,7 +213,7 @@ namespace onion
 		template <typename _FirstUniform, typename... _OtherUniforms>
 		void set_uniforms(opengl::_Location** index, _FirstUniform first, _OtherUniforms... others)
 		{
-			set_uniform(*index, first);
+			set_uniform<const _FirstUniform&>(*index, first);
 			set_uniforms(index + 1, others...);
 		}
 

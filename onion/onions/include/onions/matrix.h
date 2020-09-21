@@ -726,6 +726,10 @@ namespace onion
 		std::stack<TRANSFORM_MATRIX> m_Stack;
 
 	public:
+		/// <summary>Constructs a matrix stack consisting of a single identity matrix.</summary>
+		MatrixStack();
+
+
 		/// <summary>Retrieves the current matrix transformation.</summary>
 		/// <returns>The current matrix transformation.</returns>
 		TRANSFORM_MATRIX& get();
@@ -818,6 +822,6 @@ namespace onion
 	MatrixStack& model();
 
 	/// <summary>Retrieves the matrix stack that controls how the model space is projected onto the screen.</summary>
-	MatrixStack& camera();
+	MatrixStack& projection();
 
 }

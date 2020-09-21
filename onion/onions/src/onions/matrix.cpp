@@ -4,6 +4,11 @@
 namespace onion
 {
 
+	MatrixStack::MatrixStack()
+	{
+		reset();
+	}
+	
 	TRANSFORM_MATRIX& MatrixStack::get()
 	{
 		return m_Stack.top();
@@ -13,10 +18,18 @@ namespace onion
 	{
 		return m_Stack.top();
 	}
+
+	const float* MatrixStack::get_values() const
+	{
+		return m_Stack.top().matrix_values();
+	}
 	
 	void MatrixStack::push()
 	{
-		m_Stack.push(get());
+		if (m_Stack.empty())
+			m_Stack.emplace();
+		else
+			m_Stack.push(get());
 	}
 
 	void MatrixStack::pop()
@@ -185,10 +198,10 @@ namespace onion
 		return m;
 	}
 
-	MatrixStack& camera()
+	MatrixStack& projection()
 	{
-		static MatrixStack c;
-		return c;
+		static MatrixStack p;
+		return p;
 	}
 
 }
