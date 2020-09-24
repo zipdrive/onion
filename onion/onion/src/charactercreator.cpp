@@ -170,11 +170,10 @@ protected:
 		m_LeftButton.display();
 		m_RightButton.display();
 
-		MatrixStack& m = model();
-		m.push();
-		m.translate(m_LeftButton.get_width(), m_Label->get_height() - 2);
+		Transform::model.push();
+		Transform::model.translate(m_LeftButton.get_width(), m_Label->get_height() - 2);
 		m_Label->display();
-		m.pop();
+		Transform::model.pop();
 	}
 
 public:
@@ -400,11 +399,10 @@ protected:
 			m_LeftButton.display();
 			m_RightButton.display();
 
-			MatrixStack& m = model();
-			m.push();
-			m.translate(m_LeftButton.get_width(), m_Label->get_height() - 2, 0.f);
+			Transform::model.push();
+			Transform::model.translate(m_LeftButton.get_width(), m_Label->get_height() - 2, 0.f);
 			m_Label->display();
-			m.pop();
+			Transform::model.pop();
 		}
 
 	public:
@@ -598,13 +596,6 @@ void character_creator_setup()
 
 	g_Pages->set_bounds(200, 40, -1, app->width - 240, app->height - 80, 0);
 
-	// Set up the projection matrix
-	int depth = std::max(app->width, app->height);
-
-	MatrixStack& p = projection();
-	p.reset();
-	p.ortho(0, app->width, 0, app->height, -depth, depth);
-
 	// Run the main function
 	main(character_creator_display_func);
 }
@@ -633,27 +624,26 @@ void character_creator_display_func()
 	}
 
 	Application* app = get_application_settings();
-	MatrixStack& m = model();
-	m.reset();
-	m.scale(-1.f);
-	m.translate(-(app->width + dx), -dy, 100.f);
+	Transform::model.reset();
+	Transform::model.scale(-1.f);
+	Transform::model.translate(-(app->width + dx), -dy, 100.f);
 	for (int x = -dx; x < app->width; x += bg->width)
 	{
-		m.push();
+		Transform::model.push();
 		for (int y = -dy; y < app->height; y += bg->height)
 		{
 			ui->display(bg, bg_palette);
-			m.translate(0.f, bg->height);
+			Transform::model.translate(0.f, bg->height);
 		}
-		m.pop();
-		m.translate(bg->width);
+		Transform::model.pop();
+		Transform::model.translate(bg->width);
 	}
 
-	m.reset();
-	m.translate(100.f, 170.f, -100.f);
+	Transform::model.reset();
+	Transform::model.translate(100.f, 170.f, -100.f);
 	g_HuneCreator->display();
 
-	m.reset();
+	Transform::model.reset();
 	g_RotateLeftButton->display();
 	g_PlayStopButton->display();
 	g_RotateRightButton->display();

@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 #include <unordered_map>
+#include "../error.h"
+#include "../matrix.h"
 
 #define BUFFER_KEY int
 
@@ -13,8 +15,90 @@ namespace onion
 		// Predeclaration of the ID object.
 		struct _ID;
 
-		// Predeclaration of the location object.
-		struct _Location;
+
+		// A variable passed to a vertex shader.
+		class _VertexAttribute
+		{
+		protected:
+			// The size of the vertex attribute.
+			unsigned int m_Size;
+
+		public:
+			/// <summary>Virtual deconstructor.</summary>
+			virtual ~_VertexAttribute() {}
+
+			/// <summary>Sets where shader programs should look for the vertex attribute in the vertex buffer.</summary>
+			/// <param name="offset">The number of floats between the start of listing all attributes for a vertex and the start of this attribute for a vertex.</param>
+			/// <param name="stride">The total number of floats assigned to each vertex in the buffer.</param>
+			virtual void set(unsigned int offset, unsigned int stride) const = 0;
+		};
+
+		// The data for all vertex attributes in a shader.
+		struct _VertexAttributeInformation
+		{
+			struct Attribute
+			{
+				// An object referring to the vertex attribute.
+				_VertexAttribute* attrib;
+
+				// The offset from the start.
+				unsigned int offset;
+			};
+
+			// All vertex attributes.
+			std::vector<Attribute> attributes;
+
+			// The total size of all vertex attributes.
+			unsigned int stride;
+
+			/// <summary>Cleans up the vertex attribute objects.</summary>
+			~_VertexAttributeInformation();
+		};
+
+
+
+		// A uniform attribute.
+		class _UniformAttribute
+		{
+		public:
+			// The name of the uniform attribute.
+			const std::string name;
+
+			/// <summary>Constructs an object managing a uniform attribute.</summary>
+			/// <param name="name">The name of the uniform attribute.</param>
+			_UniformAttribute(std::string name);
+
+			/// <summary>Virtual deconstructor.</summary>
+			virtual ~_UniformAttribute();
+
+			/// <summary>Sets the value of the uniform attribute to a float.</summary>
+			/// <param name="value">The new value of the uniform attribute.</param>
+			virtual void set(float value) const = 0;
+
+			/// <summary>Sets the value of the uniform attribute to a 2-element vector.</summary>
+			/// <param name="value">The new value of the uniform attribute.</param>
+			virtual void set(const vec2f& value) const = 0;
+
+			/// <summary>Sets the value of the uniform attribute to a 3-element vector.</summary>
+			/// <param name="value">The new value of the uniform attribute.</param>
+			virtual void set(const vec3f& value) const = 0;
+
+			/// <summary>Sets the value of the uniform attribute to a 4-element vector.</summary>
+			/// <param name="value">The new value of the uniform attribute.</param>
+			virtual void set(const vec4f& value) const = 0;
+
+			/// <summary>Sets the value of the uniform attribute to a 4x4 matrix.</summary>
+			/// <param name="value">The new value of the uniform attribute.</param>
+			virtual void set(const mat4f& value) const = 0;
+
+			/// <summary>Sets the value of the uniform attribute to a matrix with 2 rows and 4 columns.</summary>
+			/// <param name="value">The new value of the uniform attribute.</param>
+			virtual void set(const mat2x4f& value) const = 0;
+
+			/// <summary>Sets the value of the uniform attribute to a transform matrix.</summary>
+			/// <param name="value">The new value of the uniform attribute.</param>
+			virtual void set(const MatrixStack& value) const = 0;
+		};
 
 
 
@@ -28,20 +112,31 @@ namespace onion
 			// The ID of this shader.
 			_ID* m_Shader;
 
+
+			// A list of all vertex attributes.
+			_VertexAttributeInformation m_VertexAttributes;
+
+			/// <summary>Compiles the shader program from raw text.</summary>
+			/// <param name="vertex_shader_text">The vertex shader, in raw text form.</param>
+			/// <param name="fragment_shader_text">The fragment shader, in raw text form.</param>
+			void compile(const char* vertex_shader_text, const char* fragment_shader_text);
+
 		protected:
-			/// <summary>Constructs a shader.</summary>
+			// A list of all uniform attributes (that aren't in blocks).
+			std::vector<_UniformAttribute*> m_UniformAttributes;
+
+
+			/// <summary>Loads shaders from vertex and fragment shader files.</summary>
+			/// <param name="path">The path to the vertex and fragment shader files, from the res/data/shaders/ folder, omitting file extensions.</param>
+			_Shader(const char* path);
+			
+			/// <summary>Constructs a shader from raw text.</summary>
 			/// <param name="vertex_shader_text">The vertex shader, in raw text form.</param>
 			/// <param name="fragment_shader_text">The fragment shader, in raw text form.</param>
 			_Shader(const char* vertex_shader_text, const char* fragment_shader_text);
 
 			/// <summary>Activates the shader.</summary>
-			void __activate();
-
-			/// <summary>Sets a uniform value.</summary>
-			/// <param name="loc">The location of the uniform.</param>
-			/// <param name="uniform">The value to set the uniform as.</param>
-			template <typename _Uniform>
-			void set_uniform(_Location* loc, _Uniform uniform);
+			void __activate() const;
 
 		public:
 			/// <summary>Destroys the shader.</summary>
@@ -49,22 +144,69 @@ namespace onion
 
 			/// <summary>Checks whether this shader is the active one.</summary>
 			/// <returns>True if this shader is active, false otherwise.</returns>
-			bool is_active();
+			bool is_active() const;
 
-			/// <summary>Retrieves the location of a uniform variable in the shader program.</summary>
-			/// <param name="name">The name of the uniform in the shader program.</param>
-			/// <returns>The location of the uniform variable.</returns>
-			_Location* get_uniform(const char* name);
-
-			/// <summary>Retrieves the location of a vertex attribute in the shader program.</summary>
-			/// <param name="name">The name of the vertex attribute in the shader program.</param>
-			/// <returns>The location of the vertex attribute variable.</returns>
-			_Location* get_attrib(const char* name);
+			/// <summary>Retrieves information about the vertex attributes of the shader program.</summary>
+			/// <returns>Information about the vertex attributes.</returns>
+			const _VertexAttributeInformation& get_attribs() const;
 		};
 
 
-		// Handles all of the OpenGL calls for constructing and binding data buffers.
-		class _Buffer
+		
+		// Handles all of the OpenGL calls for constructing and binding uniform buffers.
+		class _UniformBuffer
+		{
+		private:
+			friend class _Shader; // Allows the shader to access the locations of the uniform buffers
+
+			// All uniform buffers.
+			static std::unordered_map<std::string, _UniformBuffer*> m_Buffers;
+
+			// The name of the buffer.
+			std::string m_Name;
+
+			// The ID of this buffer. Used to bind the buffer.
+			_ID* m_Buffer;
+
+			// An object that represents the index of the buffer in memory.
+			struct Index;
+
+			// The index of the buffer in memory. Used to connect the shaders to the uniform buffers they use.
+			Index* m_Index;
+
+			// The uniforms associated with the buffer.
+			std::vector<_UniformAttribute*> m_Uniforms;
+
+			/// <summary>Binds this uniform buffer as the one being written to.</summary>
+			void bind() const;
+
+		public:
+			/// <summary>Retrieves the uniform buffer with the given name.</summary>
+			/// <param name="name">The name of the uniform buffer, as it is referred to in the shaders.</param>
+			/// <returns>The uniform buffer with that name. NULL if the buffer does not exist.</returns>
+			static _UniformBuffer* get_buffer(std::string name);
+
+			/// <summary>Constructs a uniform buffer handler.</summary>
+			/// <param name="name">The name of the uniform buffer, as it is referred to in the shaders.</param>
+			/// <param name="size">The size of the uniform buffer.</param>
+			_UniformBuffer(std::string name, std::vector<_UniformAttribute*> uniforms, unsigned int size);
+
+			/// <summary>Cleans up the buffer.</summary>
+			virtual ~_UniformBuffer();
+
+			/// <summary>Sets the value of a uniform in the buffer.</summary>
+			/// <param name="uniform">The value of the uniform.</param>
+			template <typename _Uniform>
+			void set(int index, const _Uniform& uniform) const
+			{
+				bind();
+				m_Uniforms[index]->set(uniform);
+			}
+		};
+
+
+		// Handles all of the OpenGL calls for constructing and binding vertex attribute buffers.
+		class _VertexBuffer
 		{
 		private:
 			// The ID of the currently active buffer.
@@ -76,28 +218,21 @@ namespace onion
 		protected:
 			/// <summary>Constructs a buffer from data.</summary>
 			/// <param name="data">The data to use in the buffer.</param>
-			_Buffer(const std::vector<float>& data);
+			_VertexBuffer(const std::vector<float>& data);
 
 			/// <summary>Activates the buffer.</summary>
-			virtual void __activate();
-
-			/// <summary>Sets an vertex attribute array.</summary>
-			/// <param name="loc">The location of the vertex attribute in the shader program.</param>
-			/// <param name="ptr">The number of floats between the start of the vertex data and the start of this vertex attribute.</param>
-			/// <param name="length">The number of floats in the vertex attribute.</param>
-			/// <param name="stride">The number of floats corresponding to a single vertex.</param>
-			void set_attrib(_Location* loc, unsigned int ptr, unsigned int length, unsigned int stride);
+			virtual void __activate() const;
 
 		public:
 			/// <summary>Frees the buffer from memory.</summary>
-			virtual ~_Buffer();
+			virtual ~_VertexBuffer();
 
 			/// <summary>Checks whether this buffer is the active one.</summary>
 			/// <returns>True if this buffer is active, false otherwise.</returns>
-			bool is_active();
+			bool is_active() const;
 
 			/// <summary>Activates the buffer.</summary>
-			void activate();
+			void activate() const;
 		};
 
 
@@ -147,28 +282,28 @@ namespace onion
 
 			/// <summary>Retrieves the width of the image.</summary>
 			/// <returns>The width of the image, in pixels.</returns>
-			int get_width();
+			int get_width() const;
 
 			/// <summary>Retrieves the height of the image.</summary>
 			/// <returns>The height of the image, in pixels.</returns>
-			int get_height();
+			int get_height() const;
 
 			/// <summary>Checks whether this buffer is the active one.</summary>
 			/// <returns>True if this buffer is active, false otherwise.</returns>
-			bool is_active();
+			bool is_active() const;
 
 			/// <summary>Activates the buffer.</summary>
-			void activate();
+			void activate() const;
 		};
 
 
 
 		// Handles all calls to display something using information from a buffer.
-		class _BufferDisplayer
+		class _VertexBufferDisplayer
 		{
 		protected:
 			// The buffer to display from.
-			_Buffer* m_Buffer = nullptr;
+			_VertexBuffer* m_Buffer = nullptr;
 
 		public:
 			/// <summary>Displays using the currently bound shader and information from the buffer.</summary>
@@ -178,11 +313,11 @@ namespace onion
 
 			/// <summary>Sets the buffer to use.</summary>
 			/// <param name="buffer">The new buffer to use.</param>
-			void set_buffer(_Buffer* buffer);
+			void set_buffer(_VertexBuffer* buffer);
 		};
 
 		// Displays two consecutive triangles in the buffer.
-		class _SquareBufferDisplayer : public _BufferDisplayer
+		class _SquareBufferDisplayer : public _VertexBufferDisplayer
 		{
 		public:
 			/// <summary>Displays using the currently bound shader and information from the buffer.</summary>
@@ -194,135 +329,28 @@ namespace onion
 	}
 
 
-
-	// A wrapper for a shader program.
-	template <typename... _Uniforms>
-	class Shader : public opengl::_Shader
+	class VertexBuffer : public opengl::_VertexBuffer
 	{
 	private:
-		// The locations of all uniform variables.
-		opengl::_Location* m_Uniforms[sizeof...(_Uniforms)];
-
-		/// <summary>The end condition for the recursion.</summary>
-		void set_uniforms(opengl::_Location** index) {}
-
-		/// <summary>Sets the values of each uniform variable recursively.</summary>
-		/// <param name="index">The index of the uniform currently being set.</param>
-		/// <param name="first">The value of the uniform currently being set.</param>
-		/// <param name="others">The remaining uniform variables.</param>
-		template <typename _FirstUniform, typename... _OtherUniforms>
-		void set_uniforms(opengl::_Location** index, _FirstUniform first, _OtherUniforms... others)
-		{
-			set_uniform<const _FirstUniform&>(*index, first);
-			set_uniforms(index + 1, others...);
-		}
-
-	public:
-		/// <summary>Constructs a shader program.</summary>
-		/// <param name="vertex_shader_text">The vertex shader, in raw text form.</param>
-		/// <param name="fragment_shader_text">The fragment shader, in raw text form.</param>
-		/// <param name="uniforms">An array of the names of each uniform variable included in the shader program. Should have size exactly equal to the number of template parameters to this class.</param>
-		Shader(const char* vertex_shader_text, const char* fragment_shader_text, const std::vector<std::string>& uniforms) : opengl::_Shader(vertex_shader_text, fragment_shader_text)
-		{
-			if (sizeof...(_Uniforms) > uniforms.size())
-			{
-				// TODO throw error
-			}
-
-			for (int k = sizeof...(_Uniforms)-1; k >= 0; --k)
-			{
-				m_Uniforms[k] = get_uniform(uniforms[k].c_str());
-			}
-		}
-
-		/// <summary>Destroys the shader program.</summary>
-		virtual ~Shader()
-		{
-			for (int k = sizeof...(_Uniforms)-1; k >= 0; --k)
-				delete m_Uniforms[k];
-		}
-
-		/// <summary>Activates the shader program and sets any uniform variables.</summary>
-		/// <param name="uniforms">The values of the uniform variables.</param>
-		void activate(_Uniforms... uniforms)
-		{
-			opengl::_Shader::__activate();
-			set_uniforms(m_Uniforms, uniforms...);
-		}
-	};
-
-
-	// A wrapper for a buffer of attributes for a shader program.
-	template <unsigned int... _Lengths>
-	class Buffer : public opengl::_Buffer
-	{
-	private:
-		// The location of each attribute in the buffer.
-		opengl::_Location* m_Attribs[sizeof...(_Lengths)];
-
-		/// <summary>End condition for the recursion. Sets the last attrib in the buffer.</summary>
-		/// <param name="index">A pointer to the current attrib's location in the attrib location array.</param>
-		/// <param name="ptr">The total length of all attribs before this one.</param>
-		template <unsigned int _DummyParameter>
-		unsigned int set_attrib(opengl::_Location** index, unsigned int ptr)
-		{
-			return ptr;
-		}
-
-		/// <summary>Sets the current attrib and all attribs after it.</summary>
-		/// <param name="index">A pointer to the current attrib's location in the attrib location array.</param>
-		/// <param name="ptr">The total length of all attribs before this one.</param>
-		template <unsigned int _DummyParameter, unsigned int _FirstLength, unsigned int... _OtherLengths>
-		unsigned int set_attrib(opengl::_Location** index, unsigned int ptr)
-		{
-			unsigned int stride = set_attrib<_DummyParameter, _OtherLengths...>(index + 1, ptr + _FirstLength);
-			opengl::_Buffer::set_attrib(*index, ptr, _FirstLength, stride);
-
-			return stride;
-		}
+		// The vertex attributes associated with the buffer.
+		const opengl::_VertexAttributeInformation& m_Attribs;
 
 	protected:
 		/// <summary>Activates the buffer.</summary>
-		virtual void __activate()
-		{
-			// Activate the buffer
-			opengl::_Buffer::__activate();
-
-			// Set the vertex attrib arrays
-			set_attrib<0, _Lengths...>(m_Attribs, 0);
-		}
+		void __activate() const;
 
 	public:
-		/// <summary>Constructs a buffer.</summary>
-		/// <param name="shader">The shader program that the buffer is associated with.</param>
-		/// <param name="attribs">An array of the names of each attrib variable included in the shader program. Should have size exactly equal to the number of template parameters to this class.</param>
-		/// <param name="data">The raw data of the buffer.</param>
-		Buffer(opengl::_Shader* shader, const std::vector<std::string>& attribs, const std::vector<float>& data) : opengl::_Buffer(data)
-		{
-			if (sizeof...(_Lengths) > attribs.size())
-			{
-				// TODO throw an error
-			}
+		/// <summary>Constructs a buffer of vertex attributes.</summary>
+		/// <param name="data">The data to fill the vertex attribute buffer with.</param>
+		/// <param name="attribs">The information about the vertex attributes in the buffer.</param>
+		VertexBuffer(const std::vector<float>& data, const opengl::_VertexAttributeInformation& attribs);
 
-			for (int k = sizeof...(_Lengths)-1; k >= 0; --k)
-			{
-				m_Attribs[k] = shader->get_attrib(attribs[k].c_str());
-			}
-		}
-
-		/// <summary>Frees the buffer.</summary>
-		virtual ~Buffer()
-		{
-			for (int k = sizeof...(_Lengths)-1; k >= 0; --k)
-			{
-				delete m_Attribs[k];
-			}
-		}
+		/// <summary>Virtual deconstructor.</summary>
+		virtual ~VertexBuffer();
 	};
 
 	// A buffer that also manages an image.
-	template <unsigned int... _Lengths>
-	class ImageBuffer : public Buffer<_Lengths...>
+	class ImageBuffer : public VertexBuffer
 	{
 	private:
 		// The image in the buffer.
@@ -330,45 +358,88 @@ namespace onion
 
 	protected:
 		/// <summary>Binds the buffers and the image.</summary>
-		virtual void __activate()
-		{
-			// Bind the buffers
-			Buffer<_Lengths...>::__activate();
-
-			// Activate the image
-			m_Image->activate();
-		}
+		virtual void __activate() const;
 
 	public:
 		/// <summary>Constructs a buffer that also manages a image.</summary>
-		/// <param name="shader">The shader program that the buffer is associated with.</param>
-		/// <param name="attribs">An array of the names of each attrib variable included in the shader program. Should have size exactly equal to the number of template parameters to this class.</param>
 		/// <param name="data">The raw data of the buffer.</param>
+		/// <param name="attribs">The information about the vertex attributes in the buffer.</param>
 		/// <param name="image">The image to be managed by the buffer.</param>
-		ImageBuffer(opengl::_Shader* shader, const std::vector<std::string>& attribs, const std::vector<float>& data, opengl::_Image* image) : Buffer<_Lengths...>(shader, attribs, data)
-		{
-			m_Image = image;
-		}
+		ImageBuffer(const std::vector<float>& data, const opengl::_VertexAttributeInformation& attribs, opengl::_Image* image);
 
 		/// <summary>Frees the image.</summary>
-		~ImageBuffer()
-		{
-			delete m_Image;
-		}
+		~ImageBuffer();
 
 		/// <summary>Retrieves the width of the image.</summary>
 		/// <returns>The width of the image included in the buffer.</returns>
-		int get_width()
-		{
-			return m_Image->get_width();
-		}
+		int get_width() const;
 
 		/// <summary>Retrieves the height of the image.</summary>
 		/// <returns>The height of the image included in the buffer.</returns>
-		int get_height()
+		int get_height() const;
+	};
+	
+	
+	// A wrapper for a shader program.
+	template <typename... _Uniforms>
+	class Shader : public opengl::_Shader
+	{
+	private:
+		/// <summary>The end condition for the recursion.</summary>
+		void set_uniforms(std::vector<opengl::_UniformAttribute*>::const_iterator iter) {}
+
+		/// <summary>Sets the values of each uniform variable recursively.</summary>
+		/// <param name="iter">An iterator pointing to the current uniform.</param>
+		/// <param name="first">The value of the uniform currently being set.</param>
+		/// <param name="others">The remaining uniform variables.</param>
+		template <typename _FirstUniform, typename... _OtherUniforms>
+		void set_uniforms(std::vector<opengl::_UniformAttribute*>::const_iterator iter, const _FirstUniform& first, const _OtherUniforms&... others)
 		{
-			return m_Image->get_height();
+			(*iter)->set(first);
+			set_uniforms(++iter, others...);
+		}
+
+	public:
+		/// <summary>Loads shaders from a file.</summary>
+		/// <param name="path">The path to the vertex and fragment shader files, from the res/data/shaders/ folder, omitting file extensions.</param>
+		Shader(const char* path) : opengl::_Shader(path)
+		{
+			if (sizeof...(_Uniforms) != m_UniformAttributes.size())
+			{
+				std::string message("Error loading shaders from path \"");
+				message.append(path).append("\".\n");
+				message.append("Mismatch between template parameter count of Shader (").append(std::to_string(sizeof...(_Uniforms)))
+					.append(") and number of uniform attributes detected (").append(std::to_string(m_UniformAttributes.size())).append(").");
+				errlog(message);
+				// TODO abort
+			}
+		}
+
+		/// <summary>Constructs a shader program.</summary>
+		/// <param name="vertex_shader_text">The vertex shader, in raw text form.</param>
+		/// <param name="fragment_shader_text">The fragment shader, in raw text form.</param>
+		Shader(const char* vertex_shader_text, const char* fragment_shader_text) : opengl::_Shader(vertex_shader_text, fragment_shader_text)
+		{
+			if (sizeof...(_Uniforms) != m_UniformAttributes.size() + 1)
+			{
+				std::string message("Error loading shaders from raw text.\n\n--- VERTEX ---\n");
+				message.append(vertex_shader_text).append("\n\n--- FRAGMENT ---\n").append(fragment_shader_text).append("\n------------\n");
+				message.append("Mismatch between template parameter count of Shader (").append(std::to_string(sizeof...(_Uniforms)))
+					.append(") and number of uniform attributes detected (").append(std::to_string(m_UniformAttributes.size())).append(").");
+				errlog(message);
+				// TODO abort
+			}
+		}
+
+		/// <summary>Activates the shader program and sets any uniform variables.</summary>
+		/// <param name="uniforms">The values of the uniform variables.</param>
+		void activate(_Uniforms... uniforms)
+		{
+			opengl::_Shader::__activate();
+			set_uniforms(m_UniformAttributes.begin(), uniforms...);
 		}
 	};
+
+
 
 }

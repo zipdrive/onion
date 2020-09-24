@@ -1,5 +1,5 @@
 #pragma once
-#include "shader.h"
+#include "transform.h"
 #include "../fileio.h"
 #include "../matrix.h"
 
@@ -374,13 +374,13 @@ namespace onion
 	class SpriteSheet : public _SpriteSheet
 	{
 	protected:
-		typedef Shader<const MatrixStack&, const MatrixStack&, _Args...> _SpriteShader;
+		typedef Shader<const MatrixStack&, _Args...> _SpriteShader;
 
 		// The shader used for the sprite sheet.
 		_SpriteShader* m_Shader;
 
 		// The object used to display the sprites.
-		opengl::_BufferDisplayer* m_Displayer;
+		opengl::_VertexBufferDisplayer* m_Displayer;
 
 	public:
 		/// <summary>Destroys the displayer object (but not the shader, because shaders may be shared between different sprite sheets).</summary>
@@ -395,7 +395,7 @@ namespace onion
 		void display(SPRITE_KEY key, _Args... args) const
 		{
 			// Activate the shader
-			m_Shader->activate(projection(), model(), args...);
+			m_Shader->activate(Transform::model, args...);
 
 			// Display the sprite
 			m_Displayer->display(key);
@@ -407,7 +407,7 @@ namespace onion
 		void display(const Sprite* sprite, _Args... args) const
 		{
 			// Activate the shader
-			m_Shader->activate(projection(), model(), args...);
+			m_Shader->activate(Transform::model, args...);
 
 			// Display the sprite
 			m_Displayer->display(sprite->key);

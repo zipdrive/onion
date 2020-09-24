@@ -817,11 +817,4 @@ namespace onion
 		void custom(const TRANSFORM_MATRIX& matrix);
 	};
 
-
-	/// <summary>Retrieves the matrix stack corresponding to the model space transformation.</summary>
-	MatrixStack& model();
-
-	/// <summary>Retrieves the matrix stack that controls how the model space is projected onto the screen.</summary>
-	MatrixStack& projection();
-
 }

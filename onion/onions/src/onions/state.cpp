@@ -6,19 +6,6 @@ namespace onion
 
 	State::~State() {}
 
-	void State::display() const
-	{
-		static Application*& app = get_application_settings();
-
-		int depth = std::max(app->width, app->height);
-
-		MatrixStack& p = projection();
-		p.reset();
-		p.ortho(0, app->width, 0, app->height, -depth, depth);
-
-		__display();
-	}
-
 
 	State* g_State = nullptr;
 

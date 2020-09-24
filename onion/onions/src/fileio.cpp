@@ -82,6 +82,14 @@ namespace onion
 		return string(buffer);
 	}
 
+	string LoadFile::load_line()
+	{
+		string line;
+		if (getline(m_File, line))
+			return line;
+		return "";
+	}
+
 	string LoadFile::load_data(_IntegerData& data)
 	{
 		string line;

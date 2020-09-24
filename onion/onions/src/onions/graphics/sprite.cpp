@@ -307,41 +307,7 @@ namespace onion
 		if (!m_SimpleSpriteShader)
 		{
 			// Generate the shader for simple pixel sprite sheets, if it hasn't been generated already
-			m_SimpleSpriteShader = new SimplePixelSpriteSheet::_SpriteShader(
-
-				// The raw text of the vertex shader
-				"#version 330 core\n"
-
-				"in vec2 vertexPosition;\n"
-				"in vec2 vertexUV;\n"
-
-				"uniform mat4 projection;\n"
-				"uniform mat4 model;\n"
-
-				"out vec2 fragmentUV;\n"
-
-				"void main() {\n"
-				"	gl_Position = projection * model * vec4(vertexPosition, 0, 1);\n"
-				"	fragmentUV = vertexUV;\n"
-				"}",
-
-				// The raw text of the fragment shader
-				"#version 330 core\n"
-
-				"in vec2 fragmentUV;\n"
-
-				"uniform mat4 tintMatrix;\n"
-				"uniform sampler2D tex2D;\n"
-
-				"void main() {\n"
-				"   vec4 fragColor = tintMatrix * texture(tex2D, fragmentUV);\n"
-				"	gl_FragColor = fragColor;\n"
-				"}",
-
-				// The names of each uniform variable (excluding the 2D sampler)
-				{ "projection", "model", "tintMatrix" }
-
-			);
+			m_SimpleSpriteShader = new SimplePixelSpriteSheet::_SpriteShader("simple_pixel");
 		}
 
 		return m_SimpleSpriteShader;
@@ -493,20 +459,17 @@ namespace onion
 	{
 		m_Displayer->set_buffer(
 			// Set an image buffer that sets the values of two vertex attributes, each with length 2
-			new ImageBuffer<2, 2>(
-
-				// The shader used by the sprite sheet
-				m_Shader,
-
-				// All vertex attributes
-				{ "vertexPosition", "vertexUV" },
+			new ImageBuffer(
 
 				// The array of data
 				data,
 
+				// All vertex attributes recognized by the shader program
+				m_Shader->get_attribs(),
+
 				// The previously loaded image
 				image
-				)
+			)
 		);
 	}
 
@@ -524,56 +487,7 @@ namespace onion
 		if (!m_ShadedTextureSpriteShader)
 		{
 			// Generate the shader for simple pixel sprite sheets, if it hasn't been generated already
-			m_ShadedTextureSpriteShader = new ShadedTexturePixelSpriteSheet::_SpriteShader(
-
-				// The raw text of the vertex shader
-				"#version 330 core\n"
-
-				"in vec2 vertexPosition;\n"
-				"in vec2 vertexShadingUV;\n"
-				"in vec2 vertexMappingUV;\n"
-
-				"uniform mat4 projection;\n"
-				"uniform mat4 model;\n"
-
-				"out vec2 fragmentShadingUV;\n"
-				"out vec2 fragmentMappingUV;\n"
-
-				"void main() {\n"
-				"	gl_Position = projection * model * vec4(vertexPosition, 0, 1);\n"
-				"	fragmentShadingUV = vertexShadingUV;\n"
-				"	fragmentMappingUV = vertexMappingUV;\n"
-				"}",
-
-				// The raw text of the fragment shader
-				"#version 330 core\n"
-
-				"in vec2 fragmentShadingUV;\n"
-				"in vec2 fragmentMappingUV;\n"
-
-				"uniform mat4x2 mappingMatrix;\n"
-				"uniform mat4 redPaletteMatrix;\n"
-				"uniform mat4 greenPaletteMatrix;\n"
-				"uniform mat4 bluePaletteMatrix;\n"
-
-				"uniform sampler2D tex2D;\n"
-
-				"void main() {\n"
-				"   vec4 fragShading = texture(tex2D, fragmentShadingUV);\n"
-				"   if (fragShading.a < 0.1) discard;\n"
-				"   vec2 fragMapping = vec2(mappingMatrix * texture(tex2D, fragmentMappingUV));\n"
-				"   vec4 fragPalette = texture(tex2D, fragMapping);\n"
-				"   if (fragPalette.a < 0.1) discard;\n"
-				"   mat4 fragPaletteMatrix = (fragPalette.r * redPaletteMatrix) + (fragPalette.g * greenPaletteMatrix) + (fragPalette.b * bluePaletteMatrix);\n"
-				"   fragPaletteMatrix[3][3] *= fragPalette.a;\n"
-				"   vec4 fragColor = fragPaletteMatrix * fragShading;\n"
-				"	gl_FragColor = fragColor;\n"
-				"}",
-
-				// The names of each uniform variable (excluding the 2D sampler)
-				{ "projection", "model", "mappingMatrix", "redPaletteMatrix", "greenPaletteMatrix", "bluePaletteMatrix" }
-
-			);
+			m_ShadedTextureSpriteShader = new ShadedTexturePixelSpriteSheet::_SpriteShader("shaded_texture_pixel");
 		}
 
 		m_Shader = m_ShadedTextureSpriteShader;
@@ -697,20 +611,17 @@ namespace onion
 	{
 		m_Displayer->set_buffer(
 			// Set an image buffer that sets the values of three vertex attributes, each with length 2
-			new ImageBuffer<2, 2, 2>(
-
-				// The shader used by the sprite sheet
-				m_Shader,
-
-				// All vertex attributes
-				{ "vertexPosition", "vertexShadingUV", "vertexMappingUV" },
+			new ImageBuffer(
 
 				// The array of data
 				data,
 
+				// All vertex attributes recognized by the program
+				m_Shader->get_attribs(),
+
 				// The previously loaded image
 				image
-				)
+			)
 		);
 	}
 
@@ -726,12 +637,11 @@ namespace onion
 			);
 
 			// Flip and display the textured sprite
-			MatrixStack& m = model();
-			m.push();
-			m.translate(sprite->width);
-			m.scale(-1.f);
+			Transform::model.push();
+			Transform::model.translate(sprite->width);
+			Transform::model.scale(-1.f);
 			display(sprite, texture->tex, palette->get_red_palette_matrix(), palette->get_green_palette_matrix(), palette->get_blue_palette_matrix());
-			m.pop();
+			Transform::model.pop();
 		}
 		else
 		{

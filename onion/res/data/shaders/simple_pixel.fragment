@@ -1,0 +1,12 @@
+#version 330 core
+
+in vec2 fragmentUV;
+
+uniform mat4 tintMatrix;
+uniform sampler2D tex2D;
+
+void main() 
+{
+    vec4 fragColor = tintMatrix * texture(tex2D, fragmentUV);
+    gl_FragColor = vec4(1, 1, 1, 1);
+}

@@ -113,13 +113,17 @@ namespace onion
 		/// <returns>True if the file is good, false otherwise.</returns>
 		bool good();
 
-		/// <summary>Loads an integer from file.</summary>
+		/// <summary>Loads an integer from a dense file.</summary>
 		/// <returns>An integer from the file.</returns>
 		int16_t load_int();
 
-		/// <summary>Loads a string from file.</summary>
+		/// <summary>Loads a string from a dense file.</summary>
 		/// <returns>A string from the file.</returns>
 		std::string load_string();
+
+		/// <summary>Loads a line from the file.</summary>
+		/// <returns>The next line of the file, as a string.</returns>
+		std::string load_line();
 
 		/// <summary>Loads a line of key-value pairs from file, when stored in the format "prefix  key1 = value1  key2 = value2  ..."</summary>
 		/// <param name="data">A reference to where the key-value pairs will be stored. Keys cannot include spaces.</param>

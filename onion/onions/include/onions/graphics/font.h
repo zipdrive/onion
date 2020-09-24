@@ -42,10 +42,8 @@ namespace onion
 	class SpriteFont : public Font
 	{
 	private:
-		typedef Buffer<2> SpriteFontBuffer;
-
 		// Used to display the sprites.
-		opengl::_BufferDisplayer* m_Displayer;
+		opengl::_VertexBufferDisplayer* m_Displayer;
 
 		// A font character.
 		struct Character : public Sprite

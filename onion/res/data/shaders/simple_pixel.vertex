@@ -1,0 +1,22 @@
+#version 330 core
+
+in vec2 vertexPosition;
+in vec2 vertexUV;
+
+uniform Camera
+{
+    mat4 projection;
+    mat4 view;
+};
+
+uniform mat4 model;
+
+out vec2 fragmentUV;
+
+void main() 
+{
+    vec4 pos = projection * view * model * vec4(vertexPosition, 0, 1);
+    vec4 p = projection * vec4(vertexPosition, 0, 1);
+    gl_Position = vec4(p.xyz, 1);
+    fragmentUV = vertexUV;
+}

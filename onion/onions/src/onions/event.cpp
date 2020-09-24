@@ -10,6 +10,7 @@
 #include <GLFW/glfw3.h>
 #include "../../include/onions/application.h"
 #include "../../include/onions/event.h"
+#include "../../include/onions/graphics/transform.h"
 
 
 using namespace std;
@@ -745,6 +746,13 @@ namespace onion
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 		glClearColor(0.f, 0.f, 0.f, 1.f);
+
+		// Set up the transformation matrices
+		float depth = std::max(g_Application->width, g_Application->height);
+		Transform::init();
+		Transform::projection.ortho(0.f, g_Application->width, 0.f, g_Application->height, -depth, depth);
+		Transform::set_projection();
+		Transform::set_view();
 
 		// Core loop
 		while (!glfwWindowShouldClose(g_Window))

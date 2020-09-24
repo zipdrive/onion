@@ -62,10 +62,10 @@ void test_alpha_display()
 {
 	g_TestAlphaSpriteSheet->display(0, g_TestAlphaPalette->get_red_palette_matrix());
 
-	model().push();
-	model().translate(-64.f, 64.f, -0.01f);
+	Transform::model.push();
+	Transform::model.translate(-64.f, 64.f, -0.01f);
 	g_TestAlphaSpriteSheet->display(12, g_TestAlphaPalette->get_red_palette_matrix());
-	model().pop();
+	Transform::model.pop();
 }
 
 void test_alpha_main()
@@ -79,21 +79,12 @@ void test_alpha_main()
 		vec4i(255, 0, 0, 0), vec4i(0, 255, 0, 0), vec4i(0, 0, 255, 0)
 	);
 
-	// Construct transformation
-	Application* app = get_application_settings();
-	g_Transform.set(0, 0, 2.f / app->width);
-	g_Transform.set(1, 1, 2.f / app->height);
-
-	model().push();
-	model().custom(g_Transform);
-
 	// Call the main function
 	onion::main(test_alpha_display);
 
 	// Clean up
 	delete g_TestAlphaSpriteSheet;
 	g_TestAlphaSpriteSheet = nullptr;
-	model().pop();
 }
 
 
@@ -117,21 +108,12 @@ void test_sprite_main()
 		vec4i(255, 0, 0, 255), vec4i(0, 255, 0, 255), vec4i(0, 0, 255, 255)
 	);
 
-	// Construct transformation
-	Application* app = get_application_settings();
-	g_Transform.set(0, 0, 2.f / app->width);
-	g_Transform.set(1, 1, 2.f / app->height);
-
-	model().push();
-	model().custom(g_Transform);
-
 	// Call the main function
 	onion::main(test_sprite_display);
 
 	// Clean up
 	delete g_TestSpriteSheet;
 	g_TestSpriteSheet = nullptr;
-	model().pop();
 }
 
 
@@ -160,20 +142,11 @@ void test_texmap_main()
 		vec4i(0, 0, 255, 255), vec4i(128, 128, 255, 255), vec4i(0, 0, 128, 255)
 	);
 
-	// Construct transformation
-	Application* app = get_application_settings();
-	g_Transform.set(0, 0, 2.f / app->width);
-	g_Transform.set(1, 1, 2.f / app->height);
-
-	model().push();
-	model().custom(g_Transform);
-
 	// Call the main function
 	onion::main(test_texmap_display);
 
 	// Clean up
 	delete g_TestTexmapSpriteSheet;
-	model().pop();
 	g_TestTexmapSpriteSheet = nullptr;
 }
 
@@ -205,15 +178,6 @@ void test_hune_main()
 
 	g_TestHune->facing = FACING_BACK;
 
-	// Construct transformation
-	Application* app = get_application_settings();
-	g_Transform.set(0, 0, 6.f / app->width);
-	g_Transform.set(1, 1, 6.f / app->height);
-
-	MatrixStack& p = projection();
-	p.reset();
-	p.custom(g_Transform);
-
 	// Call the main function
 	onion::main(test_hune_display);
 
@@ -239,21 +203,12 @@ void test_font_main()
 	// Create the palette
 	g_TestFontPalette = new SinglePalette(vec4i(255, 0, 0, 0), vec4i(0, 255, 0, 0), vec4i(0, 0, 255, 0));
 
-	// Construct transformation
-	Application* app = get_application_settings();
-	g_Transform.set(0, 0, 2.f / app->width);
-	g_Transform.set(1, 1, 2.f / app->height);
-
-	model().push();
-	model().custom(g_Transform);
-
 	// Call the main function
 	onion::main(test_font_display);
 
 	// Clean up
 	delete g_TestFont;
 	delete g_TestFontPalette;
-	model().pop();
 }
 
 
@@ -262,6 +217,6 @@ void test_font_main()
 int main()
 {
 	init("settings.ini");
-	character_creator_setup();
+	test_sprite_main();
 	return 0;
 }

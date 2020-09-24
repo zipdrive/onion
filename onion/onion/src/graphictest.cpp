@@ -34,20 +34,12 @@ void graphictest_display()
 
 void graphictest_main()
 {
-	// Construct transformation
-	Application* app = get_application_settings();
-	g_TestTransform.set(0, 0, 2.f / app->width);
-	g_TestTransform.set(1, 1, 2.f / app->height);
-
+	// Construct palette
 	g_Palette = new SinglePalette(
 		vec4i(255, 0, 0, 0),
 		vec4i(0, 255, 0, 0),
 		vec4i(0, 0, 255, 0)
 	);
-
-	MatrixStack& p = projection();
-	p.reset();
-	p.custom(g_TestTransform);
 
 	// Load the sprite sheet
 #ifdef TEST_SHADED_TEXTURE

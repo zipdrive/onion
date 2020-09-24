@@ -1,3 +1,4 @@
+#include <regex>
 #include <filesystem>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -27,23 +28,220 @@ namespace onion
 		};
 
 		_ID* _Shader::m_ActiveShader{ nullptr };
-		_ID* _Buffer::m_ActiveBuffer{ nullptr };
+		_ID* _VertexBuffer::m_ActiveBuffer{ nullptr };
 		_ID* _Image::m_ActiveImage{ nullptr };
 
 
-		struct _Location
+		struct _UniformBuffer::Index
 		{
-			// The location of the uniform.
-			GLuint loc;
+			GLuint index;
 
-			/// <summary>Constructs a location of a uniform in the shader program.</summary>
-			/// <param name="loc">The location of the uniform.</param>
-			_Location(GLuint loc) : loc(loc) {}
+			Index(GLuint index) : index(index) {}
 		};
 
 
 
+		class _VertexAttributeLocation : public _VertexAttribute
+		{
+		private:
+			// The location of the vertex attribute.
+			GLuint m_Location;
+
+		public:
+			_VertexAttributeLocation(GLuint location, GLuint size)
+			{
+				m_Location = location;
+				m_Size = size;
+			}
+
+			void set(unsigned int offset, unsigned int stride) const
+			{
+				glEnableVertexAttribArray(m_Location);
+				glVertexAttribPointer(m_Location, m_Size, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (void*)(sizeof(float) * offset));
+			}
+		};
+
+		_VertexAttributeInformation::~_VertexAttributeInformation()
+		{
+			for (auto iter = attributes.begin(); iter != attributes.end(); ++iter)
+				delete iter->attrib;
+		}
+
+
+
+		_UniformAttribute::_UniformAttribute(std::string name) : name(name) {}
+		_UniformAttribute::~_UniformAttribute() {}
+		
+		// The location of a uniform within a shader program.
+		template <typename T>
+		class _UniformProgramAttribute : public _UniformAttribute
+		{
+		private:
+			// The location within the shader program.
+			GLuint m_Location;
+
+		public:
+			_UniformProgramAttribute(std::string name, GLuint location) : _UniformAttribute(name)
+			{
+				m_Location = location;
+			}
+			
+			void set(float data) const
+			{
+				if (std::is_same<T, float>::value)
+				{
+					glUniform1f(m_Location, data);
+				}
+			}
+
+			void set(const vec2f& data) const
+			{
+				if (std::is_same<T, vec2f>::value)
+				{
+					glUniform2fv(m_Location, 1, data.matrix_values());
+				}
+			}
+
+			void set(const vec3f& data) const
+			{
+				if (std::is_same<T, vec3f>::value)
+				{
+					glUniform3fv(m_Location, 1, data.matrix_values());
+				}
+			}
+
+			void set(const vec4f& data) const
+			{
+				if (std::is_same<T, vec4f>::value)
+				{
+					glUniform4fv(m_Location, 1, data.matrix_values());
+				}
+			}
+
+			void set(const mat4f& data) const
+			{
+				if (std::is_same<T, mat4f>::value)
+				{
+					glUniformMatrix4fv(m_Location, 1, GL_FALSE, data.matrix_values());
+				}
+			}
+
+			void set(const mat2x4f& data) const
+			{
+				if (std::is_same<T, mat2x4f>::value)
+				{
+					glUniformMatrix4x2fv(m_Location, 1, GL_FALSE, data.matrix_values());
+				}
+			}
+
+			void set(const MatrixStack& data) const
+			{
+				if (std::is_same<T, mat4f>::value)
+				{
+					glUniformMatrix4fv(m_Location, 1, GL_FALSE, data.get_values());
+				}
+			}
+		};
+
+		template <typename T>
+		class _UniformBlockAttribute : public _UniformAttribute
+		{
+		private:
+			// The location of the uniform within the block.
+			GLuint m_Location;
+
+		public:
+			_UniformBlockAttribute(std::string name, GLuint location) : _UniformAttribute(name)
+			{
+				m_Location = location;
+			}
+
+			void set(float data) const
+			{
+				if (std::is_same<T, float>::value)
+				{
+					glBufferSubData(GL_UNIFORM_BUFFER, m_Location, 4, &data);
+				}
+			}
+
+			void set(const vec2f& data) const
+			{
+				if (std::is_same<T, vec2f>::value)
+				{
+					glBufferSubData(GL_UNIFORM_BUFFER, m_Location, 8, data.matrix_values());
+				}
+			}
+			
+			void set(const vec3f& data) const
+			{
+				if (std::is_same<T, vec3f>::value)
+				{
+					glBufferSubData(GL_UNIFORM_BUFFER, m_Location, 16, data.matrix_values());
+				}
+			}
+
+			void set(const vec4f& data) const
+			{
+				if (std::is_same<T, vec4f>::value)
+				{
+					glBufferSubData(GL_UNIFORM_BUFFER, m_Location, 16, data.matrix_values());
+				}
+			}
+
+			void set(const mat4f& data) const
+			{
+				if (std::is_same<T, mat4f>::value)
+				{
+					glBufferSubData(GL_UNIFORM_BUFFER, m_Location, 64, data.matrix_values());
+				}
+			}
+
+			void set(const mat2x4f& data) const
+			{
+				if (std::is_same<T, mat2x4f>::value)
+				{
+					glBufferSubData(GL_UNIFORM_BUFFER, m_Location, 32, data.matrix_values());
+				}
+			}
+
+			void set(const MatrixStack& data) const
+			{
+				if (std::is_same<T, mat4f>::value)
+				{
+					glBufferSubData(GL_UNIFORM_BUFFER, m_Location, 64, data.get_values());
+				}
+			}
+		};
+
+
+		_Shader::_Shader(const char* path)
+		{
+			std::string vertex_shader, fragment_shader;
+
+			// Load the files of the shaders
+			std::string fpath("res/data/shaders/");
+			fpath += path;
+
+			LoadFile vertex(fpath + ".vertex");
+			LoadFile fragment(fpath + ".fragment");
+
+			// Collect the text of each shader in a string
+			while (vertex.good())
+				vertex_shader += vertex.load_line() + "\n";
+
+			while (fragment.good())
+				fragment_shader += fragment.load_line() + "\n";
+
+			// Compile the shaders
+			compile(vertex_shader.c_str(), fragment_shader.c_str());
+		}
+
 		_Shader::_Shader(const char* vertex_shader_text, const char* fragment_shader_text)
+		{
+			compile(vertex_shader_text, fragment_shader_text);
+		}
+		
+		void _Shader::compile(const char* vertex_shader_text, const char* fragment_shader_text)
 		{
 #define SHADER_INFO_BUFFER_SIZE 500
 			int success; // Retrieves whether compilation was a success or failure.
@@ -93,6 +291,227 @@ namespace onion
 			// Delete the shaders
 			glDeleteShader(vertex_shader);
 			glDeleteShader(fragment_shader);
+
+			// Determine the shader program's vertex attributes
+			GLint vertex_attribute_count;
+			glGetProgramiv(id, GL_ACTIVE_ATTRIBUTES, &vertex_attribute_count);
+
+			if (vertex_attribute_count >= 0)
+			{
+				m_VertexAttributes.attributes.resize(vertex_attribute_count);
+				m_VertexAttributes.stride = 0;
+
+				for (int index = 0; index < vertex_attribute_count; ++index)
+				{
+					// Calculate the size of the vertex attribute
+					GLint size;
+					GLenum type;
+					glGetActiveAttrib(id, index, 0, NULL, &size, &type, NULL);
+
+					switch (type)
+					{
+					case GL_FLOAT:
+						size *= 1;
+						break;
+					case GL_FLOAT_VEC2:
+						size *= 2;
+						break;
+					case GL_FLOAT_VEC3:
+						size *= 3;
+						break;
+					case GL_FLOAT_VEC4:
+					case GL_FLOAT_MAT2:
+						size *= 4;
+						break;
+					case GL_FLOAT_MAT2x3:
+					case GL_FLOAT_MAT3x2:
+						size *= 6;
+						break;
+					case GL_FLOAT_MAT2x4:
+					case GL_FLOAT_MAT4x2:
+						size *= 8;
+						break;
+					case GL_FLOAT_MAT3:
+						size *= 9;
+						break;
+					case GL_FLOAT_MAT3x4:
+					case GL_FLOAT_MAT4x3:
+						size *= 12;
+						break;
+					case GL_FLOAT_MAT4:
+						size *= 16;
+						break;
+					default:
+						size = 0;
+						break;
+					}
+
+					m_VertexAttributes.attributes[index].attrib = new _VertexAttributeLocation(index, size);
+					m_VertexAttributes.attributes[index].offset = m_VertexAttributes.stride;
+					m_VertexAttributes.stride += size;
+				}
+			}
+
+			// Determine and construct the uniform blocks that the shader program uses
+			GLint uniform_block_count;
+			glGetProgramiv(id, GL_ACTIVE_UNIFORM_BLOCKS, &uniform_block_count);
+
+			for (int index = 0; index < uniform_block_count; ++index)
+			{
+				GLint name_length;
+				glGetActiveUniformBlockiv(id, index, GL_UNIFORM_BLOCK_NAME_LENGTH, &name_length);
+
+				GLchar* raw_name = new GLchar[name_length];
+				glGetActiveUniformBlockName(id, index, name_length, NULL, raw_name);
+				std::string name(raw_name);
+
+				_UniformBuffer* buf = _UniformBuffer::get_buffer(name);
+				if (!buf) // If the buffer does not exist, construct the uniform block
+				{
+					// Get each uniform in the block
+					GLint buf_size;
+					glGetActiveUniformBlockiv(id, index, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &buf_size);
+
+					GLint* buf_uniforms = new GLint[buf_size];
+					glGetActiveUniformBlockiv(id, index, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, buf_uniforms);
+					GLuint* buf_uniform_indices = (GLuint*)buf_uniforms;
+
+					// Get the type of each uniform in the block
+					GLint* types = new GLint[buf_size];
+					glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_TYPE, types);
+
+					// Get the offset of each uniform in the block
+					GLint* offsets = new GLint[buf_size];
+					glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_OFFSET, offsets);
+
+					// Get the size of each uniform in the block
+					GLint* sizes = new GLint[buf_size];
+					glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_SIZE, sizes);
+					unsigned int total_size = 0;
+
+					// Get the length of each uniform's name
+					GLint* name_lengths = new GLint[buf_size];
+					glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_NAME_LENGTH, name_lengths);
+
+					// Create a uniform attribute for each uniform in the block
+					std::vector<_UniformAttribute*> uniforms(buf_size);
+					for (int i = 0; i < buf_size; ++i)
+					{
+						std::string uniform_name;
+						if (name_lengths[i] > 0)
+						{
+							GLchar* name_buf = new GLchar[name_lengths[i]];
+							glGetActiveUniformName(id, buf_uniform_indices[i], name_lengths[i], NULL, name_buf);
+							uniform_name = std::string(name_buf);
+							delete[] name_buf;
+						}
+
+						_UniformAttribute* u = nullptr;
+						GLuint offset = offsets[i];
+
+						switch (types[i])
+						{
+						case GL_FLOAT:
+							u = new _UniformBlockAttribute<float>(uniform_name, offset);
+							break;
+						case GL_FLOAT_VEC2:
+							u = new _UniformBlockAttribute<vec2f>(uniform_name, offset);
+							break;
+						case GL_FLOAT_VEC3:
+							u = new _UniformBlockAttribute<vec3f>(uniform_name, offset);
+							break;
+						case GL_FLOAT_VEC4:
+							u = new _UniformBlockAttribute<vec4f>(uniform_name, offset);
+							break;
+						case GL_FLOAT_MAT4:
+							u = new _UniformBlockAttribute<mat4f>(uniform_name, offset);
+							break;
+						case GL_FLOAT_MAT4x2:
+							u = new _UniformBlockAttribute<mat2x4f>(uniform_name, offset);
+							break;
+						}
+
+						uniforms[i] = u;
+						total_size += sizes[i];
+					}
+
+					// Construct the uniform block
+					buf = new _UniformBuffer(name, uniforms, total_size);
+
+					// Clean up all the arrays we allocated earlier
+					delete[] buf_uniforms;
+					delete[] types;
+					delete[] offsets;
+					delete[] sizes;
+					delete[] name_lengths;
+				}
+
+				// Bind the shader's uniform block to a uniform buffer
+				glUniformBlockBinding(id, index, buf->m_Index->index);
+
+				// Clean up the array we allocated earlier
+				delete[] raw_name;
+			}
+
+			// Determine any other uniforms
+			GLint uniform_count;
+			glGetProgramiv(id, GL_ACTIVE_UNIFORMS, &uniform_count);
+
+			for (unsigned int uniform_index = 0; uniform_index < uniform_count; ++uniform_index)
+			{
+				GLint uniform_block_index;
+				glGetActiveUniformsiv(id, 1, &uniform_index, GL_UNIFORM_BLOCK_INDEX, &uniform_block_index);
+
+				if (uniform_block_index < 0) // Uniform doesn't belong to a uniform block
+				{
+					// Retrieve the info associated with the uniform
+					GLint size;
+					GLenum type;
+					glGetActiveUniform(id, uniform_index, 0, NULL, &size, &type, NULL);
+
+					GLint name_length;
+					glGetActiveUniformsiv(id, 1, &uniform_index, GL_UNIFORM_NAME_LENGTH, &name_length);
+
+					std::string uniform_name;
+					if (name_length > 0)
+					{
+						GLchar* name_buf = new GLchar[name_length];
+						glGetActiveUniformName(id, uniform_index, name_length, NULL, name_buf);
+						uniform_name = std::string(name_buf);
+						delete[] name_buf;
+					}
+
+					// Construct a uniform object
+					_UniformAttribute* u = nullptr;
+
+					switch (type)
+					{
+					case GL_FLOAT:
+						u = new _UniformProgramAttribute<float>(uniform_name, uniform_index);
+						break;
+					case GL_FLOAT_VEC2:
+						u = new _UniformProgramAttribute<vec2f>(uniform_name, uniform_index);
+						break;
+					case GL_FLOAT_VEC3:
+						u = new _UniformProgramAttribute<vec3f>(uniform_name, uniform_index);
+						break;
+					case GL_FLOAT_VEC4:
+						u = new _UniformProgramAttribute<vec4f>(uniform_name, uniform_index);
+						break;
+					case GL_FLOAT_MAT4:
+						u = new _UniformProgramAttribute<mat4f>(uniform_name, uniform_index);
+						break;
+					case GL_FLOAT_MAT4x2:
+						u = new _UniformProgramAttribute<mat2x4f>(uniform_name, uniform_index);
+						break;
+					}
+
+					if (u)
+					{
+						m_UniformAttributes.push_back(u);
+					}
+				}
+			}
 		}
 
 		_Shader::~_Shader()
@@ -108,90 +527,17 @@ namespace onion
 			delete m_Shader;
 		}
 
-
-		_Location* _Shader::get_uniform(const char* name)
+		const _VertexAttributeInformation& _Shader::get_attribs() const
 		{
-			return new _Location(glGetUniformLocation(m_Shader->id, name));
+			return m_VertexAttributes;
 		}
 
-		_Location* _Shader::get_attrib(const char* name)
-		{
-			return new _Location(glGetAttribLocation(m_Shader->id, name));
-		}
-
-		template <>
-		void _Shader::set_uniform(_Location* loc, float value)
-		{
-			glUniform1f(loc->loc, value);
-		}
-
-		template <>
-		void _Shader::set_uniform(_Location* loc, const vec2f& value)
-		{
-			glUniform2fv(loc->loc, 1, value.matrix_values());
-		}
-
-		template <>
-		void _Shader::set_uniform(_Location* loc, const vec3f& value)
-		{
-			glUniform3fv(loc->loc, 1, value.matrix_values());
-		}
-
-		template <>
-		void _Shader::set_uniform(_Location* loc, const vec4f& value)
-		{
-			glUniform4fv(loc->loc, 1, value.matrix_values());
-		}
-
-		template <>
-		void _Shader::set_uniform(_Location* loc, const mat2f& value)
-		{
-			glUniformMatrix2fv(loc->loc, 1, GL_FALSE, value.matrix_values());
-		}
-
-		template <>
-		void _Shader::set_uniform(_Location* loc, const mat3f& value)
-		{
-			glUniformMatrix3fv(loc->loc, 1, GL_FALSE, value.matrix_values());
-		}
-
-		template <>
-		void _Shader::set_uniform(_Location* loc, const mat4f& value)
-		{
-			glUniformMatrix4fv(loc->loc, 1, GL_FALSE, value.matrix_values());
-		}
-
-		template <>
-		void _Shader::set_uniform(_Location* loc, const mat2x4f& value)
-		{
-			glUniformMatrix4x2fv(loc->loc, 1, GL_FALSE, value.matrix_values());
-		}
-
-		template <>
-		void _Shader::set_uniform(_Location* loc, const onion::MatrixStack& stack)
-		{
-			glUniformMatrix4fv(loc->loc, 1, GL_FALSE, stack.get_values());
-		}
-
-		template <>
-		void _Shader::set_uniform(_Location* loc, const onion::Texture* texture)
-		{
-			if (texture)
-			{
-				set_uniform(loc, &texture->tex);
-			}
-		}
-
-		template <typename _Uniform>
-		void _Shader::set_uniform(_Location* loc, _Uniform value) {}
-
-
-		bool _Shader::is_active()
+		bool _Shader::is_active() const
 		{
 			return m_ActiveShader == m_Shader;
 		}
 
-		void _Shader::__activate()
+		void _Shader::__activate() const
 		{
 			if (!is_active()) // Check to make sure the shader isn't already active
 			{
@@ -202,7 +548,54 @@ namespace onion
 
 
 
-		_Buffer::_Buffer(const std::vector<float>& data)
+		std::unordered_map<std::string, _UniformBuffer*> _UniformBuffer::m_Buffers{};
+
+		_UniformBuffer::_UniformBuffer(std::string name, const std::vector<_UniformAttribute*> uniforms, unsigned int size)
+		{
+			m_Name = name;
+			m_Buffers.emplace(name, this);
+
+			// Generate the buffer
+			GLuint id;
+			glGenBuffers(1, &id);
+			glBindBuffer(GL_UNIFORM_BUFFER, id);
+			glBufferData(GL_UNIFORM_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
+			m_Buffer = new _ID(id);
+
+			// Bind the buffer to a binding point
+			glBindBufferBase(GL_UNIFORM_BUFFER, m_Buffers.size(), id);
+			m_Index = new _UniformBuffer::Index(m_Buffers.size());
+
+			// Set the uniforms
+			m_Uniforms = uniforms;
+		}
+
+		_UniformBuffer::~_UniformBuffer()
+		{
+			// Delete the buffer
+			glDeleteBuffers(1, &m_Buffer->id);
+
+			// Free the ID and location objects
+			delete m_Buffer;
+			delete m_Index;
+		}
+
+		_UniformBuffer* _UniformBuffer::get_buffer(std::string name)
+		{
+			auto iter = m_Buffers.find(name);
+			if (iter != m_Buffers.end())
+				return iter->second;
+			return nullptr;
+		}
+
+		void _UniformBuffer::bind() const
+		{
+			glBindBuffer(GL_UNIFORM_BUFFER, m_Buffer->id);
+		}
+
+
+
+		_VertexBuffer::_VertexBuffer(const std::vector<float>& data)
 		{
 			// Bind the data to a buffer
 			GLuint buf;
@@ -214,7 +607,7 @@ namespace onion
 			m_Buffer = new _ID(buf);
 		}
 
-		_Buffer::~_Buffer()
+		_VertexBuffer::~_VertexBuffer()
 		{
 			// If active, reset the active buffer
 			if (m_ActiveBuffer == m_Buffer)
@@ -227,30 +620,26 @@ namespace onion
 			delete m_Buffer;
 		}
 
-		bool _Buffer::is_active()
+		bool _VertexBuffer::is_active() const
 		{
 			return m_ActiveBuffer == m_Buffer;
 		}
 
-		void _Buffer::__activate()
-		{
-			// Bind the buffer
-			glBindBuffer(GL_ARRAY_BUFFER, m_Buffer->id);
-		}
+		void _VertexBuffer::__activate() const {}
 
-		void _Buffer::activate()
+		void _VertexBuffer::activate() const
 		{
 			if (!is_active())
 			{
+				// Set as the active buffer
 				m_ActiveBuffer = m_Buffer;
+
+				// Bind the buffer
+				glBindBuffer(GL_ARRAY_BUFFER, m_Buffer->id);
+
+				// Bind the vertex attributes
 				__activate();
 			}
-		}
-
-		void _Buffer::set_attrib(_Location* loc, unsigned int ptr, unsigned int length, unsigned int stride)
-		{
-			glEnableVertexAttribArray(loc->loc);
-			glVertexAttribPointer(loc->loc, length, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (void*)(sizeof(float) * ptr));
 		}
 
 
@@ -350,22 +739,22 @@ namespace onion
 			return true;
 		}
 
-		int _Image::get_width()
+		int _Image::get_width() const
 		{
 			return m_Width;
 		}
 
-		int _Image::get_height()
+		int _Image::get_height() const
 		{
 			return m_Height;
 		}
 
-		bool _Image::is_active()
+		bool _Image::is_active() const
 		{
 			return m_ActiveImage == m_Image;
 		}
 
-		void _Image::activate()
+		void _Image::activate() const
 		{
 			// Change the image being drawn from.
 			glBindTexture(GL_TEXTURE_2D, m_Image->id);
@@ -374,7 +763,7 @@ namespace onion
 
 
 
-		void _BufferDisplayer::set_buffer(_Buffer* buffer)
+		void _VertexBufferDisplayer::set_buffer(_VertexBuffer* buffer)
 		{
 			// Free the previous buffer being used, if there was one
 			if (m_Buffer)
@@ -395,4 +784,52 @@ namespace onion
 		}
 
 	}
+
+
+
+
+	
+	
+	VertexBuffer::VertexBuffer(const std::vector<float>& data, const opengl::_VertexAttributeInformation& attribs) : opengl::_VertexBuffer(data), m_Attribs(attribs) {}
+
+	VertexBuffer::~VertexBuffer() {}
+	
+	void VertexBuffer::__activate() const
+	{
+		for (auto iter = m_Attribs.attributes.begin(); iter != m_Attribs.attributes.end(); ++iter)
+			iter->attrib->set(iter->offset, m_Attribs.stride);
+	}
+
+
+	ImageBuffer::ImageBuffer(const std::vector<float>& data, const opengl::_VertexAttributeInformation& attribs, opengl::_Image* image) : VertexBuffer(data, attribs)
+	{
+		m_Image = image;
+	}
+
+	ImageBuffer::~ImageBuffer()
+	{
+		delete m_Image;
+	}
+	
+	void ImageBuffer::__activate() const
+	{
+		// Bind the buffers
+		VertexBuffer::__activate();
+
+		// Activate the image
+		m_Image->activate();
+	}
+
+	int ImageBuffer::get_width() const 
+	{
+		return m_Image->get_width();
+	}
+
+	int ImageBuffer::get_height() const
+	{
+		return m_Image->get_height();
+	}
+
+
+
 }
