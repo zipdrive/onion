@@ -10,7 +10,7 @@ using namespace onion;
 
 mat4x4f g_TestTransform;
 
-PALETTE_MATRIX g_PaletteMatrix;
+Palette* g_Palette;
 
 
 #ifdef TEST_SHADED_TEXTURE
@@ -26,7 +26,7 @@ Sprite* g_Sprite;
 void graphictest_display()
 {
 #ifdef TEST_SHADED_TEXTURE
-	g_SpriteSheet->display(g_Sprite, &g_Texture->tex, &g_PaletteMatrix, &g_PaletteMatrix, &g_PaletteMatrix);
+	g_SpriteSheet->display(g_Sprite, false, g_Texture, g_Palette);
 #else 
 	g_SpriteSheet->display(g_Sprite, &g_PaletteMatrix);
 #endif
@@ -34,13 +34,12 @@ void graphictest_display()
 
 void graphictest_main()
 {
-	// Construct transformation
-	Application* app = get_application_settings();
-	g_TestTransform.set(0, 0, 2.f / app->width);
-	g_TestTransform.set(1, 1, 2.f / app->height);
-
-	mat_push();
-	mat_custom_transform(g_TestTransform);
+	// Construct palette
+	g_Palette = new SinglePalette(
+		vec4i(255, 0, 0, 0),
+		vec4i(0, 255, 0, 0),
+		vec4i(0, 0, 255, 0)
+	);
 
 	// Load the sprite sheet
 #ifdef TEST_SHADED_TEXTURE
@@ -57,5 +56,5 @@ void graphictest_main()
 
 	// Clean up
 	delete g_SpriteSheet;
-	mat_pop();
+	delete g_Palette;
 }

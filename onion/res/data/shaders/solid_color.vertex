@@ -1,0 +1,16 @@
+#version 330 core
+
+in vec2 vertexPosition;
+
+uniform Camera
+{
+    mat4 projection;
+    mat4 view;
+};
+
+uniform mat4 model;
+
+void main() 
+{
+    gl_Position = projection * view * model * vec4(vertexPosition, 0, 1);
+}

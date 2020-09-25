@@ -1,0 +1,24 @@
+#version 330 core
+
+in vec2 fragmentShadingUV;
+in vec2 fragmentMappingUV;
+
+uniform mat4x2 mappingMatrix;
+uniform mat4 redPaletteMatrix;
+uniform mat4 greenPaletteMatrix;
+uniform mat4 bluePaletteMatrix;
+
+uniform sampler2D tex2D;
+
+void main() 
+{
+    vec4 fragShading = texture(tex2D, fragmentShadingUV);
+    if (fragShading.a < 0.1) discard;
+    vec2 fragMapping = vec2(mappingMatrix * texture(tex2D, fragmentMappingUV));
+    vec4 fragPalette = texture(tex2D, fragMapping);
+    if (fragPalette.a < 0.1) discard;
+    mat4 fragPaletteMatrix = (fragPalette.r * redPaletteMatrix) + (fragPalette.g * greenPaletteMatrix) + (fragPalette.b * bluePaletteMatrix);
+    fragPaletteMatrix[3][3] *= fragPalette.a;
+    vec4 fragColor = fragPaletteMatrix * fragShading;
+    gl_FragColor = fragColor;
+}

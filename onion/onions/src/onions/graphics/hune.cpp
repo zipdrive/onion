@@ -343,40 +343,39 @@ int HuneLowerBody::display(HuneDirection facing, int frame) const
 
 	int height = max(left->get_height(), right->get_height());
 
-	MatrixStack& m = model();
-	m.push();
+	Transform::model.push();
 	switch (facing)
 	{
 	case FACING_FRONT:
 		height -= 1;
 
-		m.translate(0.f, -1.f, 0.02f);
+		Transform::model.translate(0.f, -1.f, 0.02f);
 		left->display(texture, palette);
-		m.translate(-8.f, 0.f, frame < HUNE_WALKING_INDEX + (HUNE_WALKING_SIZE / 2) ? -0.01f : 0.01f);
+		Transform::model.translate(-8.f, 0.f, frame < HUNE_WALKING_INDEX + (HUNE_WALKING_SIZE / 2) ? -0.01f : 0.01f);
 		right->display(texture, palette);
 		break;
 	case FACING_BACK:
 		height -= 1;
 
-		m.translate(0.f, -1.f, 0.02f);
+		Transform::model.translate(0.f, -1.f, 0.02f);
 		right->display(texture, palette);
-		m.translate(-8.f, 0.f, frame < HUNE_WALKING_INDEX + (HUNE_WALKING_SIZE / 2) ? -0.01f : 0.01f);
+		Transform::model.translate(-8.f, 0.f, frame < HUNE_WALKING_INDEX + (HUNE_WALKING_SIZE / 2) ? -0.01f : 0.01f);
 		left->display(texture, palette);
 		break;
 	case FACING_LEFT:
-		m.translate(12 - left->get_width(), 0.f, 0.01f);
+		Transform::model.translate(12 - left->get_width(), 0.f, 0.01f);
 		left->display(texture, palette);
-		m.translate(left->get_width() - right->get_width(), 0.f, 0.01f);
+		Transform::model.translate(left->get_width() - right->get_width(), 0.f, 0.01f);
 		right->display(texture, palette);
 		break;
 	case FACING_RIGHT:
-		m.translate(-10.f, 0.f, 0.01f);
+		Transform::model.translate(-10.f, 0.f, 0.01f);
 		right->display(texture, palette);
-		m.translate(0.f, 0.f, 0.01f);
+		Transform::model.translate(0.f, 0.f, 0.01f);
 		left->display(texture, palette);
 		break;
 	}
-	m.pop();
+	Transform::model.pop();
 
 	return height;
 }
@@ -387,8 +386,7 @@ int HuneUpperBody::display(HuneDirection facing, int frame) const
 	const HuneSprite* right = right_arm->get_frame(facing, frame);
 	const HuneSprite* mid = torso->get_frame(facing, frame);
 
-	MatrixStack& m = model();
-	m.push();
+	Transform::model.push();
 	switch (facing)
 	{
 	case FACING_FRONT:
@@ -396,15 +394,15 @@ int HuneUpperBody::display(HuneDirection facing, int frame) const
 		float left_dz = frame < HUNE_WALKING_INDEX + (HUNE_WALKING_SIZE / 2) ? -0.01f : 0.01f;
 
 		// Display the torso
-		m.translate(-mid->get_width() / 2, 0.f, 0.f);
+		Transform::model.translate(-mid->get_width() / 2, 0.f, 0.f);
 		mid->display(torso_texture, palette);
 
 		// Display the arms
-		m.push();
-		m.translate(mid->get_width() - 4, 20 - left->get_height(), left_dz);
+		Transform::model.push();
+		Transform::model.translate(mid->get_width() - 4, 20 - left->get_height(), left_dz);
 		left->display(arm_texture, palette);
-		m.pop();
-		m.translate(4 - right->get_width(), 20 - right->get_height(), -left_dz);
+		Transform::model.pop();
+		Transform::model.translate(4 - right->get_width(), 20 - right->get_height(), -left_dz);
 		right->display(arm_texture, palette);
 
 		break;
@@ -414,50 +412,50 @@ int HuneUpperBody::display(HuneDirection facing, int frame) const
 		float left_dz = frame > HUNE_WALKING_INDEX + (HUNE_WALKING_SIZE / 2) ? -0.01f : 0.01f;
 
 		// Display the torso
-		m.translate(-mid->get_width() / 2, 0.f, 0.f);
+		Transform::model.translate(-mid->get_width() / 2, 0.f, 0.f);
 		mid->display(torso_texture, palette);
 
 		// Display the arms
-		m.push();
-		m.translate(mid->get_width() - 4, 20 - right->get_height(), -left_dz);
+		Transform::model.push();
+		Transform::model.translate(mid->get_width() - 4, 20 - right->get_height(), -left_dz);
 		right->display(arm_texture, palette);
-		m.pop();
-		m.translate(4 - left->get_width(), 20 - left->get_height(), left_dz);
+		Transform::model.pop();
+		Transform::model.translate(4 - left->get_width(), 20 - left->get_height(), left_dz);
 		left->display(arm_texture, palette);
 		break;
 	}
 	case FACING_RIGHT:
 	{
 		// Display the torso
-		m.push();
-		m.translate(-6.f, 0.f, 0.f);
+		Transform::model.push();
+		Transform::model.translate(-6.f, 0.f, 0.f);
 		mid->display(torso_texture, palette);
-		m.pop();
+		Transform::model.pop();
 
 		// Display the arms
-		m.translate(-9.f, 20 - right->get_height(), -0.01f);
+		Transform::model.translate(-9.f, 20 - right->get_height(), -0.01f);
 		right->display(arm_texture, palette);
-		m.translate(0.f, right->get_height() - left->get_height(), 0.02f);
+		Transform::model.translate(0.f, right->get_height() - left->get_height(), 0.02f);
 		left->display(arm_texture, palette);
 		break;
 	}
 	case FACING_LEFT:
 	{
 		// Display the torso
-		m.push();
-		m.translate(-6.f, 0.f, 0.f);
+		Transform::model.push();
+		Transform::model.translate(-6.f, 0.f, 0.f);
 		mid->display(torso_texture, palette);
-		m.pop();
+		Transform::model.pop();
 
 		// Display the arms
-		m.translate(11 - right->get_width(), 20 - right->get_height(), 0.01f);
+		Transform::model.translate(11 - right->get_width(), 20 - right->get_height(), 0.01f);
 		right->display(arm_texture, palette);
-		m.translate(right->get_width() - left->get_width(), right->get_height() - left->get_height(), -0.02f);
+		Transform::model.translate(right->get_width() - left->get_width(), right->get_height() - left->get_height(), -0.02f);
 		left->display(arm_texture, palette);
 		break;
 	}
 	}
-	m.pop();
+	Transform::model.pop();
 
 	return mid->get_height();
 }
@@ -1140,26 +1138,25 @@ void HuneGraphic::display() const
 {
 	int frame = m_Animation->get_frame();
 
-	MatrixStack& m = model();
-	m.push();
+	Transform::model.push();
 
 	int trans = m_BaseLowerBody.display(facing, frame) - 4;
-	m.push();
-	m.translate(0.f, 0.f, -0.001f);
+	Transform::model.push();
+	Transform::model.translate(0.f, 0.f, -0.001f);
 	m_Shoes.display(facing, frame);
-	m.translate(0.f, 0.f, -0.001f);
+	Transform::model.translate(0.f, 0.f, -0.001f);
 	m_Bottom.display(facing, frame);
-	m.pop();
-	m.translate(0.f, trans);
+	Transform::model.pop();
+	Transform::model.translate(0.f, trans);
 
 	trans = m_BaseUpperBody.display(facing, frame) - 2;
-	m.push();
-	m.translate(0.f, 0.f, -0.001f);
+	Transform::model.push();
+	Transform::model.translate(0.f, 0.f, -0.001f);
 	m_Top.display(facing, frame);
-	m.translate(0.f, 0.f, -0.001f);
+	Transform::model.translate(0.f, 0.f, -0.001f);
 	m_Jacket.display(facing, frame);
-	m.pop();
-	m.translate(0.f, trans);
+	Transform::model.pop();
+	Transform::model.translate(0.f, trans);
 
 	const HuneSprite* skull_sprite = m_Skull->get_frame(facing, frame);
 	const HuneSprite* snout_sprite = m_Snout->get_frame(facing, frame);
@@ -1176,29 +1173,29 @@ void HuneGraphic::display() const
 		int half_snout_width = snout_sprite->get_width() / 2;
 
 		// Display skull
-		m.translate(-half_skull_width, 0.f, -0.01f);
+		Transform::model.translate(-half_skull_width, 0.f, -0.01f);
 		skull_sprite->display(m_HeadTexture, &m_BodyPalette);
 
 		// Display snout
-		m.translate(half_skull_width - half_snout_width, 0.f, -0.01f);
+		Transform::model.translate(half_skull_width - half_snout_width, 0.f, -0.01f);
 		snout_sprite->display(m_HeadTexture, &m_BodyPalette);
 
 		// Display right upper head
-		m.push();
-		m.translate(half_snout_width, 8.f, -0.01f);
+		Transform::model.push();
+		Transform::model.translate(half_snout_width, 8.f, -0.01f);
 		right_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 
 		// Display left upper head
-		m.translate(1 - left_upper_head_sprite->get_width());
+		Transform::model.translate(1 - left_upper_head_sprite->get_width());
 		left_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
-		m.pop();
+		Transform::model.pop();
 
 		// Display right lower head
-		m.translate(half_snout_width + half_skull_width - 2, 0.f, -0.02f);
+		Transform::model.translate(half_snout_width + half_skull_width - 2, 0.f, -0.02f);
 		right_lower_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 
 		// Display left lower head
-		m.translate(6 - skull_sprite->get_width() - left_lower_head_sprite->get_width());
+		Transform::model.translate(6 - skull_sprite->get_width() - left_lower_head_sprite->get_width());
 		left_lower_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 		break;
 	}
@@ -1207,71 +1204,71 @@ void HuneGraphic::display() const
 		int half_skull_width = skull_sprite->get_width() / 2;
 
 		// Display skull
-		m.translate(-half_skull_width, 0.f, -0.01f);
+		Transform::model.translate(-half_skull_width, 0.f, -0.01f);
 		skull_sprite->display(m_HeadTexture, &m_BodyPalette);
 
 		// Display left ear
-		m.push();
-		m.translate(half_skull_width, 8.f, -0.01f);
+		Transform::model.push();
+		Transform::model.translate(half_skull_width, 8.f, -0.01f);
 		left_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 
 		// Display right ear
-		m.translate(1 - right_upper_head_sprite->get_width());
+		Transform::model.translate(1 - right_upper_head_sprite->get_width());
 		right_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
-		m.pop();
+		Transform::model.pop();
 
 		// Display right lower head
-		m.push();
-		m.translate(3 - right_lower_head_sprite->get_width(), 0.f, -0.02f);
+		Transform::model.push();
+		Transform::model.translate(3 - right_lower_head_sprite->get_width(), 0.f, -0.02f);
 		right_lower_head_sprite->display(m_HeadTexture, &m_BodyPalette);
-		m.pop();
+		Transform::model.pop();
 
 		// Display left lower head
-		m.translate(skull_sprite->get_width() - 3, 0.f, -0.02f);
+		Transform::model.translate(skull_sprite->get_width() - 3, 0.f, -0.02f);
 		left_lower_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 		break;
 	}
 	case FACING_RIGHT:
 		// Display snout
-		m.push();
-		m.translate(3.f, 0.f, -0.02f);
+		Transform::model.push();
+		Transform::model.translate(3.f, 0.f, -0.02f);
 		snout_sprite->display(m_HeadTexture, &m_BodyPalette);
 
 		// Display right upper head
-		m.translate(-3 - right_upper_head_sprite->get_width(), 8.f, -0.01f);
+		Transform::model.translate(-3 - right_upper_head_sprite->get_width(), 8.f, -0.01f);
 		right_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
-		m.pop();
+		Transform::model.pop();
 		
 		// Display skull
-		m.translate(5 - skull_sprite->get_width(), 0.f, -0.01f);
+		Transform::model.translate(5 - skull_sprite->get_width(), 0.f, -0.01f);
 		skull_sprite->display(m_HeadTexture, &m_BodyPalette);
 
 		// Display right lower head
-		m.translate(2 - right_lower_head_sprite->get_width(), 0.f, -0.03f);
+		Transform::model.translate(2 - right_lower_head_sprite->get_width(), 0.f, -0.03f);
 		right_lower_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 		break;
 	case FACING_LEFT:
 		// Display skull
-		m.translate(-4.f, 0.f, -0.01f);
+		Transform::model.translate(-4.f, 0.f, -0.01f);
 		skull_sprite->display(m_HeadTexture, &m_BodyPalette);
 
 		// Display left lower head
-		m.push();
-		m.translate(skull_sprite->get_width() - 2, 0.f, -0.03f);
+		Transform::model.push();
+		Transform::model.translate(skull_sprite->get_width() - 2, 0.f, -0.03f);
 		left_lower_head_sprite->display(m_HeadTexture, &m_BodyPalette);
-		m.pop();
+		Transform::model.pop();
 
 		// Display left upper head
-		m.translate(5.f, 8.f, -0.01f);
+		Transform::model.translate(5.f, 8.f, -0.01f);
 		left_upper_head_sprite->display(m_HeadTexture, &m_BodyPalette);
 
 		// Display snout
-		m.translate(-3 - snout_sprite->get_width(), -8.f, -0.01f);
+		Transform::model.translate(-3 - snout_sprite->get_width(), -8.f, -0.01f);
 		snout_sprite->display(m_HeadTexture, &m_BodyPalette);
 		break;
 	}
 
-	m.pop();
+	Transform::model.pop();
 }
 
 

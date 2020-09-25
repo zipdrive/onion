@@ -81,32 +81,15 @@ namespace onion
 
 	void Frame::display() const
 	{
-		// Set the clipping rectangle to the bounds of the frame
-		// TODO
-		//Buffer::set_clipping_rectangle(m_Bounds);
-
 		// Set up the transformation
-		MatrixStack& c = camera();
-		c.push();
-		c.translate(m_Bounds.get(0, 0), m_Bounds.get(1, 0), m_Bounds.get(2, 0));
+		Transform::model.push();
+		Transform::model.translate(m_Bounds.get(0, 0), m_Bounds.get(1, 0), m_Bounds.get(2, 0));
 
 		// Display the contents of the frame
 		__display();
 
 		// Deconstruct the transformation
-		c.pop();
-
-		// Set the clipping rectangle back to bounds of the parent
-		if (m_Parent)
-		{
-			// TODO
-			//Buffer::set_clipping_rectangle(m_Parent->get_bounds());
-		}
-		else
-		{
-			// TODO
-			//Buffer::set_clipping_rectangle(mat2x2f(0.f, 0.f, INFINITY, INFINITY));
-		}
+		Transform::model.pop();
 	}
 
 
@@ -127,8 +110,6 @@ namespace onion
 				m_Highlighted = true;
 				highlight();
 			}
-
-			return EVENT_STOP;
 		}
 		else if (m_Highlighted)
 		{
@@ -249,9 +230,8 @@ namespace onion
 	void TextInput::__display() const
 	{
 		// Set up the transform
-		MatrixStack& m = model();
-		m.push();
-		m.translate(m_Bounds.get(0, 0), m_Bounds.get(1, 0), 0.f);
+		Transform::model.push();
+		Transform::model.translate(m_Bounds.get(0, 0), m_Bounds.get(1, 0), 0.f);
 
 		// Display the text input
 		get_font()->display_line(m_TextInput, get_font_palette());
@@ -259,12 +239,12 @@ namespace onion
 		// Display the cursor
 		if (!m_TextFrozen)
 		{
-			m.translate(get_font()->get_line_width(m_TextInput.substr(0, m_Cursor)), 0.f, 0.f);
+			Transform::model.translate(get_font()->get_line_width(m_TextInput.substr(0, m_Cursor)), 0.f, 0.f);
 			m_CursorGraphic->display();
 		}
 
 		// Clean up the transform
-		m.pop();
+		Transform::model.pop();
 	}
 
 
@@ -392,50 +372,49 @@ namespace onion
 
 	void ScrollBar::__display() const
 	{
-		MatrixStack& m = model();
 		if (m_Horizontal)
 		{
 			// Draw the left arrow
 			m_Arrow->display();
 
 			// Draw the background
-			m.translate(m_Arrow->get_width());
+			Transform::model.translate(m_Arrow->get_width());
 			m_Background->display();
 
 			// Draw the scroller
-			m.push();
-			m.translate(roundf(m_Value * (m_Background->get_width() - m_Scroller->get_width())), 0.f, -0.1f);
+			Transform::model.push();
+			Transform::model.translate(roundf(m_Value * (m_Background->get_width() - m_Scroller->get_width())), 0.f, -0.1f);
 			m_Scroller->display();
-			m.pop();
+			Transform::model.pop();
 
 			// Draw the right arrow
-			m.translate(m_Background->get_width() + m_Arrow->get_width());
-			m.scale(-1.f);
+			Transform::model.translate(m_Background->get_width() + m_Arrow->get_width());
+			Transform::model.scale(-1.f);
 			m_Arrow->display();
 		}
 		else
 		{
 			// Draw the bottom arrow
-			m.translate(0.f, m_Arrow->get_height());
+			Transform::model.translate(0.f, m_Arrow->get_height());
 
-			m.push();
-			m.scale(1.f, -1.f);
+			Transform::model.push();
+			Transform::model.scale(1.f, -1.f);
 			m_Arrow->display();
-			m.pop();
+			Transform::model.pop();
 
 			// Draw the background
 			m_Background->display();
 
 			// Draw the scroller
-			m.push();
-			m.translate(0.f, roundf(m_Value * (m_Background->get_height() - m_Scroller->get_height() - (0.5f * m_Arrow->get_height()))), -0.1f);
-			m.scale(-1.f);
-			m.rotatez(1.570796f);
+			Transform::model.push();
+			Transform::model.translate(0.f, roundf(m_Value * (m_Background->get_height() - m_Scroller->get_height() - (0.5f * m_Arrow->get_height()))), -0.1f);
+			Transform::model.scale(-1.f);
+			Transform::model.rotatez(1.570796f);
 			m_Scroller->display();
-			m.pop();
+			Transform::model.pop();
 
 			// Draw the top arrow
-			m.translate(0.f, m_Background->get_height());
+			Transform::model.translate(0.f, m_Background->get_height());
 			m_Arrow->display();
 		}
 	}
@@ -466,15 +445,14 @@ namespace onion
 	void ScrollableFrame::__display() const
 	{
 		// Draw the frame itself
-		MatrixStack& m = model();
-		m.push();
+		Transform::model.push();
 		int dx = m_HorizontalScrollBar ? m_HorizontalScrollBar->get_value() * m_ScrollDistance.get(0) : 0;
 		int dy = m_VerticalScrollBar ?
 			(m_ScrollDistance.get(1) < 0 ? m_VerticalScrollBar->get_value() * m_ScrollDistance.get(1) : m_ScrollDistance.get(1))
 			: 0;
-		m.translate(dx, dy);
+		Transform::model.translate(dx, dy);
 		m_Frame->display();
-		m.pop();
+		Transform::model.pop();
 
 		// Draw the scroll bars
 		if (m_HorizontalScrollBar) m_HorizontalScrollBar->display();

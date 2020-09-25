@@ -13,42 +13,16 @@ namespace onion
 	{
 		if (!m_Shader)
 		{
-			m_Shader = new SolidColorGraphic::SolidColorShader(
-
-				// The raw vertex shader text
-				"#version 330 core\n"
-				"layout(location = 0) in vec2 vertexPosition;\n"
-				"uniform mat4 MVP;\n"
-				"void main() {\n"
-				"	gl_Position = MVP * vec4(vertexPosition, 0, 1);\n"
-				"}",
-
-				// The raw fragment shader text
-				"#version 330 core\n"
-				"uniform vec4 color;\n"
-				"void main() {\n"
-				"	gl_FragColor = color;\n"
-				"}",
-
-				// The uniform variables for the shader program
-				{ "MVP", "color" }
-
-			);
+			m_Shader = new SolidColorGraphic::SolidColorShader("solid_color");
 		}
 
 		// Construct the buffer
 		m_Displayer = new opengl::_SquareBufferDisplayer();
 		m_Displayer->set_buffer(
-			new SolidColorGraphic::SolidColorBuffer(
-				
-				// The shader
-				m_Shader,
-
-				// The vertex attributes
-				{ "vertexPosition" },
+			new VertexBuffer(
 
 				// The position of each vertex
-				{ 
+				{
 					// The first triangle of vertices
 					0.f, 0.f,
 					1.f, 0.f,
@@ -57,9 +31,11 @@ namespace onion
 					// The second triangle of vertices
 					0.f, 0.f,
 					0.f, 1.f,
-					1.f, 1.f 
-				}
-
+					1.f, 1.f
+				},
+				
+				// All vertex attributes
+				m_Shader->get_attribs()
 			)
 		);
 	}
@@ -81,15 +57,18 @@ namespace onion
 
 	void SolidColorGraphic::display() const
 	{
+		// Stretch the graphic to match the width and height
+		Transform::model.push();
+		Transform::model.scale(width, height);
+
 		// Activate the shader
-		m_Shader->activate(&color);
+		m_Shader->activate(color);
 
 		// Display the rectangle
-		MatrixStack& m = model();
-		m.push();
-		m.scale(width, height);
 		m_Displayer->display(0);
-		m.pop();
+
+		// Clean up the transformation
+		Transform::model.pop();
 	}
 
 

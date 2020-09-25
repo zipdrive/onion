@@ -870,6 +870,10 @@ namespace onion
 		std::stack<TransformMatrix> m_Stack;
 
 	public:
+		/// <summary>Constructs a matrix stack consisting of a single identity matrix.</summary>
+		MatrixStack();
+
+
 		/// <summary>Retrieves the current matrix transformation.</summary>
 		/// <returns>The current matrix transformation.</returns>
 		TransformMatrix& get();
@@ -956,12 +960,5 @@ namespace onion
 		/// <param name="matrix">The custom transformation matrix.</param>
 		void custom(const TransformMatrix& matrix);
 	};
-
-
-	/// <summary>Retrieves the matrix stack corresponding to the model space transformation.</summary>
-	MatrixStack& model();
-
-	/// <summary>Retrieves the matrix stack that controls how the model space is projected onto the screen.</summary>
-	MatrixStack& camera();
 
 }

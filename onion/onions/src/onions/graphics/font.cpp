@@ -132,20 +132,17 @@ namespace onion
 		// Set the buffer
 		m_Displayer->set_buffer(
 			// Set an image buffer that sets the values of two vertex attributes, each with length 2
-			new ImageBuffer<2, 2>(
-
-				// The shader used by the sprite sheet
-				SimplePixelSpriteSheet::get_shader(),
-
-				// All vertex attributes
-				{ "vertexPosition", "vertexUV" },
+			new ImageBuffer(
 
 				// The array of data
 				data,
 
+				// The shader used by the sprite sheet
+				SimplePixelSpriteSheet::get_shader()->get_attribs(),
+
 				// The previously loaded image
 				image
-				)
+			)
 		);
 
 		m_IsLoaded = true;
@@ -200,8 +197,7 @@ namespace onion
 			return;
 
 		// Display the characters of the string
-		MatrixStack& m = model();
-		m.push();
+		Transform::model.push();
 		char prev = line.at(0);
 
 		for (int k = 1; k <= line.size(); ++k)
@@ -209,7 +205,7 @@ namespace onion
 			if (const SpriteFont::Character* c = m_CharacterManager.get(prev))
 			{
 				// Activate the shader
-				SimplePixelSpriteSheet::get_shader()->activate(camera(), m, &palette->get_red_palette_matrix());
+				SimplePixelSpriteSheet::get_shader()->activate(Transform::model, palette->get_red_palette_matrix());
 
 				// Display the buffer
 				m_Displayer->display(c->key);
@@ -218,10 +214,10 @@ namespace onion
 			char current = (k == line.size() ? '\0' : line.at(k));
 			int dx = get_character_dx(prev, current);
 			prev = current;
-			m.translate(dx);
+			Transform::model.translate(dx, 0.f, -0.001f);
 		}
 
-		m.pop();
+		Transform::model.pop();
 	}
 
 
@@ -334,20 +330,19 @@ namespace onion
 	{
 		if (!m_Lines.empty())
 		{
-			MatrixStack& m = model();
-			m.push();
+			Transform::model.push();
 			if (m_VerticalAlignment == TEXT_VERTICAL_TOP)
-				m.translate(0.f, -get_height());
+				Transform::model.translate(0.f, -get_height());
 			else if (m_VerticalAlignment == TEXT_VERTICAL_CENTER)
-				m.translate(0.f, -(get_height() / 2));
+				Transform::model.translate(0.f, -(get_height() / 2));
 
 			auto iter = m_Lines.rbegin();
 			while (true)
 			{
-				m.push();
-				m.translate(iter->xpos);
+				Transform::model.push();
+				Transform::model.translate(iter->xpos);
 				m_Font->display_line(iter->text, m_Palette);
-				m.pop();
+				Transform::model.pop();
 
 				if (++iter == m_Lines.rend())
 				{
@@ -355,11 +350,11 @@ namespace onion
 				}
 				else
 				{
-					m.translate(0.f, m_Font->get_line_height() + m_LineSpacing);
+					Transform::model.translate(0.f, m_Font->get_line_height() + m_LineSpacing);
 				}
 			}
 
-			m.pop();
+			Transform::model.pop();
 		}
 	}
 }

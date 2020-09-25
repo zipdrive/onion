@@ -170,10 +170,10 @@ protected:
 		m_LeftButton.display();
 		m_RightButton.display();
 
-		mat_push();
-		mat_translate(m_LeftButton.get_width(), m_Label->get_height() - 2, 0.f);
+		Transform::model.push();
+		Transform::model.translate(m_LeftButton.get_width(), m_Label->get_height() - 2);
 		m_Label->display();
-		mat_pop();
+		Transform::model.pop();
 	}
 
 public:
@@ -399,10 +399,10 @@ protected:
 			m_LeftButton.display();
 			m_RightButton.display();
 
-			mat_push();
-			mat_translate(m_LeftButton.get_width(), m_Label->get_height() - 2, 0.f);
+			Transform::model.push();
+			Transform::model.translate(m_LeftButton.get_width(), m_Label->get_height() - 2, 0.f);
 			m_Label->display();
-			mat_pop();
+			Transform::model.pop();
 		}
 
 	public:
@@ -537,14 +537,14 @@ void character_creator_setup()
 	SinglePalette* ui_palette = new SinglePalette(vec4i(255, 255, 255, 0), vec4i(0, 0, 0, 0), vec4i(0, 0, 0, 0));
 
 	g_RotateLeftButton = new HuneCreatorButton(
-		new SimpleStaticSpriteGraphic(ui, "rotate left", &ui_palette->get_red_palette_matrix()), 
+		new SimpleStaticSpriteGraphic(ui, "rotate left", ui_palette->get_red_palette_matrix()), 
 		&HuneCreator::rotate_left
 	);
 	g_RotateLeftButton->set_bounds(71, 149, -1, 18, 15, 0);
 	g_RotateLeftButton->unfreeze();
 
 	g_RotateRightButton = new HuneCreatorButton(
-		new SimpleStaticSpriteGraphic(ui, "rotate right", &ui_palette->get_red_palette_matrix()), 
+		new SimpleStaticSpriteGraphic(ui, "rotate right", ui_palette->get_red_palette_matrix()), 
 		&HuneCreator::rotate_right
 	);
 	g_RotateRightButton->set_bounds(111, 149, -1, 18, 15, 0);
@@ -555,8 +555,8 @@ void character_creator_setup()
 	g_PlayStopButton->unfreeze();
 
 
-	SimpleStaticSpriteGraphic* left_arrow = new SimpleStaticSpriteGraphic(ui, "arrow left", &ui_palette->get_red_palette_matrix());
-	SimpleStaticSpriteGraphic* right_arrow = new SimpleStaticSpriteGraphic(ui, "arrow right", &ui_palette->get_red_palette_matrix());
+	SimpleStaticSpriteGraphic* left_arrow = new SimpleStaticSpriteGraphic(ui, "arrow left", ui_palette->get_red_palette_matrix());
+	SimpleStaticSpriteGraphic* right_arrow = new SimpleStaticSpriteGraphic(ui, "arrow right", ui_palette->get_red_palette_matrix());
 
 	g_Pages = new HuneCreatorPageContainer(g_HuneCreator, left_arrow, right_arrow);
 
@@ -613,11 +613,6 @@ void character_creator_display_func()
 	static int last_frame = UpdateEvent::frame;
 	static int bg_scroll_speed = UpdateEvent::frames_per_second / bg->width;
 
-	Application* app = get_application_settings();
-	mat_push();
-	mat_translate(-1.f, -1.f, 0.f);
-	mat_scale(2.f / app->width, 2.f / app->height, 2.f / max(app->width, app->height));
-
 	int frame_diff = UpdateEvent::frame - last_frame;
 
 	if (frame_diff > bg_scroll_speed)
@@ -628,32 +623,30 @@ void character_creator_display_func()
 		last_frame = UpdateEvent::frame;
 	}
 
-	mat_push();
-	mat_scale(-1.f, 1.f, 1.f);
-	mat_translate(-(app->width + dx), -dy, 1.f);
+	Application* app = get_application_settings();
+	Transform::model.reset();
+	Transform::model.scale(-1.f);
+	Transform::model.translate(-(app->width + dx), -dy, 100.f);
 	for (int x = -dx; x < app->width; x += bg->width)
 	{
-		mat_push();
+		Transform::model.push();
 		for (int y = -dy; y < app->height; y += bg->height)
 		{
 			ui->display(bg, bg_palette);
-			mat_translate(0.f, bg->height, 0.f);
+			Transform::model.translate(0.f, bg->height);
 		}
-		mat_pop();
-		mat_translate(bg->width, 0.f, 0.f);
+		Transform::model.pop();
+		Transform::model.translate(bg->width);
 	}
-	mat_pop();
 
-	mat_push();
-	mat_translate(100.f, 170.f, -0.5f);
+	Transform::model.reset();
+	Transform::model.translate(100.f, 170.f, -100.f);
 	g_HuneCreator->display();
-	mat_pop();
 
+	Transform::model.reset();
 	g_RotateLeftButton->display();
 	g_PlayStopButton->display();
 	g_RotateRightButton->display();
 
 	g_Pages->display();
-
-	mat_pop();
 }
