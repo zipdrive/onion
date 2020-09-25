@@ -78,10 +78,10 @@ namespace onion
 		{
 		private:
 			// The location within the shader program.
-			GLuint m_Location;
+			GLint m_Location;
 
 		public:
-			_UniformProgramAttribute(std::string name, GLuint location) : _UniformAttribute(name)
+			_UniformProgramAttribute(std::string name, GLint location) : _UniformAttribute(name)
 			{
 				m_Location = location;
 			}
@@ -147,20 +147,20 @@ namespace onion
 		class _UniformBlockAttribute : public _UniformAttribute
 		{
 		private:
-			// The location of the uniform within the block.
-			GLuint m_Location;
+			// The offset of the uniform within the block.
+			GLint m_Offset;
 
 		public:
-			_UniformBlockAttribute(std::string name, GLuint location) : _UniformAttribute(name)
+			_UniformBlockAttribute(std::string name, GLint offset) : _UniformAttribute(name)
 			{
-				m_Location = location;
+				m_Offset = offset;
 			}
 
 			void set(float data) const
 			{
 				if (std::is_same<T, float>::value)
 				{
-					glBufferSubData(GL_UNIFORM_BUFFER, m_Location, 4, &data);
+					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 4, &data);
 				}
 			}
 
@@ -168,7 +168,7 @@ namespace onion
 			{
 				if (std::is_same<T, vec2f>::value)
 				{
-					glBufferSubData(GL_UNIFORM_BUFFER, m_Location, 8, data.matrix_values());
+					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 8, data.matrix_values());
 				}
 			}
 			
@@ -176,7 +176,7 @@ namespace onion
 			{
 				if (std::is_same<T, vec3f>::value)
 				{
-					glBufferSubData(GL_UNIFORM_BUFFER, m_Location, 16, data.matrix_values());
+					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 16, data.matrix_values());
 				}
 			}
 
@@ -184,7 +184,7 @@ namespace onion
 			{
 				if (std::is_same<T, vec4f>::value)
 				{
-					glBufferSubData(GL_UNIFORM_BUFFER, m_Location, 16, data.matrix_values());
+					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 16, data.matrix_values());
 				}
 			}
 
@@ -192,7 +192,7 @@ namespace onion
 			{
 				if (std::is_same<T, mat4f>::value)
 				{
-					glBufferSubData(GL_UNIFORM_BUFFER, m_Location, 64, data.matrix_values());
+					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 64, data.matrix_values());
 				}
 			}
 
@@ -200,7 +200,7 @@ namespace onion
 			{
 				if (std::is_same<T, mat2x4f>::value)
 				{
-					glBufferSubData(GL_UNIFORM_BUFFER, m_Location, 32, data.matrix_values());
+					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 32, data.matrix_values());
 				}
 			}
 
@@ -208,7 +208,7 @@ namespace onion
 			{
 				if (std::is_same<T, mat4f>::value)
 				{
-					glBufferSubData(GL_UNIFORM_BUFFER, m_Location, 64, data.get_values());
+					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 64, data.get_values());
 				}
 			}
 		};
@@ -356,24 +356,26 @@ namespace onion
 			GLint uniform_block_count;
 			glGetProgramiv(id, GL_ACTIVE_UNIFORM_BLOCKS, &uniform_block_count);
 
-			for (int index = 0; index < uniform_block_count; ++index)
+			for (GLuint uniform_block_index = 0; uniform_block_index < uniform_block_count; ++uniform_block_index)
 			{
-				GLint name_length;
-				glGetActiveUniformBlockiv(id, index, GL_UNIFORM_BLOCK_NAME_LENGTH, &name_length);
+				// Get the name of the uniform block
+				GLint uniform_block_name_length;
+				glGetActiveUniformBlockiv(id, uniform_block_index, GL_UNIFORM_BLOCK_NAME_LENGTH, &uniform_block_name_length);
 
-				GLchar* raw_name = new GLchar[name_length];
-				glGetActiveUniformBlockName(id, index, name_length, NULL, raw_name);
-				std::string name(raw_name);
+				GLchar* raw_uniform_block_name = new GLchar[uniform_block_name_length];
+				glGetActiveUniformBlockName(id, uniform_block_index, uniform_block_name_length, NULL, raw_uniform_block_name);
+				std::string uniform_block_name(raw_uniform_block_name);
+				delete[] raw_uniform_block_name;
 
-				_UniformBuffer* buf = _UniformBuffer::get_buffer(name);
+				_UniformBuffer* buf = _UniformBuffer::get_buffer(uniform_block_name);
 				if (!buf) // If the buffer does not exist, construct the uniform block
 				{
 					// Get each uniform in the block
 					GLint buf_size;
-					glGetActiveUniformBlockiv(id, index, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &buf_size);
+					glGetActiveUniformBlockiv(id, uniform_block_index, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &buf_size);
 
 					GLint* buf_uniforms = new GLint[buf_size];
-					glGetActiveUniformBlockiv(id, index, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, buf_uniforms);
+					glGetActiveUniformBlockiv(id, uniform_block_index, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, buf_uniforms);
 					GLuint* buf_uniform_indices = (GLuint*)buf_uniforms;
 
 					// Get the type of each uniform in the block
@@ -390,24 +392,24 @@ namespace onion
 					unsigned int total_size = 0;
 
 					// Get the length of each uniform's name
-					GLint* name_lengths = new GLint[buf_size];
-					glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_NAME_LENGTH, name_lengths);
+					GLint* uniform_name_lengths = new GLint[buf_size];
+					glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_NAME_LENGTH, uniform_name_lengths);
 
 					// Create a uniform attribute for each uniform in the block
 					std::vector<_UniformAttribute*> uniforms(buf_size);
 					for (int i = 0; i < buf_size; ++i)
 					{
 						std::string uniform_name;
-						if (name_lengths[i] > 0)
+						if (uniform_name_lengths[i] > 0)
 						{
-							GLchar* name_buf = new GLchar[name_lengths[i]];
-							glGetActiveUniformName(id, buf_uniform_indices[i], name_lengths[i], NULL, name_buf);
-							uniform_name = std::string(name_buf);
-							delete[] name_buf;
+							GLchar* raw_uniform_name = new GLchar[uniform_name_lengths[i]];
+							glGetActiveUniformName(id, buf_uniform_indices[i], uniform_name_lengths[i], NULL, raw_uniform_name);
+							uniform_name = std::string(raw_uniform_name);
+							delete[] raw_uniform_name;
 						}
 
 						_UniformAttribute* u = nullptr;
-						GLuint offset = offsets[i];
+						GLint offset = offsets[i];
 
 						switch (types[i])
 						{
@@ -436,21 +438,18 @@ namespace onion
 					}
 
 					// Construct the uniform block
-					buf = new _UniformBuffer(name, uniforms, total_size);
+					buf = new _UniformBuffer(uniform_block_name, uniforms, total_size);
 
 					// Clean up all the arrays we allocated earlier
 					delete[] buf_uniforms;
 					delete[] types;
 					delete[] offsets;
 					delete[] sizes;
-					delete[] name_lengths;
+					delete[] uniform_name_lengths;
 				}
 
 				// Bind the shader's uniform block to a uniform buffer
-				glUniformBlockBinding(id, index, buf->m_Index->index);
-
-				// Clean up the array we allocated earlier
-				delete[] raw_name;
+				glUniformBlockBinding(id, uniform_block_index, buf->m_Index->index);
 			}
 
 			// Determine any other uniforms
@@ -464,22 +463,26 @@ namespace onion
 
 				if (uniform_block_index < 0) // Uniform doesn't belong to a uniform block
 				{
+					// Retrieve the name of the uniform
+					GLint uniform_name_length;
+					glGetActiveUniformsiv(id, 1, &uniform_index, GL_UNIFORM_NAME_LENGTH, &uniform_name_length);
+
+					std::string uniform_name;
+					if (uniform_name_length > 0)
+					{
+						GLchar* name_buf = new GLchar[uniform_name_length];
+						glGetActiveUniformName(id, uniform_index, uniform_name_length, NULL, name_buf);
+						uniform_name = std::string(name_buf);
+						delete[] name_buf;
+					}
+
+					// Retrieve the location of the uniform
+					GLint uniform_location = glGetUniformLocation(id, uniform_name.c_str());
+
 					// Retrieve the info associated with the uniform
 					GLint size;
 					GLenum type;
 					glGetActiveUniform(id, uniform_index, 0, NULL, &size, &type, NULL);
-
-					GLint name_length;
-					glGetActiveUniformsiv(id, 1, &uniform_index, GL_UNIFORM_NAME_LENGTH, &name_length);
-
-					std::string uniform_name;
-					if (name_length > 0)
-					{
-						GLchar* name_buf = new GLchar[name_length];
-						glGetActiveUniformName(id, uniform_index, name_length, NULL, name_buf);
-						uniform_name = std::string(name_buf);
-						delete[] name_buf;
-					}
 
 					// Construct a uniform object
 					_UniformAttribute* u = nullptr;
@@ -487,29 +490,27 @@ namespace onion
 					switch (type)
 					{
 					case GL_FLOAT:
-						u = new _UniformProgramAttribute<float>(uniform_name, uniform_index);
+						u = new _UniformProgramAttribute<float>(uniform_name, uniform_location);
 						break;
 					case GL_FLOAT_VEC2:
-						u = new _UniformProgramAttribute<vec2f>(uniform_name, uniform_index);
+						u = new _UniformProgramAttribute<vec2f>(uniform_name, uniform_location);
 						break;
 					case GL_FLOAT_VEC3:
-						u = new _UniformProgramAttribute<vec3f>(uniform_name, uniform_index);
+						u = new _UniformProgramAttribute<vec3f>(uniform_name, uniform_location);
 						break;
 					case GL_FLOAT_VEC4:
-						u = new _UniformProgramAttribute<vec4f>(uniform_name, uniform_index);
+						u = new _UniformProgramAttribute<vec4f>(uniform_name, uniform_location);
 						break;
 					case GL_FLOAT_MAT4:
-						u = new _UniformProgramAttribute<mat4f>(uniform_name, uniform_index);
+						u = new _UniformProgramAttribute<mat4f>(uniform_name, uniform_location);
 						break;
 					case GL_FLOAT_MAT4x2:
-						u = new _UniformProgramAttribute<mat2x4f>(uniform_name, uniform_index);
+						u = new _UniformProgramAttribute<mat2x4f>(uniform_name, uniform_location);
 						break;
 					}
 
 					if (u)
-					{
 						m_UniformAttributes.push_back(u);
-					}
 				}
 			}
 		}

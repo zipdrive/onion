@@ -217,6 +217,6 @@ void test_font_main()
 int main()
 {
 	init("settings.ini");
-	test_sprite_main();
+	test_alpha_main();
 	return 0;
 }
