@@ -12,6 +12,30 @@ namespace onion
 	namespace opengl
 	{
 
+
+		/// <summary>Checks for any OpenGL errors. If any were received, logs them.</summary>
+		/// <param name="message">The header written before writing the OpenGL error codes.</param>
+		void errcheck(std::string message)
+		{
+			if (GLenum errcode = glGetError())
+			{
+				// Log the header message
+				errlog("ONION: " + message + "\n");
+
+				// Log OpenGL error codes until there are none left
+				do
+				{
+					errlog(std::string("  OpenGL error message received: ") + std::to_string(errcode) + "\n");
+				} 
+				while (errcode = glGetError());
+
+				// Add a newline afterwards.
+				errlog("\n");
+			}
+		}
+
+
+
 		struct _ID
 		{
 			GLuint id;
@@ -32,12 +56,36 @@ namespace onion
 		_ID* _Image::m_ActiveImage{ nullptr };
 
 
-		struct _UniformBuffer::Index
+		struct _UniformBuffer::BindingPoint
 		{
-			GLuint index;
+		private:
+			static GLuint m_NextAvailableBindingPoint;
 
-			Index(GLuint index) : index(index) {}
+		public:
+			// The binding point
+			GLuint binding;
+
+			BindingPoint() : binding(m_NextAvailableBindingPoint++) {}
 		};
+
+		GLuint _UniformBuffer::BindingPoint::m_NextAvailableBindingPoint{ 0 };
+
+
+
+		template <typename T>
+		unsigned int get_byte_count()
+		{
+			return 0;
+		}
+
+		template <> unsigned int get_byte_count<float>() { return 4; }
+		template <> unsigned int get_byte_count<vec2f>() { return 8; }
+		template <> unsigned int get_byte_count<vec3f>() { return 12; }
+		template <> unsigned int get_byte_count<vec4f>() { return 16; }
+		template <> unsigned int get_byte_count<mat2f>() { return 16; }
+		template <> unsigned int get_byte_count<mat3f>() { return 36; }
+		template <> unsigned int get_byte_count<mat4f>() { return 64; }
+		template <> unsigned int get_byte_count<mat2x4f>() { return 32; }
 
 
 
@@ -85,133 +133,216 @@ namespace onion
 			{
 				m_Location = location;
 			}
-			
-			void set(float data) const
+
+			unsigned int get_size() const
 			{
-				if (std::is_same<T, float>::value)
-				{
-					glUniform1f(m_Location, data);
-				}
+				return get_byte_count<T>();
 			}
 
-			void set(const vec2f& data) const
-			{
-				if (std::is_same<T, vec2f>::value)
-				{
-					glUniform2fv(m_Location, 1, data.matrix_values());
-				}
-			}
+			void set(float value) const {}
 
-			void set(const vec3f& data) const
-			{
-				if (std::is_same<T, vec3f>::value)
-				{
-					glUniform3fv(m_Location, 1, data.matrix_values());
-				}
-			}
+			void set(const vec2f& value) const {}
+			void set(const vec3f& value) const {}
+			void set(const vec4f& value) const {}
 
-			void set(const vec4f& data) const
-			{
-				if (std::is_same<T, vec4f>::value)
-				{
-					glUniform4fv(m_Location, 1, data.matrix_values());
-				}
-			}
+			void set(const mat2f& value) const {}
+			void set(const mat3f& value) const {}
+			void set(const mat4f& value) const {}
+			void set(const mat2x4f& value) const {}
 
-			void set(const mat4f& data) const
-			{
-				if (std::is_same<T, mat4f>::value)
-				{
-					glUniformMatrix4fv(m_Location, 1, GL_FALSE, data.matrix_values());
-				}
-			}
-
-			void set(const mat2x4f& data) const
-			{
-				if (std::is_same<T, mat2x4f>::value)
-				{
-					glUniformMatrix4x2fv(m_Location, 1, GL_FALSE, data.matrix_values());
-				}
-			}
-
-			void set(const MatrixStack& data) const
-			{
-				if (std::is_same<T, mat4f>::value)
-				{
-					glUniformMatrix4fv(m_Location, 1, GL_FALSE, data.get_values());
-				}
-			}
+			void set(const MatrixStack& value) const {}
 		};
+
+		template <>
+		void _UniformProgramAttribute<float>::set(float value) const
+		{
+			glUniform1f(m_Location, value);
+		}
+
+		template <>
+		void _UniformProgramAttribute<vec2f>::set(const vec2f& value) const
+		{
+			glUniform2fv(m_Location, 1, value.matrix_values());
+		}
+
+		template <>
+		void _UniformProgramAttribute<vec3f>::set(const vec3f& value) const
+		{
+			glUniform3fv(m_Location, 1, value.matrix_values());
+		}
+
+		template <>
+		void _UniformProgramAttribute<vec4f>::set(const vec4f& value) const
+		{
+			glUniform4fv(m_Location, 1, value.matrix_values());
+		}
+
+		template <>
+		void _UniformProgramAttribute<mat2f>::set(const mat2f& value) const
+		{
+			glUniformMatrix2fv(m_Location, 1, GL_FALSE, value.matrix_values());
+		}
+
+		template <>
+		void _UniformProgramAttribute<mat3f>::set(const mat3f& value) const
+		{
+			glUniformMatrix3fv(m_Location, 1, GL_FALSE, value.matrix_values());
+		}
+
+		template <>
+		void _UniformProgramAttribute<mat4f>::set(const mat4f& value) const
+		{
+			glUniformMatrix4fv(m_Location, 1, GL_FALSE, value.matrix_values());
+		}
+
+		template <>
+		void _UniformProgramAttribute<mat2x4f>::set(const mat2x4f& value) const
+		{
+			glUniformMatrix4x2fv(m_Location, 1, GL_FALSE, value.matrix_values());
+		}
+
+		template <>
+		void _UniformProgramAttribute<TRANSFORM_MATRIX>::set(const MatrixStack& value) const
+		{
+			glUniformMatrix4fv(m_Location, 1, GL_FALSE, value.get_values());
+		}
+
 
 		template <typename T>
 		class _UniformBlockAttribute : public _UniformAttribute
 		{
-		private:
+		protected:
 			// The offset of the uniform within the block.
-			GLint m_Offset;
+			const GLint m_Offset;
 
 		public:
-			_UniformBlockAttribute(std::string name, GLint offset) : _UniformAttribute(name)
+			_UniformBlockAttribute(std::string name, GLint offset) : _UniformAttribute(name), m_Offset(offset) {}
+
+			unsigned int get_size() const
 			{
-				m_Offset = offset;
+				return get_byte_count<T>();
 			}
 
-			void set(float data) const
-			{
-				if (std::is_same<T, float>::value)
-				{
-					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 4, &data);
-				}
-			}
+			void set(float value) const {}
 
-			void set(const vec2f& data) const
-			{
-				if (std::is_same<T, vec2f>::value)
-				{
-					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 8, data.matrix_values());
-				}
-			}
-			
-			void set(const vec3f& data) const
-			{
-				if (std::is_same<T, vec3f>::value)
-				{
-					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 16, data.matrix_values());
-				}
-			}
+			void set(const vec2f& value) const {}
+			void set(const vec3f& value) const {}
+			void set(const vec4f& value) const {}
 
-			void set(const vec4f& data) const
-			{
-				if (std::is_same<T, vec4f>::value)
-				{
-					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 16, data.matrix_values());
-				}
-			}
+			void set(const mat2f& value) const {}
+			void set(const mat3f& value) const {}
+			void set(const mat4f& value) const {}
+			void set(const mat2x4f& value) const {}
 
-			void set(const mat4f& data) const
-			{
-				if (std::is_same<T, mat4f>::value)
-				{
-					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 64, data.matrix_values());
-				}
-			}
-
-			void set(const mat2x4f& data) const
-			{
-				if (std::is_same<T, mat2x4f>::value)
-				{
-					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 32, data.matrix_values());
-				}
-			}
-
-			void set(const MatrixStack& data) const
-			{
-				if (std::is_same<T, mat4f>::value)
-				{
-					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 64, data.get_values());
-				}
-			}
+			void set(const MatrixStack& value) const {}
 		};
+
+		template <>
+		void _UniformBlockAttribute<float>::set(float value) const
+		{
+			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 4, &value);
+		}
+
+		template <>
+		void _UniformBlockAttribute<vec2f>::set(const vec2f& value) const
+		{
+			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 8, value.matrix_values());
+		}
+
+		template <>
+		void _UniformBlockAttribute<vec2f>::set(const vec3f& value) const
+		{
+			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 16, value.matrix_values());
+		}
+
+		template <>
+		void _UniformBlockAttribute<vec2f>::set(const vec4f& value) const
+		{
+			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 16, value.matrix_values());
+		}
+
+		template <>
+		void _UniformBlockAttribute<mat4f>::set(const mat4f& value) const
+		{
+			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 64, value.matrix_values());
+		}
+
+		template <>
+		void _UniformBlockAttribute<mat2x4f>::set(const mat2x4f& value) const
+		{
+			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 32, value.matrix_values());
+		}
+
+		template <>
+		void _UniformBlockAttribute<mat4f>::set(const MatrixStack& value) const
+		{
+			/*
+			const float* mat = value.get_values();
+			GLsizeiptr size = sizeof(float) * 16;
+
+			GLint buffer_size = 0;
+			glGetBufferParameteriv(GL_UNIFORM_BUFFER, GL_BUFFER_SIZE, &buffer_size);
+			errcheck("Error retrieving the size of the buffer for the uniform block.");
+
+			GLvoid* ptr = glMapBufferRange(GL_UNIFORM_BUFFER, m_Offset, size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+			errcheck("Error received when mapping a range from the buffer for the uniform block.");
+			memcpy(ptr, mat, sizeof(float) * 16);
+			glUnmapBuffer(GL_UNIFORM_BUFFER);
+			*/
+
+			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 64, value.get_values());
+		}
+
+
+		template <typename T, bool _IsRowMajor>
+		class _UniformBlockMatrixAttribute : public _UniformBlockAttribute<T>
+		{
+		protected:
+			// The stride between columns of the matrix.
+			const GLint m_MatrixStride;
+
+		public:
+			_UniformBlockMatrixAttribute(std::string name, GLint offset, GLint matrix_stride) : _UniformBlockAttribute<T>(name, offset), m_MatrixStride(matrix_stride) {}
+
+			void set(const mat2f& value) const {}
+			void set(const mat3f& value) const {}
+			void set(const mat4f& value) const {}
+			void set(const mat2x4f& value) const {}
+
+			void set(const MatrixStack& value) const {}
+		};
+
+		template <>
+		void _UniformBlockMatrixAttribute<mat2f, false>::set(const mat2f& value) const
+		{
+			int size = (m_MatrixStride / 4) + 2;
+			float* data = new float[size];
+			data[0] = value.get(0);
+			data[1] = value.get(1);
+			data[m_MatrixStride + 0] = value.get(2);
+			data[m_MatrixStride + 1] = value.get(3);
+
+			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, size * 4, value.matrix_values());
+		}
+
+		template <>
+		void _UniformBlockMatrixAttribute<mat3f, false>::set(const mat3f& value) const
+		{
+			int size = (m_MatrixStride / 2) + 3;
+			float* data = new float[size];
+			data[0] = value.get(0);
+			data[1] = value.get(1);
+			data[2] = value.get(2);
+			data[m_MatrixStride + 0] = value.get(3);
+			data[m_MatrixStride + 1] = value.get(4);
+			data[m_MatrixStride + 2] = value.get(5);
+			data[(2 * m_MatrixStride) + 0] = value.get(6);
+			data[(2 * m_MatrixStride) + 1] = value.get(7);
+			data[(2 * m_MatrixStride) + 2] = value.get(8);
+
+			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, size * 4, value.matrix_values());
+		}
+
 
 
 		_Shader::_Shader(const char* path)
@@ -243,70 +374,86 @@ namespace onion
 		
 		void _Shader::compile(const char* vertex_shader_text, const char* fragment_shader_text)
 		{
+			errcheck("Error received at some point before beginning shader compilation.");
+
 #define SHADER_INFO_BUFFER_SIZE 500
-			int success; // Retrieves whether compilation was a success or failure.
-			char info_buffer[SHADER_INFO_BUFFER_SIZE]; // Buffer in case compilation/linking fails.
+			GLint success; // Retrieves whether compilation was a success or failure.
+			GLchar info_buffer[SHADER_INFO_BUFFER_SIZE]; // Buffer in case compilation/linking fails.
 
 			// Vertex shader
 			GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 			glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
+			errcheck("Error received when setting the source text for the vertex shader.");
 			glCompileShader(vertex_shader);
+			errcheck("Error received when issuing the instruction to compile the vertex shader.");
 			// If compilation failed, log the error
 			glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+			errcheck("Error received when checking the compilation status of the vertex shader.");
 			if (!success)
 			{
 				glGetShaderInfoLog(vertex_shader, SHADER_INFO_BUFFER_SIZE, NULL, info_buffer);
-				errlog(std::string("Failed to compile vertex shader.\n") + info_buffer + "\n\n");
+				errlog(std::string("ONION: Error received when compiling the vertex shader.\n") + info_buffer + "\n\n");
 				errabort(ERROR_FAILED_TO_COMPILE_VERTEX_SHADER);
 			}
 
 			// Fragment shader
 			GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
 			glShaderSource(fragment_shader, 1, &fragment_shader_text, NULL);
+			errcheck("Error received when setting the source text for the fragment shader.");
 			glCompileShader(fragment_shader);
+			errcheck("Error received when issuing the instruction to compile the fragment shader.");
 			// If compilation failed, log the error
 			glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+			errcheck("Error received when checking the compilation status of the fragment shader.");
 			if (!success)
 			{
 				glGetShaderInfoLog(fragment_shader, SHADER_INFO_BUFFER_SIZE, NULL, info_buffer);
-				errlog(std::string("Failed to compile fragment shader.\n") + info_buffer + "\n\n");
+				errlog(std::string("ONION: Error received when compiling the fragment shader.\n") + info_buffer + "\n\n");
 				errabort(ERROR_FAILED_TO_COMPILE_FRAGMENT_SHADER);
 			}
 
 			// Create shader program
 			GLuint id = glCreateProgram();
 			glAttachShader(id, vertex_shader);
+			errcheck("Error received when attaching vertex shader to shader program.");
 			glAttachShader(id, fragment_shader);
+			errcheck("Error received when attaching fragment shader to shader program.");
 			glLinkProgram(id);
+			errcheck("Error received when issuing the instruction to link the shader program.");
 			m_Shader = new _ID(id);
 			// If linking failed, log the error
-			glGetShaderiv(id, GL_LINK_STATUS, &success);
+			glGetProgramiv(id, GL_LINK_STATUS, &success);
+			errcheck("Error received when checking the link status of the shader program.");
 			if (!success)
 			{
 				glGetProgramInfoLog(id, SHADER_INFO_BUFFER_SIZE, NULL, info_buffer);
-				errlog(std::string("Failed to link shader program.\n") + info_buffer + "\n\n");
+				errlog(std::string("ONION: Error received when linking the shader program.\n") + info_buffer + "\n\n");
 				errabort(ERROR_FAILED_TO_LINK_SHADER_PROGRAM);
 			}
 
 			// Delete the shaders
 			glDeleteShader(vertex_shader);
+			errcheck("Error received when deleting the vertex shader after linking it to the shader program.");
 			glDeleteShader(fragment_shader);
+			errcheck("Error received when deleting the fragment shader after linking it to the shader program.");
 
 			// Determine the shader program's vertex attributes
 			GLint vertex_attribute_count;
 			glGetProgramiv(id, GL_ACTIVE_ATTRIBUTES, &vertex_attribute_count);
+			errcheck("Error received when checking number of vertex attributes.");
 
 			if (vertex_attribute_count >= 0)
 			{
 				m_VertexAttributes.attributes.resize(vertex_attribute_count);
 				m_VertexAttributes.stride = 0;
 
-				for (int index = 0; index < vertex_attribute_count; ++index)
+				for (GLuint index = 0; index < vertex_attribute_count; ++index)
 				{
 					// Calculate the size of the vertex attribute
 					GLint size;
 					GLenum type;
 					glGetActiveAttrib(id, index, 0, NULL, &size, &type, NULL);
+					errcheck("Error received when retrieving information about the vertex attribute with index " + std::to_string(index) + ".");
 
 					switch (type)
 					{
@@ -386,17 +533,20 @@ namespace onion
 					GLint* offsets = new GLint[buf_size];
 					glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_OFFSET, offsets);
 
-					// Get the size of each uniform in the block
-					GLint* sizes = new GLint[buf_size];
-					glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_SIZE, sizes);
-					unsigned int total_size = 0;
+					// Get the size and stride of the array for each uniform in the block
+					GLint* array_sizes = new GLint[buf_size];
+					glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_SIZE, array_sizes);
+
+					GLint* array_strides = new GLint[buf_size];
+					glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_ARRAY_STRIDE, array_strides);
 
 					// Get the length of each uniform's name
 					GLint* uniform_name_lengths = new GLint[buf_size];
 					glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_NAME_LENGTH, uniform_name_lengths);
 
 					// Create a uniform attribute for each uniform in the block
-					std::vector<_UniformAttribute*> uniforms(buf_size);
+					std::vector<_UniformAttribute*> uniforms;
+					unsigned int total_uniform_block_size = 0;
 					for (int i = 0; i < buf_size; ++i)
 					{
 						std::string uniform_name;
@@ -408,48 +558,68 @@ namespace onion
 							delete[] raw_uniform_name;
 						}
 
-						_UniformAttribute* u = nullptr;
 						GLint offset = offsets[i];
+						GLenum type = types[i];
 
-						switch (types[i])
+						GLint array_size = array_sizes[i];
+						for (int n = 0; n < array_size; ++n)
 						{
-						case GL_FLOAT:
-							u = new _UniformBlockAttribute<float>(uniform_name, offset);
-							break;
-						case GL_FLOAT_VEC2:
-							u = new _UniformBlockAttribute<vec2f>(uniform_name, offset);
-							break;
-						case GL_FLOAT_VEC3:
-							u = new _UniformBlockAttribute<vec3f>(uniform_name, offset);
-							break;
-						case GL_FLOAT_VEC4:
-							u = new _UniformBlockAttribute<vec4f>(uniform_name, offset);
-							break;
-						case GL_FLOAT_MAT4:
-							u = new _UniformBlockAttribute<mat4f>(uniform_name, offset);
-							break;
-						case GL_FLOAT_MAT4x2:
-							u = new _UniformBlockAttribute<mat2x4f>(uniform_name, offset);
-							break;
+							_UniformAttribute* u = nullptr;
+
+							std::string uname(uniform_name);
+							if (array_size > 1)
+								uname += "[" + std::to_string(n) + "]";
+
+							if (type == GL_FLOAT)
+							{
+								u = new _UniformBlockAttribute<float>(uname, offset);
+							}
+							else if (type == GL_FLOAT_VEC2)
+							{
+								u = new _UniformBlockAttribute<vec2f>(uname, offset);
+							}
+							else if (type == GL_FLOAT_VEC3)
+							{
+								u = new _UniformBlockAttribute<vec3f>(uname, offset);
+							}
+							else if (type == GL_FLOAT_VEC4)
+							{
+								u = new _UniformBlockAttribute<vec4f>(uname, offset);
+							}
+							else
+							{
+								if (type == GL_FLOAT_MAT4)
+								{
+									u = new _UniformBlockAttribute<mat4f>(uname, offset);
+								}
+								else if (type == GL_FLOAT_MAT4x2)
+								{
+									u = new _UniformBlockAttribute<mat2x4f>(uname, offset);
+								}
+							}
+
+							uniforms.push_back(u);
+
+							total_uniform_block_size = std::max(total_uniform_block_size, offset + u->get_size());
+							offset += array_strides[i];
 						}
 
-						uniforms[i] = u;
-						total_size += sizes[i];
 					}
 
 					// Construct the uniform block
-					buf = new _UniformBuffer(uniform_block_name, uniforms, total_size);
+					buf = new _UniformBuffer(uniform_block_name, uniforms, total_uniform_block_size);
 
 					// Clean up all the arrays we allocated earlier
 					delete[] buf_uniforms;
 					delete[] types;
 					delete[] offsets;
-					delete[] sizes;
+					delete[] array_sizes;
+					delete[] array_strides;
 					delete[] uniform_name_lengths;
 				}
 
 				// Bind the shader's uniform block to a uniform buffer
-				glUniformBlockBinding(id, uniform_block_index, buf->m_Index->index);
+				glUniformBlockBinding(id, uniform_block_index, buf->m_BindingPoint->binding);
 			}
 
 			// Determine any other uniforms
@@ -549,6 +719,8 @@ namespace onion
 
 
 
+		_ID* _UniformBuffer::m_ActiveBuffer{ nullptr };
+		
 		std::unordered_map<std::string, _UniformBuffer*> _UniformBuffer::m_Buffers{};
 
 		_UniformBuffer::_UniformBuffer(std::string name, const std::vector<_UniformAttribute*> uniforms, unsigned int size)
@@ -559,13 +731,17 @@ namespace onion
 			// Generate the buffer
 			GLuint id;
 			glGenBuffers(1, &id);
+			errcheck("Error when generating the buffer for uniform block " + name + ".");
 			glBindBuffer(GL_UNIFORM_BUFFER, id);
+			errcheck("Error when binding the buffer for uniform block " + name + ".");
 			glBufferData(GL_UNIFORM_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
+			errcheck("Error when setting up the buffer for uniform block " + name + ".");
 			m_Buffer = new _ID(id);
 
 			// Bind the buffer to a binding point
-			glBindBufferBase(GL_UNIFORM_BUFFER, m_Buffers.size(), id);
-			m_Index = new _UniformBuffer::Index(m_Buffers.size());
+			m_BindingPoint = new _UniformBuffer::BindingPoint();
+			glBindBufferBase(GL_UNIFORM_BUFFER, m_BindingPoint->binding, id);
+			errcheck("Error when binding the buffer for uniform block " + name + " to binding point " + std::to_string(m_BindingPoint->binding) + ".");
 
 			// Set the uniforms
 			m_Uniforms = uniforms;
@@ -573,12 +749,16 @@ namespace onion
 
 		_UniformBuffer::~_UniformBuffer()
 		{
+			// If active, reset the active buffer.
+			if (m_ActiveBuffer == m_Buffer)
+				m_ActiveBuffer = nullptr;
+
 			// Delete the buffer
 			glDeleteBuffers(1, &m_Buffer->id);
 
 			// Free the ID and location objects
 			delete m_Buffer;
-			delete m_Index;
+			delete m_BindingPoint;
 		}
 
 		_UniformBuffer* _UniformBuffer::get_buffer(std::string name)
@@ -591,7 +771,11 @@ namespace onion
 
 		void _UniformBuffer::bind() const
 		{
-			glBindBuffer(GL_UNIFORM_BUFFER, m_Buffer->id);
+			if (m_ActiveBuffer != m_Buffer)
+			{
+				m_ActiveBuffer = m_Buffer;
+				glBindBuffer(GL_UNIFORM_BUFFER, m_Buffer->id);
+			}
 		}
 
 

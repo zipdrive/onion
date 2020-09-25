@@ -71,6 +71,10 @@ namespace onion
 			/// <summary>Virtual deconstructor.</summary>
 			virtual ~_UniformAttribute();
 
+			/// <summary>Retrieves the size of the uniform attribute.</summary>
+			/// <returns>The size of the uniform attribute, in bytes.</returns>
+			virtual unsigned int get_size() const = 0;
+
 			/// <summary>Sets the value of the uniform attribute to a float.</summary>
 			/// <param name="value">The new value of the uniform attribute.</param>
 			virtual void set(float value) const = 0;
@@ -86,6 +90,14 @@ namespace onion
 			/// <summary>Sets the value of the uniform attribute to a 4-element vector.</summary>
 			/// <param name="value">The new value of the uniform attribute.</param>
 			virtual void set(const vec4f& value) const = 0;
+
+			/// <summary>Sets the value of the uniform attribute to a 2x2 matrix.</summary>
+			/// <param name="value">The new value of the uniform attribute.</param>
+			virtual void set(const mat2f& value) const = 0;
+
+			/// <summary>Sets the value of the uniform attribute to a 3x3 matrix.</summary>
+			/// <param name="value">The new value of the uniform attribute.</param>
+			virtual void set(const mat3f& value) const = 0;
 
 			/// <summary>Sets the value of the uniform attribute to a 4x4 matrix.</summary>
 			/// <param name="value">The new value of the uniform attribute.</param>
@@ -159,6 +171,9 @@ namespace onion
 		private:
 			friend class _Shader; // Allows the shader to access the locations of the uniform buffers
 
+			// The currently bound uniform buffer.
+			static _ID* m_ActiveBuffer;
+
 			// All uniform buffers.
 			static std::unordered_map<std::string, _UniformBuffer*> m_Buffers;
 
@@ -168,17 +183,19 @@ namespace onion
 			// The ID of this buffer. Used to bind the buffer.
 			_ID* m_Buffer;
 
-			// An object that represents the index of the buffer in memory.
-			struct Index;
+			/// <summary>Binds this uniform buffer as the one being written to.</summary>
+			void bind() const;
 
-			// The index of the buffer in memory. Used to connect the shaders to the uniform buffers they use.
-			Index* m_Index;
+
+			// An object that represents a binding point that the buffer in memory.
+			struct BindingPoint;
+
+			// The binding point that the buffer is linked to. Used to connect the shaders to the uniform buffers they use.
+			BindingPoint* m_BindingPoint;
+
 
 			// The uniforms associated with the buffer.
 			std::vector<_UniformAttribute*> m_Uniforms;
-
-			/// <summary>Binds this uniform buffer as the one being written to.</summary>
-			void bind() const;
 
 		public:
 			/// <summary>Retrieves the uniform buffer with the given name.</summary>
