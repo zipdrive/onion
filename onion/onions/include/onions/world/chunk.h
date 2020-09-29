@@ -58,7 +58,7 @@ namespace onion
 			opengl::_Image* m_TileImage = nullptr;
 
 			// Used to display rows of tiles.
-			opengl::_BufferDisplayer* m_Displayer = nullptr;
+			opengl::_VertexBufferDisplayer* m_Displayer = nullptr;
 
 
 			// The x-axis width of the chunk.

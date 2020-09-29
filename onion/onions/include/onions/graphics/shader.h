@@ -74,42 +74,24 @@ namespace onion
 			/// <summary>Retrieves the size of the uniform attribute.</summary>
 			/// <returns>The size of the uniform attribute, in bytes.</returns>
 			virtual unsigned int get_size() const = 0;
+		};
 
-			/// <summary>Sets the value of the uniform attribute to a float.</summary>
-			/// <param name="value">The new value of the uniform attribute.</param>
-			virtual void set(float value) const = 0;
+		// A uniform attribute with a defined type.
+		template <typename T>
+		class _UniformTypedAttribute : public _UniformAttribute
+		{
+		public:
+			/// <summary>Constructs an object managing a typed uniform attribute.</summary>
+			/// <param name="name">The name of the uniform attribute.</param>
+			_UniformTypedAttribute(std::string name);
 
-			/// <summary>Sets the value of the uniform attribute to a 2-element vector.</summary>
-			/// <param name="value">The new value of the uniform attribute.</param>
-			virtual void set(const vec2f& value) const = 0;
+			/// <summary>Retrieves the size of the uniform attribute.</summary>
+			/// <returns>The size of the uniform attribute, in bytes.</returns>
+			virtual unsigned int get_size() const;
 
-			/// <summary>Sets the value of the uniform attribute to a 3-element vector.</summary>
+			/// <summary>Sets the value of the uniform attribute.</summary>
 			/// <param name="value">The new value of the uniform attribute.</param>
-			virtual void set(const vec3f& value) const = 0;
-
-			/// <summary>Sets the value of the uniform attribute to a 4-element vector.</summary>
-			/// <param name="value">The new value of the uniform attribute.</param>
-			virtual void set(const vec4f& value) const = 0;
-
-			/// <summary>Sets the value of the uniform attribute to a 2x2 matrix.</summary>
-			/// <param name="value">The new value of the uniform attribute.</param>
-			virtual void set(const mat2f& value) const = 0;
-
-			/// <summary>Sets the value of the uniform attribute to a 3x3 matrix.</summary>
-			/// <param name="value">The new value of the uniform attribute.</param>
-			virtual void set(const mat3f& value) const = 0;
-
-			/// <summary>Sets the value of the uniform attribute to a 4x4 matrix.</summary>
-			/// <param name="value">The new value of the uniform attribute.</param>
-			virtual void set(const mat4f& value) const = 0;
-
-			/// <summary>Sets the value of the uniform attribute to a matrix with 2 rows and 4 columns.</summary>
-			/// <param name="value">The new value of the uniform attribute.</param>
-			virtual void set(const mat2x4f& value) const = 0;
-
-			/// <summary>Sets the value of the uniform attribute to a transform matrix.</summary>
-			/// <param name="value">The new value of the uniform attribute.</param>
-			virtual void set(const MatrixStack& value) const = 0;
+			virtual void set(const T& value) const = 0;
 		};
 
 
@@ -132,6 +114,15 @@ namespace onion
 			/// <param name="vertex_shader_text">The vertex shader, in raw text form.</param>
 			/// <param name="fragment_shader_text">The fragment shader, in raw text form.</param>
 			void compile(const char* vertex_shader_text, const char* fragment_shader_text);
+			
+			/// <summary>Compiles the shader program from raw text.</summary>
+			/// <param name="vertex_shader_text">The vertex shader, in raw text form.</param>
+			/// <param name="geometry_shader_text">The geometry shader, in raw text form.</param>
+			/// <param name="fragment_shader_text">The fragment shader, in raw text form.</param>
+			void compile(const char* vertex_shader_text, const char* geometry_shader_text, const char* fragment_shader_text);
+
+			/// <summary>Processes information about vertex and uniform attributes from the compiled shader program.</summary>
+			void process();
 
 		protected:
 			// A list of all uniform attributes (that aren't in blocks).
@@ -217,7 +208,11 @@ namespace onion
 			void set(int index, const _Uniform& uniform) const
 			{
 				bind();
-				m_Uniforms[index]->set(uniform);
+
+				if (_UniformTypedAttribute<_Uniform>* u = dynamic_cast<_UniformTypedAttribute<_Uniform>*>(m_Uniforms[index]))
+				{
+					u->set(uniform);
+				}
 			}
 		};
 
@@ -309,8 +304,8 @@ namespace onion
 			/// <returns>True if this buffer is active, false otherwise.</returns>
 			bool is_active() const;
 
-			/// <summary>Activates the buffer.</summary>
-			void activate() const;
+			/// <summary>Activates the buffer and binds it to the n-th texture slot.</summary>
+			void activate(int slot = 0) const;
 		};
 
 
@@ -366,7 +361,7 @@ namespace onion
 		virtual ~VertexBuffer();
 	};
 
-	// A buffer that also manages an image.
+	// A vertex buffer that also manages an image that should be bound to the 0-index slot.
 	class ImageBuffer : public VertexBuffer
 	{
 	private:
@@ -395,8 +390,8 @@ namespace onion
 		/// <returns>The height of the image included in the buffer.</returns>
 		int get_height() const;
 	};
-	
-	
+
+
 	// A wrapper for a shader program.
 	template <typename... _Uniforms>
 	class Shader : public opengl::_Shader
@@ -412,7 +407,11 @@ namespace onion
 		template <typename _FirstUniform, typename... _OtherUniforms>
 		void set_uniforms(std::vector<opengl::_UniformAttribute*>::const_iterator iter, const _FirstUniform& first, const _OtherUniforms&... others)
 		{
-			(*iter)->set(first);
+			if (opengl::_UniformTypedAttribute<_FirstUniform>* u = dynamic_cast<opengl::_UniformTypedAttribute<_FirstUniform>*>(*iter))
+			{
+				u->set(first);
+			}
+
 			set_uniforms(++iter, others...);
 		}
 
@@ -450,7 +449,7 @@ namespace onion
 
 		/// <summary>Activates the shader program and sets any uniform variables.</summary>
 		/// <param name="uniforms">The values of the uniform variables.</param>
-		void activate(_Uniforms... uniforms)
+		void activate(const _Uniforms&... uniforms)
 		{
 			opengl::_Shader::__activate();
 			set_uniforms(m_UniformAttributes.begin(), uniforms...);

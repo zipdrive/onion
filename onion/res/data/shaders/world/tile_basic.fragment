@@ -1,0 +1,22 @@
+// FRAGMENT SHADER
+#version 330 core
+#define NUM_LIGHTS 8
+
+in vec3 fragmentNormal;
+in vec2 fragmentUV;
+
+
+
+
+uniform sampler2D tex2D;
+
+
+void main() 
+{
+    vec3 fragColor = vec3(texture(tex2D, fragmentUV));
+    
+    vec3 norm = normalize(fragmentNormal);
+    
+    
+    gl_FragColor = fragColor;\n"
+}

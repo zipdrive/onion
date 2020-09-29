@@ -20,11 +20,11 @@ namespace onion
 
 	void Transform::set_projection()
 	{
-		m_Buffer->set(0, projection);
+		m_Buffer->set<matrix<float, 4, 4>>(0, projection.get());
 	}
 
 	void Transform::set_view()
 	{
-		m_Buffer->set(1, view);
+		m_Buffer->set<matrix<float, 4, 4>>(1, view.get());
 	}
 }

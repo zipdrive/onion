@@ -1,867 +1,871 @@
 #pragma once
 #include <stack>
 
-// A matrix of numeric values
-template <typename T, int _Rows, int _Columns>
-class matrix
+
+namespace onion
 {
-protected:
-	T mat[_Rows * _Columns];
 
-public:
-	/// <summary>Retrieves a pointer to the matrix value array.</summary>
-	/// <returns>A pointer to the matrix value array.</returns>
-	const T* matrix_values() const
+
+	// A matrix of numeric values
+	template <typename T, int _Rows, int _Columns>
+	class matrix
 	{
-		// DEBUG: Set breakpoint on this line to view 
-		return mat;
-	}
+	protected:
+		T mat[_Rows * _Columns];
 
-
-	/// <summary>Retrieves a reference to the value at the specified index of the matrix value array.</summary>
-	/// <param name="index">The index of the value.</param>
-	T& operator()(int index)
-	{
-		return mat[index];
-	}
-
-	/// <summary>Retrieves a reference to the value at the specified row and column.</summary>
-	/// <param name="row">The row of the value.</param>
-	/// <param name="column">The column of the value.</param>
-	T& operator()(int row, int column)
-	{
-		return mat[row + (_Rows * column)]; // Row-major order
-	}
-
-
-	/// <summary>Retrieves the value at the specified index of the matrix value array.</summary>
-	/// <param name="index">The index of the value.</param>
-	T get(int index) const
-	{
-		return mat[index];
-	}
-
-	/// <summary>Retrieves the value at the specified row and column.</summary>
-	/// <param name="row">The row of the value.</param>
-	/// <param name="column">The column of the value.</param>
-	T get(int row, int column) const
-	{
-		return mat[row + (_Rows * column)]; // Row-major order
-	}
-
-
-	/// <summary>Sets the value at the specified row and column.</summary>
-	/// <param name="row">The row of the value.</param>
-	/// <param name="column">The column of the value.</param>
-	void set(int row, int column, T value)
-	{
-		mat[row + (_Rows * column)] = value;
-	}
-
-
-
-	/// <summary>Adds another matrix to this one and returns the result.</summary>
-	/// <param name="other">The other matrix.</param>
-	/// <returns>The addition of this matrix and the other one.</returns>
-	matrix<T, _Rows, _Columns> operator+(const matrix<T, _Rows, _Columns>& other) const
-	{
-		matrix<T, _Rows, _Columns> result;
-
-		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+	public:
+		/// <summary>Retrieves a pointer to the matrix value array.</summary>
+		/// <returns>A pointer to the matrix value array.</returns>
+		const T* matrix_values() const
 		{
-			result.mat[k] = mat[k] + other.get(k);
+			// DEBUG: Set breakpoint on this line to view 
+			return mat;
 		}
 
-		return result;
-	}
 
-	/// <summary>Subtracts another matrix from this one and returns the result.</summary>
-	/// <param name="other">The other matrix.</param>
-	/// <returns>The subtraction of this matrix and the other one.</returns>
-	matrix<T, _Rows, _Columns> operator-(const matrix<T, _Rows, _Columns>& other) const
-	{
-		matrix<T, _Rows, _Columns> result;
-
-		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+		/// <summary>Retrieves a reference to the value at the specified index of the matrix value array.</summary>
+		/// <param name="index">The index of the value.</param>
+		T& operator()(int index)
 		{
-			result.mat[k] = mat[k] - other.get(k);
+			return mat[index];
 		}
 
-		return result;
-	}
-
-	/// <summary>Multiplies another matrix to this one and returns the result.</summary>
-	/// <param name="other">The other matrix.</param>
-	/// <returns>The multiplication of this matrix and the other one.</returns>
-	template <int _ColumnsRHS>
-	matrix<T, _Rows, _ColumnsRHS> operator*(const matrix<T, _Columns, _ColumnsRHS>& other) const
-	{
-		matrix<T, _Rows, _ColumnsRHS> result;
-
-		for (int r = _Rows - 1; r >= 0; --r)
+		/// <summary>Retrieves a reference to the value at the specified row and column.</summary>
+		/// <param name="row">The row of the value.</param>
+		/// <param name="column">The column of the value.</param>
+		T& operator()(int row, int column)
 		{
-			for (int c = _ColumnsRHS - 1; c >= 0; --c)
+			return mat[row + (_Rows * column)]; // Row-major order
+		}
+
+
+		/// <summary>Retrieves the value at the specified index of the matrix value array.</summary>
+		/// <param name="index">The index of the value.</param>
+		T get(int index) const
+		{
+			return mat[index];
+		}
+
+		/// <summary>Retrieves the value at the specified row and column.</summary>
+		/// <param name="row">The row of the value.</param>
+		/// <param name="column">The column of the value.</param>
+		T get(int row, int column) const
+		{
+			return mat[row + (_Rows * column)]; // Row-major order
+		}
+
+
+		/// <summary>Sets the value at the specified row and column.</summary>
+		/// <param name="row">The row of the value.</param>
+		/// <param name="column">The column of the value.</param>
+		void set(int row, int column, T value)
+		{
+			mat[row + (_Rows * column)] = value;
+		}
+
+
+
+		/// <summary>Adds another matrix to this one and returns the result.</summary>
+		/// <param name="other">The other matrix.</param>
+		/// <returns>The addition of this matrix and the other one.</returns>
+		matrix<T, _Rows, _Columns> operator+(const matrix<T, _Rows, _Columns>& other) const
+		{
+			matrix<T, _Rows, _Columns> result;
+
+			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 			{
-				T val = 0;
-				for (int k = _Columns - 1; k >= 0; --k)
-					val += get(r, k) * other.get(k, c);
-				result.set(r, c, val);
+				result.mat[k] = mat[k] + other.get(k);
+			}
+
+			return result;
+		}
+
+		/// <summary>Subtracts another matrix from this one and returns the result.</summary>
+		/// <param name="other">The other matrix.</param>
+		/// <returns>The subtraction of this matrix and the other one.</returns>
+		matrix<T, _Rows, _Columns> operator-(const matrix<T, _Rows, _Columns>& other) const
+		{
+			matrix<T, _Rows, _Columns> result;
+
+			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+			{
+				result.mat[k] = mat[k] - other.get(k);
+			}
+
+			return result;
+		}
+
+		/// <summary>Multiplies another matrix to this one and returns the result.</summary>
+		/// <param name="other">The other matrix.</param>
+		/// <returns>The multiplication of this matrix and the other one.</returns>
+		template <int _ColumnsRHS>
+		matrix<T, _Rows, _ColumnsRHS> operator*(const matrix<T, _Columns, _ColumnsRHS>& other) const
+		{
+			matrix<T, _Rows, _ColumnsRHS> result;
+
+			for (int r = _Rows - 1; r >= 0; --r)
+			{
+				for (int c = _ColumnsRHS - 1; c >= 0; --c)
+				{
+					T val = 0;
+					for (int k = _Columns - 1; k >= 0; --k)
+						val += get(r, k) * other.get(k, c);
+					result.set(r, c, val);
+				}
+			}
+
+			return result;
+		}
+
+
+
+		/// <summary>Multiplies a scalar to this one and returns the result.</summary>
+		/// <param name="scalar">The scalar value.</param>
+		/// <returns>The multiplication of this matrix and the scalar.</returns>
+		matrix<T, _Rows, _Columns> operator*(int scalar) const
+		{
+			matrix<T, _Rows, _Columns> result;
+
+			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+				result.mat[k] = scalar * mat[k];
+
+			return result;
+		}
+
+		/// <summary>Multiplies a scalar to this one and returns the result.</summary>
+		/// <param name="scalar">The scalar value.</param>
+		/// <returns>The multiplication of this matrix and the scalar.</returns>
+		matrix<T, _Rows, _Columns> operator*(float scalar) const
+		{
+			matrix<T, _Rows, _Columns> result;
+
+			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+				result.mat[k] = scalar * mat[k];
+
+			return result;
+		}
+
+
+
+		/// <summary>Adds another matrix to this one in-place.</summary>
+		/// <param name="other">The other matrix.</param>
+		/// <returns>A reference to this matrix.</returns>
+		matrix<T, _Rows, _Columns>& operator+=(const matrix<T, _Rows, _Columns>& other)
+		{
+			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+			{
+				mat[k] += other.get(k);
+			}
+
+			return *this;
+		}
+
+		/// <summary>Subtracts another matrix from this one in-place.</summary>
+		/// <param name="other">The other matrix.</param>
+		/// <returns>A reference to this matrix.</returns>
+		matrix<T, _Rows, _Columns>& operator-=(const matrix<T, _Rows, _Columns>& other)
+		{
+			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+			{
+				mat[k] -= other.get(k);
+			}
+
+			return *this;
+		}
+
+		/// <summary>Multiplies a scalar value to this matrix in-place.</summary>
+		/// <param name="scalar">The scalar value.</param>
+		/// <returns>A reference to this matrix.</returns>
+		matrix<T, _Rows, _Columns>& operator*=(int scalar)
+		{
+			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+			{
+				mat[k] *= scalar;
+			}
+
+			return *this;
+		}
+	
+		/// <summary>Multiplies a scalar value to this matrix in-place.</summary>
+		/// <param name="scalar">The scalar value.</param>
+		/// <returns>A reference to this matrix.</returns>
+		matrix<T, _Rows, _Columns>& operator*=(float scalar)
+		{
+			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+			{
+				mat[k] *= scalar;
+			}
+
+			return *this;
+		}
+
+
+		/// <summary>Sets this matrix equal to another one.</summary>
+		/// <param name="other">The other matrix.</param>
+		/// <returns>A reference to this matrix.</returns>
+		matrix<T, _Rows, _Columns>& operator=(const matrix<T, _Rows, _Columns>& other)
+		{
+			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+			{
+				mat[k] = other.get(k);
+			}
+
+			return *this;
+		}
+
+
+		/// <summary>Checks whether this matrix is equal to another one.</summary>
+		/// <param name="other">The other matrix.</param>
+		/// <returns>True if both matrices are equal, false otherwise.</returns>
+		bool operator==(const matrix<T, _Rows, _Columns>& other)
+		{
+			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+			{
+				if (mat[k] != other.get(k))
+					return false;
+			}
+
+			return true;
+		}
+
+		/// <summary>Checks whether this matrix is not equal to another one.</summary>
+		/// <param name="other">The other matrix.</param>
+		/// <returns>True if the matrices are not equal, false if they are.</returns>
+		bool operator!=(const matrix<T, _Rows, _Columns>& other)
+		{
+			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+			{
+				if (mat[k] != other.get(k))
+					return true;
+			}
+
+			return false;
+		}
+
+
+
+		matrix()
+		{
+			for (int r = _Rows - 1; r >= 0; --r)
+			{
+				for (int c = _Columns - 1; c >= 0; --c)
+				{
+					if (r == c && _Rows == _Columns)
+						set(r, c, 1);
+					else
+						set(r, c, 0);
+				}
 			}
 		}
-
-		return result;
-	}
+	};
 
 
-
-	/// <summary>Multiplies a scalar to this one and returns the result.</summary>
+	/// <summary>Multiplies a scalar to a matrix and returns the result.</summary>
 	/// <param name="scalar">The scalar value.</param>
+	/// <param name="matrix">The matrix.</param>
 	/// <returns>The multiplication of this matrix and the scalar.</returns>
-	matrix<T, _Rows, _Columns> operator*(int scalar) const
+	template <typename T, int _Rows, int _Columns>
+	matrix<T, _Rows, _Columns> operator*(int scalar, matrix<T, _Rows, _Columns> matrix)
 	{
-		matrix<T, _Rows, _Columns> result;
-
-		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
-			result.mat[k] = scalar * mat[k];
-
-		return result;
+		return matrix * scalar;
 	}
 
-	/// <summary>Multiplies a scalar to this one and returns the result.</summary>
+	/// <summary>Multiplies a scalar to a matrix and returns the result.</summary>
 	/// <param name="scalar">The scalar value.</param>
+	/// <param name="matrix">The matrix.</param>
 	/// <returns>The multiplication of this matrix and the scalar.</returns>
-	matrix<T, _Rows, _Columns> operator*(float scalar) const
+	template <typename T, int _Rows, int _Columns>
+	matrix<T, _Rows, _Columns> operator*(float scalar, matrix<T, _Rows, _Columns> matrix)
 	{
-		matrix<T, _Rows, _Columns> result;
-
-		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
-			result.mat[k] = scalar * mat[k];
-
-		return result;
+		return matrix * scalar;
 	}
 
 
-
-	/// <summary>Adds another matrix to this one in-place.</summary>
-	/// <param name="other">The other matrix.</param>
-	/// <returns>A reference to this matrix.</returns>
-	matrix<T, _Rows, _Columns>& operator+=(const matrix<T, _Rows, _Columns>& other)
-	{
-		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
-		{
-			mat[k] += other.get(k);
-		}
-
-		return *this;
-	}
-
-	/// <summary>Subtracts another matrix from this one in-place.</summary>
-	/// <param name="other">The other matrix.</param>
-	/// <returns>A reference to this matrix.</returns>
-	matrix<T, _Rows, _Columns>& operator-=(const matrix<T, _Rows, _Columns>& other)
-	{
-		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
-		{
-			mat[k] -= other.get(k);
-		}
-
-		return *this;
-	}
-
-	/// <summary>Multiplies a scalar value to this matrix in-place.</summary>
-	/// <param name="scalar">The scalar value.</param>
-	/// <returns>A reference to this matrix.</returns>
-	matrix<T, _Rows, _Columns>& operator*=(int scalar)
-	{
-		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
-		{
-			mat[k] *= scalar;
-		}
-
-		return *this;
-	}
-	
-	/// <summary>Multiplies a scalar value to this matrix in-place.</summary>
-	/// <param name="scalar">The scalar value.</param>
-	/// <returns>A reference to this matrix.</returns>
-	matrix<T, _Rows, _Columns>& operator*=(float scalar)
-	{
-		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
-		{
-			mat[k] *= scalar;
-		}
-
-		return *this;
-	}
-
-
-	/// <summary>Sets this matrix equal to another one.</summary>
-	/// <param name="other">The other matrix.</param>
-	/// <returns>A reference to this matrix.</returns>
-	matrix<T, _Rows, _Columns>& operator=(const matrix<T, _Rows, _Columns>& other)
-	{
-		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
-		{
-			mat[k] = other.get(k);
-		}
-
-		return *this;
-	}
-
-
-	/// <summary>Checks whether this matrix is equal to another one.</summary>
-	/// <param name="other">The other matrix.</param>
-	/// <returns>True if both matrices are equal, false otherwise.</returns>
-	bool operator==(const matrix<T, _Rows, _Columns>& other)
-	{
-		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
-		{
-			if (mat[k] != other.get(k))
-				return false;
-		}
-
-		return true;
-	}
-
-	/// <summary>Checks whether this matrix is not equal to another one.</summary>
-	/// <param name="other">The other matrix.</param>
-	/// <returns>True if the matrices are not equal, false if they are.</returns>
-	bool operator!=(const matrix<T, _Rows, _Columns>& other)
-	{
-		for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
-		{
-			if (mat[k] != other.get(k))
-				return true;
-		}
-
-		return false;
-	}
-
-
-
-	matrix()
+	/// <summary>Multiplies two matrices.</summary>
+	/// <param name="lhs">The matrix being multiplied on the left.</param>
+	/// <param name="rhs">The matrix being multiplied on the right.</param>
+	/// <param name="res">Outputs the resulting matrix.</param>
+	template <typename T, int _Rows, int _Middle, int _Columns>
+	void mat_mul(const matrix<T, _Rows, _Middle>& lhs, const matrix<T, _Middle, _Columns>& rhs, matrix<T, _Rows, _Columns>& res)
 	{
 		for (int r = _Rows - 1; r >= 0; --r)
 		{
 			for (int c = _Columns - 1; c >= 0; --c)
 			{
-				if (r == c && _Rows == _Columns)
-					set(r, c, 1);
-				else
-					set(r, c, 0);
+				T val = 0;
+				for (int k = _Middle - 1; k >= 0; --k)
+					val += lhs.get(r, k) * rhs.get(k, c);
+				res.set(r, c, val);
 			}
 		}
 	}
-};
 
 
-/// <summary>Multiplies a scalar to a matrix and returns the result.</summary>
-/// <param name="scalar">The scalar value.</param>
-/// <param name="matrix">The matrix.</param>
-/// <returns>The multiplication of this matrix and the scalar.</returns>
-template <typename T, int _Rows, int _Columns>
-matrix<T, _Rows, _Columns> operator*(int scalar, matrix<T, _Rows, _Columns> matrix)
-{
-	return matrix * scalar;
-}
-
-/// <summary>Multiplies a scalar to a matrix and returns the result.</summary>
-/// <param name="scalar">The scalar value.</param>
-/// <param name="matrix">The matrix.</param>
-/// <returns>The multiplication of this matrix and the scalar.</returns>
-template <typename T, int _Rows, int _Columns>
-matrix<T, _Rows, _Columns> operator*(float scalar, matrix<T, _Rows, _Columns> matrix)
-{
-	return matrix * scalar;
-}
 
 
-/// <summary>Multiplies two matrices.</summary>
-/// <param name="lhs">The matrix being multiplied on the left.</param>
-/// <param name="rhs">The matrix being multiplied on the right.</param>
-/// <param name="res">Outputs the resulting matrix.</param>
-template <typename T, int _Rows, int _Middle, int _Columns>
-void mat_mul(const matrix<T, _Rows, _Middle>& lhs, const matrix<T, _Middle, _Columns>& rhs, matrix<T, _Rows, _Columns>& res)
-{
-	for (int r = _Rows - 1; r >= 0; --r)
+	// A vector of numeric values
+	template <typename T, int N>
+	class vec : public matrix<T, N, 1>
 	{
-		for (int c = _Columns - 1; c >= 0; --c)
+	public:
+		/// <summary>Computes the dot product of two vectors.</summary>
+		/// <param name="other">The other vector.</param>
+		/// <returns>The dot product of the two vectors.</returns>
+		T operator*(const matrix<T, N, 1>& other) const
 		{
-			T val = 0;
-			for (int k = _Middle - 1; k >= 0; --k)
-				val += lhs.get(r, k) * rhs.get(k, c);
-			res.set(r, c, val);
+			T sum = 0;
+			for (int k = N - 1; k >= 0; --k)
+				sum += get(k) * other.get(k);
+			return sum;
 		}
-	}
-}
 
+		/// <summary>Calculates the sum of all squared elements in the vector.</summary>
+		/// <returns>The square of the magnitude of the vector.</returns>
+		T square_sum() const
+		{
+			T sum = 0;
+			for (int k = N - 1; k >= 0; --k)
+				sum += get(k) * get(k);
+			return sum;
+		}
 
+		/// <summary>Normalizes the vector.</summary>
+		/// <param name="normalized">Outputs the normalized vector.</param>
+		void normalize(matrix<float, N, 1>& normalized) const
+		{
+			float mag = sqrt(square_sum());
+			for (int k = N - 1; k >= 0; --k)
+				normalized.set(k, 0, get(k) / mag);
+		}
+	};
 
+	template <typename T> class vec2;
+	template <typename T> class vec3;
+	template <typename T> class vec4;
 
-// A vector of numeric values
-template <typename T, int N>
-class vec : public matrix<T, N, 1>
-{
-public:
-	/// <summary>Computes the dot product of two vectors.</summary>
-	/// <param name="other">The other vector.</param>
-	/// <returns>The dot product of the two vectors.</returns>
-	T operator*(const matrix<T, N, 1>& other) const
+	// A 2-by-1 vector of numeric values
+	template <typename T>
+	class vec2 : public vec<T, 2>
 	{
-		T sum = 0;
-		for (int k = N - 1; k >= 0; --k)
-			sum += get(k) * other.get(k);
-		return sum;
-	}
+	public:
+		vec2() {}
 
-	/// <summary>Calculates the sum of all squared elements in the vector.</summary>
-	/// <returns>The square of the magnitude of the vector.</returns>
-	T square_sum() const
-	{
-		T sum = 0;
-		for (int k = N - 1; k >= 0; --k)
-			sum += get(k) * get(k);
-		return sum;
-	}
+		vec2(T a1, T a2)
+		{
+			set(0, 0, a1);
+			set(1, 0, a2);
+		}
 
-	/// <summary>Normalizes the vector.</summary>
-	/// <param name="normalized">Outputs the normalized vector.</param>
-	void normalize(matrix<float, N, 1>& normalized) const
-	{
-		float mag = sqrt(square_sum());
-		for (int k = N - 1; k >= 0; --k)
-			normalized.set(k, 0, get(k) / mag);
-	}
-};
+		template <typename U, int _Rows>
+		vec2(const matrix<U, _Rows, 1>& m)
+		{
+			set(0, 0, m.get(0));
+			set(1, 0, m.get(1));
+		}
 
-template <typename T> class vec2;
-template <typename T> class vec3;
-template <typename T> class vec4;
-
-// A 2-by-1 vector of numeric values
-template <typename T>
-class vec2 : public vec<T, 2>
-{
-public:
-	vec2() {}
-
-	vec2(T a1, T a2)
-	{
-		set(0, 0, a1);
-		set(1, 0, a2);
-	}
-
-	template <typename U, int _Rows>
-	vec2(const matrix<U, _Rows, 1>& m)
-	{
-		set(0, 0, m.get(0));
-		set(1, 0, m.get(1));
-	}
-
-	template <typename U>
-	vec2(const vec2<U>& v)
-	{
-		set(0, 0, v.get(0));
-		set(1, 0, v.get(1));
-	}
+		template <typename U>
+		vec2(const vec2<U>& v)
+		{
+			set(0, 0, v.get(0));
+			set(1, 0, v.get(1));
+		}
 	
-	template <typename U>
-	vec2(const vec3<U>& v)
+		template <typename U>
+		vec2(const vec3<U>& v)
+		{
+			set(0, 0, v.get(0));
+			set(1, 0, v.get(1));
+		}
+
+		template <typename U>
+		vec2(const vec4<U>& v)
+		{
+			set(0, 0, v.get(0));
+			set(1, 0, v.get(1));
+		}
+
+
+		vec2& operator=(const matrix<T, 2, 1>& other)
+		{
+			matrix<T, 2, 1>::operator=(other);
+			return *this;
+		}
+	};
+
+	// A 3-by-1 vector of numeric values
+	template <typename T>
+	class vec3 : public vec<T, 3>
 	{
-		set(0, 0, v.get(0));
-		set(1, 0, v.get(1));
-	}
+	public:
+		vec3() {}
 
-	template <typename U>
-	vec2(const vec4<U>& v)
-	{
-		set(0, 0, v.get(0));
-		set(1, 0, v.get(1));
-	}
+		vec3(T a1, T a2, T a3)
+		{
+			set(0, 0, a1);
+			set(1, 0, a2);
+			set(2, 0, a3);
+		}
 
+		template <typename U, int _Rows>
+		vec3(const matrix<U, _Rows, 1>& m)
+		{
+			set(0, 0, m.get(0));
+			set(1, 0, m.get(1));
+			set(2, 0, m.get(2));
+		}
 
-	vec2& operator=(const matrix<T, 2, 1>& other)
-	{
-		matrix<T, 2, 1>::operator=(other);
-		return *this;
-	}
-};
+		template <typename U>
+		vec3(const vec2<U>& v, T a3)
+		{
+			set(0, 0, v.get(0));
+			set(1, 0, v.get(1));
+			set(2, 0, a3);
+		}
 
-// A 3-by-1 vector of numeric values
-template <typename T>
-class vec3 : public vec<T, 3>
-{
-public:
-	vec3() {}
-
-	vec3(T a1, T a2, T a3)
-	{
-		set(0, 0, a1);
-		set(1, 0, a2);
-		set(2, 0, a3);
-	}
-
-	template <typename U, int _Rows>
-	vec3(const matrix<U, _Rows, 1>& m)
-	{
-		set(0, 0, m.get(0));
-		set(1, 0, m.get(1));
-		set(2, 0, m.get(2));
-	}
-
-	template <typename U>
-	vec3(const vec2<U>& v, T a3)
-	{
-		set(0, 0, v.get(0));
-		set(1, 0, v.get(1));
-		set(2, 0, a3);
-	}
-
-	template <typename U>
-	vec3(const vec3<U>& v)
-	{
-		set(0, 0, v.get(0));
-		set(1, 0, v.get(1));
-		set(2, 0, v.get(2));
-	}
+		template <typename U>
+		vec3(const vec3<U>& v)
+		{
+			set(0, 0, v.get(0));
+			set(1, 0, v.get(1));
+			set(2, 0, v.get(2));
+		}
 	
-	template <typename U>
-	vec3(const vec4<U>& v)
+		template <typename U>
+		vec3(const vec4<U>& v)
+		{
+			set(0, 0, v.get(0));
+			set(1, 0, v.get(1));
+			set(2, 0, v.get(2));
+		}
+
+
+		vec3& operator=(const matrix<T, 3, 1>& other)
+		{
+			matrix<T, 3, 1>::operator=(other);
+			return *this;
+		}
+
+
+		/// <summary>Computes the cross product of this three-dimensional vector with another.</summary>
+		/// <param name="other">The vector on the right-hand side of the cross product.</param>
+		/// <param name="result">Outputs the cross product of the two vectors.</param>
+		void cross(const matrix<T, 3, 1>& other, matrix<T, 3, 1>& result)
+		{
+			result.set(0, 0, (get(1) * other.get(2)) - (get(2) * other.get(1)));
+			result.set(1, 0, (get(2) * other.get(0)) - (get(0) * other.get(2)));
+			result.set(2, 0, (get(0) * other.get(1)) - (get(1) * other.get(0)));
+		}
+	};
+
+	// A 4-by-1 vector of numeric values
+	template <typename T>
+	class vec4 : public vec<T, 4>
 	{
-		set(0, 0, v.get(0));
-		set(1, 0, v.get(1));
-		set(2, 0, v.get(2));
-	}
+	public:
+		vec4() {}
+
+		vec4(T a1, T a2, T a3, T a4)
+		{
+			set(0, 0, a1);
+			set(1, 0, a2);
+			set(2, 0, a3);
+			set(3, 0, a4);
+		}
+
+		template <typename U, int _Rows>
+		vec4(const matrix<U, _Rows, 1>& m)
+		{
+			set(0, 0, m.get(0));
+			set(1, 0, m.get(1));
+			set(2, 0, m.get(2));
+			set(3, 0, m.get(3));
+		}
+
+		template <typename U>
+		vec4(const vec2<U>& v, T a3, T a4)
+		{
+			set(0, 0, v.get(0));
+			set(1, 0, v.get(1));
+			set(2, 0, a3);
+			set(3, 0, a4);
+		}
+
+		template <typename U>
+		vec4(const vec3<U>& v, T a4)
+		{
+			set(0, 0, v.get(0));
+			set(1, 0, v.get(1));
+			set(2, 0, v.get(2));
+			set(3, 0, a4);
+		}
+
+		template <typename U>
+		vec4(const vec4<U>& v)
+		{
+			set(0, 0, v.get(0));
+			set(1, 0, v.get(1));
+			set(2, 0, v.get(2));
+			set(3, 0, v.get(3));
+		}
 
 
-	vec3& operator=(const matrix<T, 3, 1>& other)
+		vec4& operator=(const matrix<T, 4, 1>& other)
+		{
+			matrix<T, 4, 1>::operator=(other);
+			return *this;
+		}
+	};
+
+
+	// A 2-by-2 matrix of numeric values
+	template <typename T>
+	class mat2x2 : public matrix<T, 2, 2>
 	{
-		matrix<T, 3, 1>::operator=(other);
-		return *this;
-	}
+	public:
+		mat2x2() {}
+
+		mat2x2(T a11, T a12, T a21, T a22)
+		{
+			set(0, 0, a11);
+			set(0, 1, a12);
+			set(1, 0, a21);
+			set(1, 1, a22);
+		}
+
+		template <typename U>
+		mat2x2(const mat2x2<U>& m)
+		{
+			for (int k = 3; k >= 0; --k)
+				mat[k] = m.get(k);
+		}
 
 
-	/// <summary>Computes the cross product of this three-dimensional vector with another.</summary>
-	/// <param name="other">The vector on the right-hand side of the cross product.</param>
-	/// <param name="result">Outputs the cross product of the two vectors.</param>
-	void cross(const matrix<T, 3, 1>& other, matrix<T, 3, 1>& result)
+		mat2x2& operator=(const matrix<T, 2, 2>& other)
+		{
+			matrix<T, 2, 2>::operator=(other);
+			return *this;
+		}
+
+		mat2x2& operator*=(const matrix<T, 2, 2>& other)
+		{
+			return operator=(operator*(other));
+		}
+	};
+
+	// A 3-by-3 matrix of numeric values
+	template <typename T>
+	class mat3x3 : public matrix<T, 3, 3>
 	{
-		result.set(0, 0, (get(1) * other.get(2)) - (get(2) * other.get(1)));
-		result.set(1, 0, (get(2) * other.get(0)) - (get(0) * other.get(2)));
-		result.set(2, 0, (get(0) * other.get(1)) - (get(1) * other.get(0)));
-	}
-};
+	public:
+		mat3x3() {}
 
-// A 4-by-1 vector of numeric values
-template <typename T>
-class vec4 : public vec<T, 4>
-{
-public:
-	vec4() {}
+		mat3x3(T a11, T a12, T a13,
+			T a21, T a22, T a23,
+			T a31, T a32, T a33)
+		{
+			set(0, 0, a11);
+			set(0, 1, a12);
+			set(0, 2, a13);
+			set(1, 0, a21);
+			set(1, 1, a22);
+			set(1, 2, a23);
+			set(2, 0, a31);
+			set(2, 1, a32);
+			set(2, 2, a33);
+		}
 
-	vec4(T a1, T a2, T a3, T a4)
+		template <typename U>
+		mat3x3(const mat3x3<U>& m)
+		{
+			for (int k = 8; k >= 0; --k)
+				mat[k] = m.get(k);
+		}
+
+
+		mat3x3& operator=(const matrix<T, 3, 3>& other)
+		{
+			matrix<T, 3, 3>::operator=(other);
+			return *this;
+		}
+
+		mat3x3& operator*=(const matrix<T, 3, 3>& other)
+		{
+			return operator=(operator*(other));
+		}
+	};
+
+	// A 4-by-4 matrix of float values
+	template <typename T>
+	class mat4x4 : public matrix<T, 4, 4>
 	{
-		set(0, 0, a1);
-		set(1, 0, a2);
-		set(2, 0, a3);
-		set(3, 0, a4);
-	}
+	public:
+		mat4x4() {}
 
-	template <typename U, int _Rows>
-	vec4(const matrix<U, _Rows, 1>& m)
+		mat4x4(T a11, T a12, T a13, T a14,
+			T a21, T a22, T a23, T a24,
+			T a31, T a32, T a33, T a34,
+			T a41 = 0, T a42 = 0, T a43 = 0, T a44 = 1)
+		{
+			set(0, 0, a11);
+			set(0, 1, a12);
+			set(0, 2, a13);
+			set(0, 3, a14);
+
+			set(1, 0, a21);
+			set(1, 1, a22);
+			set(1, 2, a23);
+			set(1, 3, a24);
+
+			set(2, 0, a31);
+			set(2, 1, a32);
+			set(2, 2, a33);
+			set(2, 3, a34);
+
+			set(3, 0, a41);
+			set(3, 1, a42);
+			set(3, 2, a43);
+			set(3, 3, a44);
+		}
+
+		template <typename U>
+		mat4x4(const mat4x4<U>& m)
+		{
+			for (int k = 15; k >= 0; --k)
+				mat[k] = m.get(k);
+		}
+
+
+		mat4x4& operator=(const matrix<T, 4, 4>& other)
+		{
+			matrix<T, 4, 4>::operator=(other);
+			return *this;
+		}
+
+		mat4x4& operator*=(const matrix<T, 4, 4>& other)
+		{
+			return operator=(operator*(other));
+		}
+	};
+
+
+
+	// A matrix with 3 rows and 2 columns.
+	template <typename T>
+	class mat3x2 : public matrix<T, 3, 2>
 	{
-		set(0, 0, m.get(0));
-		set(1, 0, m.get(1));
-		set(2, 0, m.get(2));
-		set(3, 0, m.get(3));
-	}
+	public:
+		mat3x2() {}
 
-	template <typename U>
-	vec4(const vec2<U>& v, T a3, T a4)
+		mat3x2(T a11, T a12,
+			T a21, T a22,
+			T a31, T a32)
+		{
+			set(0, 0, a11);
+			set(0, 1, a12);
+
+			set(1, 0, a21);
+			set(1, 1, a22);
+
+			set(2, 0, a31);
+			set(2, 1, a32);
+		}
+
+		mat3x2& operator=(const matrix<T, 3, 2>& other)
+		{
+			matrix<T, 3, 2>::operator=(other);
+			return *this;
+		}
+	};
+
+	// A matrix with 2 rows and 4 columns.
+	template <typename T>
+	class mat2x4 : public matrix<T, 2, 4>
 	{
-		set(0, 0, v.get(0));
-		set(1, 0, v.get(1));
-		set(2, 0, a3);
-		set(3, 0, a4);
-	}
+	public:
+		mat2x4(T a11, T a12, T a13, T a14,
+			T a21, T a22, T a23, T a24)
+		{
+			set(0, 0, a11);
+			set(0, 1, a12);
+			set(0, 2, a13);
+			set(0, 3, a14);
 
-	template <typename U>
-	vec4(const vec3<U>& v, T a4)
+			set(1, 0, a21);
+			set(1, 1, a22);
+			set(1, 2, a23);
+			set(1, 3, a24);
+		}
+
+		mat2x4& operator=(const matrix<T, 2, 4>& other)
+		{
+			matrix<T, 2, 4>::operator=(other);
+			return *this;
+		}
+	};
+
+	// 
+	template <typename T>
+	class mat3x4 : public matrix<T, 3, 4>
 	{
-		set(0, 0, v.get(0));
-		set(1, 0, v.get(1));
-		set(2, 0, v.get(2));
-		set(3, 0, a4);
-	}
+	public:
+		mat3x4() {}
 
-	template <typename U>
-	vec4(const vec4<U>& v)
+		mat3x4(T a11, T a12, T a13, T a14,
+			T a21, T a22, T a23, T a24,
+			T a31, T a32, T a33, T a34)
+		{
+			set(0, 0, a11);
+			set(0, 1, a12);
+			set(0, 2, a13);
+			set(0, 3, a14);
+
+			set(1, 0, a21);
+			set(1, 1, a22);
+			set(1, 2, a23);
+			set(1, 3, a24);
+
+			set(2, 0, a31);
+			set(2, 1, a32);
+			set(2, 2, a33);
+			set(2, 3, a34);
+		}
+
+		mat3x4& operator=(const matrix<T, 3, 4>& other)
+		{
+			matrix<T, 3, 4>::operator=(other);
+			return *this;
+		}
+	};
+
+
+	typedef mat2x2<int> mat2x2i;
+	#define mat2i mat2x2i
+	typedef mat3x3<int> mat3x3i;
+	#define mat3i mat3x3i
+	typedef mat4x4<int> mat4x4i;
+	#define mat4i mat4x4i
+
+	typedef mat2x2<float> mat2x2f;
+	#define mat2f mat2x2f
+	typedef mat3x3<float> mat3x3f;
+	#define mat3f mat3x3f
+	typedef mat4x4<float> mat4x4f;
+	#define mat4f mat4x4f
+
+	typedef mat3x2<int> mat3x2i;
+
+	typedef mat2x4<float> mat2x4f;
+	typedef mat3x4<float> mat3x4f;
+
+	typedef vec2<int> vec2i;
+	typedef vec3<int> vec3i;
+	typedef vec4<int> vec4i;
+
+	typedef vec2<float> vec2f;
+	typedef vec3<float> vec3f;
+	typedef vec4<float> vec4f;
+
+
+
+	class TransformMatrix : public mat4f
 	{
-		set(0, 0, v.get(0));
-		set(1, 0, v.get(1));
-		set(2, 0, v.get(2));
-		set(3, 0, v.get(3));
-	}
-
-
-	vec4& operator=(const matrix<T, 4, 1>& other)
-	{
-		matrix<T, 4, 1>::operator=(other);
-		return *this;
-	}
-};
-
-
-// A 2-by-2 matrix of numeric values
-template <typename T>
-class mat2x2 : public matrix<T, 2, 2>
-{
-public:
-	mat2x2() {}
-
-	mat2x2(T a11, T a12, T a21, T a22)
-	{
-		set(0, 0, a11);
-		set(0, 1, a12);
-		set(1, 0, a21);
-		set(1, 1, a22);
-	}
-
-	template <typename U>
-	mat2x2(const mat2x2<U>& m)
-	{
-		for (int k = 3; k >= 0; --k)
-			mat[k] = m.get(k);
-	}
-
-
-	mat2x2& operator=(const matrix<T, 2, 2>& other)
-	{
-		matrix<T, 2, 2>::operator=(other);
-		return *this;
-	}
-
-	mat2x2& operator*=(const matrix<T, 2, 2>& other)
-	{
-		return operator=(operator*(other));
-	}
-};
-
-// A 3-by-3 matrix of numeric values
-template <typename T>
-class mat3x3 : public matrix<T, 3, 3>
-{
-public:
-	mat3x3() {}
-
-	mat3x3(T a11, T a12, T a13,
-		T a21, T a22, T a23,
-		T a31, T a32, T a33)
-	{
-		set(0, 0, a11);
-		set(0, 1, a12);
-		set(0, 2, a13);
-		set(1, 0, a21);
-		set(1, 1, a22);
-		set(1, 2, a23);
-		set(2, 0, a31);
-		set(2, 1, a32);
-		set(2, 2, a33);
-	}
-
-	template <typename U>
-	mat3x3(const mat3x3<U>& m)
-	{
-		for (int k = 8; k >= 0; --k)
-			mat[k] = m.get(k);
-	}
-
-
-	mat3x3& operator=(const matrix<T, 3, 3>& other)
-	{
-		matrix<T, 3, 3>::operator=(other);
-		return *this;
-	}
-
-	mat3x3& operator*=(const matrix<T, 3, 3>& other)
-	{
-		return operator=(operator*(other));
-	}
-};
-
-// A 4-by-4 matrix of float values
-template <typename T>
-class mat4x4 : public matrix<T, 4, 4>
-{
-public:
-	mat4x4() {}
-
-	mat4x4(T a11, T a12, T a13, T a14,
-		T a21, T a22, T a23, T a24,
-		T a31, T a32, T a33, T a34,
-		T a41 = 0, T a42 = 0, T a43 = 0, T a44 = 1)
-	{
-		set(0, 0, a11);
-		set(0, 1, a12);
-		set(0, 2, a13);
-		set(0, 3, a14);
-
-		set(1, 0, a21);
-		set(1, 1, a22);
-		set(1, 2, a23);
-		set(1, 3, a24);
-
-		set(2, 0, a31);
-		set(2, 1, a32);
-		set(2, 2, a33);
-		set(2, 3, a34);
-
-		set(3, 0, a41);
-		set(3, 1, a42);
-		set(3, 2, a43);
-		set(3, 3, a44);
-	}
-
-	template <typename U>
-	mat4x4(const mat4x4<U>& m)
-	{
-		for (int k = 15; k >= 0; --k)
-			mat[k] = m.get(k);
-	}
-
-
-	mat4x4& operator=(const matrix<T, 4, 4>& other)
-	{
-		matrix<T, 4, 4>::operator=(other);
-		return *this;
-	}
-
-	mat4x4& operator*=(const matrix<T, 4, 4>& other)
-	{
-		return operator=(operator*(other));
-	}
-};
-
-
-
-// A matrix with 3 rows and 2 columns.
-template <typename T>
-class mat3x2 : public matrix<T, 3, 2>
-{
-public:
-	mat3x2() {}
-
-	mat3x2(T a11, T a12,
-		T a21, T a22,
-		T a31, T a32)
-	{
-		set(0, 0, a11);
-		set(0, 1, a12);
-
-		set(1, 0, a21);
-		set(1, 1, a22);
-
-		set(2, 0, a31);
-		set(2, 1, a32);
-	}
-
-	mat3x2& operator=(const matrix<T, 3, 2>& other)
-	{
-		matrix<T, 3, 2>::operator=(other);
-		return *this;
-	}
-};
-
-// A matrix with 2 rows and 4 columns.
-template <typename T>
-class mat2x4 : public matrix<T, 2, 4>
-{
-public:
-	mat2x4(T a11, T a12, T a13, T a14,
-		T a21, T a22, T a23, T a24)
-	{
-		set(0, 0, a11);
-		set(0, 1, a12);
-		set(0, 2, a13);
-		set(0, 3, a14);
-
-		set(1, 0, a21);
-		set(1, 1, a22);
-		set(1, 2, a23);
-		set(1, 3, a24);
-	}
-
-	mat2x4& operator=(const matrix<T, 2, 4>& other)
-	{
-		matrix<T, 2, 4>::operator=(other);
-		return *this;
-	}
-};
-
-// 
-template <typename T>
-class mat3x4 : public matrix<T, 3, 4>
-{
-public:
-	mat3x4() {}
-
-	mat3x4(T a11, T a12, T a13, T a14,
-		T a21, T a22, T a23, T a24,
-		T a31, T a32, T a33, T a34)
-	{
-		set(0, 0, a11);
-		set(0, 1, a12);
-		set(0, 2, a13);
-		set(0, 3, a14);
-
-		set(1, 0, a21);
-		set(1, 1, a22);
-		set(1, 2, a23);
-		set(1, 3, a24);
-
-		set(2, 0, a31);
-		set(2, 1, a32);
-		set(2, 2, a33);
-		set(2, 3, a34);
-	}
-
-	mat3x4& operator=(const matrix<T, 3, 4>& other)
-	{
-		matrix<T, 3, 4>::operator=(other);
-		return *this;
-	}
-};
-
-
-typedef mat2x2<int> mat2x2i;
-#define mat2i mat2x2i
-typedef mat3x3<int> mat3x3i;
-#define mat3i mat3x3i
-typedef mat4x4<int> mat4x4i;
-#define mat4i mat4x4i
-
-typedef mat2x2<float> mat2x2f;
-#define mat2f mat2x2f
-typedef mat3x3<float> mat3x3f;
-#define mat3f mat3x3f
-typedef mat4x4<float> mat4x4f;
-#define mat4f mat4x4f
-
-typedef mat3x2<int> mat3x2i;
-
-typedef mat2x4<float> mat2x4f;
-typedef mat3x4<float> mat3x4f;
-
-typedef vec2<int> vec2i;
-typedef vec3<int> vec3i;
-typedef vec4<int> vec4i;
-
-typedef vec2<float> vec2f;
-typedef vec3<float> vec3f;
-typedef vec4<float> vec4f;
-
-
-
-class TransformMatrix : public mat4f
-{
-public:
-	/// <summary>Constructs a matrix transformation.</summary>
-	/// <param name="a11">The element in the first row and first column.</param>
-	/// <param name="a12">The element in the first row and second column.</param>
-	/// <param name="a13">The element in the first row and third column.</param>
-	/// <param name="a14">The element in the first row and fourth column.</param>
-	/// <param name="a21">The element in the second row and first column.</param>
-	/// <param name="a22">The element in the second row and second column.</param>
-	/// <param name="a23">The element in the second row and third column.</param>
-	/// <param name="a24">The element in the second row and fourth column.</param>
-	/// <param name="a31">The element in the third row and first column.</param>
-	/// <param name="a32">The element in the third row and second column.</param>
-	/// <param name="a33">The element in the third row and third column.</param>
-	/// <param name="a34">The element in the third row and fourth column.</param>
-	/// <param name="a41">The element in the fourth row and first column.</param>
-	/// <param name="a42">The element in the fourth row and second column.</param>
-	/// <param name="a43">The element in the fourth row and third column.</param>
-	/// <param name="a44">The element in the fourth row and fourth column.</param>
-	TransformMatrix(
-		float a11 = 1.f, float a12 = 0.f, float a13 = 0.f, float a14 = 0.f,
-		float a21 = 0.f, float a22 = 1.f, float a23 = 0.f, float a24 = 0.f,
-		float a31 = 0.f, float a32 = 0.f, float a33 = 1.f, float a34 = 0.f,
-		float a41 = 0.f, float a42 = 0.f, float a43 = 0.f, float a44 = 1.f
-	);
-
-	/// <summary>Adds a translation to the current transformation.</summary>
-	/// <param name="dx">The translation along the x-axis.</param>
-	void translate(float tx);
-
-	/// <summary>Adds a translation to the current transformation.</summary>
-	/// <param name="dx">The translation along the x-axis.</param>
-	/// <param name="dy">The translation along the y-axis.</param>
-	void translate(float tx, float ty);
-
-	/// <summary>Adds a translation to the current transformation.</summary>
-	/// <param name="dx">The translation along the x-axis.</param>
-	/// <param name="dy">The translation along the y-axis.</param>
-	/// <param name="dz">The translation along the z-axis.</param>
-	void translate(float tx, float ty, float tz);
-
-
-	/// <summary>Adds a scale transform to the current transformation.</summary>
-	/// <param name="sx">The scaling factor for the x-axis.</param>
-	void scale(float sx);
-
-	/// <summary>Adds a scale transform to the current transformation.</summary>
-	/// <param name="sx">The scaling factor for the x-axis.</param>
-	/// <param name="sy">The scaling factor for the y-axis.</param>
-	void scale(float sx, float sy);
-
-	/// <summary>Adds a scale transform to the current transformation.</summary>
-	/// <param name="sx">The scaling factor for the x-axis.</param>
-	/// <param name="sy">The scaling factor for the y-axis.</param>
-	/// <param name="sz">The scaling factor for the z-axis.</param>
-	void scale(float sx, float sy, float sz);
-
-
-	/// <summary>Adds a rotation transform around the x-axis to the current transformation.</summary>
-	/// <param name="angle">The angle of rotation, in radians.</param>
-	void rotatex(float angle);
-
-	/// <summary>Adds a rotation transform around the y-axis to the current transformation.</summary>
-	/// <param name="angle">The angle of rotation, in radians.</param>
-	void rotatey(float angle);
-
-	/// <summary>Adds a rotation transform around the z-axis to the current transformation.</summary>
-	/// <param name="angle">The angle of rotation, in radians.</param>
-	void rotatez(float angle);
-
-
-	/// <summary>Sets the current transformation to the identity matrix.</summary>
-	void identity();
-
-	/// <summary>Creates an orthogonal projection.</summary>
-	/// <param name="left">The left side of the projection.</param>
-	/// <param name="right">The right side of the projection.</param>
-	/// <param name="bottom">The bottom side of the projection.</param>
-	/// <param name="top">The top side of the projection.</param>
-	/// <param name="near">The near side of the projection.</param>
-	/// <param name="far">The far side of the projection.</param>
-	void ortho(float left, float right, float bottom, float top, float near, float far);
-
-
-	/// <summary>Sets this matrix equal to the right-hand side of the operator.</summary>
-	/// <param name="other">The matrix to set this one equal to.</param>
-	/// <returns>A reference to this matrix.</returns>
-	TransformMatrix& operator=(const matrix<float, 4, 4>& other);
-
-	/// <summary>Multiplies this matrix by another one, in place.</summary>
-	/// <param name="other">The matrix to multiply this one by.</param>
-	/// <returns>A reference to this matrix.</returns>
-	TransformMatrix& operator*=(const matrix<float, 4, 4>& other);
-};
-
-
-
-namespace onion
-{
+	public:
+		/// <summary>Constructs a matrix transformation.</summary>
+		/// <param name="a11">The element in the first row and first column.</param>
+		/// <param name="a12">The element in the first row and second column.</param>
+		/// <param name="a13">The element in the first row and third column.</param>
+		/// <param name="a14">The element in the first row and fourth column.</param>
+		/// <param name="a21">The element in the second row and first column.</param>
+		/// <param name="a22">The element in the second row and second column.</param>
+		/// <param name="a23">The element in the second row and third column.</param>
+		/// <param name="a24">The element in the second row and fourth column.</param>
+		/// <param name="a31">The element in the third row and first column.</param>
+		/// <param name="a32">The element in the third row and second column.</param>
+		/// <param name="a33">The element in the third row and third column.</param>
+		/// <param name="a34">The element in the third row and fourth column.</param>
+		/// <param name="a41">The element in the fourth row and first column.</param>
+		/// <param name="a42">The element in the fourth row and second column.</param>
+		/// <param name="a43">The element in the fourth row and third column.</param>
+		/// <param name="a44">The element in the fourth row and fourth column.</param>
+		TransformMatrix(
+			float a11 = 1.f, float a12 = 0.f, float a13 = 0.f, float a14 = 0.f,
+			float a21 = 0.f, float a22 = 1.f, float a23 = 0.f, float a24 = 0.f,
+			float a31 = 0.f, float a32 = 0.f, float a33 = 1.f, float a34 = 0.f,
+			float a41 = 0.f, float a42 = 0.f, float a43 = 0.f, float a44 = 1.f
+		);
+
+		/// <summary>Adds a translation to the current transformation.</summary>
+		/// <param name="dx">The translation along the x-axis.</param>
+		void translate(float tx);
+
+		/// <summary>Adds a translation to the current transformation.</summary>
+		/// <param name="dx">The translation along the x-axis.</param>
+		/// <param name="dy">The translation along the y-axis.</param>
+		void translate(float tx, float ty);
+
+		/// <summary>Adds a translation to the current transformation.</summary>
+		/// <param name="dx">The translation along the x-axis.</param>
+		/// <param name="dy">The translation along the y-axis.</param>
+		/// <param name="dz">The translation along the z-axis.</param>
+		void translate(float tx, float ty, float tz);
+
+
+		/// <summary>Adds a scale transform to the current transformation.</summary>
+		/// <param name="sx">The scaling factor for the x-axis.</param>
+		void scale(float sx);
+
+		/// <summary>Adds a scale transform to the current transformation.</summary>
+		/// <param name="sx">The scaling factor for the x-axis.</param>
+		/// <param name="sy">The scaling factor for the y-axis.</param>
+		void scale(float sx, float sy);
+
+		/// <summary>Adds a scale transform to the current transformation.</summary>
+		/// <param name="sx">The scaling factor for the x-axis.</param>
+		/// <param name="sy">The scaling factor for the y-axis.</param>
+		/// <param name="sz">The scaling factor for the z-axis.</param>
+		void scale(float sx, float sy, float sz);
+
+
+		/// <summary>Adds a rotation transform around the x-axis to the current transformation.</summary>
+		/// <param name="angle">The angle of rotation, in radians.</param>
+		void rotatex(float angle);
+
+		/// <summary>Adds a rotation transform around the y-axis to the current transformation.</summary>
+		/// <param name="angle">The angle of rotation, in radians.</param>
+		void rotatey(float angle);
+
+		/// <summary>Adds a rotation transform around the z-axis to the current transformation.</summary>
+		/// <param name="angle">The angle of rotation, in radians.</param>
+		void rotatez(float angle);
+
+
+		/// <summary>Sets the current transformation to the identity matrix.</summary>
+		void identity();
+
+		/// <summary>Creates an orthogonal projection.</summary>
+		/// <param name="left">The left side of the projection.</param>
+		/// <param name="right">The right side of the projection.</param>
+		/// <param name="bottom">The bottom side of the projection.</param>
+		/// <param name="top">The top side of the projection.</param>
+		/// <param name="near">The near side of the projection.</param>
+		/// <param name="far">The far side of the projection.</param>
+		void ortho(float left, float right, float bottom, float top, float near, float far);
+
+
+		/// <summary>Sets this matrix equal to the right-hand side of the operator.</summary>
+		/// <param name="other">The matrix to set this one equal to.</param>
+		/// <returns>A reference to this matrix.</returns>
+		TransformMatrix& operator=(const matrix<float, 4, 4>& other);
+
+		/// <summary>Multiplies this matrix by another one, in place.</summary>
+		/// <param name="other">The matrix to multiply this one by.</param>
+		/// <returns>A reference to this matrix.</returns>
+		TransformMatrix& operator*=(const matrix<float, 4, 4>& other);
+	};
+
+
+
+
 
 	class MatrixStack
 	{

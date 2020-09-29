@@ -72,45 +72,7 @@ namespace onion
 			// Load the tile shader
 			if (!m_TileShader)
 			{
-				m_TileShader = new Shader<const vec3i*>(
-
-					// The raw text of the vertex shader
-					"#version 330 core\n"
-					""
-					"in vec3 vertexPosition;\n"
-					"in vec3 vertexNormal;\n"
-					"in vec2 vertexUV;\n"
-					""
-					"uniform mat4 camera;\n"
-					"uniform mat4 model;\n"
-					""
-					"out vec3 fragmentNormal;\n"
-					"out vec2 fragmentUV;\n"
-					""
-					"void main() {\n"
-					"	gl_Position = camera * model * vec4(vertexPosition, 1);\n"
-					"   fragmentNormal = vertexNormal;\n"
-					"	fragmentUV = vertexUV;\n"
-					"}",
-
-					// The raw text of the fragment shader
-					"#version 330 core\n"
-					""
-					"in vec3 fragmentNormal;\n"
-					"in vec2 fragmentUV;\n"
-					""
-					"uniform sampler2D tex2D;\n"
-					""
-					"void main() {\n"
-					//"   vec3 norm = normalize(fragmentNormal);\n"
-					"   vec4 fragColor = texture(tex2D, UV);\n"
-					"	gl_FragColor = fragColor;\n"
-					"}",
-
-					// The uniform variables of the shader program
-					{ "camera", "model" }
-
-				);
+				m_TileShader = new Shader<const vec3i*>("tile_basic");
 			}
 
 			// Set up the buffer vectors
@@ -394,16 +356,14 @@ namespace onion
 			// Generate the buffer
 			m_Displayer = new opengl::_SquareBufferDisplayer();
 			m_Displayer->set_buffer(
-				new Buffer<3, 3, 2>(
-
-					// The shader for the tiles
-					m_TileShader,
-
-					// The vertex attributes
-					{ "vertexPosition", "vertexNormal", "vertexUV" },
+				new VertexBuffer(
 
 					// The array of data to put in the buffer
-					data
+					data,
+
+					// The vertex attributes for the tiles
+					m_TileShader->get_attribs()
+
 				)
 			);
 

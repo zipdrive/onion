@@ -374,7 +374,7 @@ namespace onion
 	class SpriteSheet : public _SpriteSheet
 	{
 	protected:
-		typedef Shader<const MatrixStack&, _Args...> _SpriteShader;
+		typedef Shader<matrix<float, 4, 4>, _Args...> _SpriteShader;
 
 		// The shader used for the sprite sheet.
 		_SpriteShader* m_Shader;
@@ -392,10 +392,10 @@ namespace onion
 		/// <summary>Displays a sprite on the sprite sheet.</summary>
 		/// <param name="key">The key to the sprite.</param>
 		/// <param name="args">Values to pass to the shader.</param>
-		void display(SPRITE_KEY key, _Args... args) const
+		void display(SPRITE_KEY key, const _Args&... args) const
 		{
 			// Activate the shader
-			m_Shader->activate(Transform::model, args...);
+			m_Shader->activate(Transform::model.get(), args...);
 
 			// Display the sprite
 			m_Displayer->display(key);
@@ -407,7 +407,7 @@ namespace onion
 		void display(const Sprite* sprite, _Args... args) const
 		{
 			// Activate the shader
-			m_Shader->activate(Transform::model, args...);
+			m_Shader->activate(Transform::model.get(), args...);
 
 			// Display the sprite
 			m_Displayer->display(sprite->key);
@@ -429,7 +429,7 @@ namespace onion
 
 
 	// A sprite sheet that renders pixel perfect sprites and maps red, green, and blue to separate colors.
-	class SimplePixelSpriteSheet : public PixelSpriteSheet<const PALETTE_MATRIX&>
+	class SimplePixelSpriteSheet : public PixelSpriteSheet<matrix<float, 4, 4>>
 	{
 	protected:
 		// The shader shared by all simple sprite sheets.
@@ -468,7 +468,7 @@ namespace onion
 		/// <param name="height">The height of each sprite.</param>
 		virtual void load(const char* path, int width, int height);
 
-		using PixelSpriteSheet<const PALETTE_MATRIX&>::display;
+		using PixelSpriteSheet<matrix<float, 4, 4>>::display;
 
 		/// <summary>Displays a sprite from the sprite sheet.</summary>
 		/// <param name="sprite">The sprite to display.</param>
@@ -478,7 +478,7 @@ namespace onion
 
 
 	// A sprite sheet that picks shading from one sprite and colors from another sprite.
-	class ShadedTexturePixelSpriteSheet : public PixelSpriteSheet<const TEXTURE_MATRIX&, const PALETTE_MATRIX&, const PALETTE_MATRIX&, const PALETTE_MATRIX&>
+	class ShadedTexturePixelSpriteSheet : public PixelSpriteSheet<matrix<float, 2, 4>, matrix<float, 4, 4>, matrix<float, 4, 4>, matrix<float, 4, 4>>
 	{
 	protected:
 		// The shader shared by all shaded texture sprite sheets.
@@ -513,7 +513,7 @@ namespace onion
 		/// <returns>The texture associated with the ID, if there is one. NULL otherwise.</returns>
 		Texture* get_texture(TEXTURE_ID id);
 
-		using PixelSpriteSheet<const TEXTURE_MATRIX&, const PALETTE_MATRIX&, const PALETTE_MATRIX&, const PALETTE_MATRIX&>::display;
+		using PixelSpriteSheet<matrix<float, 2, 4>, matrix<float, 4, 4>, matrix<float, 4, 4>, matrix<float, 4, 4>>::display;
 
 		/// <summary>Displays a shaded and textured sprite from the sprite sheet.</summary>
 		/// <param name="sprite">The shading of the sprite to display.</param>

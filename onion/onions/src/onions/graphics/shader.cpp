@@ -9,9 +9,10 @@
 
 namespace onion
 {
+
+
 	namespace opengl
 	{
-
 
 		/// <summary>Checks for any OpenGL errors. If any were received, logs them.</summary>
 		/// <param name="message">The header written before writing the OpenGL error codes.</param>
@@ -72,20 +73,164 @@ namespace onion
 
 
 
-		template <typename T>
-		unsigned int get_byte_count()
+		template <GLenum... _EnumValues>
+		struct map_glenum_base
 		{
-			return 0;
-		}
+			template <typename... _TypeValues>
+			struct to_type_base
+			{
+				template <std::size_t N, GLenum _CompareValue, GLenum... _RemainingEnumValues>
+				struct EnumIndexer
+				{
+					static constexpr std::size_t index = N;
+				};
 
-		template <> unsigned int get_byte_count<float>() { return 4; }
-		template <> unsigned int get_byte_count<vec2f>() { return 8; }
-		template <> unsigned int get_byte_count<vec3f>() { return 12; }
-		template <> unsigned int get_byte_count<vec4f>() { return 16; }
-		template <> unsigned int get_byte_count<mat2f>() { return 16; }
-		template <> unsigned int get_byte_count<mat3f>() { return 36; }
-		template <> unsigned int get_byte_count<mat4f>() { return 64; }
-		template <> unsigned int get_byte_count<mat2x4f>() { return 32; }
+				template <std::size_t N, GLenum _CompareValue, GLenum _NthEnumValue, GLenum... _RemainingEnumValues>
+				struct EnumIndexer<N, _CompareValue, _NthEnumValue, _RemainingEnumValues...>
+				{
+					static constexpr std::size_t index = _CompareValue == _NthEnumValue ? N : EnumIndexer<N + 1, _CompareValue, _RemainingEnumValues...>::index;
+				};
+
+
+				template <std::size_t N, GLenum _NthEnumValue, GLenum... _RemainingEnumValues>
+				struct NthEnumGetter
+				{
+					static constexpr GLenum value = NthEnumGetter<N - 1, _RemainingEnumValues...>::value;
+				};
+
+				template <GLenum _NthEnumValue, GLenum... _RemainingEnumValues>
+				struct NthEnumGetter<0, _NthEnumValue, _RemainingEnumValues...>
+				{
+					static constexpr GLenum value = _NthEnumValue;
+				};
+
+				template <std::size_t N>
+				struct NthEnum
+				{
+					static constexpr GLenum value = NthEnumGetter<N, _EnumValues...>::value;
+				};
+
+
+				template <std::size_t N>
+				using NthType = typename std::tuple_element<N, std::tuple<_TypeValues...>>::type;
+				
+				template <GLenum _EnumValue>
+				using mapper = NthType<EnumIndexer<0, _EnumValue, _EnumValues...>::index>;
+
+
+				static constexpr std::size_t count = sizeof...(_EnumValues);
+			};
+		};
+
+		typedef map_glenum_base<
+			GL_FLOAT,
+			GL_FLOAT_VEC2,
+			GL_FLOAT_VEC3,
+			GL_FLOAT_VEC4,
+			GL_FLOAT_MAT2,
+			GL_FLOAT_MAT3,
+			GL_FLOAT_MAT4,
+			GL_FLOAT_MAT2x3,
+			GL_FLOAT_MAT2x4,
+			GL_FLOAT_MAT3x4,
+			GL_FLOAT_MAT3x2,
+			GL_FLOAT_MAT4x2,
+			GL_FLOAT_MAT4x3,
+			GL_INT,
+			GL_INT_VEC2,
+			GL_INT_VEC3,
+			GL_INT_VEC4,
+			GL_DOUBLE,
+			GL_DOUBLE_VEC2,
+			GL_DOUBLE_VEC3,
+			GL_DOUBLE_VEC4,
+			GL_DOUBLE_MAT2,
+			GL_DOUBLE_MAT3,
+			GL_DOUBLE_MAT4,
+			GL_DOUBLE_MAT2x3,
+			GL_DOUBLE_MAT2x4,
+			GL_DOUBLE_MAT3x4,
+			GL_DOUBLE_MAT3x2,
+			GL_DOUBLE_MAT4x2,
+			GL_DOUBLE_MAT4x3
+		> map_glenum;
+		
+		typedef map_glenum::to_type_base<
+			float,
+			matrix<float, 2, 1>,
+			matrix<float, 3, 1>,
+			matrix<float, 4, 1>,
+			matrix<float, 2, 2>,
+			matrix<float, 3, 3>,
+			matrix<float, 4, 4>,
+			matrix<float, 3, 2>,
+			matrix<float, 4, 2>,
+			matrix<float, 4, 3>,
+			matrix<float, 2, 3>,
+			matrix<float, 2, 4>,
+			matrix<float, 3, 4>,
+			int,
+			matrix<int, 2, 1>,
+			matrix<int, 3, 1>,
+			matrix<int, 4, 1>,
+			double,
+			matrix<double, 2, 1>,
+			matrix<double, 3, 1>,
+			matrix<double, 4, 1>,
+			matrix<double, 2, 2>,
+			matrix<double, 3, 3>,
+			matrix<double, 4, 4>,
+			matrix<double, 3, 2>,
+			matrix<double, 4, 2>,
+			matrix<double, 4, 3>,
+			matrix<double, 2, 3>,
+			matrix<double, 2, 4>,
+			matrix<double, 3, 4>
+		> map_glenum_to_type;
+
+		template <GLenum _EnumValue>
+		using glenum_type = map_glenum_to_type::mapper<_EnumValue>;
+
+		template <std::size_t N>
+		using glenum_at = map_glenum_to_type::NthEnum<N>;
+
+		template <std::size_t N>
+		using glenum_type_at = map_glenum_to_type::NthType<N>;
+
+
+
+		template <typename _Primitive>
+		struct gl_primitive_base
+		{
+			using type = void;
+		};
+
+		template <>
+		struct gl_primitive_base<float>
+		{
+			using type = GLfloat;
+		};
+
+		template <>
+		struct gl_primitive_base<double>
+		{
+			using type = GLdouble;
+		};
+
+		template <>
+		struct gl_primitive_base<int>
+		{
+			using type = GLint;
+		};
+
+		template <>
+		struct gl_primitive_base<unsigned int>
+		{
+			using type = GLuint;
+		};
+
+		template <typename _Primitive>
+		using gl_primitive = typename gl_primitive_base<_Primitive>::template type;
 
 
 
@@ -117,180 +262,412 @@ namespace onion
 
 
 
+		template <typename T>
+		struct SizeRetriever
+		{
+			/// <summary>Retrieves the size of the primitives that compose the type.</summary>
+			static constexpr std::size_t primitive = sizeof(T);
+
+			/// <summary>Retrieves the total size of the type.</summary>
+			static constexpr std::size_t whole = sizeof(T);
+		};
+
+		/*
+		template <typename _Primitive, int _Rows, int _Columns>
+		struct SizeRetriever<matrix<_Primitive, _Rows, _Columns>>
+		{
+			/// <summary>Retrieves the size of the primitives that compose the type.</summary>
+			static constexpr std::size_t primitive = SizeRetriever<_Primitive>::whole;
+
+			/// <summary>Retrieves the total size of the type.</summary>
+			static constexpr std::size_t whole = primitive * _Rows * _Columns;
+		};
+		*/
+
+		
+		/// <summary>Retrieves the number of base primitives that make up the type.</summary>
+		/// <returns>The sizeof the type, divided by the sizeof the base primitives underlying the type.
+		/// For primitives, it will return 1.
+		/// For matrices, it will return the number of elements in the matrix.</returns>
+		template <std::size_t N = 0>
+		std::size_t retrieve_countof_type(GLenum type)
+		{
+			if (glenum_at<N>::value == type)
+			{
+				return SizeRetriever<glenum_type_at<N>>::whole / SizeRetriever<glenum_type_at<N>>::primitive;
+			}
+			else
+			{
+				return retrieve_countof_type<N + 1>(type);
+			}
+		}
+
+		template <>
+		std::size_t retrieve_countof_type<map_glenum_to_type::count>(GLenum type)
+		{
+			return 0;
+		}
+
+
+
 		_UniformAttribute::_UniformAttribute(std::string name) : name(name) {}
 		_UniformAttribute::~_UniformAttribute() {}
+
+		template <typename T>
+		_UniformTypedAttribute<T>::_UniformTypedAttribute(std::string name) : _UniformAttribute(name) {}
+
+		template <typename T>
+		unsigned int _UniformTypedAttribute<T>::get_size() const
+		{
+			return SizeRetriever<T>::whole;
+		}
+
 		
 		// The location of a uniform within a shader program.
 		template <typename T>
-		class _UniformProgramAttribute : public _UniformAttribute
+		class _UniformProgramAttribute : public _UniformTypedAttribute<T>
 		{
 		private:
 			// The location within the shader program.
-			GLint m_Location;
+			const GLint m_Location;
 
 		public:
-			_UniformProgramAttribute(std::string name, GLint location) : _UniformAttribute(name)
-			{
-				m_Location = location;
-			}
+			_UniformProgramAttribute(std::string name, GLint location) : _UniformTypedAttribute<T>(name), m_Location(location) {}
 
-			unsigned int get_size() const
-			{
-				return get_byte_count<T>();
-			}
-
-			void set(float value) const {}
-
-			void set(const vec2f& value) const {}
-			void set(const vec3f& value) const {}
-			void set(const vec4f& value) const {}
-
-			void set(const mat2f& value) const {}
-			void set(const mat3f& value) const {}
-			void set(const mat4f& value) const {}
-			void set(const mat2x4f& value) const {}
-
-			void set(const MatrixStack& value) const {}
+			void set(const T& value) const {}
 		};
 
 		template <>
-		void _UniformProgramAttribute<float>::set(float value) const
+		void _UniformProgramAttribute<float>::set(const float& value) const
 		{
 			glUniform1f(m_Location, value);
 		}
 
 		template <>
-		void _UniformProgramAttribute<vec2f>::set(const vec2f& value) const
+		void _UniformProgramAttribute<int>::set(const int& value) const
 		{
-			glUniform2fv(m_Location, 1, value.matrix_values());
+			glUniform1i(m_Location, value);
 		}
 
 		template <>
-		void _UniformProgramAttribute<vec3f>::set(const vec3f& value) const
+		void _UniformProgramAttribute<double>::set(const double& value) const
 		{
-			glUniform3fv(m_Location, 1, value.matrix_values());
+			glUniform1d(m_Location, value);
+		}
+
+
+		
+		
+		
+		template <typename... _Functions>
+		struct FunctionList
+		{
+		private:
+			template <int N, typename _NthFunction, typename... _RemainingFunctions>
+			struct NthFunctionGetter
+			{
+				using type = typename NthFunctionGetter<N - 1, _RemainingFunctions...>::type;
+			};
+
+			template <typename _NthFunction, typename... _RemainingFunctions>
+			struct NthFunctionGetter<0, _NthFunction, _RemainingFunctions...>
+			{
+				using type = _NthFunction;
+			};
+
+		public:
+			const std::tuple<_Functions...> func;
+
+			constexpr FunctionList(_Functions... f) : func(f...) {}
+
+			template <int N>
+			using ptr = typename NthFunctionGetter<N, _Functions...>::type;
+
+			template <int N>
+			constexpr ptr<N> get()
+			{
+				return std::get<N>(func);
+			}
+		};
+
+		template <typename... _Functions>
+		constexpr auto generate_function_list(_Functions... f)
+		{
+			return std::tuple<_Functions...>(f...);
+		}
+		
+		
+		
+		// This is a hacky solution, I'm aware.
+		// But I'm working with VS2015, which doesn't fully support C++14's constexpr extensions, so I'm making do.
+
+		// Also, for some reason it seems like casting PFNGLUNIFORM2FVPROC* to void(*)(GLint, GLint, const GLfloat*) results in an
+		// access violation error, so I have to keep a reference to the actual type of each function.
+
+		template <typename T>
+		struct UniformMatrixProgramFunctions {};
+
+		template <>
+		struct UniformMatrixProgramFunctions<float>
+		{
+			using tuple_type = std::tuple<
+				PFNGLUNIFORM2FVPROC*,
+				PFNGLUNIFORM3FVPROC*,
+				PFNGLUNIFORM4FVPROC*,
+				PFNGLUNIFORMMATRIX2FVPROC*,
+				PFNGLUNIFORMMATRIX3X2FVPROC*,
+				PFNGLUNIFORMMATRIX4X2FVPROC*,
+				PFNGLUNIFORMMATRIX2X3FVPROC*,
+				PFNGLUNIFORMMATRIX3FVPROC*,
+				PFNGLUNIFORMMATRIX4X3FVPROC*,
+				PFNGLUNIFORMMATRIX2X4FVPROC*,
+				PFNGLUNIFORMMATRIX3X4FVPROC*,
+				PFNGLUNIFORMMATRIX4FVPROC*
+			>;
+
+			static const tuple_type functions;
+		};
+
+		const UniformMatrixProgramFunctions<float>::tuple_type UniformMatrixProgramFunctions<float>::functions =
+			std::make_tuple(
+				&glUniform2fv,
+				&glUniform3fv,
+				&glUniform4fv,
+				&glUniformMatrix2fv,
+				&glUniformMatrix2x3fv,
+				&glUniformMatrix2x4fv,
+				&glUniformMatrix3x2fv,
+				&glUniformMatrix3fv,
+				&glUniformMatrix3x4fv,
+				&glUniformMatrix4x2fv,
+				&glUniformMatrix4x3fv,
+				&glUniformMatrix4fv
+			);
+		
+		template <>
+		struct UniformMatrixProgramFunctions<double>
+		{
+			using tuple_type = std::tuple<
+				PFNGLUNIFORM2DVPROC*,
+				PFNGLUNIFORM3DVPROC*,
+				PFNGLUNIFORM4DVPROC*,
+				PFNGLUNIFORMMATRIX2DVPROC*,
+				PFNGLUNIFORMMATRIX3X2DVPROC*,
+				PFNGLUNIFORMMATRIX4X2DVPROC*,
+				PFNGLUNIFORMMATRIX2X3DVPROC*,
+				PFNGLUNIFORMMATRIX3DVPROC*,
+				PFNGLUNIFORMMATRIX4X3DVPROC*,
+				PFNGLUNIFORMMATRIX2X4DVPROC*,
+				PFNGLUNIFORMMATRIX3X4DVPROC*,
+				PFNGLUNIFORMMATRIX4DVPROC*
+			>;
+
+			static const tuple_type functions;
+		};
+
+		const UniformMatrixProgramFunctions<double>::tuple_type UniformMatrixProgramFunctions<double>::functions =
+			std::make_tuple(
+				&glUniform2dv,
+				&glUniform3dv,
+				&glUniform4dv,
+				&glUniformMatrix2dv,
+				&glUniformMatrix2x3dv,
+				&glUniformMatrix2x4dv,
+				&glUniformMatrix3x2dv,
+				&glUniformMatrix3dv,
+				&glUniformMatrix3x4dv,
+				&glUniformMatrix4x2dv,
+				&glUniformMatrix4x3dv,
+				&glUniformMatrix4dv
+			);
+		
+		template <>
+		struct UniformMatrixProgramFunctions<int>
+		{
+			using tuple_type = std::tuple<
+				PFNGLUNIFORM2IVPROC*,
+				PFNGLUNIFORM3IVPROC*,
+				PFNGLUNIFORM4IVPROC*
+			>;
+
+			static const tuple_type functions;
+		};
+
+		const UniformMatrixProgramFunctions<int>::tuple_type UniformMatrixProgramFunctions<int>::functions =
+			std::make_tuple(
+				&glUniform2iv,
+				&glUniform3iv,
+				&glUniform4iv
+			);
+
+		template <>
+		struct UniformMatrixProgramFunctions<unsigned int>
+		{
+			using tuple_type = std::tuple<
+				PFNGLUNIFORM2UIVPROC*,
+				PFNGLUNIFORM3UIVPROC*,
+				PFNGLUNIFORM4UIVPROC*
+			>;
+
+			static const tuple_type functions;
+		};
+
+		const UniformMatrixProgramFunctions<unsigned int>::tuple_type UniformMatrixProgramFunctions<unsigned int>::functions = 
+			std::make_tuple(
+				&glUniform2uiv,
+				&glUniform3uiv,
+				&glUniform4uiv
+			);
+
+
+		template <typename _Number, int _Rows, int _Columns>
+		class _UniformProgramAttribute<matrix<_Number, _Rows, _Columns>> : public _UniformTypedAttribute<matrix<_Number, _Rows, _Columns>>
+		{
+		private:
+			// The index of the function.
+			static constexpr int m_FunctionIndex = (_Rows - 2) + (3 * (_Columns - 1));
+
+			using FunctionPtr = std::tuple_element_t<m_FunctionIndex, typename UniformMatrixProgramFunctions<_Number>::tuple_type>;
+
+			// The function that sets the uniform values.
+			static FunctionPtr m_Function;
+
+			// The location within the shader program.
+			const GLint m_Location;
+
+		public:
+			_UniformProgramAttribute(std::string name, GLint location) : _UniformTypedAttribute<matrix<_Number, _Rows, _Columns>>(name), m_Location(location) {}
+
+			void set(const matrix<_Number, _Rows, _Columns>& value) const 
+			{
+				(*m_Function)(m_Location, 1, GL_FALSE, value.matrix_values());
+			}
+		};
+
+		template <typename _Number, int _Rows, int _Columns>
+		typename _UniformProgramAttribute<matrix<_Number, _Rows, _Columns>>::FunctionPtr _UniformProgramAttribute<matrix<_Number, _Rows, _Columns>>::m_Function =
+			std::get<_UniformProgramAttribute<matrix<_Number, _Rows, _Columns>>::m_FunctionIndex>(UniformMatrixProgramFunctions<_Number>::functions);
+		
+		template <typename _Number, int _Rows>
+		class _UniformProgramAttribute<matrix<_Number, _Rows, 1>> : public _UniformTypedAttribute<matrix<_Number, _Rows, 1>>
+		{
+		private:
+			// The index of the function.
+			static constexpr int m_FunctionIndex = _Rows - 2;
+
+			using FunctionPtr = std::tuple_element_t<m_FunctionIndex, typename UniformMatrixProgramFunctions<_Number>::tuple_type>;
+
+			// The function that sets the uniform values
+			static FunctionPtr m_Function;
+
+			// The location within the shader program.
+			const GLint m_Location;
+
+		public:
+			_UniformProgramAttribute(std::string name, GLint location) : _UniformTypedAttribute<matrix<_Number, _Rows, 1>>(name), m_Location(location) {}
+
+			void set(const matrix<_Number, _Rows, 1>& value) const
+			{
+				(*m_Function)(m_Location, 1, value.matrix_values());
+			}
+		};
+
+		template <typename _Number, int _Rows>
+		typename _UniformProgramAttribute<matrix<_Number, _Rows, 1>>::FunctionPtr _UniformProgramAttribute<matrix<_Number, _Rows, 1>>::m_Function =
+			std::get<_UniformProgramAttribute<matrix<_Number, _Rows, 1>>::m_FunctionIndex>(UniformMatrixProgramFunctions<_Number>::functions);
+
+
+		template <std::size_t N = 0>
+		_UniformAttribute* generate_uniform_program_attribute(GLenum type, std::string name, GLint location)
+		{
+			if (glenum_at<N>::value == type)
+			{
+				return new _UniformProgramAttribute<glenum_type_at<N>>(name, location);
+			}
+			else
+			{
+				return generate_uniform_program_attribute<N + 1>(type, name, location);
+			}
 		}
 
 		template <>
-		void _UniformProgramAttribute<vec4f>::set(const vec4f& value) const
+		_UniformAttribute* generate_uniform_program_attribute<map_glenum_to_type::count>(GLenum type, std::string, GLint location)
 		{
-			glUniform4fv(m_Location, 1, value.matrix_values());
+			return nullptr;
 		}
 
-		template <>
-		void _UniformProgramAttribute<mat2f>::set(const mat2f& value) const
-		{
-			glUniformMatrix2fv(m_Location, 1, GL_FALSE, value.matrix_values());
-		}
-
-		template <>
-		void _UniformProgramAttribute<mat3f>::set(const mat3f& value) const
-		{
-			glUniformMatrix3fv(m_Location, 1, GL_FALSE, value.matrix_values());
-		}
-
-		template <>
-		void _UniformProgramAttribute<mat4f>::set(const mat4f& value) const
-		{
-			glUniformMatrix4fv(m_Location, 1, GL_FALSE, value.matrix_values());
-		}
-
-		template <>
-		void _UniformProgramAttribute<mat2x4f>::set(const mat2x4f& value) const
-		{
-			glUniformMatrix4x2fv(m_Location, 1, GL_FALSE, value.matrix_values());
-		}
-
-		template <>
-		void _UniformProgramAttribute<TRANSFORM_MATRIX>::set(const MatrixStack& value) const
-		{
-			glUniformMatrix4fv(m_Location, 1, GL_FALSE, value.get_values());
-		}
 
 
 		template <typename T>
-		class _UniformBlockAttribute : public _UniformAttribute
+		class _UniformBlockAttribute : public _UniformTypedAttribute<T>
 		{
 		protected:
 			// The offset of the uniform within the block.
 			const GLint m_Offset;
 
 		public:
-			_UniformBlockAttribute(std::string name, GLint offset) : _UniformAttribute(name), m_Offset(offset) {}
+			_UniformBlockAttribute(std::string name, GLint offset) : _UniformTypedAttribute<T>(name), m_Offset(offset) {}
 
-			unsigned int get_size() const
-			{
-				return get_byte_count<T>();
-			}
-
-			void set(float value) const {}
-
-			void set(const vec2f& value) const {}
-			void set(const vec3f& value) const {}
-			void set(const vec4f& value) const {}
-
-			void set(const mat2f& value) const {}
-			void set(const mat3f& value) const {}
-			void set(const mat4f& value) const {}
-			void set(const mat2x4f& value) const {}
-
-			void set(const MatrixStack& value) const {}
+			void set(const T& value) const {}
 		};
 
 		template <>
-		void _UniformBlockAttribute<float>::set(float value) const
+		void _UniformBlockAttribute<int>::set(const int& value) const
+		{
+			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 4, &value);
+		}
+		
+		template <>
+		void _UniformBlockAttribute<float>::set(const float& value) const
 		{
 			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 4, &value);
 		}
 
-		template <>
-		void _UniformBlockAttribute<vec2f>::set(const vec2f& value) const
+
+		template <typename _Number, int _Rows, int _Columns>
+		class _UniformBlockAttribute<matrix<_Number, _Rows, _Columns>> : public _UniformTypedAttribute<matrix<_Number, _Rows, _Columns>>
 		{
-			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 8, value.matrix_values());
+		protected:
+			// The offset of the uniform within the block.
+			const GLint m_Offset;
+
+		public:
+			_UniformBlockAttribute(std::string name, GLint offset) : _UniformTypedAttribute<matrix<_Number, _Rows, _Columns>>(name), m_Offset(offset) {}
+
+			void set(const matrix<_Number, _Rows, _Columns>& value) const 
+			{
+				if (std::is_same<_Number, gl_primitive<_Number>>::value)
+				{
+					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, _Rows * _Columns * sizeof(gl_primitive<_Number>), value.matrix_values());
+				}
+				else
+				{
+					gl_primitive<_Number> buf[_Rows * _Columns];
+					for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+						buf[k] = value.get(k);
+					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, _Rows * _Columns * sizeof(gl_primitive<_Number>), buf);
+				}
+			}
+		};
+
+
+		template <std::size_t N = 0>
+		_UniformAttribute* generate_uniform_block_attribute(GLenum type, std::string name, GLint offset)
+		{
+			if (glenum_at<N>::value == type)
+			{
+				return new _UniformBlockAttribute<glenum_type_at<N>>(name, offset);
+			}
+			else
+			{
+				return generate_uniform_block_attribute<N + 1>(type, name, offset);
+			}
 		}
 
 		template <>
-		void _UniformBlockAttribute<vec2f>::set(const vec3f& value) const
+		_UniformAttribute* generate_uniform_block_attribute<map_glenum_to_type::count>(GLenum type, std::string, GLint location)
 		{
-			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 16, value.matrix_values());
-		}
-
-		template <>
-		void _UniformBlockAttribute<vec2f>::set(const vec4f& value) const
-		{
-			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 16, value.matrix_values());
-		}
-
-		template <>
-		void _UniformBlockAttribute<mat4f>::set(const mat4f& value) const
-		{
-			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 64, value.matrix_values());
-		}
-
-		template <>
-		void _UniformBlockAttribute<mat2x4f>::set(const mat2x4f& value) const
-		{
-			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 32, value.matrix_values());
-		}
-
-		template <>
-		void _UniformBlockAttribute<mat4f>::set(const MatrixStack& value) const
-		{
-			/*
-			const float* mat = value.get_values();
-			GLsizeiptr size = sizeof(float) * 16;
-
-			GLint buffer_size = 0;
-			glGetBufferParameteriv(GL_UNIFORM_BUFFER, GL_BUFFER_SIZE, &buffer_size);
-			errcheck("Error retrieving the size of the buffer for the uniform block.");
-
-			GLvoid* ptr = glMapBufferRange(GL_UNIFORM_BUFFER, m_Offset, size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
-			errcheck("Error received when mapping a range from the buffer for the uniform block.");
-			memcpy(ptr, mat, sizeof(float) * 16);
-			glUnmapBuffer(GL_UNIFORM_BUFFER);
-			*/
-
-			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 64, value.get_values());
+			return nullptr;
 		}
 
 
@@ -372,11 +749,13 @@ namespace onion
 			compile(vertex_shader_text, fragment_shader_text);
 		}
 		
+
+#define SHADER_INFO_BUFFER_SIZE 500
+
 		void _Shader::compile(const char* vertex_shader_text, const char* fragment_shader_text)
 		{
 			errcheck("Error received at some point before beginning shader compilation.");
 
-#define SHADER_INFO_BUFFER_SIZE 500
 			GLint success; // Retrieves whether compilation was a success or failure.
 			GLchar info_buffer[SHADER_INFO_BUFFER_SIZE]; // Buffer in case compilation/linking fails.
 
@@ -437,6 +816,102 @@ namespace onion
 			glDeleteShader(fragment_shader);
 			errcheck("Error received when deleting the fragment shader after linking it to the shader program.");
 
+			// Process the variables
+			process();
+		}
+
+		void _Shader::compile(const char* vertex_shader_text, const char* geometry_shader_text, const char* fragment_shader_text)
+		{
+			errcheck("Error received at some point before beginning shader compilation.");
+
+			GLint success; // Retrieves whether compilation was a success or failure.
+			GLchar info_buffer[SHADER_INFO_BUFFER_SIZE]; // Buffer in case compilation/linking fails.
+
+			// Vertex shader
+			GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+			glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
+			errcheck("Error received when setting the source text for the vertex shader.");
+			glCompileShader(vertex_shader);
+			errcheck("Error received when issuing the instruction to compile the vertex shader.");
+			// If compilation failed, log the error
+			glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+			errcheck("Error received when checking the compilation status of the vertex shader.");
+			if (!success)
+			{
+				glGetShaderInfoLog(vertex_shader, SHADER_INFO_BUFFER_SIZE, NULL, info_buffer);
+				errlog(std::string("ONION: Error received when compiling the vertex shader.\n") + info_buffer + "\n\n");
+				errabort(ERROR_FAILED_TO_COMPILE_VERTEX_SHADER);
+			}
+
+			// Geometry shader
+			GLuint geometry_shader = glCreateShader(GL_VERTEX_SHADER);
+			glShaderSource(geometry_shader, 1, &geometry_shader_text, NULL);
+			errcheck("Error received when setting the source text for the geometry shader.");
+			glCompileShader(geometry_shader);
+			errcheck("Error received when issuing the instruction to compile the geometry shader.");
+			// If compilation failed, log the error
+			glGetShaderiv(geometry_shader, GL_COMPILE_STATUS, &success);
+			errcheck("Error received when checking the compilation status of the geometry shader.");
+			if (!success)
+			{
+				glGetShaderInfoLog(geometry_shader, SHADER_INFO_BUFFER_SIZE, NULL, info_buffer);
+				errlog(std::string("ONION: Error received when compiling the geometry shader.\n") + info_buffer + "\n\n");
+				errabort(ERROR_FAILED_TO_COMPILE_GEOMETRY_SHADER);
+			}
+
+			// Fragment shader
+			GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+			glShaderSource(fragment_shader, 1, &fragment_shader_text, NULL);
+			errcheck("Error received when setting the source text for the fragment shader.");
+			glCompileShader(fragment_shader);
+			errcheck("Error received when issuing the instruction to compile the fragment shader.");
+			// If compilation failed, log the error
+			glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+			errcheck("Error received when checking the compilation status of the fragment shader.");
+			if (!success)
+			{
+				glGetShaderInfoLog(fragment_shader, SHADER_INFO_BUFFER_SIZE, NULL, info_buffer);
+				errlog(std::string("ONION: Error received when compiling the fragment shader.\n") + info_buffer + "\n\n");
+				errabort(ERROR_FAILED_TO_COMPILE_FRAGMENT_SHADER);
+			}
+
+			// Create shader program
+			GLuint id = glCreateProgram();
+			glAttachShader(id, vertex_shader);
+			errcheck("Error received when attaching vertex shader to shader program.");
+			glAttachShader(id, geometry_shader);
+			errcheck("Error received when attaching geometry shader to shader program.");
+			glAttachShader(id, fragment_shader);
+			errcheck("Error received when attaching fragment shader to shader program.");
+			glLinkProgram(id);
+			errcheck("Error received when issuing the instruction to link the shader program.");
+			m_Shader = new _ID(id);
+			// If linking failed, log the error
+			glGetProgramiv(id, GL_LINK_STATUS, &success);
+			errcheck("Error received when checking the link status of the shader program.");
+			if (!success)
+			{
+				glGetProgramInfoLog(id, SHADER_INFO_BUFFER_SIZE, NULL, info_buffer);
+				errlog(std::string("ONION: Error received when linking the shader program.\n") + info_buffer + "\n\n");
+				errabort(ERROR_FAILED_TO_LINK_SHADER_PROGRAM);
+			}
+
+			// Delete the shaders
+			glDeleteShader(vertex_shader);
+			errcheck("Error received when deleting the vertex shader after linking it to the shader program.");
+			glDeleteShader(geometry_shader);
+			errcheck("Error received when deleting the geometry shader after linking it to the shader program.");
+			glDeleteShader(fragment_shader);
+			errcheck("Error received when deleting the fragment shader after linking it to the shader program.");
+
+			// Process the variables
+			process();
+		}
+
+		void _Shader::process()
+		{
+			GLuint id = m_Shader->id;
+
 			// Determine the shader program's vertex attributes
 			GLint vertex_attribute_count;
 			glGetProgramiv(id, GL_ACTIVE_ATTRIBUTES, &vertex_attribute_count);
@@ -455,43 +930,7 @@ namespace onion
 					glGetActiveAttrib(id, index, 0, NULL, &size, &type, NULL);
 					errcheck("Error received when retrieving information about the vertex attribute with index " + std::to_string(index) + ".");
 
-					switch (type)
-					{
-					case GL_FLOAT:
-						size *= 1;
-						break;
-					case GL_FLOAT_VEC2:
-						size *= 2;
-						break;
-					case GL_FLOAT_VEC3:
-						size *= 3;
-						break;
-					case GL_FLOAT_VEC4:
-					case GL_FLOAT_MAT2:
-						size *= 4;
-						break;
-					case GL_FLOAT_MAT2x3:
-					case GL_FLOAT_MAT3x2:
-						size *= 6;
-						break;
-					case GL_FLOAT_MAT2x4:
-					case GL_FLOAT_MAT4x2:
-						size *= 8;
-						break;
-					case GL_FLOAT_MAT3:
-						size *= 9;
-						break;
-					case GL_FLOAT_MAT3x4:
-					case GL_FLOAT_MAT4x3:
-						size *= 12;
-						break;
-					case GL_FLOAT_MAT4:
-						size *= 16;
-						break;
-					default:
-						size = 0;
-						break;
-					}
+					size *= retrieve_countof_type(type);
 
 					m_VertexAttributes.attributes[index].attrib = new _VertexAttributeLocation(index, size);
 					m_VertexAttributes.attributes[index].offset = m_VertexAttributes.stride;
@@ -564,43 +1003,16 @@ namespace onion
 						GLint array_size = array_sizes[i];
 						for (int n = 0; n < array_size; ++n)
 						{
-							_UniformAttribute* u = nullptr;
-
 							std::string uname(uniform_name);
 							if (array_size > 1)
 								uname += "[" + std::to_string(n) + "]";
 
-							if (type == GL_FLOAT)
+							if (_UniformAttribute* u = generate_uniform_block_attribute(type, uname, offset))
 							{
-								u = new _UniformBlockAttribute<float>(uname, offset);
-							}
-							else if (type == GL_FLOAT_VEC2)
-							{
-								u = new _UniformBlockAttribute<vec2f>(uname, offset);
-							}
-							else if (type == GL_FLOAT_VEC3)
-							{
-								u = new _UniformBlockAttribute<vec3f>(uname, offset);
-							}
-							else if (type == GL_FLOAT_VEC4)
-							{
-								u = new _UniformBlockAttribute<vec4f>(uname, offset);
-							}
-							else
-							{
-								if (type == GL_FLOAT_MAT4)
-								{
-									u = new _UniformBlockAttribute<mat4f>(uname, offset);
-								}
-								else if (type == GL_FLOAT_MAT4x2)
-								{
-									u = new _UniformBlockAttribute<mat2x4f>(uname, offset);
-								}
+								uniforms.push_back(u);
+								total_uniform_block_size = std::max(total_uniform_block_size, offset + u->get_size());
 							}
 
-							uniforms.push_back(u);
-
-							total_uniform_block_size = std::max(total_uniform_block_size, offset + u->get_size());
 							offset += array_strides[i];
 						}
 
@@ -620,67 +1032,69 @@ namespace onion
 
 				// Bind the shader's uniform block to a uniform buffer
 				glUniformBlockBinding(id, uniform_block_index, buf->m_BindingPoint->binding);
+				errcheck("Error binding the uniform block \"" + uniform_block_name + "\" of the shader.");
 			}
 
 			// Determine any other uniforms
 			GLint uniform_count;
 			glGetProgramiv(id, GL_ACTIVE_UNIFORMS, &uniform_count);
+			errcheck("Error retrieving the number of uniforms of the shader program.");
 
 			for (unsigned int uniform_index = 0; uniform_index < uniform_count; ++uniform_index)
 			{
 				GLint uniform_block_index;
 				glGetActiveUniformsiv(id, 1, &uniform_index, GL_UNIFORM_BLOCK_INDEX, &uniform_block_index);
+				errcheck("Error retrieving the uniform block of the uniform with index " + std::to_string(uniform_index) + ".");
 
 				if (uniform_block_index < 0) // Uniform doesn't belong to a uniform block
 				{
 					// Retrieve the name of the uniform
 					GLint uniform_name_length;
 					glGetActiveUniformsiv(id, 1, &uniform_index, GL_UNIFORM_NAME_LENGTH, &uniform_name_length);
+					errcheck("Error retrieving the length of the name of the uniform with index " + std::to_string(uniform_index) + ".");
 
 					std::string uniform_name;
 					if (uniform_name_length > 0)
 					{
 						GLchar* name_buf = new GLchar[uniform_name_length];
 						glGetActiveUniformName(id, uniform_index, uniform_name_length, NULL, name_buf);
+						errcheck("Error retrieving the name of the uniform with index " + std::to_string(uniform_index) + ".");
 						uniform_name = std::string(name_buf);
 						delete[] name_buf;
 					}
 
 					// Retrieve the location of the uniform
-					GLint uniform_location = glGetUniformLocation(id, uniform_name.c_str());
-
-					// Retrieve the info associated with the uniform
-					GLint size;
-					GLenum type;
-					glGetActiveUniform(id, uniform_index, 0, NULL, &size, &type, NULL);
-
-					// Construct a uniform object
-					_UniformAttribute* u = nullptr;
-
-					switch (type)
+					GLint uniform_location;
+					uniform_location = glGetUniformLocation(id, uniform_name.c_str());
+					if (uniform_location < 0)
 					{
-					case GL_FLOAT:
-						u = new _UniformProgramAttribute<float>(uniform_name, uniform_location);
-						break;
-					case GL_FLOAT_VEC2:
-						u = new _UniformProgramAttribute<vec2f>(uniform_name, uniform_location);
-						break;
-					case GL_FLOAT_VEC3:
-						u = new _UniformProgramAttribute<vec3f>(uniform_name, uniform_location);
-						break;
-					case GL_FLOAT_VEC4:
-						u = new _UniformProgramAttribute<vec4f>(uniform_name, uniform_location);
-						break;
-					case GL_FLOAT_MAT4:
-						u = new _UniformProgramAttribute<mat4f>(uniform_name, uniform_location);
-						break;
-					case GL_FLOAT_MAT4x2:
-						u = new _UniformProgramAttribute<mat2x4f>(uniform_name, uniform_location);
-						break;
+						errcheck("Error retrieving the location of the uniform with name " + uniform_name + ".");
 					}
+					else
+					{
+						// Retrieve the info associated with the uniform
+						GLint array_size = 1;
+						glGetActiveUniformsiv(id, 1, &uniform_index, GL_UNIFORM_SIZE, &array_size);
+						errcheck("Error retrieving the array size of uniform \"" + uniform_name + "\".");
 
-					if (u)
-						m_UniformAttributes.push_back(u);
+						GLint type;
+						glGetActiveUniformsiv(id, 1, &uniform_index, GL_UNIFORM_TYPE, &type);
+						errcheck("Error retrieving the type of uniform \"" + uniform_name + "\".");
+
+						// Construct a uniform object
+						for (int n = 0; n < array_size; ++n)
+						{
+							std::string uname(uniform_name);
+							if (array_size > 1)
+								uname += "[" + std::to_string(n) + "]";
+
+							// Generate the object managing the uniform attribute
+							if (_UniformAttribute* u = generate_uniform_program_attribute(type, uname, uniform_location))
+							{
+								m_UniformAttributes.push_back(u);
+							}
+						}
+					}
 				}
 			}
 		}
@@ -939,10 +1353,16 @@ namespace onion
 			return m_ActiveImage == m_Image;
 		}
 
-		void _Image::activate() const
+		void _Image::activate(int slot) const
 		{
-			// Change the image being drawn from.
-			glBindTexture(GL_TEXTURE_2D, m_Image->id);
+			if (slot >= 0 && slot < 15) // Make sure the slot is valid
+			{
+				// Change the active texture
+				glActiveTexture(GL_TEXTURE0 + slot);
+
+				// Change the image being drawn from.
+				glBindTexture(GL_TEXTURE_2D, m_Image->id);
+			}
 		}
 
 

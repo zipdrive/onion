@@ -16,8 +16,9 @@ namespace onion
 
 
 #define ERROR_FAILED_TO_COMPILE_VERTEX_SHADER 0x1
-#define ERROR_FAILED_TO_COMPILE_FRAGMENT_SHADER 0x2
-#define ERROR_FAILED_TO_LINK_SHADER_PROGRAM 0x3
+#define ERROR_FAILED_TO_COMPILE_GEOMETRY_SHADER 0x2
+#define ERROR_FAILED_TO_COMPILE_FRAGMENT_SHADER 0x3
+#define ERROR_FAILED_TO_LINK_SHADER_PROGRAM 0x4
 
 
 	/// <summary>Displays an error message and aborts the application.</summary>
