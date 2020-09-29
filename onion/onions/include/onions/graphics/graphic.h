@@ -170,6 +170,6 @@ namespace onion
 	};
 
 
-	typedef StaticSpriteGraphic<matrix<float, 4, 4>> SimpleStaticSpriteGraphic;
+	typedef StaticSpriteGraphic<matrix<float, 4, 4>, int> SimpleStaticSpriteGraphic;
 
 }

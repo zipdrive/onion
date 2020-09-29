@@ -205,7 +205,7 @@ namespace onion
 			if (const SpriteFont::Character* c = m_CharacterManager.get(prev))
 			{
 				// Activate the shader
-				SimplePixelSpriteSheet::get_shader()->activate(Transform::model.get(), palette->get_red_palette_matrix());
+				SimplePixelSpriteSheet::get_shader()->activate(Transform::model.get(), palette->get_red_palette_matrix(), 0);
 
 				// Display the buffer
 				m_Displayer->display(c->key);

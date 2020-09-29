@@ -537,14 +537,14 @@ void character_creator_setup()
 	SinglePalette* ui_palette = new SinglePalette(vec4i(255, 255, 255, 0), vec4i(0, 0, 0, 0), vec4i(0, 0, 0, 0));
 
 	g_RotateLeftButton = new HuneCreatorButton(
-		new SimpleStaticSpriteGraphic(ui, "rotate left", ui_palette->get_red_palette_matrix()), 
+		new SimpleStaticSpriteGraphic(ui, "rotate left", ui_palette->get_red_palette_matrix(), 0), 
 		&HuneCreator::rotate_left
 	);
 	g_RotateLeftButton->set_bounds(71, 149, -1, 18, 15, 0);
 	g_RotateLeftButton->unfreeze();
 
 	g_RotateRightButton = new HuneCreatorButton(
-		new SimpleStaticSpriteGraphic(ui, "rotate right", ui_palette->get_red_palette_matrix()), 
+		new SimpleStaticSpriteGraphic(ui, "rotate right", ui_palette->get_red_palette_matrix(), 0), 
 		&HuneCreator::rotate_right
 	);
 	g_RotateRightButton->set_bounds(111, 149, -1, 18, 15, 0);
@@ -555,8 +555,8 @@ void character_creator_setup()
 	g_PlayStopButton->unfreeze();
 
 
-	SimpleStaticSpriteGraphic* left_arrow = new SimpleStaticSpriteGraphic(ui, "arrow left", ui_palette->get_red_palette_matrix());
-	SimpleStaticSpriteGraphic* right_arrow = new SimpleStaticSpriteGraphic(ui, "arrow right", ui_palette->get_red_palette_matrix());
+	SimpleStaticSpriteGraphic* left_arrow = new SimpleStaticSpriteGraphic(ui, "arrow left", ui_palette->get_red_palette_matrix(), 0);
+	SimpleStaticSpriteGraphic* right_arrow = new SimpleStaticSpriteGraphic(ui, "arrow right", ui_palette->get_red_palette_matrix(), 0);
 
 	g_Pages = new HuneCreatorPageContainer(g_HuneCreator, left_arrow, right_arrow);
 

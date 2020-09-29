@@ -429,7 +429,7 @@ namespace onion
 
 
 	// A sprite sheet that renders pixel perfect sprites and maps red, green, and blue to separate colors.
-	class SimplePixelSpriteSheet : public PixelSpriteSheet<matrix<float, 4, 4>>
+	class SimplePixelSpriteSheet : public PixelSpriteSheet<matrix<float, 4, 4>, int>
 	{
 	protected:
 		// The shader shared by all simple sprite sheets.
@@ -468,7 +468,7 @@ namespace onion
 		/// <param name="height">The height of each sprite.</param>
 		virtual void load(const char* path, int width, int height);
 
-		using PixelSpriteSheet<matrix<float, 4, 4>>::display;
+		using PixelSpriteSheet<matrix<float, 4, 4>, int>::display;
 
 		/// <summary>Displays a sprite from the sprite sheet.</summary>
 		/// <param name="sprite">The sprite to display.</param>
@@ -478,7 +478,7 @@ namespace onion
 
 
 	// A sprite sheet that picks shading from one sprite and colors from another sprite.
-	class ShadedTexturePixelSpriteSheet : public PixelSpriteSheet<matrix<float, 2, 4>, matrix<float, 4, 4>, matrix<float, 4, 4>, matrix<float, 4, 4>>
+	class ShadedTexturePixelSpriteSheet : public PixelSpriteSheet<matrix<float, 2, 4>, matrix<float, 4, 4>, matrix<float, 4, 4>, matrix<float, 4, 4>, int>
 	{
 	protected:
 		// The shader shared by all shaded texture sprite sheets.
@@ -513,7 +513,7 @@ namespace onion
 		/// <returns>The texture associated with the ID, if there is one. NULL otherwise.</returns>
 		Texture* get_texture(TEXTURE_ID id);
 
-		using PixelSpriteSheet<matrix<float, 2, 4>, matrix<float, 4, 4>, matrix<float, 4, 4>, matrix<float, 4, 4>>::display;
+		using PixelSpriteSheet<matrix<float, 2, 4>, matrix<float, 4, 4>, matrix<float, 4, 4>, matrix<float, 4, 4>, int>::display;
 
 		/// <summary>Displays a shaded and textured sprite from the sprite sheet.</summary>
 		/// <param name="sprite">The shading of the sprite to display.</param>

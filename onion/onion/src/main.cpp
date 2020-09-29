@@ -60,11 +60,12 @@ Palette* g_TestAlphaPalette;
 
 void test_alpha_display()
 {
-	g_TestAlphaSpriteSheet->display(0, g_TestAlphaPalette->get_red_palette_matrix());
-
 	Transform::model.push();
+	Transform::model.translate(100.f, 100.f);
+	g_TestAlphaSpriteSheet->display(0, g_TestAlphaPalette->get_red_palette_matrix(), 0);
+
 	Transform::model.translate(-64.f, 64.f, -0.01f);
-	g_TestAlphaSpriteSheet->display(12, g_TestAlphaPalette->get_red_palette_matrix());
+	g_TestAlphaSpriteSheet->display(12, g_TestAlphaPalette->get_red_palette_matrix(), 0);
 	Transform::model.pop();
 }
 

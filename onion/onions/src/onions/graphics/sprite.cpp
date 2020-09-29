@@ -475,7 +475,7 @@ namespace onion
 
 	void SimplePixelSpriteSheet::display(const Sprite* sprite, const Palette* palette) const
 	{
-		display(sprite->key, palette->get_red_palette_matrix());
+		display(sprite->key, palette->get_red_palette_matrix(), 0);
 	}
 
 
@@ -640,12 +640,12 @@ namespace onion
 			Transform::model.push();
 			Transform::model.translate(sprite->width);
 			Transform::model.scale(-1.f);
-			display(sprite, texture->tex, palette->get_red_palette_matrix(), palette->get_green_palette_matrix(), palette->get_blue_palette_matrix());
+			display(sprite, trans_tex, palette->get_red_palette_matrix(), palette->get_green_palette_matrix(), palette->get_blue_palette_matrix(), 0);
 			Transform::model.pop();
 		}
 		else
 		{
-			display(sprite, texture->tex, palette->get_red_palette_matrix(), palette->get_green_palette_matrix(), palette->get_blue_palette_matrix());
+			display(sprite, texture->tex, palette->get_red_palette_matrix(), palette->get_green_palette_matrix(), palette->get_blue_palette_matrix(), 0);
 		}
 	}
 

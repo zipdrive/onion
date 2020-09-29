@@ -140,6 +140,11 @@ namespace onion
 			GL_INT_VEC2,
 			GL_INT_VEC3,
 			GL_INT_VEC4,
+			GL_SAMPLER_2D,
+			GL_UNSIGNED_INT,
+			GL_UNSIGNED_INT_VEC2,
+			GL_UNSIGNED_INT_VEC3,
+			GL_UNSIGNED_INT_VEC4,
 			GL_DOUBLE,
 			GL_DOUBLE_VEC2,
 			GL_DOUBLE_VEC3,
@@ -173,6 +178,11 @@ namespace onion
 			matrix<int, 2, 1>,
 			matrix<int, 3, 1>,
 			matrix<int, 4, 1>,
+			int,
+			unsigned int,
+			matrix<unsigned int, 2, 1>,
+			matrix<unsigned int, 3, 1>,
+			matrix<unsigned int, 4, 1>,
 			double,
 			matrix<double, 2, 1>,
 			matrix<double, 3, 1>,
@@ -272,17 +282,15 @@ namespace onion
 			static constexpr std::size_t whole = sizeof(T);
 		};
 
-		/*
 		template <typename _Primitive, int _Rows, int _Columns>
 		struct SizeRetriever<matrix<_Primitive, _Rows, _Columns>>
 		{
 			/// <summary>Retrieves the size of the primitives that compose the type.</summary>
-			static constexpr std::size_t primitive = SizeRetriever<_Primitive>::whole;
+			static constexpr std::size_t primitive = SizeRetriever<_Primitive>::primitive;
 
 			/// <summary>Retrieves the total size of the type.</summary>
-			static constexpr std::size_t whole = primitive * _Rows * _Columns;
+			static constexpr std::size_t whole = SizeRetriever<_Primitive>::whole * _Rows * _Columns;
 		};
-		*/
 
 		
 		/// <summary>Retrieves the number of base primitives that make up the type.</summary>
@@ -347,6 +355,12 @@ namespace onion
 		void _UniformProgramAttribute<int>::set(const int& value) const
 		{
 			glUniform1i(m_Location, value);
+		}
+
+		template <>
+		void _UniformProgramAttribute<unsigned int>::set(const unsigned int& value) const
+		{
+			glUniform1ui(m_Location, value);
 		}
 
 		template <>
@@ -731,6 +745,7 @@ namespace onion
 			fpath += path;
 
 			LoadFile vertex(fpath + ".vertex");
+			LoadFile geometry(fpath + ".geometry");
 			LoadFile fragment(fpath + ".fragment");
 
 			// Collect the text of each shader in a string
@@ -740,8 +755,20 @@ namespace onion
 			while (fragment.good())
 				fragment_shader += fragment.load_line() + "\n";
 
-			// Compile the shaders
-			compile(vertex_shader.c_str(), fragment_shader.c_str());
+			if (geometry.good()) // A geometry shader
+			{
+				std::string geometry_shader;
+				while (geometry.good())
+					geometry_shader += geometry.load_line() + "\n";
+
+				// Compile the shaders
+				compile(vertex_shader.c_str(), geometry_shader.c_str(), fragment_shader.c_str());
+			}
+			else // No geometry shader
+			{
+				// Compile the shaders
+				compile(vertex_shader.c_str(), fragment_shader.c_str());
+			}
 		}
 
 		_Shader::_Shader(const char* vertex_shader_text, const char* fragment_shader_text)
@@ -844,7 +871,7 @@ namespace onion
 			}
 
 			// Geometry shader
-			GLuint geometry_shader = glCreateShader(GL_VERTEX_SHADER);
+			GLuint geometry_shader = glCreateShader(GL_GEOMETRY_SHADER);
 			glShaderSource(geometry_shader, 1, &geometry_shader_text, NULL);
 			errcheck("Error received when setting the source text for the geometry shader.");
 			glCompileShader(geometry_shader);
