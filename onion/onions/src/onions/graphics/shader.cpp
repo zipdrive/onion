@@ -27,8 +27,7 @@ namespace onion
 				do
 				{
 					errlog(std::string("  OpenGL error message received: ") + std::to_string(errcode) + "\n");
-				} 
-				while (errcode = glGetError());
+				} while (errcode = glGetError());
 
 				// Add a newline afterwards.
 				errlog("\n");
@@ -113,7 +112,7 @@ namespace onion
 
 				template <std::size_t N>
 				using NthType = typename std::tuple_element<N, std::tuple<_TypeValues...>>::type;
-				
+
 				template <GLenum _EnumValue>
 				using mapper = NthType<EnumIndexer<0, _EnumValue, _EnumValues...>::index>;
 
@@ -122,7 +121,7 @@ namespace onion
 			};
 		};
 
-		typedef map_glenum_base<
+		typedef map_glenum_base <
 			GL_FLOAT,
 			GL_FLOAT_VEC2,
 			GL_FLOAT_VEC3,
@@ -159,43 +158,43 @@ namespace onion
 			GL_DOUBLE_MAT4x2,
 			GL_DOUBLE_MAT4x3
 		> map_glenum;
-		
+
 		typedef map_glenum::to_type_base<
-			float,
-			matrix<float, 2, 1>,
-			matrix<float, 3, 1>,
-			matrix<float, 4, 1>,
-			matrix<float, 2, 2>,
-			matrix<float, 3, 3>,
-			matrix<float, 4, 4>,
-			matrix<float, 3, 2>,
-			matrix<float, 4, 2>,
-			matrix<float, 4, 3>,
-			matrix<float, 2, 3>,
-			matrix<float, 2, 4>,
-			matrix<float, 3, 4>,
-			int,
-			matrix<int, 2, 1>,
-			matrix<int, 3, 1>,
-			matrix<int, 4, 1>,
-			int,
-			unsigned int,
-			matrix<unsigned int, 2, 1>,
-			matrix<unsigned int, 3, 1>,
-			matrix<unsigned int, 4, 1>,
-			double,
-			matrix<double, 2, 1>,
-			matrix<double, 3, 1>,
-			matrix<double, 4, 1>,
-			matrix<double, 2, 2>,
-			matrix<double, 3, 3>,
-			matrix<double, 4, 4>,
-			matrix<double, 3, 2>,
-			matrix<double, 4, 2>,
-			matrix<double, 4, 3>,
-			matrix<double, 2, 3>,
-			matrix<double, 2, 4>,
-			matrix<double, 3, 4>
+			Float,
+			FLOAT_VEC2,
+			FLOAT_VEC3,
+			FLOAT_VEC4,
+			FLOAT_MAT2,
+			FLOAT_MAT3,
+			FLOAT_MAT4,
+			FLOAT_MAT2X3,
+			FLOAT_MAT2X4,
+			FLOAT_MAT3X4,
+			FLOAT_MAT3X2,
+			FLOAT_MAT4X2,
+			FLOAT_MAT4X3,
+			Int,
+			INT_VEC2,
+			INT_VEC3,
+			INT_VEC4,
+			Int,
+			Uint,
+			UINT_VEC2,
+			UINT_VEC3,
+			UINT_VEC4,
+			Double,
+			DOUBLE_VEC2,
+			DOUBLE_VEC3,
+			DOUBLE_VEC4,
+			DOUBLE_MAT2,
+			DOUBLE_MAT3,
+			DOUBLE_MAT4,
+			DOUBLE_MAT2X3,
+			DOUBLE_MAT2X4,
+			DOUBLE_MAT3X4,
+			DOUBLE_MAT3X2,
+			DOUBLE_MAT4X2,
+			DOUBLE_MAT4X3
 		> map_glenum_to_type;
 
 		template <GLenum _EnumValue>
@@ -206,41 +205,6 @@ namespace onion
 
 		template <std::size_t N>
 		using glenum_type_at = map_glenum_to_type::NthType<N>;
-
-
-
-		template <typename _Primitive>
-		struct gl_primitive_base
-		{
-			using type = void;
-		};
-
-		template <>
-		struct gl_primitive_base<float>
-		{
-			using type = GLfloat;
-		};
-
-		template <>
-		struct gl_primitive_base<double>
-		{
-			using type = GLdouble;
-		};
-
-		template <>
-		struct gl_primitive_base<int>
-		{
-			using type = GLint;
-		};
-
-		template <>
-		struct gl_primitive_base<unsigned int>
-		{
-			using type = GLuint;
-		};
-
-		template <typename _Primitive>
-		using gl_primitive = typename gl_primitive_base<_Primitive>::template type;
 
 
 
@@ -272,27 +236,9 @@ namespace onion
 
 
 
-		template <typename T>
-		struct SizeRetriever
-		{
-			/// <summary>Retrieves the size of the primitives that compose the type.</summary>
-			static constexpr std::size_t primitive = sizeof(T);
-
-			/// <summary>Retrieves the total size of the type.</summary>
-			static constexpr std::size_t whole = sizeof(T);
-		};
-
-		template <typename _Primitive, int _Rows, int _Columns>
-		struct SizeRetriever<matrix<_Primitive, _Rows, _Columns>>
-		{
-			/// <summary>Retrieves the size of the primitives that compose the type.</summary>
-			static constexpr std::size_t primitive = SizeRetriever<_Primitive>::primitive;
-
-			/// <summary>Retrieves the total size of the type.</summary>
-			static constexpr std::size_t whole = SizeRetriever<_Primitive>::whole * _Rows * _Columns;
-		};
-
 		
+
+
 		/// <summary>Retrieves the number of base primitives that make up the type.</summary>
 		/// <returns>The sizeof the type, divided by the sizeof the base primitives underlying the type.
 		/// For primitives, it will return 1.
@@ -302,7 +248,7 @@ namespace onion
 		{
 			if (glenum_at<N>::value == type)
 			{
-				return SizeRetriever<glenum_type_at<N>>::whole / SizeRetriever<glenum_type_at<N>>::primitive;
+				return type_size<glenum_type_at<N>>::whole / type_size<glenum_type_at<N>>::primitive;
 			}
 			else
 			{
@@ -327,7 +273,7 @@ namespace onion
 		template <typename T>
 		unsigned int _UniformTypedAttribute<T>::get_size() const
 		{
-			return SizeRetriever<T>::whole;
+			return type_size<T>::whole;
 		}
 
 		
@@ -346,25 +292,25 @@ namespace onion
 		};
 
 		template <>
-		void _UniformProgramAttribute<float>::set(const float& value) const
+		void _UniformProgramAttribute<Float>::set(const Float& value) const
 		{
 			glUniform1f(m_Location, value);
 		}
 
 		template <>
-		void _UniformProgramAttribute<int>::set(const int& value) const
+		void _UniformProgramAttribute<Int>::set(const Int& value) const
 		{
 			glUniform1i(m_Location, value);
 		}
 
 		template <>
-		void _UniformProgramAttribute<unsigned int>::set(const unsigned int& value) const
+		void _UniformProgramAttribute<Uint>::set(const Uint& value) const
 		{
 			glUniform1ui(m_Location, value);
 		}
 
 		template <>
-		void _UniformProgramAttribute<double>::set(const double& value) const
+		void _UniformProgramAttribute<Double>::set(const Double& value) const
 		{
 			glUniform1d(m_Location, value);
 		}
@@ -534,8 +480,8 @@ namespace onion
 			);
 
 
-		template <typename _Number, int _Rows, int _Columns>
-		class _UniformProgramAttribute<matrix<_Number, _Rows, _Columns>> : public _UniformTypedAttribute<matrix<_Number, _Rows, _Columns>>
+		template <typename _Number, int _Columns, int _Rows>
+		class _UniformProgramAttribute<matrix<_Number, _Columns, _Rows>> : public _UniformTypedAttribute<matrix<_Number, _Columns, _Rows>>
 		{
 		private:
 			// The index of the function.
@@ -550,17 +496,17 @@ namespace onion
 			const GLint m_Location;
 
 		public:
-			_UniformProgramAttribute(std::string name, GLint location) : _UniformTypedAttribute<matrix<_Number, _Rows, _Columns>>(name), m_Location(location) {}
+			_UniformProgramAttribute(std::string name, GLint location) : _UniformTypedAttribute<matrix<_Number, _Columns, _Rows>>(name), m_Location(location) {}
 
-			void set(const matrix<_Number, _Rows, _Columns>& value) const 
+			void set(const matrix<_Number, _Columns, _Rows>& value) const 
 			{
 				(*m_Function)(m_Location, 1, GL_FALSE, value.matrix_values());
 			}
 		};
 
-		template <typename _Number, int _Rows, int _Columns>
-		typename _UniformProgramAttribute<matrix<_Number, _Rows, _Columns>>::FunctionPtr _UniformProgramAttribute<matrix<_Number, _Rows, _Columns>>::m_Function =
-			std::get<_UniformProgramAttribute<matrix<_Number, _Rows, _Columns>>::m_FunctionIndex>(UniformMatrixProgramFunctions<_Number>::functions);
+		template <typename _Number, int _Columns, int _Rows>
+		typename _UniformProgramAttribute<matrix<_Number, _Columns, _Rows>>::FunctionPtr _UniformProgramAttribute<matrix<_Number, _Columns, _Rows>>::m_Function =
+			std::get<_UniformProgramAttribute<matrix<_Number, _Columns, _Rows>>::m_FunctionIndex>(UniformMatrixProgramFunctions<_Number>::functions);
 		
 		template <typename _Number, int _Rows>
 		class _UniformProgramAttribute<matrix<_Number, _Rows, 1>> : public _UniformTypedAttribute<matrix<_Number, _Rows, 1>>
@@ -613,54 +559,33 @@ namespace onion
 
 
 		template <typename T>
-		class _UniformBlockAttribute : public _UniformTypedAttribute<T>
+		_UniformBlockAttribute<T>::_UniformBlockAttribute(std::string name, Int offset) : _UniformTypedAttribute<T>(name), m_Offset(offset) {}
+
+		template <typename T>
+		void _UniformBlockAttribute<T>::set(const T& value) const 
+		{
+			T* ptr = (T*)glMapBufferRange(GL_UNIFORM_BUFFER, m_Offset, type_size<T>::whole, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+			*ptr = value;
+			glUnmapBuffer(GL_UNIFORM_BUFFER);
+		}
+
+
+		template <typename _Number, int _Columns, int _Rows>
+		class _UniformBlockAttribute<matrix<_Number, _Columns, _Rows>> : public _UniformTypedAttribute<matrix<_Number, _Columns, _Rows>>
 		{
 		protected:
 			// The offset of the uniform within the block.
 			const GLint m_Offset;
 
 		public:
-			_UniformBlockAttribute(std::string name, GLint offset) : _UniformTypedAttribute<T>(name), m_Offset(offset) {}
+			_UniformBlockAttribute(std::string name, GLint offset) : _UniformTypedAttribute<matrix<_Number, _Columns, _Rows>>(name), m_Offset(offset) {}
 
-			void set(const T& value) const {}
-		};
-
-		template <>
-		void _UniformBlockAttribute<int>::set(const int& value) const
-		{
-			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 4, &value);
-		}
-		
-		template <>
-		void _UniformBlockAttribute<float>::set(const float& value) const
-		{
-			glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, 4, &value);
-		}
-
-
-		template <typename _Number, int _Rows, int _Columns>
-		class _UniformBlockAttribute<matrix<_Number, _Rows, _Columns>> : public _UniformTypedAttribute<matrix<_Number, _Rows, _Columns>>
-		{
-		protected:
-			// The offset of the uniform within the block.
-			const GLint m_Offset;
-
-		public:
-			_UniformBlockAttribute(std::string name, GLint offset) : _UniformTypedAttribute<matrix<_Number, _Rows, _Columns>>(name), m_Offset(offset) {}
-
-			void set(const matrix<_Number, _Rows, _Columns>& value) const 
+			void set(const matrix<_Number, _Columns, _Rows>& value) const 
 			{
-				if (std::is_same<_Number, gl_primitive<_Number>>::value)
-				{
-					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, _Rows * _Columns * sizeof(gl_primitive<_Number>), value.matrix_values());
-				}
-				else
-				{
-					gl_primitive<_Number> buf[_Rows * _Columns];
-					for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
-						buf[k] = value.get(k);
-					glBufferSubData(GL_UNIFORM_BUFFER, m_Offset, _Rows * _Columns * sizeof(gl_primitive<_Number>), buf);
-				}
+				_Number* ptr = (_Number*)glMapBufferRange(GL_UNIFORM_BUFFER, m_Offset, type_size<matrix<_Number, _Columns, _Rows>>::whole, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+				for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+					ptr[k] = value.get(k);
+				glUnmapBuffer(GL_UNIFORM_BUFFER);
 			}
 		};
 
@@ -698,7 +623,7 @@ namespace onion
 			void set(const mat2f& value) const {}
 			void set(const mat3f& value) const {}
 			void set(const mat4f& value) const {}
-			void set(const mat2x4f& value) const {}
+			void set(const mat4x2f& value) const {}
 
 			void set(const MatrixStack& value) const {}
 		};
@@ -1233,6 +1158,25 @@ namespace onion
 			m_Buffer = new _ID(buf);
 		}
 
+		_VertexBuffer::_VertexBuffer(const _VertexBufferData* data)
+		{
+			// Generate the array of data for the buffer
+			std::size_t bytes;
+			char* ptr = data->compile(bytes);
+
+			// Bind the data to a buffer
+			GLuint buf;
+			glGenBuffers(1, &buf);
+			glBindBuffer(GL_ARRAY_BUFFER, buf);
+			glBufferData(GL_ARRAY_BUFFER, bytes, ptr, GL_STATIC_DRAW);
+
+			// Clean up the array of data for the buffer
+			delete[] ptr;
+
+			// Set the ID
+			m_Buffer = new _ID(buf);
+		}
+
 		_VertexBuffer::~_VertexBuffer()
 		{
 			// If active, reset the active buffer
@@ -1423,6 +1367,8 @@ namespace onion
 	
 	
 	VertexBuffer::VertexBuffer(const std::vector<float>& data, const opengl::_VertexAttributeInformation& attribs) : opengl::_VertexBuffer(data), m_Attribs(attribs) {}
+
+	VertexBuffer::VertexBuffer(const opengl::_VertexBufferData* data, const opengl::_VertexAttributeInformation& attribs) : opengl::_VertexBuffer(data), m_Attribs(attribs) {}
 
 	VertexBuffer::~VertexBuffer() {}
 	

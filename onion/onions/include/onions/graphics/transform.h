@@ -32,4 +32,33 @@ namespace onion
 		static void set_view();
 	};
 
+
+	// A camera that controls the projection and view matrices.
+	class Camera
+	{
+	private:
+		// The currently active camera.
+		static Camera* m_ActiveCamera;
+
+	protected:
+		/// <summary>Sets up the camera projection.</summary>
+		virtual void __activate() const = 0;
+
+	public:
+		/// <summary>Checks whether this is the active camera.</summary>
+		/// <returns>True if this is the active camera, false otherwise.</returns>
+		bool is_active() const;
+
+		/// <summary>Activates the camera.</summary>
+		void activate();
+	};
+
+	// A camera that does a pixel-perfect orthogonal projection.
+	class OrthogonalCamera : public Camera
+	{
+	protected:
+		/// <summary>Sets up an orthogonal camera projection.</summary>
+		virtual void __activate() const;
+	};
+
 }

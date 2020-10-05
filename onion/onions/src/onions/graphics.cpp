@@ -1082,7 +1082,7 @@ protected:
 			m_BlueMatrix = glGetUniformLocation(m_Shader, "bluePaletteMatrix");
 		}
 
-		void activate(const mat2x4f& texture, const Palette* palette)
+		void activate(const mat4x2f& texture, const Palette* palette)
 		{
 			// Activate the shader program
 			Shader::activate();
@@ -1229,7 +1229,7 @@ public:
 
 				float half_width = (0.5f * texture_width) / width;
 
-				Texture* texture = new Texture(mat2x4f(
+				Texture* texture = new Texture(mat4x2f(
 					-half_width, half_width, 0.f, ((float)left / width) + half_width,
 					0.f, 0.f, (float)texture_height / height, (float)top / height
 				));
@@ -1341,7 +1341,7 @@ public:
 	/// <summary>Draws a sprite on the sprite sheet.</summary>
 	/// <param name="sprite">The key of the sprite.</param>
 	/// <param name="palette">The color palette of the sprite.</param>
-	void display(SPRITE_KEY sprite, const mat2x4f& texture, const Palette* palette) const
+	void display(SPRITE_KEY sprite, const mat4x2f& texture, const Palette* palette) const
 	{
 		// Activate the shader program
 		m_Shader->activate(texture, palette);
@@ -1477,7 +1477,7 @@ void Texture::set_texture(TEXTURE_ID id, Texture* texture)
 	}
 }
 
-Texture::Texture(const mat2x4f& trans) : transform(trans) {}
+Texture::Texture(const mat4x2f& trans) : transform(trans) {}
 
 
 

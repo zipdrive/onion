@@ -1,5 +1,6 @@
 #pragma once
 #include "graphics/frame.h"
+#include "application.h"
 
 
 namespace onion
@@ -9,7 +10,13 @@ namespace onion
 	class State
 	{
 	public:
-		virtual ~State();
+		/// <summary>Virtual deconstructor.</summary>
+		virtual ~State() = default;
+
+		/// <summary>Is called when the state is made or when the window is resized.</summary>
+		/// <param name="width">The width of the window.</param>
+		/// <param name="height">The height of the window.</param>
+		virtual void set_bounds(int width, int height);
 
 		/// <summary>Displays the state.</summary>
 		virtual void display() const = 0;

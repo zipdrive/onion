@@ -8,7 +8,7 @@
 #include <memory>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "../../include/onions/application.h"
+#include "../../include/onions/state.h"
 #include "../../include/onions/event.h"
 #include "../../include/onions/graphics/transform.h"
 
@@ -594,6 +594,10 @@ namespace onion
 			}
 		}
 
+		// Resize the state, if it exists
+		if (State* state = get_state())
+			state->set_bounds(width, height);
+
 		// Set the viewport
 		glViewport(0, 0, width, height);
 		return 0;
@@ -732,6 +736,9 @@ namespace onion
 			return 1;
 		}
 
+		// Set up the transformation matrices
+		Transform::init();
+
 		return 0;
 	}
 
@@ -746,13 +753,6 @@ namespace onion
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 		glClearColor(0.f, 0.f, 0.f, 1.f);
-
-		// Set up the transformation matrices
-		float depth = std::max(g_Application->width, g_Application->height);
-		Transform::init();
-		Transform::projection.ortho(0.f, g_Application->width, 0.f, g_Application->height, -depth, depth);
-		Transform::set_projection();
-		Transform::set_view();
 
 		// Core loop
 		while (!glfwWindowShouldClose(g_Window))

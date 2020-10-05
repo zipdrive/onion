@@ -452,10 +452,10 @@ namespace onion
 		static void set_texture(TEXTURE_ID id, Texture* texture);
 
 		// A matrix that projects a vec4f into a set of texture coordinates.
-		mat2x4f transform;
+		mat4x2f transform;
 
 		/// <summary></summary>
-		Texture(const mat2x4f& trans);
+		Texture(const mat4x2f& trans);
 	};
 
 	// A sprite sheet that maps textures onto sprites.
@@ -489,7 +489,7 @@ namespace onion
 		/// <param name="sprite">The key of the sprite.</param>
 		/// <param name="palette">The color palette of the sprite.</param>
 		/// <param name="texture">The texture mapped onto the sprite.</param>
-		virtual void display(SPRITE_KEY sprite, const mat2x4f& texture, const Palette* palette) const = 0;
+		virtual void display(SPRITE_KEY sprite, const mat4x2f& texture, const Palette* palette) const = 0;
 	};
 
 

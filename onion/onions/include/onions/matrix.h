@@ -1,13 +1,19 @@
 #pragma once
 #include <stack>
+#include "primitive.h"
 
 
 namespace onion
 {
 
+	using Int = primitive<int>;
+	using Uint = primitive<unsigned int>;
+	using Float = primitive<float>;
+	using Double = primitive<double>;
+
 
 	// A matrix of numeric values
-	template <typename T, int _Rows, int _Columns>
+	template <typename T, int _Columns, int _Rows>
 	class matrix
 	{
 	protected:
@@ -68,9 +74,9 @@ namespace onion
 		/// <summary>Adds another matrix to this one and returns the result.</summary>
 		/// <param name="other">The other matrix.</param>
 		/// <returns>The addition of this matrix and the other one.</returns>
-		matrix<T, _Rows, _Columns> operator+(const matrix<T, _Rows, _Columns>& other) const
+		matrix<T, _Columns, _Rows> operator+(const matrix<T, _Columns, _Rows>& other) const
 		{
-			matrix<T, _Rows, _Columns> result;
+			matrix<T, _Columns, _Rows> result;
 
 			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 			{
@@ -83,9 +89,9 @@ namespace onion
 		/// <summary>Subtracts another matrix from this one and returns the result.</summary>
 		/// <param name="other">The other matrix.</param>
 		/// <returns>The subtraction of this matrix and the other one.</returns>
-		matrix<T, _Rows, _Columns> operator-(const matrix<T, _Rows, _Columns>& other) const
+		matrix<T, _Columns, _Rows> operator-(const matrix<T, _Columns, _Rows>& other) const
 		{
-			matrix<T, _Rows, _Columns> result;
+			matrix<T, _Columns, _Rows> result;
 
 			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 			{
@@ -99,9 +105,9 @@ namespace onion
 		/// <param name="other">The other matrix.</param>
 		/// <returns>The multiplication of this matrix and the other one.</returns>
 		template <int _ColumnsRHS>
-		matrix<T, _Rows, _ColumnsRHS> operator*(const matrix<T, _Columns, _ColumnsRHS>& other) const
+		matrix<T, _ColumnsRHS, _Rows> operator*(const matrix<T, _ColumnsRHS, _Columns>& other) const
 		{
-			matrix<T, _Rows, _ColumnsRHS> result;
+			matrix<T, _ColumnsRHS, _Rows> result;
 
 			for (int r = _Rows - 1; r >= 0; --r)
 			{
@@ -122,9 +128,9 @@ namespace onion
 		/// <summary>Multiplies a scalar to this one and returns the result.</summary>
 		/// <param name="scalar">The scalar value.</param>
 		/// <returns>The multiplication of this matrix and the scalar.</returns>
-		matrix<T, _Rows, _Columns> operator*(int scalar) const
+		matrix<T, _Columns, _Rows> operator*(int scalar) const
 		{
-			matrix<T, _Rows, _Columns> result;
+			matrix<T, _Columns, _Rows> result;
 
 			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 				result.mat[k] = scalar * mat[k];
@@ -135,9 +141,9 @@ namespace onion
 		/// <summary>Multiplies a scalar to this one and returns the result.</summary>
 		/// <param name="scalar">The scalar value.</param>
 		/// <returns>The multiplication of this matrix and the scalar.</returns>
-		matrix<T, _Rows, _Columns> operator*(float scalar) const
+		matrix<T, _Columns, _Rows> operator*(float scalar) const
 		{
-			matrix<T, _Rows, _Columns> result;
+			matrix<T, _Columns, _Rows> result;
 
 			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 				result.mat[k] = scalar * mat[k];
@@ -150,7 +156,7 @@ namespace onion
 		/// <summary>Adds another matrix to this one in-place.</summary>
 		/// <param name="other">The other matrix.</param>
 		/// <returns>A reference to this matrix.</returns>
-		matrix<T, _Rows, _Columns>& operator+=(const matrix<T, _Rows, _Columns>& other)
+		matrix<T, _Columns, _Rows>& operator+=(const matrix<T, _Columns, _Rows>& other)
 		{
 			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 			{
@@ -163,7 +169,7 @@ namespace onion
 		/// <summary>Subtracts another matrix from this one in-place.</summary>
 		/// <param name="other">The other matrix.</param>
 		/// <returns>A reference to this matrix.</returns>
-		matrix<T, _Rows, _Columns>& operator-=(const matrix<T, _Rows, _Columns>& other)
+		matrix<T, _Columns, _Rows>& operator-=(const matrix<T, _Columns, _Rows>& other)
 		{
 			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 			{
@@ -176,7 +182,7 @@ namespace onion
 		/// <summary>Multiplies a scalar value to this matrix in-place.</summary>
 		/// <param name="scalar">The scalar value.</param>
 		/// <returns>A reference to this matrix.</returns>
-		matrix<T, _Rows, _Columns>& operator*=(int scalar)
+		matrix<T, _Columns, _Rows>& operator*=(int scalar)
 		{
 			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 			{
@@ -189,7 +195,7 @@ namespace onion
 		/// <summary>Multiplies a scalar value to this matrix in-place.</summary>
 		/// <param name="scalar">The scalar value.</param>
 		/// <returns>A reference to this matrix.</returns>
-		matrix<T, _Rows, _Columns>& operator*=(float scalar)
+		matrix<T, _Columns, _Rows>& operator*=(float scalar)
 		{
 			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 			{
@@ -203,7 +209,7 @@ namespace onion
 		/// <summary>Sets this matrix equal to another one.</summary>
 		/// <param name="other">The other matrix.</param>
 		/// <returns>A reference to this matrix.</returns>
-		matrix<T, _Rows, _Columns>& operator=(const matrix<T, _Rows, _Columns>& other)
+		matrix<T, _Columns, _Rows>& operator=(const matrix<T, _Columns, _Rows>& other)
 		{
 			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 			{
@@ -217,7 +223,7 @@ namespace onion
 		/// <summary>Checks whether this matrix is equal to another one.</summary>
 		/// <param name="other">The other matrix.</param>
 		/// <returns>True if both matrices are equal, false otherwise.</returns>
-		bool operator==(const matrix<T, _Rows, _Columns>& other)
+		bool operator==(const matrix<T, _Columns, _Rows>& other)
 		{
 			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 			{
@@ -231,7 +237,7 @@ namespace onion
 		/// <summary>Checks whether this matrix is not equal to another one.</summary>
 		/// <param name="other">The other matrix.</param>
 		/// <returns>True if the matrices are not equal, false if they are.</returns>
-		bool operator!=(const matrix<T, _Rows, _Columns>& other)
+		bool operator!=(const matrix<T, _Columns, _Rows>& other)
 		{
 			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 			{
@@ -264,8 +270,8 @@ namespace onion
 	/// <param name="scalar">The scalar value.</param>
 	/// <param name="matrix">The matrix.</param>
 	/// <returns>The multiplication of this matrix and the scalar.</returns>
-	template <typename T, int _Rows, int _Columns>
-	matrix<T, _Rows, _Columns> operator*(int scalar, matrix<T, _Rows, _Columns> matrix)
+	template <typename T, int _Columns, int _Rows>
+	matrix<T, _Columns, _Rows> operator*(int scalar, matrix<T, _Columns, _Rows> matrix)
 	{
 		return matrix * scalar;
 	}
@@ -274,31 +280,75 @@ namespace onion
 	/// <param name="scalar">The scalar value.</param>
 	/// <param name="matrix">The matrix.</param>
 	/// <returns>The multiplication of this matrix and the scalar.</returns>
-	template <typename T, int _Rows, int _Columns>
-	matrix<T, _Rows, _Columns> operator*(float scalar, matrix<T, _Rows, _Columns> matrix)
+	template <typename T, int _Columns, int _Rows>
+	matrix<T, _Columns, _Rows> operator*(float scalar, matrix<T, _Columns, _Rows> matrix)
 	{
 		return matrix * scalar;
 	}
 
 
-	/// <summary>Multiplies two matrices.</summary>
-	/// <param name="lhs">The matrix being multiplied on the left.</param>
-	/// <param name="rhs">The matrix being multiplied on the right.</param>
-	/// <param name="res">Outputs the resulting matrix.</param>
-	template <typename T, int _Rows, int _Middle, int _Columns>
-	void mat_mul(const matrix<T, _Rows, _Middle>& lhs, const matrix<T, _Middle, _Columns>& rhs, matrix<T, _Rows, _Columns>& res)
+#define FLOAT_VEC2				matrix<Float, 2, 1>
+#define FLOAT_VEC3				matrix<Float, 3, 1>
+#define FLOAT_VEC4				matrix<Float, 4, 1>
+#define FLOAT_MAT2				matrix<Float, 2, 2>
+#define FLOAT_MAT3X2			matrix<Float, 3, 2>
+#define FLOAT_MAT4X2			matrix<Float, 4, 2>
+#define FLOAT_MAT2X3			matrix<Float, 2, 3>
+#define FLOAT_MAT3				matrix<Float, 3, 3>
+#define FLOAT_MAT4X3			matrix<Float, 4, 3>
+#define FLOAT_MAT2X4			matrix<Float, 2, 4>
+#define FLOAT_MAT3X4			matrix<Float, 3, 4>
+#define FLOAT_MAT4				matrix<Float, 4, 4>
+
+#define DOUBLE_VEC2				matrix<Double, 2, 1>
+#define DOUBLE_VEC3				matrix<Double, 3, 1>
+#define DOUBLE_VEC4				matrix<Double, 4, 1>
+#define DOUBLE_MAT2				matrix<Double, 2, 2>
+#define DOUBLE_MAT3X2			matrix<Double, 3, 2>
+#define DOUBLE_MAT4X2			matrix<Double, 4, 2>
+#define DOUBLE_MAT2X3			matrix<Double, 2, 3>
+#define DOUBLE_MAT3				matrix<Double, 3, 3>
+#define DOUBLE_MAT4X3			matrix<Double, 4, 3>
+#define DOUBLE_MAT2X4			matrix<Double, 2, 4>
+#define DOUBLE_MAT3X4			matrix<Double, 3, 4>
+#define DOUBLE_MAT4				matrix<Double, 4, 4>
+
+#define INT_VEC2				matrix<Int, 2, 1>
+#define INT_VEC3				matrix<Int, 3, 1>
+#define INT_VEC4				matrix<Int, 4, 1>
+#define INT_MAT2				matrix<Int, 2, 2>
+#define INT_MAT3X2				matrix<Int, 3, 2>
+#define INT_MAT4X2				matrix<Int, 4, 2>
+#define INT_MAT2X3				matrix<Int, 2, 3>
+#define INT_MAT3				matrix<Int, 3, 3>
+#define INT_MAT4X3				matrix<Int, 4, 3>
+#define INT_MAT2X4				matrix<Int, 2, 4>
+#define INT_MAT3X4				matrix<Int, 3, 4>
+#define INT_MAT4				matrix<Int, 4, 4>
+
+#define UINT_VEC2				matrix<Uint, 2, 1>
+#define UINT_VEC3				matrix<Uint, 3, 1>
+#define UINT_VEC4				matrix<Uint, 4, 1>
+#define UINT_MAT2				matrix<Uint, 2, 2>
+#define UINT_MAT3X2				matrix<Uint, 3, 2>
+#define UINT_MAT4X2				matrix<Uint, 4, 2>
+#define UINT_MAT2X3				matrix<Uint, 2, 3>
+#define UINT_MAT3				matrix<Uint, 3, 3>
+#define UINT_MAT4X3				matrix<Uint, 4, 3>
+#define UINT_MAT2X4				matrix<Uint, 2, 4>
+#define UINT_MAT3X4				matrix<Uint, 3, 4>
+#define UINT_MAT4				matrix<Uint, 4, 4>
+
+
+	template <typename _Primitive, int _Columns, int _Rows>
+	struct type_size<matrix<_Primitive, _Columns, _Rows>>
 	{
-		for (int r = _Rows - 1; r >= 0; --r)
-		{
-			for (int c = _Columns - 1; c >= 0; --c)
-			{
-				T val = 0;
-				for (int k = _Middle - 1; k >= 0; --k)
-					val += lhs.get(r, k) * rhs.get(k, c);
-				res.set(r, c, val);
-			}
-		}
-	}
+		/// <summary>Retrieves the size of the primitives that compose the type.</summary>
+		static constexpr std::size_t primitive = type_size<_Primitive>::primitive;
+
+		/// <summary>Retrieves the total size of the type.</summary>
+		static constexpr std::size_t whole = type_size<_Primitive>::whole * _Rows * _Columns;
+	};
 
 
 
@@ -651,12 +701,12 @@ namespace onion
 
 	// A matrix with 3 rows and 2 columns.
 	template <typename T>
-	class mat3x2 : public matrix<T, 3, 2>
+	class mat2x3 : public matrix<T, 2, 3>
 	{
 	public:
-		mat3x2() {}
+		mat2x3() {}
 
-		mat3x2(T a11, T a12,
+		mat2x3(T a11, T a12,
 			T a21, T a22,
 			T a31, T a32)
 		{
@@ -670,19 +720,19 @@ namespace onion
 			set(2, 1, a32);
 		}
 
-		mat3x2& operator=(const matrix<T, 3, 2>& other)
+		mat2x3& operator=(const matrix<T, 2, 3>& other)
 		{
-			matrix<T, 3, 2>::operator=(other);
+			matrix<T, 2, 3>::operator=(other);
 			return *this;
 		}
 	};
 
 	// A matrix with 2 rows and 4 columns.
 	template <typename T>
-	class mat2x4 : public matrix<T, 2, 4>
+	class mat4x2 : public matrix<T, 4, 2>
 	{
 	public:
-		mat2x4(T a11, T a12, T a13, T a14,
+		mat4x2(T a11, T a12, T a13, T a14,
 			T a21, T a22, T a23, T a24)
 		{
 			set(0, 0, a11);
@@ -696,21 +746,21 @@ namespace onion
 			set(1, 3, a24);
 		}
 
-		mat2x4& operator=(const matrix<T, 2, 4>& other)
+		mat4x2& operator=(const matrix<T, 4, 2>& other)
 		{
-			matrix<T, 2, 4>::operator=(other);
+			matrix<T, 4, 2>::operator=(other);
 			return *this;
 		}
 	};
 
 	// 
 	template <typename T>
-	class mat3x4 : public matrix<T, 3, 4>
+	class mat4x3 : public matrix<T, 4, 3>
 	{
 	public:
-		mat3x4() {}
+		mat4x3() {}
 
-		mat3x4(T a11, T a12, T a13, T a14,
+		mat4x3(T a11, T a12, T a13, T a14,
 			T a21, T a22, T a23, T a24,
 			T a31, T a32, T a33, T a34)
 		{
@@ -730,40 +780,40 @@ namespace onion
 			set(2, 3, a34);
 		}
 
-		mat3x4& operator=(const matrix<T, 3, 4>& other)
+		mat4x3& operator=(const matrix<T, 4, 3>& other)
 		{
-			matrix<T, 3, 4>::operator=(other);
+			matrix<T, 4, 3>::operator=(other);
 			return *this;
 		}
 	};
 
 
-	typedef mat2x2<int> mat2x2i;
+	typedef mat2x2<Int> mat2x2i;
 	#define mat2i mat2x2i
-	typedef mat3x3<int> mat3x3i;
+	typedef mat3x3<Int> mat3x3i;
 	#define mat3i mat3x3i
-	typedef mat4x4<int> mat4x4i;
+	typedef mat4x4<Int> mat4x4i;
 	#define mat4i mat4x4i
 
-	typedef mat2x2<float> mat2x2f;
+	typedef mat2x2<Float> mat2x2f;
 	#define mat2f mat2x2f
-	typedef mat3x3<float> mat3x3f;
+	typedef mat3x3<Float> mat3x3f;
 	#define mat3f mat3x3f
-	typedef mat4x4<float> mat4x4f;
+	typedef mat4x4<Float> mat4x4f;
 	#define mat4f mat4x4f
 
-	typedef mat3x2<int> mat3x2i;
+	typedef mat2x3<Int> mat2x3i;
 
-	typedef mat2x4<float> mat2x4f;
-	typedef mat3x4<float> mat3x4f;
+	typedef mat4x2<Float> mat4x2f;
+	typedef mat4x3<Float> mat4x3f;
 
-	typedef vec2<int> vec2i;
-	typedef vec3<int> vec3i;
-	typedef vec4<int> vec4i;
+	typedef vec2<Int> vec2i;
+	typedef vec3<Int> vec3i;
+	typedef vec4<Int> vec4i;
 
-	typedef vec2<float> vec2f;
-	typedef vec3<float> vec3f;
-	typedef vec4<float> vec4f;
+	typedef vec2<Float> vec2f;
+	typedef vec3<Float> vec3f;
+	typedef vec4<Float> vec4f;
 
 
 

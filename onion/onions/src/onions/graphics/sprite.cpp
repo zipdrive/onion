@@ -630,8 +630,8 @@ namespace onion
 		if (flip_horizontally)
 		{
 			// Flip where red and green map to on the texture
-			const mat2x4f& tex = texture->tex;
-			mat2x4f trans_tex(
+			const mat4x2f& tex = texture->tex;
+			mat4x2f trans_tex(
 				-tex.get(0, 0), -tex.get(0, 1), tex.get(0, 2), tex.get(0, 3),
 				-tex.get(1, 0), -tex.get(1, 1), tex.get(1, 2), tex.get(1, 3)
 			);

@@ -1,6 +1,6 @@
 #include <onion.h>
 #include "../include/charactercreator.h"
-#include "../include/graphictest.h"
+#include "../include/test.h"
 
 #include <iostream>
 
@@ -218,6 +218,6 @@ void test_font_main()
 int main()
 {
 	init("settings.ini");
-	test_alpha_main();
+	worldtest_main();
 	return 0;
 }

@@ -56,6 +56,152 @@ namespace onion
 		};
 
 
+		// The data passed to a vertex buffer.
+		class _VertexBufferData
+		{
+		public:
+			// An untyped attribute for the vertex buffer.
+			struct _Attribute
+			{
+				/// <summary>Retrieves the size of the attribute.</summary>
+				/// <returns>The size of the attribute, in bytes.</returns>
+				virtual std::size_t size() const = 0;
+
+				/// <summary>Assigns the value of the attribute to a location in the buffer.</summary>
+				/// <param name="ptr">A pointer to the beginning of where to assign the value. Outputs a pointer to the byte after the value.</param>
+				virtual void assign(void*& ptr) const = 0;
+
+				/// <summary>Clones the attribute.</summary>
+				/// <returns>A pointer to a copy of this attribute.</returns>
+				virtual _Attribute* clone() const = 0;
+			};
+
+			// A typed attribute for the vertex buffer.
+			template <typename _Attrib>
+			struct Attribute : public _Attribute
+			{
+				/// <summary>Retrieves the size of the attribute.</summary>
+				/// <returns>The size of the attribute, in bytes.</returns>
+				static constexpr std::size_t attr_size()
+				{
+					return type_size<_Attrib>::whole;
+				}
+
+				// The value of the attribute.
+				_Attrib value;
+
+				/// <summary>Default constructor.</summary>
+				Attribute() = default;
+
+				/// <summary>Constructs an attribute with a given value.</summary>
+				/// <param name="other">The value of the attribute.</param>
+				Attribute(const _Attrib& other) : value(other) {}
+
+				/// <summary>Retrieves the size of the attribute.</summary>
+				/// <returns>The size of the attribute, in bytes.</returns>
+				std::size_t size() const
+				{
+					return attr_size();
+				}
+
+				/// <summary>Assigns the value of the attribute to a location in the buffer.</summary>
+				/// <param name="ptr">A pointer to the beginning of where to assign the value. Outputs a pointer to the byte after the value.</param>
+				void assign(void*& ptr) const
+				{
+					_Attrib* tptr = (_Attrib*)ptr;
+					*tptr++ = value;
+					ptr = tptr;
+				}
+
+				/// <summary>Clones the attribute.</summary>
+				/// <returns>A pointer to a copy of this attribute.</returns>
+				_Attribute* clone() const
+				{
+					return new Attribute<_Attrib>(value);
+				}
+			};
+
+			// A matrix-typed attribute for the vertex buffer.
+			template <typename _Number, int _Columns, int _Rows>
+			struct Attribute<matrix<_Number, _Columns, _Rows>> : public _Attribute
+			{
+				/// <summary>Retrieves the size of the attribute.</summary>
+				/// <returns>The size of the attribute, in bytes.</returns>
+				static constexpr std::size_t attr_size()
+				{
+					return type_size<matrix<_Number, _Columns, _Rows>>::whole;
+				}
+
+				// The value of the attribute.
+				matrix<_Number, _Columns, _Rows> value;
+
+				/// <summary>Default constructor.</summary>
+				Attribute() = default;
+
+				/// <summary>Constructs an attribute with a given value.</summary>
+				/// <param name="other">The value of the attribute.</param>
+				Attribute(const matrix<_Number, _Columns, _Rows>& other) : value(other) {}
+
+				/// <summary>Retrieves the size of the attribute.</summary>
+				/// <returns>The size of the attribute, in bytes.</returns>
+				std::size_t size() const
+				{
+					return attr_size();
+				}
+
+				/// <summary>Assigns the value of the attribute to a location in the buffer.</summary>
+				/// <param name="ptr">A pointer to the beginning of where to assign the value. Outputs a pointer to the byte after the value.</param>
+				void assign(void*& ptr) const
+				{
+					_Number* tptr = (_Number*)ptr;
+
+					for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+						tptr[k] = value.get(k);
+
+					ptr = tptr + (_Rows * _Columns);
+				}
+
+				/// <summary>Clones the attribute.</summary>
+				/// <returns>A pointer to a copy of this attribute.</returns>
+				_Attribute* clone() const
+				{
+					return new Attribute<matrix<_Number, _Columns, _Rows>>(value);
+				}
+			};
+
+
+			/// <summary>Retrieves the size of each vertex.</summary>
+			/// <returns>The size of each vertex, in bytes.</returns>
+			virtual std::size_t vertex_size() const = 0;
+
+			/// <summary>Retrieves the number of vertices in the buffer.</summary>
+			/// <returns>The number of vertices in the buffer.</returns>
+			virtual std::size_t buffer_size() const = 0;
+
+
+			/// <summary>Pushes new vertices to the back of the buffer.</summary>
+			/// <param name="count">The number of new vertices to add.</param>
+			/// <returns>The index of the first new vertex.</returns>
+			virtual int push(int count = 1) = 0;
+
+			/// <summary>Inserts new vertices at the specified index.</summary>
+			/// <param name="index">The index to begin inserting new vertices at.</param>
+			/// <param name="count">The number of new vertices to add.</param>
+			/// <returns>The index of the first new vertex.</returns>
+			virtual int insert(int index, int count = 1) = 0;
+
+			/// <summary>Pops the vertices on the back of the buffer.</summary>
+			/// <param name="count">The number of vertices to delete.</param>
+			virtual void pop(int count = 1) = 0;
+
+
+			/// <summary>Compiles the buffer of data.</summary>
+			/// <param name="bytes">The size of the buffer, in bytes.</param>
+			/// <returns>A pointer to the start of the buffer.</returns>
+			virtual char* compile(std::size_t& bytes) const = 0;
+		};
+
+
 
 		// A uniform attribute.
 		class _UniformAttribute
@@ -92,6 +238,19 @@ namespace onion
 			/// <summary>Sets the value of the uniform attribute.</summary>
 			/// <param name="value">The new value of the uniform attribute.</param>
 			virtual void set(const T& value) const = 0;
+		};
+
+		template <typename T>
+		class _UniformBlockAttribute : public _UniformTypedAttribute<T>
+		{
+		protected:
+			// The offset of the uniform within the block.
+			const Int m_Offset;
+
+		public:
+			_UniformBlockAttribute(std::string name, Int offset);
+
+			void set(const T& value) const;
 		};
 
 
@@ -203,6 +362,7 @@ namespace onion
 			virtual ~_UniformBuffer();
 
 			/// <summary>Sets the value of a uniform in the buffer.</summary>
+			/// <param name="index">The index of the uniform.</param>
 			/// <param name="uniform">The value of the uniform.</param>
 			template <typename _Uniform>
 			void set(int index, const _Uniform& uniform) const
@@ -212,6 +372,26 @@ namespace onion
 				if (_UniformTypedAttribute<_Uniform>* u = dynamic_cast<_UniformTypedAttribute<_Uniform>*>(m_Uniforms[index]))
 				{
 					u->set(uniform);
+				}
+			}
+
+			/// <summary>Sets the value of a uniform in the buffer.</summary>
+			/// <param name="name">The name of the uniform.</param>
+			/// <param name="uniform">The value of the uniform.</param>
+			template <typename _Uniform>
+			void set(std::string name, const _Uniform& uniform) const
+			{
+				bind();
+
+				for (auto iter = m_Uniforms.begin(); iter != m_Uniforms.end(); ++iter)
+				{
+					if ((*iter)->name.compare(name) == 0)
+					{
+						if (_UniformTypedAttribute<_Uniform>* u = dynamic_cast<_UniformTypedAttribute<_Uniform>*>(*iter))
+						{
+							u->set(uniform);
+						}
+					}
 				}
 			}
 		};
@@ -231,6 +411,10 @@ namespace onion
 			/// <summary>Constructs a buffer from data.</summary>
 			/// <param name="data">The data to use in the buffer.</param>
 			_VertexBuffer(const std::vector<float>& data);
+
+			/// <summary>Constructs a buffer from data.</summary>
+			/// <param name="data">The data to use in the buffer.</param>
+			_VertexBuffer(const _VertexBufferData* data);
 
 			/// <summary>Activates the buffer.</summary>
 			virtual void __activate() const;
@@ -319,7 +503,8 @@ namespace onion
 
 		public:
 			/// <summary>Displays using the currently bound shader and information from the buffer.</summary>
-			/// <param name="start">A pointer to the start location in the buffer.</param>
+			/// <param name="start">A pointer to the start location in the buffer.
+			/// This should be equal to the index of the starting vertex in the buffer array.</param>
 			/// <param name="count">The number of sequential shapes to display.</param>
 			virtual void display(BUFFER_KEY start, int count = 1) const = 0;
 
@@ -333,7 +518,8 @@ namespace onion
 		{
 		public:
 			/// <summary>Displays using the currently bound shader and information from the buffer.</summary>
-			/// <param name="start">A pointer to the start location in the buffer.</param>
+			/// <param name="start">A pointer to the start location in the buffer.
+			/// This should be equal to the index of the starting vertex in the buffer array.</param>
 			/// <param name="count">The number of sequential shapes to display.</param>
 			virtual void display(BUFFER_KEY start, int count = 1) const;
 		};
@@ -341,6 +527,145 @@ namespace onion
 	}
 
 
+	// Strictly typed data for a vertex buffer.
+	template <typename... _Attribs>
+	class VertexBufferData : public opengl::_VertexBufferData
+	{
+	public:
+		template <int N>
+		using nth_t = std::tuple_element_t<N, std::tuple<_Attribs...>>;
+
+	private:
+		using vertex_t = std::tuple<Attribute<_Attribs>...>;
+
+		// The data for every vertex in the buffer.
+		std::vector<vertex_t> m_Vertices;
+
+		template <typename _NthAttrib, typename... _RemainingAttribs>
+		struct VertexSizeGetter
+		{
+			/// <summary>Retrieves the total size of the n-th attribute and beyond.</summary>
+			/// <returns>The size of the n-th attribute and beyond, in bytes.</returns>
+			static std::size_t size()
+			{
+				return Attribute<_NthAttrib>::attr_size();
+			}
+		};
+
+		template <typename _NthAttrib, typename _NthPlusOneAttrib, typename... _RemainingAttribs>
+		struct VertexSizeGetter<_NthAttrib, _NthPlusOneAttrib, _RemainingAttribs...>
+		{
+			/// <summary>Retrieves the total size of the n-th attribute and beyond.</summary>
+			/// <returns>The size of the n-th attribute and beyond, in bytes.</returns>
+			static std::size_t size()
+			{
+				return Attribute<_NthAttrib>::attr_size() + VertexSizeGetter<_NthPlusOneAttrib, _RemainingAttribs...>::size();
+			}
+		};
+
+		/// <summary>Assigns the n-th element in the vertex and every element after it to a location in the buffer.</summary>
+		/// <param name="ptr">A pointer to the beginning of where to assign the values. Outputs a pointer to the byte after the vertex.</param>
+		/// <param name="vertex">The vertex to assign.</param>
+		template <int N>
+		void __assign(void*& ptr, const vertex_t& vertex) const
+		{
+			std::get<N>(vertex).assign(ptr);
+			__assign<N + 1>(ptr, vertex);
+		}
+
+		/// <summary>The end condition for the template recursion.</summary>
+		/// <param name="ptr">A pointer to the beginning of where to assign the values. Outputs a pointer to the byte after the vertex.</param>
+		/// <param name="vertex">The vertex to assign.</param>
+		template <>
+		void __assign<sizeof...(_Attribs)>(void*& ptr, const vertex_t& vertex) const {}
+
+		/// <summary>Assigns the values of each attribute in the vertex to a location in the buffer.</summary>
+		/// <param name="ptr">A pointer to the beginning of where to assign the values. Outputs a pointer to the byte after the vertex.</param>
+		/// <param name="vertex">The vertex to assign.</param>
+		void assign(void*& ptr, const vertex_t& vertex) const
+		{
+			__assign<0>(ptr, vertex);
+		}
+
+	public:
+		/// <summary>Retrieves the size of each vertex.</summary>
+		/// <returns>The size of each vertex, in bytes.</returns>
+		std::size_t vertex_size() const
+		{
+			return VertexSizeGetter<_Attribs...>::size();
+		}
+
+		/// <summary>Retrieves the number of vertices in the buffer.</summary>
+		/// <returns>The number of vertices in the buffer.</returns>
+		std::size_t buffer_size() const
+		{
+			return m_Vertices.size();
+		}
+
+		/// <summary>Retrieves the n-th element of the vertex at the specified index.</summary>
+		/// <param name="index">The index of the vertex.</param>
+		template <int N>
+		const nth_t<N>& get(int index) const
+		{
+			return std::get<N>(m_Vertices[index]).value;
+		}
+
+		/// <summary>Assigns a value to the n-th element of the vertex at the specified index.</summary>
+		/// <param name="index">The index of the vertex.</param>
+		/// <param name="value">The value to assign to the n-th element of the vertex.</param>
+		template <int N>
+		void set(int index, const nth_t<N>& value)
+		{
+			std::get<N>(m_Vertices[index]).value = value;
+		}
+
+		/// <summary>Pushes new vertices to the back of the buffer.</summary>
+		/// <param name="count">The number of new vertices to add.</param>
+		/// <returns>The index of the first new vertex.</returns>
+		int push(int count = 1)
+		{
+			int index = m_Vertices.size();
+			m_Vertices.resize(index + count);
+			return index;
+		}
+
+		/// <summary>Inserts new vertices at the specified index.</summary>
+		/// <param name="index">The index to begin inserting new vertices at.</param>
+		/// <param name="count">The number of new vertices to add.</param>
+		/// <returns>The index of the first new vertex.</returns>
+		int insert(int index, int count = 1)
+		{
+			m_Vertices.resize(m_Vertices.size() + count);
+			for (int k = m_Vertices.size() - 1; k >= index + count; --k)
+				m_Vertices[k] = m_Vertices[k - count];
+			return index;
+		}
+
+		/// <summary>Pops the vertices on the back of the buffer.</summary>
+		/// <param name="count">The number of vertices to delete.</param>
+		void pop(int count = 1)
+		{
+			m_Vertices.pop_back();
+		}
+
+		/// <summary>Compiles the buffer of data into an array.</summary>
+		/// <param name="bytes">The size of the buffer, in bytes.</param>
+		/// <returns>A pointer to the start of the buffer.</returns>
+		char* compile(std::size_t& bytes) const
+		{
+			bytes = vertex_size() * m_Vertices.size();
+			char* buf = new char[bytes];
+
+			void* ptr = buf;
+			for (auto iter = m_Vertices.begin(); iter != m_Vertices.end(); ++iter)
+			{
+				assign(ptr, *iter);
+			}
+
+			return buf;
+		}
+	};
+	
 	class VertexBuffer : public opengl::_VertexBuffer
 	{
 	private:
@@ -356,6 +681,11 @@ namespace onion
 		/// <param name="data">The data to fill the vertex attribute buffer with.</param>
 		/// <param name="attribs">The information about the vertex attributes in the buffer.</param>
 		VertexBuffer(const std::vector<float>& data, const opengl::_VertexAttributeInformation& attribs);
+
+		/// <summary>Constructs a buffer of vertex attributes.</summary>
+		/// <param name="data">The data to fill the vertex attribute buffer with.</param>
+		/// <param name="attribs">The information about the vertex attributes in the buffer.</param>
+		VertexBuffer(const opengl::_VertexBufferData* data, const opengl::_VertexAttributeInformation& attribs);
 
 		/// <summary>Virtual deconstructor.</summary>
 		virtual ~VertexBuffer();

@@ -1,0 +1,20 @@
+// Fragment shader
+#version 330 core
+
+
+in VS_FS
+{
+    // The UV texture coordinates
+    vec2 uv;
+}
+fs_in;
+
+uniform sampler2D tileTexture;
+
+
+// MAIN FUNCTION
+
+void main()
+{
+    gl_FragColor = texture(tileTexture, fs_in.uv);
+}

@@ -1,5 +1,6 @@
 #pragma once
 #include "../matrix.h"
+#include "../graphics/transform.h"
 
 namespace onion
 {
@@ -9,15 +10,12 @@ namespace onion
 #define UNITS_PER_PIXEL 32
 
 		// A method of projecting model space onto the screen.
-		class Camera
+		class WorldCamera : public Camera
 		{
 		protected:
 			// The bounds of the frame that the camera belongs to.
-			const mat3x2i& m_FrameBounds;
+			const mat2x3i& m_FrameBounds;
 
-
-			// The transform matrix.
-			TransformMatrix m_Transform;
 
 			// The camera position.
 			vec3i m_Position;
@@ -25,19 +23,10 @@ namespace onion
 		public:
 			/// <summary>Constructs a camera object.</summary>
 			/// <param name="frame_bounds">A reference to the bounds of the frame that the camera belongs to.</param>
-			Camera(const mat3x2i& frame_bounds);
+			WorldCamera(const mat2x3i& frame_bounds);
 
 			/// <summary>Virtual deconstructor.</summary>
-			virtual ~Camera();
-
-
-			/// <summary>Retrieves the transform matrix.</summary>
-			/// <returns>The camera transform matrix to use.</returns>
-			const TransformMatrix& get_transform() const;
-
-
-			/// <summary>Resets the camera transform.</summary>
-			virtual void reset() = 0;
+			virtual ~WorldCamera() = default;
 
 
 			/// <summary>Retrieves the position of the camera in model space.</summary>
@@ -63,16 +52,16 @@ namespace onion
 
 
 		// A camera that uses a top-down oblique projection, never changing the angle that the world is viewed from or the scale of the world.
-		class StaticTopDownCamera : public Camera
+		class StaticTopDownWorldCamera : public WorldCamera
 		{
+		protected:
+			/// <summary>Sets up the camera projection.</summary>
+			void __activate() const;
+
 		public:
 			/// <summary>Constructs a top-down camera object.</summary>
 			/// <param name="frame_bounds">A reference to the bounds of the frame that the camera belongs to.</param>
-			StaticTopDownCamera(const mat3x2i& frame_bounds);
-
-
-			/// <summary>Resets the camera transform.</summary>
-			void reset();
+			StaticTopDownWorldCamera(const mat2x3i& frame_bounds);
 
 
 			/// <summary>Retrieves the 2D direction that model space is being viewed from.</summary>
@@ -85,7 +74,7 @@ namespace onion
 
 
 		// A camera that uses an axonometric projection with an angle that can change.
-		class DynamicAxonometricCamera : public Camera
+		class DynamicAxonometricWorldCamera : public WorldCamera
 		{
 		protected:
 			// The angle that the model space is viewed at from the top, in radians. 0 is from the top, PI/2 is from the side.
@@ -94,16 +83,15 @@ namespace onion
 			// The angle that the model space is viewed at from the side, in radians.
 			float m_SideViewAngle;
 
+			/// <summary>Sets up the camera projection.</summary>
+			void __activate() const;
+
 		public:
 			/// <summary>Constructs a top-down camera object.</summary>
 			/// <param name="frame_bounds">A reference to the bounds of the frame that the camera belongs to.</param>
 			/// <param name="top_view_angle"></param>
 			/// <param name="side_view_angle">The angle that </param>
-			DynamicAxonometricCamera(const mat3x2i& frame_bounds, float top_view_angle, float side_view_angle);
-
-
-			/// <summary>Resets the camera transform.</summary>
-			void reset();
+			DynamicAxonometricWorldCamera(const mat2x3i& frame_bounds, float top_view_angle, float side_view_angle);
 
 
 			/// <summary>Sets the top-down angle that the model space is viewed from.</summary>

@@ -18,21 +18,21 @@ namespace onion
 		set_bounds(x, y, z, width, height, depth);
 	}
 
-	const mat3x2i& Frame::get_bounds() const
+	const mat2x3i& Frame::get_bounds() const
 	{
 		return m_Bounds;
 	}
 
-	mat3x2i Frame::get_absolute_bounds() const
+	mat2x3i Frame::get_absolute_bounds() const
 	{
 		if (m_Parent)
 		{
-			mat3x2i pbounds = m_Parent->get_absolute_bounds();
+			mat2x3i pbounds = m_Parent->get_absolute_bounds();
 			int px = pbounds.get(0, 0);
 			int py = pbounds.get(1, 0);
 			int pz = pbounds.get(2, 0);
 
-			return mat3x2i(m_Bounds.get(0, 0) + px, m_Bounds.get(0, 1) + px,
+			return mat2x3i(m_Bounds.get(0, 0) + px, m_Bounds.get(0, 1) + px,
 				m_Bounds.get(1, 0) + py, m_Bounds.get(1, 1) + py,
 				m_Bounds.get(2, 0) + pz, m_Bounds.get(2, 1) + pz);
 		}
@@ -100,7 +100,7 @@ namespace onion
 
 	int Button::trigger(const MouseMoveEvent& event_data)
 	{
-		mat3x2i absbounds = get_absolute_bounds();
+		mat2x3i absbounds = get_absolute_bounds();
 
 		if (event_data.x >= absbounds.get(0, 0) && event_data.x < absbounds.get(0, 1)
 			&& event_data.y >= absbounds.get(1, 0) && event_data.y < absbounds.get(1, 1))
@@ -165,7 +165,7 @@ namespace onion
 
 	int TextInput::trigger(const MousePressEvent& event_data)
 	{
-		mat3x2i absbounds = get_absolute_bounds();
+		mat2x3i absbounds = get_absolute_bounds();
 
 		if (event_data.x >= absbounds.get(0, 0) && event_data.x < absbounds.get(0, 1)
 			&& event_data.y >= absbounds.get(1, 0) && event_data.y < absbounds.get(1, 1))
@@ -305,7 +305,7 @@ namespace onion
 
 	int ScrollBar::trigger(const MousePressEvent& event_data)
 	{
-		mat3x2i absbounds = get_absolute_bounds();
+		mat2x3i absbounds = get_absolute_bounds();
 		int dx = event_data.x - absbounds.get(0, 0);
 		int dy = event_data.y - absbounds.get(1, 0);
 
@@ -360,7 +360,7 @@ namespace onion
 	{
 		if (dragged == this)
 		{
-			mat3x2i absbounds = get_absolute_bounds();
+			mat2x3i absbounds = get_absolute_bounds();
 			int dx = event_data.x - absbounds.get(0, 0) - m_Arrow->get_width();
 			int dy = event_data.y - absbounds.get(1, 0) - m_Arrow->get_height();
 

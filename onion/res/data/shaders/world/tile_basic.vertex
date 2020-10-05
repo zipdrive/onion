@@ -41,8 +41,8 @@ uniform Lighting
     OverheadLight overhead;
     
     // The point lights.
-    int num_lights;
-    PointLight lights[MAX_NUMBER_LIGHTS];
+    int num_point_lights;
+    PointLight point_lights[MAX_NUMBER_LIGHTS];
 };
 
 
