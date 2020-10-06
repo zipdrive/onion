@@ -520,13 +520,13 @@ namespace onion
 			{
 				for (int j = m_Dimensions.get(1) - 1; j >= 0; --j)
 				{
-					vec2f base_pos = vec2f(m_TileSize * UNITS_PER_PIXEL * i, m_TileSize * UNITS_PER_PIXEL * j);
+					vec2f base_pos = vec2f(m_TileSize * i, m_TileSize * j);
 
 					vec2f pos[4];
 					pos[TILE_CORNER_BOTTOM_LEFT] = base_pos + vec2f(0.f, 0.f);
-					pos[TILE_CORNER_BOTTOM_RIGHT] = base_pos + vec2f(m_TileSize * UNITS_PER_PIXEL, 0.f);
-					pos[TILE_CORNER_TOP_RIGHT] = base_pos + vec2f(m_TileSize * UNITS_PER_PIXEL, m_TileSize * UNITS_PER_PIXEL);
-					pos[TILE_CORNER_TOP_LEFT] = base_pos + vec2f(0.f, m_TileSize * UNITS_PER_PIXEL);
+					pos[TILE_CORNER_BOTTOM_RIGHT] = base_pos + vec2f(m_TileSize, 0.f);
+					pos[TILE_CORNER_TOP_RIGHT] = base_pos + vec2f(m_TileSize, m_TileSize);
+					pos[TILE_CORNER_TOP_LEFT] = base_pos + vec2f(0.f, m_TileSize);
 
 					int index = 6 * get_index(i, j);
 

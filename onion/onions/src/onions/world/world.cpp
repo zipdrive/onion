@@ -13,6 +13,13 @@ namespace onion
 			delete m_Camera;
 		}
 
+		void World::display() const
+		{
+			if (m_Camera)
+				m_Camera->activate();
+			__display();
+		}
+
 
 		WorldState::WorldState(World* world)
 		{
@@ -41,9 +48,6 @@ namespace onion
 		
 		void BasicWorld::__display() const
 		{
-			// Activate the camera
-			m_Camera->activate();
-
 			// Display the chunk
 			m_Chunk->display_tiles();
 		}

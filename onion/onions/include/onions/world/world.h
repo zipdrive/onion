@@ -22,6 +22,9 @@ namespace onion
 
 			/// <summary>Destroys the camera.</summary>
 			virtual ~World();
+
+			/// <summary>Displays the world.</summary>
+			virtual void display() const;
 		};
 
 		// A state that displays the world.

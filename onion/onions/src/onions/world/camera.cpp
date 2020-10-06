@@ -42,10 +42,6 @@ namespace onion
 		
 		void StaticTopDownWorldCamera::__activate() const
 		{
-			// Scale the camera view
-			float ppu = 1.f / UNITS_PER_PIXEL;
-			Transform::projection.scale(ppu, ppu, ppu);
-
 			// Create a pixel-perfect orthogonal projection centered in the middle of the screen
 			vec3i halves(
 				(m_FrameBounds.get(0, 1) - m_FrameBounds.get(0, 0)) / 2,

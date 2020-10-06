@@ -47,7 +47,8 @@ vec3 CalcCubeLight(CubeLight light, vec2 pos, vec3 diffuse)
     );
     
     // The strength of diffuse shading
-    float diff = max(dir.z, 0.0);
+    vec3 dir_n = normalize(dir);
+    float diff = max(dir_n.z, 0.0);
     vec3 diffuseColor = diff * light.diffuse * diffuse;
     
     // The attenuation of the light
