@@ -11,30 +11,43 @@ namespace onion
 	}
 
 
-	std::vector<PointLight*> Lighting::m_PointLights{};
-
-	void Lighting::set(int index, PointLight* light)
+	void Lighting::set_ambient_light(const vec3f& ambient)
 	{
-		if (index >= m_PointLights.size())
-		{
-			m_PointLights.resize(index + 1);
-			m_Buffer->set<int>("num_point_lights", m_PointLights.size());
-		}
-
-		m_PointLights[index] = light;
-
-		std::string base = "point_lights[" + std::to_string(index) + "].";
-		m_Buffer->set(base + "position", light->position);
-		m_Buffer->set(base + "linear", light->linear);
-		m_Buffer->set(base + "quadratic", light->quadratic);
+		m_Buffer->set<FLOAT_VEC3>("ambient", ambient);
 	}
 
-	void Lighting::add(PointLight* light)
+
+	std::vector<CubeLight*> Lighting::m_CubeLights{};
+
+	void Lighting::set(int index, CubeLight* light)
+	{
+		if (index >= m_CubeLights.size())
+		{
+			m_CubeLights.resize(index + 1);
+			m_Buffer->set<Int>("numCubeLights", m_CubeLights.size());
+		}
+
+		m_CubeLights[index] = light;
+
+		std::string base = "cubeLights[" + std::to_string(index) + "].";
+		
+		m_Buffer->set<FLOAT_VEC3>(base + "mins", light->mins);
+		m_Buffer->set<FLOAT_VEC3>(base + "maxs", light->maxs);
+
+		m_Buffer->set<FLOAT_VEC3>(base + "diffuse", light->color.diffuse);
+		m_Buffer->set<FLOAT_VEC3>(base + "specular", light->color.specular);
+
+		m_Buffer->set<Float>(base + "constant", light->attenuation.constant);
+		m_Buffer->set<Float>(base + "linear", light->attenuation.linear);
+		m_Buffer->set<Float>(base + "quadratic", light->attenuation.quadratic);
+	}
+
+	void Lighting::add(CubeLight* light)
 	{
 		// Make sure you aren't adding the same light twice
-		for (int index = 0; index < m_PointLights.size(); ++index)
+		for (int index = 0; index < m_CubeLights.size(); ++index)
 		{
-			if (m_PointLights[index] == light)
+			if (m_CubeLights[index] == light)
 			{
 				set(index, light);
 				return;
@@ -42,26 +55,26 @@ namespace onion
 		}
 
 		// Make sure you aren't exceeding the maximum number of allowed lights
-		if (m_PointLights.size() < MAX_NUMBER_POINT_LIGHTS - 1)
+		if (m_CubeLights.size() < MAX_NUMBER_CUBE_LIGHTS - 1)
 		{
 			// Add the light at the back
-			set(m_PointLights.size(), light);
+			set(m_CubeLights.size(), light);
 		}
 	}
 
-	void Lighting::remove(PointLight* light)
+	void Lighting::remove(CubeLight* light)
 	{
-		for (int index = m_PointLights.size() - 1; index >= 0; --index)
+		for (int index = m_CubeLights.size() - 1; index >= 0; --index)
 		{
-			if (m_PointLights[index] == light)
+			if (m_CubeLights[index] == light)
 			{
 				// If the light being removed isn't at the back, move the light that is at the back to replace the light being removed
-				if (index < m_PointLights.size() - 1)
-					set(index, m_PointLights.back());
+				if (index < m_CubeLights.size() - 1)
+					set(index, m_CubeLights.back());
 
 				// Resize the array
-				m_PointLights.pop_back();
-				m_Buffer->set<int>("num_point_lights", m_PointLights.size());
+				m_CubeLights.pop_back();
+				m_Buffer->set<Int>("numCubeLights", m_CubeLights.size());
 
 				return;
 			}

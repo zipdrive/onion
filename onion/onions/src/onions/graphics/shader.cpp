@@ -908,83 +908,84 @@ namespace onion
 				_UniformBuffer* buf = _UniformBuffer::get_buffer(uniform_block_name);
 				if (!buf) // If the buffer does not exist, construct the uniform block
 				{
-					// Get each uniform in the block
-					GLint buf_size;
-					glGetActiveUniformBlockiv(id, uniform_block_index, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &buf_size);
+					// Construct an empty uniform block
+					buf = new _UniformBuffer(uniform_block_name);
+				}
 
-					GLint* buf_uniforms = new GLint[buf_size];
-					glGetActiveUniformBlockiv(id, uniform_block_index, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, buf_uniforms);
-					GLuint* buf_uniform_indices = (GLuint*)buf_uniforms;
+				// Get each uniform in the block
+				GLint buf_size;
+				glGetActiveUniformBlockiv(id, uniform_block_index, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &buf_size);
 
-					// Get the type of each uniform in the block
-					GLint* types = new GLint[buf_size];
-					glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_TYPE, types);
+				GLint* buf_uniforms = new GLint[buf_size];
+				glGetActiveUniformBlockiv(id, uniform_block_index, GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, buf_uniforms);
+				GLuint* buf_uniform_indices = (GLuint*)buf_uniforms;
 
-					// Get the offset of each uniform in the block
-					GLint* offsets = new GLint[buf_size];
-					glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_OFFSET, offsets);
+				// Get the type of each uniform in the block
+				GLint* types = new GLint[buf_size];
+				glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_TYPE, types);
 
-					// Get the size and stride of the array for each uniform in the block
-					GLint* array_sizes = new GLint[buf_size];
-					glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_SIZE, array_sizes);
+				// Get the offset of each uniform in the block
+				GLint* offsets = new GLint[buf_size];
+				glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_OFFSET, offsets);
 
-					GLint* array_strides = new GLint[buf_size];
-					glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_ARRAY_STRIDE, array_strides);
+				// Get the size and stride of the array for each uniform in the block
+				GLint* array_sizes = new GLint[buf_size];
+				glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_SIZE, array_sizes);
 
-					// Get the length of each uniform's name
-					GLint* uniform_name_lengths = new GLint[buf_size];
-					glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_NAME_LENGTH, uniform_name_lengths);
+				GLint* array_strides = new GLint[buf_size];
+				glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_ARRAY_STRIDE, array_strides);
 
-					// Create a uniform attribute for each uniform in the block
-					std::vector<_UniformAttribute*> uniforms;
-					unsigned int total_uniform_block_size = 0;
-					for (int i = 0; i < buf_size; ++i)
+				// Get the length of each uniform's name
+				GLint* uniform_name_lengths = new GLint[buf_size];
+				glGetActiveUniformsiv(id, buf_size, buf_uniform_indices, GL_UNIFORM_NAME_LENGTH, uniform_name_lengths);
+
+				// Create a uniform attribute for each uniform in the block
+				std::vector<_UniformAttribute*> uniforms;
+				unsigned int total_uniform_block_size = 0;
+				for (int i = 0; i < buf_size; ++i)
+				{
+					std::string uniform_name;
+					if (uniform_name_lengths[i] > 0)
 					{
-						std::string uniform_name;
-						if (uniform_name_lengths[i] > 0)
-						{
-							GLchar* raw_uniform_name = new GLchar[uniform_name_lengths[i]];
-							glGetActiveUniformName(id, buf_uniform_indices[i], uniform_name_lengths[i], NULL, raw_uniform_name);
-							uniform_name = std::string(raw_uniform_name);
-							delete[] raw_uniform_name;
-						}
-
-						GLint offset = offsets[i];
-						GLenum type = types[i];
-
-						GLint array_size = array_sizes[i];
-						for (int n = 0; n < array_size; ++n)
-						{
-							std::string uname(uniform_name);
-							if (array_size > 1)
-								uname += "[" + std::to_string(n) + "]";
-
-							if (_UniformAttribute* u = generate_uniform_block_attribute(type, uname, offset))
-							{
-								uniforms.push_back(u);
-								total_uniform_block_size = std::max(total_uniform_block_size, offset + u->get_size());
-							}
-
-							offset += array_strides[i];
-						}
-
+						GLchar* raw_uniform_name = new GLchar[uniform_name_lengths[i]];
+						glGetActiveUniformName(id, buf_uniform_indices[i], uniform_name_lengths[i], NULL, raw_uniform_name);
+						uniform_name = std::string(raw_uniform_name);
+						delete[] raw_uniform_name;
 					}
 
-					// Construct the uniform block
-					buf = new _UniformBuffer(uniform_block_name, uniforms, total_uniform_block_size);
+					GLint offset = offsets[i];
+					GLenum type = types[i];
 
-					// Clean up all the arrays we allocated earlier
-					delete[] buf_uniforms;
-					delete[] types;
-					delete[] offsets;
-					delete[] array_sizes;
-					delete[] array_strides;
-					delete[] uniform_name_lengths;
+					GLint array_size = array_sizes[i];
+					for (int n = 0; n < array_size; ++n)
+					{
+						std::string uname(uniform_name);
+						if (array_size > 1)
+							uname += "[" + std::to_string(n) + "]";
+
+						if (_UniformAttribute* u = generate_uniform_block_attribute(type, uname, offset))
+						{
+							uniforms.push_back(u);
+							total_uniform_block_size = std::max(total_uniform_block_size, offset + u->get_size());
+						}
+
+						offset += array_strides[i];
+					}
 				}
+
+				buf->set_uniforms(uniforms, total_uniform_block_size);
 
 				// Bind the shader's uniform block to a uniform buffer
 				glUniformBlockBinding(id, uniform_block_index, buf->m_BindingPoint->binding);
 				errcheck("Error binding the uniform block \"" + uniform_block_name + "\" of the shader.");
+
+				// Clean up all the arrays we allocated earlier
+				delete[] buf_uniforms;
+				delete[] types;
+				delete[] offsets;
+				delete[] array_sizes;
+				delete[] array_strides;
+				delete[] uniform_name_lengths;
 			}
 
 			// Determine any other uniforms
@@ -1089,28 +1090,21 @@ namespace onion
 		
 		std::unordered_map<std::string, _UniformBuffer*> _UniformBuffer::m_Buffers{};
 
-		_UniformBuffer::_UniformBuffer(std::string name, const std::vector<_UniformAttribute*> uniforms, unsigned int size)
+		_UniformBuffer::_UniformBuffer(std::string name)
 		{
 			m_Name = name;
 			m_Buffers.emplace(name, this);
-
-			// Generate the buffer
-			GLuint id;
-			glGenBuffers(1, &id);
-			errcheck("Error when generating the buffer for uniform block " + name + ".");
-			glBindBuffer(GL_UNIFORM_BUFFER, id);
-			errcheck("Error when binding the buffer for uniform block " + name + ".");
-			glBufferData(GL_UNIFORM_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
-			errcheck("Error when setting up the buffer for uniform block " + name + ".");
-			m_Buffer = new _ID(id);
-
-			// Bind the buffer to a binding point
-			m_BindingPoint = new _UniformBuffer::BindingPoint();
-			glBindBufferBase(GL_UNIFORM_BUFFER, m_BindingPoint->binding, id);
-			errcheck("Error when binding the buffer for uniform block " + name + " to binding point " + std::to_string(m_BindingPoint->binding) + ".");
+			m_Buffer = nullptr;
+		}
+		
+		_UniformBuffer::_UniformBuffer(std::string name, const std::vector<_UniformAttribute*>& uniforms, unsigned int size)
+		{
+			m_Name = name;
+			m_Buffers.emplace(name, this);
+			m_Buffer = nullptr;
 
 			// Set the uniforms
-			m_Uniforms = uniforms;
+			set_uniforms(uniforms, size);
 		}
 
 		_UniformBuffer::~_UniformBuffer()
@@ -1132,7 +1126,31 @@ namespace onion
 			auto iter = m_Buffers.find(name);
 			if (iter != m_Buffers.end())
 				return iter->second;
-			return nullptr;
+			return new _UniformBuffer(name);
+		}
+
+		void _UniformBuffer::set_uniforms(const std::vector<_UniformAttribute*>& uniforms, unsigned int size)
+		{
+			if (!m_Buffer)
+			{
+				// Generate the buffer
+				GLuint id;
+				glGenBuffers(1, &id);
+				errcheck("Error when generating the buffer for uniform block " + m_Name + ".");
+				glBindBuffer(GL_UNIFORM_BUFFER, id);
+				errcheck("Error when binding the buffer for uniform block " + m_Name + ".");
+				glBufferData(GL_UNIFORM_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
+				errcheck("Error when setting up the buffer for uniform block " + m_Name + ".");
+				m_Buffer = new _ID(id);
+
+				// Bind the buffer to a binding point
+				m_BindingPoint = new _UniformBuffer::BindingPoint();
+				glBindBufferBase(GL_UNIFORM_BUFFER, m_BindingPoint->binding, id);
+				errcheck("Error when binding the buffer for uniform block " + m_Name + " to binding point " + std::to_string(m_BindingPoint->binding) + ".");
+
+				// Set the uniforms
+				m_Uniforms = uniforms;
+			}
 		}
 
 		void _UniformBuffer::bind() const

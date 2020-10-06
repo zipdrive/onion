@@ -121,8 +121,8 @@ namespace onion
 		float a03 = (left + right) / (left - right);
 		float a11 = 2.f / (top - bottom);
 		float a13 = (bottom + top) / (bottom - top);
-		float a22 = 2.f / (far - near);
-		float a23 = (near + far) / (near - far);
+		float a22 = 1.f / (near - far);
+		float a23 = near / (far - near);
 
 		for (int k = 2; k >= 0; --k)
 		{

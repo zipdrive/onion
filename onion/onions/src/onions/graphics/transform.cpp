@@ -17,17 +17,6 @@ namespace onion
 		model.reset();
 
 		m_Buffer = opengl::_UniformBuffer::get_buffer("Camera");
-		if (!m_Buffer)
-		{
-			m_Buffer = new opengl::_UniformBuffer(
-				"Camera",
-				{ 
-					new opengl::_UniformBlockAttribute<FLOAT_MAT4>("projection", 0), 
-					new opengl::_UniformBlockAttribute<FLOAT_MAT4>("view", type_size<FLOAT_MAT4>::whole)
-				},
-				2 * type_size<FLOAT_MAT4>::whole
-			);
-		}
 	}
 
 	void Transform::set_projection()

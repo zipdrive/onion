@@ -22,6 +22,10 @@ uniform mat4 model;
 
 out VS_FS
 {
+    // The fragment position
+    vec2 pos;
+
+    // The UV texture coordinates
     vec2 uv;
 }
 vs_out;
@@ -31,5 +35,6 @@ void main()
 {
     // Set the shader's output to the fragment shader
     gl_Position = projection * view * model * vec4(vertexPosition, 0, 1);
+    vs_out.pos = vertexPosition;
     vs_out.uv = vertexUV;
 }

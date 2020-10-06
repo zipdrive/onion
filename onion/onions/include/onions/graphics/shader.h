@@ -353,13 +353,26 @@ namespace onion
 			/// <returns>The uniform buffer with that name. NULL if the buffer does not exist.</returns>
 			static _UniformBuffer* get_buffer(std::string name);
 
+
+			/// <summary>Constructs an empty uniform buffer handler.</summary>
+			/// <param name="name">The name of the uniform buffer, as it is referred to in the shaders.</param>
+			_UniformBuffer(std::string name);
+
 			/// <summary>Constructs a uniform buffer handler.</summary>
 			/// <param name="name">The name of the uniform buffer, as it is referred to in the shaders.</param>
+			/// <param name="uniforms">The list of uniform attributes in the block.</param>
 			/// <param name="size">The size of the uniform buffer.</param>
-			_UniformBuffer(std::string name, std::vector<_UniformAttribute*> uniforms, unsigned int size);
+			_UniformBuffer(std::string name, const std::vector<_UniformAttribute*>& uniforms, unsigned int size);
 
 			/// <summary>Cleans up the buffer.</summary>
 			virtual ~_UniformBuffer();
+
+			
+			/// <summary>Sets what uniforms are in the buffer.</summary>
+			/// <param name="uniforms">The list of uniform attributes in the block.</param>
+			/// <param name="size">The size of the uniform buffer.</param>
+			void set_uniforms(const std::vector<_UniformAttribute*>& uniforms, unsigned int size);
+
 
 			/// <summary>Sets the value of a uniform in the buffer.</summary>
 			/// <param name="index">The index of the uniform.</param>

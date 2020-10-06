@@ -11,6 +11,7 @@
 #include "../../include/onions/state.h"
 #include "../../include/onions/event.h"
 #include "../../include/onions/graphics/transform.h"
+#include "../../include/onions/world/lighting.h"
 
 
 using namespace std;
@@ -738,6 +739,7 @@ namespace onion
 
 		// Set up the transformation matrices
 		Transform::init();
+		Lighting::init();
 
 		return 0;
 	}
