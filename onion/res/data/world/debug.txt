@@ -1,4 +1,4 @@
 sprites = "debug.png"
 
-tile                            x = "0"     y = "0"     dx = "10"   dy = "10"   sprite = "0"
+tile                            x = "0"     y = "0"     dx = "25"   dy = "25"   sprite = "1"
 tile                            x = "1"     y = "1"     dx = "2"    dy = "2"    sprite = "6"    sprite_rot = "1"

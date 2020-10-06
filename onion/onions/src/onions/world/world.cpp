@@ -44,6 +44,7 @@ namespace onion
 			set_chunk(chunk);
 
 			m_Camera = new StaticTopDownWorldCamera(m_Bounds);
+			m_Camera->set_position(vec3i(200, 200, 0));
 		}
 		
 		void BasicWorld::__display() const
