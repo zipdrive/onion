@@ -9,10 +9,10 @@ namespace onion
 		struct Color
 		{
 			// The diffuse color of the light.
-			vec3f diffuse;
+			vec3f color;
 
-			// The specular color of the light.
-			vec3f specular;
+			// The intensity of the specular highlight.
+			float intensity;
 		};
 
 		struct Brightness
@@ -44,8 +44,8 @@ namespace onion
 		// The color of the light.
 		Color color;
 
-		// The brightness of the light.
-		Brightness attenuation;
+		// The maximum radius of the light.
+		float radius;
 	};
 
 
@@ -82,5 +82,10 @@ namespace onion
 		/// <param name="light">A pointer to the light.</param>
 		static void remove(CubeLight* light);
 	};
+
+
+	/// <summary>Retrieves the image used to sample for blue noise dithering.</summary>
+	/// <returns>An image that can be used to sample for blue noise dithering.</returns>
+	opengl::_Image* get_bluenoise_image();
 
 }

@@ -18,49 +18,65 @@ fs_in;
 
 struct CubeLight
 {
-    // The corner with minimum values
+    // The corner with minimum values.
     vec3 mins;
     
-    // The corner with maximum values
+    // The corner with maximum values.
     vec3 maxs;
     
     
-    // The diffuse color of the light
-    vec3 diffuse;
+    // The color of the light.
+    vec3 color;
     
-    // The specular color of the light
-    vec3 specular;
+    // The intensity of the specular highlight.
+    float intensity;
     
     
-    // Attenuation variables
-    float constant;
-    float linear;
-    float quadratic;
+    // The maximum radius of the light.
+    float radius;
 };
 
-vec3 CalcCubeLight(CubeLight light, vec2 pos, vec3 color)
+vec3 CalcCubeLight(CubeLight light, vec2 pos, sampler2D noiseTexture)
 {
-    vec3 dir = vec3(
-        max(light.mins.x - pos.x, min(light.maxs.x - pos.x, 0.0)),
-        max(light.mins.y - pos.y, min(light.maxs.y - pos.y, 0.0)),
+    // Calculate the closest point on the light
+    vec3 closest = vec3(
+        max(light.mins.x, min(light.maxs.x, pos.x)),
+        max(light.mins.y, min(light.maxs.y, pos.y)),
         max(light.mins.z, min(light.maxs.z, 0.0))
     );
+    vec3 dir = closest - vec3(pos, 0.0);
     
-    // The strength of diffuse shading
-    vec3 dir_n = normalize(dir);
-    float diff = max(dir_n.z, 0.0);
-    vec3 diffuseColor = diff * light.diffuse;
+    float maxDistance = sqrt((light.radius * light.radius) - (closest.z * closest.z)); // The maximum distance from the closest point
     
-    // The strength of specular shading
-    vec3 half_n = normalize(vec3(0.0, 0.0, 1.0) + dir_n);
-    float spec = pow(max(half_n.z, 0.0), 8);
-    vec3 specularColor = spec * light.specular;
+    float distance = length(dir);
+    if (distance < maxDistance)
+    {
+        float maxStrength = 1.0 + light.intensity; // The strength of the light directly underneath the closest point
+        
+        // Calculate the base strength of the light
+        float leveledStrength = maxStrength * max(1.0 - pow(distance / maxDistance, 0.9), 0.0);
+        //float diffuseStrength = dir.z / distance;
+        float baseStrength = leveledStrength;
+        
+        // Calculate the discretized strength of the light
+        float strengthPerLevel = maxStrength / round(5.0 * maxStrength);
+        float strength = strengthPerLevel * round(baseStrength / strengthPerLevel);
+        
+        // Dither the boundary between discrete strengths
+        float closenessToBoundary = (strength - baseStrength) / strengthPerLevel;
+        float strengthChange = -strengthPerLevel;
+        if (closenessToBoundary < 0.0)
+        {
+            closenessToBoundary += 1.0;
+            strengthChange = -strengthChange;
+        }
+        float dither = texture(noiseTexture, vec2(closenessToBoundary, 0.03125 * dot(vec2(2.0, 19.0), pos))).r;
+        strength += (dither * min(strengthChange, 0.0)) + ((1.0 - dither) * max(strengthChange, 0.0));
+        
+        return strength * light.color;
+    }
     
-    // The attenuation of the light
-    float dist = length(dir);
-    float attenuation = 1.0 / (light.constant + ((light.linear + (light.quadratic * dist)) * dist));
-    
-    return attenuation * (diffuseColor + specularColor) * color;
+    return vec3(0.0);
 }
 
 
@@ -77,18 +93,27 @@ uniform Lighting
 
 
 uniform sampler2D tileTexture;
-//uniform sampler2D noiseTexture;
+uniform sampler2D noiseTexture;
 
 
 // MAIN FUNCTION
 
+#define AddCubeLightColor(k)        if (k < numCubeLights) color += CalcCubeLight(cubeLights[k], fs_in.pos, noiseTexture)
+
 void main()
 {
     vec3 diff = vec3(texture(tileTexture, fs_in.uv));
-    vec3 color = ambient * diff;
+    vec3 color = ambient;
     
-    for (int k = 0; k < numCubeLights; k++)
-        color += CalcCubeLight(cubeLights[k], fs_in.pos, diff);
+    // This is SUCH a hacky solution, but I have a driver bug or something that apparently doesn't like for loops? So whatever.
+    AddCubeLightColor(0);
+    AddCubeLightColor(1);
+    AddCubeLightColor(2);
+    AddCubeLightColor(3);
+    AddCubeLightColor(4);
+    AddCubeLightColor(5);
+    AddCubeLightColor(6);
+    AddCubeLightColor(7);
     
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(color * diff, 1.0);
 }

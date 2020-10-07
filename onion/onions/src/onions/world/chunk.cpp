@@ -2,6 +2,7 @@
 #include "../../../include/onions/error.h"
 #include "../../../include/onions/world/camera.h"
 #include "../../../include/onions/world/chunk.h"
+#include "../../../include/onions/world/lighting.h"
 
 using namespace std;
 
@@ -404,12 +405,12 @@ namespace onion
 
 
 
-		Shader<matrix<float, 4, 4>, int>* FlatChunk::m_BasicFlatTileShader{ nullptr };
+		Shader<FLOAT_MAT4, Int, Int>* FlatChunk::m_BasicFlatTileShader{ nullptr };
 
 		FlatChunk::FlatChunk(const char* path) : Chunk(path)
 		{
 			if (!m_BasicFlatTileShader)
-				m_BasicFlatTileShader = new Shader<matrix<float, 4, 4>, int>("world/flat_tile_basic");
+				m_BasicFlatTileShader = new Shader<FLOAT_MAT4, Int, Int>("world/flat_tile_basic");
 		}
 
 		opengl::_VertexBufferData* FlatChunk::__load()
@@ -555,7 +556,9 @@ namespace onion
 
 		void FlatChunk::activate_tile_shader() const
 		{
-			m_BasicFlatTileShader->activate(Transform::model.get(), 0);
+			m_BasicFlatTileShader->activate(Transform::model.get(), 0, 1);
+			get_tile_image()->activate(0);
+			get_bluenoise_image()->activate(1);
 		}
 
 

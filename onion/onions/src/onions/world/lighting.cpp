@@ -34,12 +34,10 @@ namespace onion
 		m_Buffer->set<FLOAT_VEC3>(base + "mins", light->mins);
 		m_Buffer->set<FLOAT_VEC3>(base + "maxs", light->maxs);
 
-		m_Buffer->set<FLOAT_VEC3>(base + "diffuse", light->color.diffuse);
-		m_Buffer->set<FLOAT_VEC3>(base + "specular", light->color.specular);
+		m_Buffer->set<FLOAT_VEC3>(base + "color", light->color.color);
+		m_Buffer->set<Float>(base + "intensity", light->color.intensity);
 
-		m_Buffer->set<Float>(base + "constant", light->attenuation.constant);
-		m_Buffer->set<Float>(base + "linear", light->attenuation.linear);
-		m_Buffer->set<Float>(base + "quadratic", light->attenuation.quadratic);
+		m_Buffer->set<Float>(base + "radius", light->radius);
 	}
 
 	void Lighting::add(CubeLight* light)
@@ -81,5 +79,11 @@ namespace onion
 		}
 	}
 
+
+	opengl::_Image* get_bluenoise_image()
+	{
+		static opengl::_Image* bluenoise = new opengl::_Image("world/bluenoise.png");
+		return bluenoise;
+	}
 
 }

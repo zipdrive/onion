@@ -129,7 +129,7 @@ namespace onion
 		{
 		protected:
 			// 
-			static Shader<matrix<float, 4, 4>, int>* m_BasicFlatTileShader;
+			static Shader<FLOAT_MAT4, Int, Int>* m_BasicFlatTileShader;
 
 			/// <summary>Retrieves the tile shader.</summary>
 			/// <returns>A pointer to the tile shader.</returns>
