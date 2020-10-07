@@ -43,7 +43,7 @@ namespace onion
 			m_Chunk = nullptr;
 			set_chunk(chunk);
 
-			m_Camera = new StaticTopDownWorldCamera(m_Bounds);
+			m_Camera = new DynamicAxonometricWorldCamera(m_Bounds, 0.6981f, 0.785398f);
 			m_Camera->set_position(vec3i(200, 200, 0));
 		}
 		

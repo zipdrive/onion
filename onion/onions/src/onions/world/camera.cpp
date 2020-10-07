@@ -77,16 +77,18 @@ namespace onion
 
 		void DynamicAxonometricWorldCamera::__activate() const
 		{
-			// Translate the camera to the center of the frame
-			Transform::projection.translate(
+			// Create a pixel-perfect orthogonal projection centered in the middle of the screen
+			vec3i halves(
 				(m_FrameBounds.get(0, 1) - m_FrameBounds.get(0, 0)) / 2,
 				(m_FrameBounds.get(1, 1) - m_FrameBounds.get(1, 0)) / 2,
 				(m_FrameBounds.get(2, 1) - m_FrameBounds.get(2, 0)) / 2
 			);
 
-			// Scale the view
-			float ppu = 0.5f / UNITS_PER_PIXEL;
-			Transform::projection.scale(ppu, ppu, ppu);
+			Transform::projection.ortho(
+				-halves.get(0), halves.get(0),
+				-halves.get(1), halves.get(1),
+				-halves.get(2), halves.get(2)
+			);
 
 			// A positive y-unit pushes the coordinate farther from the camera, and is squished by the cosine of the top view angle.
 			// A positive z-unit pulls the coordinate closer to the camera and up by one positive y-unit.

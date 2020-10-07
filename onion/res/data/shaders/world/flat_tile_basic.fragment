@@ -16,6 +16,38 @@ fs_in;
 
 
 
+float CalcLightStrength(vec2 pos, vec3 dir, float intensity, float maxDistance, sampler2D noiseTexture)
+{
+    float distance = length(dir);
+    if (distance < maxDistance)
+    {
+        float maxStrength = 1.0 + intensity; // The strength of the light directly underneath the closest point
+        float strengthPerLevel = maxStrength / round(5.0 * maxStrength); // The difference in strength between each discretized level
+        
+        // Calculate the base strength of the light
+        float edgeDiffuseStrength = 0.081024 * strengthPerLevel;
+        float attenuation = max((dir.z / (maxDistance * edgeDiffuseStrength)) - 1.0, 0.0) * pow(distance / maxDistance, 5.0);
+        float baseDiffuseStrength = dir.z / distance;
+        float baseStrength = baseDiffuseStrength / (1.0 + attenuation);
+        
+        // Calculate the discretized strength of the light
+        float strength = strengthPerLevel * round(baseStrength / strengthPerLevel);
+        
+        // Dither the boundary between discrete strengths
+        float closenessToBoundary = (strength - baseStrength) / strengthPerLevel;
+        float closenessSign = abs(closenessToBoundary) / closenessToBoundary;
+        float strengthChange = -strengthPerLevel * closenessSign;
+        closenessToBoundary = (4.0 * closenessToBoundary * closenessToBoundary * closenessToBoundary) + max(-closenessSign, 0.0);
+        float dither = texture(noiseTexture, vec2(closenessToBoundary, 0.03125 * (dot(pos, vec2(19.0 * pos.x, 167.0))))).r;
+        strength += (dither * min(strengthChange, 0.0)) + ((1.0 - dither) * max(strengthChange, 0.0));
+        
+        return strength;
+    }
+    
+    return 0.0;
+}
+
+
 struct CubeLight
 {
     // The corner with minimum values.
@@ -47,36 +79,7 @@ vec3 CalcCubeLight(CubeLight light, vec2 pos, sampler2D noiseTexture)
     vec3 dir = closest - vec3(pos, 0.0);
     
     float maxDistance = sqrt((light.radius * light.radius) - (closest.z * closest.z)); // The maximum distance from the closest point
-    
-    float distance = length(dir);
-    if (distance < maxDistance)
-    {
-        float maxStrength = 1.0 + light.intensity; // The strength of the light directly underneath the closest point
-        
-        // Calculate the base strength of the light
-        float leveledStrength = maxStrength * max(1.0 - pow(distance / maxDistance, 0.9), 0.0);
-        //float diffuseStrength = dir.z / distance;
-        float baseStrength = leveledStrength;
-        
-        // Calculate the discretized strength of the light
-        float strengthPerLevel = maxStrength / round(5.0 * maxStrength);
-        float strength = strengthPerLevel * round(baseStrength / strengthPerLevel);
-        
-        // Dither the boundary between discrete strengths
-        float closenessToBoundary = (strength - baseStrength) / strengthPerLevel;
-        float strengthChange = -strengthPerLevel;
-        if (closenessToBoundary < 0.0)
-        {
-            closenessToBoundary += 1.0;
-            strengthChange = -strengthChange;
-        }
-        float dither = texture(noiseTexture, vec2(closenessToBoundary, 0.03125 * dot(vec2(2.0, 19.0), pos))).r;
-        strength += (dither * min(strengthChange, 0.0)) + ((1.0 - dither) * max(strengthChange, 0.0));
-        
-        return strength * light.color;
-    }
-    
-    return vec3(0.0);
+    return CalcLightStrength(pos, dir, light.intensity, maxDistance, noiseTexture) * light.color;
 }
 
 
