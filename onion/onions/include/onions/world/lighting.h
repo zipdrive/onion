@@ -1,5 +1,7 @@
 #pragma once
+#include <unordered_set>
 #include "../graphics/shader.h"
+#include "object.h"
 
 namespace onion
 {
@@ -12,20 +14,12 @@ namespace onion
 			vec3f color;
 
 			// The intensity of the specular highlight.
-			float intensity;
-		};
+			Float intensity;
 
-		struct Brightness
-		{
-			// How bright the light is.
-			float constant;
+		} color;
 
-			// How much the brightness drops off proportional to the distance from the light.
-			float linear;
-
-			// How much the brightness drops off proportional to the distance squared from the light.
-			float quadratic;
-		};
+		// The maximum distance from the light source that light still illuminates.
+		Int radius;
 	};
 
 
@@ -39,13 +33,6 @@ namespace onion
 
 		// The corner of the light with maximum values.
 		vec3f maxs;
-
-
-		// The color of the light.
-		Color color;
-
-		// The maximum radius of the light.
-		float radius;
 	};
 
 
@@ -73,7 +60,7 @@ namespace onion
 		/// <param name="ambient">The ambient color.</param>
 		static void set_ambient_light(const vec3f& ambient);
 
-
+		
 		/// <summary>Lights up the scene with the given light.</summary>
 		/// <param name="light">The data about the light.</param>
 		static void add(CubeLight* light);
@@ -87,5 +74,112 @@ namespace onion
 	/// <summary>Retrieves the image used to sample for blue noise dithering.</summary>
 	/// <returns>An image that can be used to sample for blue noise dithering.</returns>
 	opengl::_Image* get_bluenoise_image();
+
+
+
+	namespace world
+	{
+
+		// An interface for objects that cast light on their surroundings.
+		class LightObject : public Object
+		{
+		public:
+			/// <summary>Constructs an object that projects light.</summary>
+			/// <param name="bounds">The bounds of the object.</param>
+			LightObject(Bounds* bounds);
+
+			/// <summary>Retrieves a pointer to the data about the light.</summary>
+			/// <returns>A pointer to the data about the light.</returns>
+			virtual const Light* get_light() const = 0;
+
+			/// <summary>Toggles whether the light is being used or not.<summary>
+			/// <param name="on">True if the light should be activated, false if it should be turned off.</param>
+			virtual void toggle(bool on) = 0;
+		};
+
+		class LightObjectManager
+		{
+		private:
+			// A cube that stores all lights that should be turned on when the cube is displayed.
+			struct Block
+			{
+				// The point at the center of the cube.
+				vec3i center;
+
+				// All lights that illuminate a point within the cube.
+				std::unordered_set<LightObject*> objects;
+			};
+
+			// The size of each block.
+			static Int m_BlockSize;
+
+			// A map of all stored blocks.
+			std::unordered_map<vec3i, Block*, std::hash<INT_VEC3>> m_Blocks;
+
+			
+			/// <summary>Inserts a light object into the block with the specified index, if and only if the light illuminates that block.</summary>
+			/// <param name="index">The index of the block.</param>
+			/// <param name="obj">The light object.</param>
+			/// <returns>True if the light illuminated the block with the specified index, false otherwise.</returns>
+			template <int N>
+			bool insert(const vec3i& index, LightObject* obj);
+
+		public:
+			/// <summary>Frees the memory of all blocks.</summary>
+			~LightObjectManager();
+
+			/// <summary>Adds a light to be managed.</summary>
+			/// <param name="obj">The light to be managed.</param>
+			void add(LightObject* obj);
+		};
+
+
+		// An object shaped like a rectangular prism that projects light.
+		class CubeLightObject : public LightObject
+		{
+		protected:
+			// The light's data.
+			CubeLight m_Light;
+
+		public:
+			/// <summary>Constructs a light object.</summary>
+			/// <param name="position">The position of the light object.</param>
+			/// <param name="dimensions">The dimensions of the light object.</param>
+			/// <param name="color">The color of the light.</param>
+			/// <param name="intensity">The intensity of the light's highlight. A number from -1 (for no light) to 0 (for no highlight) to 1 (for a very intense highlight).<param>
+			/// <param name="radius">The maximum radius of the light.</param>
+			CubeLightObject(const vec3i& position, const vec3i& dimensions, const vec3f& color, Float intensity, Int radius);
+
+			/// <summary>Retrieves a pointer to the data about the light.</summary>
+			/// <returns>A pointer to the data about the light.</returns>
+			const Light* get_light() const;
+
+			/// <summary>Toggles whether the light is being used or not.<summary>
+			/// <param name="on">True if the light should be activated, false if it should be turned off.</param>
+			virtual void toggle(bool on);
+		};
+
+		class CubeLightObjectGenerator : public ObjectGenerator
+		{
+		protected:
+			// The dimensions of the light.
+			vec3i m_Dimensions;
+
+			// The color of the light.
+			vec3f m_Color;
+
+			// The intensity of the light.
+			Float m_Intensity;
+
+			// The radius of the light.
+			Int m_Radius;
+
+		public:
+			CubeLightObjectGenerator(std::string id, const _StringData& params);
+
+			Object* generate(const _StringData& params) const;
+		};
+
+	}
 
 }

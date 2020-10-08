@@ -28,7 +28,7 @@ float CalcLightStrength(vec2 pos, vec3 dir, float intensity, float maxDistance, 
         float edgeDiffuseStrength = 0.081024 * strengthPerLevel;
         float attenuation = max((dir.z / (maxDistance * edgeDiffuseStrength)) - 1.0, 0.0) * pow(distance / maxDistance, 5.0);
         float baseDiffuseStrength = dir.z / distance;
-        float baseStrength = baseDiffuseStrength / (1.0 + attenuation);
+        float baseStrength = baseDiffuseStrength * maxStrength / (1.0 + attenuation);
         
         // Calculate the discretized strength of the light
         float strength = strengthPerLevel * round(baseStrength / strengthPerLevel);

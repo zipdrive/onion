@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <regex>
 #include "../../../include/onions/error.h"
 #include "../../../include/onions/world/camera.h"
 #include "../../../include/onions/world/chunk.h"
@@ -413,10 +414,115 @@ namespace onion
 				m_BasicFlatTileShader = new Shader<FLOAT_MAT4, Int, Int>("world/flat_tile_basic");
 		}
 
+		void FlatChunk::__load_tile(const _StringData& line, FlatChunk::buffer_t* data)
+		{
+			int x, y;
+			if (line.get("x", x) && line.get("y", y))
+			{
+				int dx, dy;
+				if (!line.get("dx", dx))
+					dx = 1;
+				if (!line.get("dy", dy))
+					dy = 1;
+
+				if (x + dx >= m_Dimensions.get(0) || y + dy >= m_Dimensions.get(1))
+				{
+					// Resize the dimensions of the vertex array in the buffer
+
+					int ddx = max(x + dx - m_Dimensions.get(0), 0);
+					int ddy = max(y + dy - m_Dimensions.get(1), 0);
+
+					if (ddx > 0)
+					{
+						if (m_Dimensions.get(0) == 0)
+						{
+							if (m_Dimensions.get(1) > 0)
+							{
+								data->push(6 * ddx * m_Dimensions.get(1));
+							}
+						}
+						else
+						{
+							// Resize the number of vertices per row in the buffer
+							int index = get_index(m_Dimensions.get(0), 1);
+							for (int r = 0; r < m_Dimensions.get(1) - 1; ++r)
+							{
+								data->insert(index, 6 * ddx);
+								index += m_Dimensions.get(0) + ddx;
+							}
+							data->push(6 * ddx);
+						}
+					}
+
+					if (ddy > 0)
+					{
+						data->push(6 * (m_Dimensions.get(0) + ddx) * ddy);
+					}
+
+					m_Dimensions += vec2i(ddx, ddy);
+				}
+
+				int sprite; // The index of the sprite for the tile
+				if (line.get("sprite", sprite))
+				{
+					int sprite_rot; // The rotation of the tile's sprite from its default orientation
+					if (!line.get("sprite_rot", sprite_rot))
+						sprite_rot = 0;
+
+					const opengl::_Image* img = get_tile_image();
+					int sx = (sprite % (img->get_width() / m_TileSize)) * m_TileSize;
+					int sy = (sprite / (img->get_height() / m_TileSize)) * m_TileSize;
+
+					float l = (float)sx / img->get_width();
+					float r = (float)(sx + m_TileSize) / img->get_width();
+					float t = (float)sy / img->get_height();
+					float b = (float)(sy + m_TileSize) / img->get_height();
+
+					vec2f uv[4];
+					uv[TILE_CORNER_BOTTOM_LEFT] = vec2f(l, b);
+					uv[TILE_CORNER_BOTTOM_RIGHT] = vec2f(r, b);
+					uv[TILE_CORNER_TOP_RIGHT] = vec2f(r, t);
+					uv[TILE_CORNER_TOP_LEFT] = vec2f(l, t);
+
+					for (int i = x; i < x + dx; ++i)
+					{
+						for (int j = y; j < y + dy; ++j)
+						{
+							int index = 6 * get_index(i, j);
+
+							data->set<1>(index + 0, uv[(TILE_CORNER_BOTTOM_LEFT + sprite_rot) % 4]);
+							data->set<1>(index + 1, uv[(TILE_CORNER_BOTTOM_RIGHT + sprite_rot) % 4]);
+							data->set<1>(index + 2, uv[(TILE_CORNER_TOP_RIGHT + sprite_rot) % 4]);
+
+							data->set<1>(index + 3, uv[(TILE_CORNER_BOTTOM_LEFT + sprite_rot) % 4]);
+							data->set<1>(index + 4, uv[(TILE_CORNER_TOP_LEFT + sprite_rot) % 4]);
+							data->set<1>(index + 5, uv[(TILE_CORNER_TOP_RIGHT + sprite_rot) % 4]);
+						}
+					}
+				}
+			}
+		}
+
+		void FlatChunk::__load_obj(std::string id, const _StringData& line)
+		{
+			Object* obj = ObjectGenerator::generate(id, line);
+
+			if (LightObject* lightobj = static_cast<LightObject*>(obj))
+			{
+				m_LightManager.add(lightobj);
+			}
+
+			const vec3i& pos = obj->get_bounds()->get_position();
+
+			// TODO
+		}
+
 		opengl::_VertexBufferData* FlatChunk::__load()
 		{
-			using buffer_t = VertexBufferData<matrix<float, 2, 1>, matrix<float, 2, 1>>;
 			buffer_t* data = new buffer_t();
+
+			regex tile_regex("^tile");
+			regex obj_regex("^obj\\s+(.*)");
 
 			string fpath = string("res/data/world/") + m_Path;
 			LoadFile file(fpath);
@@ -425,94 +531,21 @@ namespace onion
 				_StringData line;
 				string id = file.load_data(line);
 
-				string img;
-				if (line.get("sprites", img))
-					set_tile_image(img);
-
-				int x, y;
-				if (line.get("x", x) && line.get("y", y))
+				smatch match;
+				if (regex_match(id, match, tile_regex))
 				{
-					int dx, dy;
-					if (!line.get("dx", dx))
-						dx = 1;
-					if (!line.get("dy", dy))
-						dy = 1;
-
-					if (x + dx >= m_Dimensions.get(0) || y + dy >= m_Dimensions.get(1))
-					{
-						// Resize the dimensions of the vertex array in the buffer
-
-						int ddx = max(x + dx - m_Dimensions.get(0), 0);
-						int ddy = max(y + dy - m_Dimensions.get(1), 0);
-
-						if (ddx > 0)
-						{
-							if (m_Dimensions.get(0) == 0)
-							{
-								if (m_Dimensions.get(1) > 0)
-								{
-									data->push(6 * ddx * m_Dimensions.get(1));
-								}
-							}
-							else
-							{
-								// Resize the number of vertices per row in the buffer
-								int index = get_index(m_Dimensions.get(0), 1);
-								for (int r = 0; r < m_Dimensions.get(1) - 1; ++r)
-								{
-									data->insert(index, 6 * ddx);
-									index += m_Dimensions.get(0) + ddx;
-								}
-								data->push(6 * ddx);
-							}
-						}
-
-						if (ddy > 0)
-						{
-							data->push(6 * (m_Dimensions.get(0) + ddx) * ddy);
-						}
-						
-						m_Dimensions += vec2i(ddx, ddy);
-					}
-
-					int sprite; // The index of the sprite for the tile
-					if (line.get("sprite", sprite))
-					{
-						int sprite_rot; // The rotation of the tile's sprite from its default orientation
-						if (!line.get("sprite_rot", sprite_rot))
-							sprite_rot = 0;
-
-						const opengl::_Image* img = get_tile_image();
-						int sx = (sprite % (img->get_width() / m_TileSize)) * m_TileSize;
-						int sy = (sprite / (img->get_height() / m_TileSize)) * m_TileSize;
-
-						float l = (float)sx / img->get_width();
-						float r = (float)(sx + m_TileSize) / img->get_width();
-						float t = (float)sy / img->get_height();
-						float b = (float)(sy + m_TileSize) / img->get_height();
-
-						vec2f uv[4];
-						uv[TILE_CORNER_BOTTOM_LEFT] = vec2f(l, b);
-						uv[TILE_CORNER_BOTTOM_RIGHT] = vec2f(r, b);
-						uv[TILE_CORNER_TOP_RIGHT] = vec2f(r, t);
-						uv[TILE_CORNER_TOP_LEFT] = vec2f(l, t);
-
-						for (int i = x; i < x + dx; ++i)
-						{
-							for (int j = y; j < y + dy; ++j)
-							{
-								int index = 6 * get_index(i, j);
-
-								data->set<1>(index + 0, uv[(TILE_CORNER_BOTTOM_LEFT + sprite_rot) % 4]);
-								data->set<1>(index + 1, uv[(TILE_CORNER_BOTTOM_RIGHT + sprite_rot) % 4]);
-								data->set<1>(index + 2, uv[(TILE_CORNER_TOP_RIGHT + sprite_rot) % 4]);
-
-								data->set<1>(index + 3, uv[(TILE_CORNER_BOTTOM_LEFT + sprite_rot) % 4]);
-								data->set<1>(index + 4, uv[(TILE_CORNER_TOP_LEFT + sprite_rot) % 4]);
-								data->set<1>(index + 5, uv[(TILE_CORNER_TOP_RIGHT + sprite_rot) % 4]);
-							}
-						}
-					}
+					__load_tile(line, data);
+				}
+				else if (regex_match(id, match, obj_regex))
+				{
+					id = match[1].str();
+					__load_obj(id, line);
+				}
+				else
+				{
+					string img;
+					if (line.get("sprites", img))
+						set_tile_image(img);
 				}
 			}
 

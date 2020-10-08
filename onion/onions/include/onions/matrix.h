@@ -11,6 +11,9 @@ namespace onion
 	using Float = primitive<float>;
 	using Double = primitive<double>;
 
+	using Char = primitive<char>;
+	using String = primitive<std::string>;
+
 
 	// A matrix of numeric values
 	template <typename T, int _Columns, int _Rows>
@@ -223,7 +226,7 @@ namespace onion
 		/// <summary>Checks whether this matrix is equal to another one.</summary>
 		/// <param name="other">The other matrix.</param>
 		/// <returns>True if both matrices are equal, false otherwise.</returns>
-		bool operator==(const matrix<T, _Columns, _Rows>& other)
+		bool operator==(const matrix<T, _Columns, _Rows>& other) const
 		{
 			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 			{
@@ -237,7 +240,7 @@ namespace onion
 		/// <summary>Checks whether this matrix is not equal to another one.</summary>
 		/// <param name="other">The other matrix.</param>
 		/// <returns>True if the matrices are not equal, false if they are.</returns>
-		bool operator!=(const matrix<T, _Columns, _Rows>& other)
+		bool operator!=(const matrix<T, _Columns, _Rows>& other) const
 		{
 			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 			{
@@ -413,27 +416,6 @@ namespace onion
 			set(1, 0, m.get(1));
 		}
 
-		template <typename U>
-		vec2(const vec2<U>& v)
-		{
-			set(0, 0, v.get(0));
-			set(1, 0, v.get(1));
-		}
-	
-		template <typename U>
-		vec2(const vec3<U>& v)
-		{
-			set(0, 0, v.get(0));
-			set(1, 0, v.get(1));
-		}
-
-		template <typename U>
-		vec2(const vec4<U>& v)
-		{
-			set(0, 0, v.get(0));
-			set(1, 0, v.get(1));
-		}
-
 
 		vec2& operator=(const matrix<T, 2, 1>& other)
 		{
@@ -465,27 +447,11 @@ namespace onion
 		}
 
 		template <typename U>
-		vec3(const vec2<U>& v, T a3)
+		vec3(const matrix<U, 2, 1>& v, T a3)
 		{
 			set(0, 0, v.get(0));
 			set(1, 0, v.get(1));
 			set(2, 0, a3);
-		}
-
-		template <typename U>
-		vec3(const vec3<U>& v)
-		{
-			set(0, 0, v.get(0));
-			set(1, 0, v.get(1));
-			set(2, 0, v.get(2));
-		}
-	
-		template <typename U>
-		vec3(const vec4<U>& v)
-		{
-			set(0, 0, v.get(0));
-			set(1, 0, v.get(1));
-			set(2, 0, v.get(2));
 		}
 
 
@@ -532,7 +498,7 @@ namespace onion
 		}
 
 		template <typename U>
-		vec4(const vec2<U>& v, T a3, T a4)
+		vec4(const matrix<U, 2, 1>& v, T a3, T a4)
 		{
 			set(0, 0, v.get(0));
 			set(1, 0, v.get(1));
@@ -541,21 +507,12 @@ namespace onion
 		}
 
 		template <typename U>
-		vec4(const vec3<U>& v, T a4)
+		vec4(const matrix<U, 3, 1>& v, T a4)
 		{
 			set(0, 0, v.get(0));
 			set(1, 0, v.get(1));
 			set(2, 0, v.get(2));
 			set(3, 0, a4);
-		}
-
-		template <typename U>
-		vec4(const vec4<U>& v)
-		{
-			set(0, 0, v.get(0));
-			set(1, 0, v.get(1));
-			set(2, 0, v.get(2));
-			set(3, 0, v.get(3));
 		}
 
 
@@ -1013,6 +970,24 @@ namespace onion
 		/// <summary>Multiplies the current matrix by a custom transformation.</summary>
 		/// <param name="matrix">The custom transformation matrix.</param>
 		void custom(const TransformMatrix& matrix);
+	};
+
+}
+
+namespace std
+{
+
+	template <typename T, int _Columns, int _Rows>
+	struct hash<onion::matrix<T, _Columns, _Rows>>
+	{
+		size_t operator()(const onion::matrix<T, _Columns, _Rows>& value) const noexcept
+		{
+			hash<T> hasher;
+			size_t res = 0;
+			for (int k = (_Columns * _Rows) - 1; k >= 0; --k)
+				res = hasher(value.get(k)) ^ (res << 1);
+			return res;
+		}
 	};
 
 }

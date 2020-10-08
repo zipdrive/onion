@@ -1,0 +1,1 @@
+DEBUG light1                type = "light, cube"    color = "230,115,38"   intensity = "100"      radius = "250"

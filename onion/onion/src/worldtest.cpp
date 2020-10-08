@@ -8,9 +8,12 @@ void worldtest_main()
 	world::Chunk::set_tile_size(16);
 
 	world::Chunk* chunk = new world::FlatChunk("debug.txt");
+	world::World* world = new world::BasicWorld(chunk);
+	set_state(new world::WorldState(world));
 
-	Lighting::set_ambient_light(vec3f(0.04f, 0.13f, 0.27f));//(vec3f(0.05f, 0.05f, 0.1f));
+	Lighting::set_ambient_light(vec3f(0.04f, 0.13f, 0.27f));
 
+	/*
 	CubeLight* light = new CubeLight();
 	light->mins = vec3f(200.f, 200.f, 50.f);
 	light->maxs = vec3f(240.f, 210.f, 50.f);
@@ -25,8 +28,7 @@ void worldtest_main()
 
 	Lighting::add(light);
 	Lighting::add(light2);
+	*/
 
-	world::World* world = new world::BasicWorld(chunk);
-	set_state(new world::WorldState(world));
 	state_main();
 }

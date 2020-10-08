@@ -2,11 +2,13 @@
 #include <unordered_set>
 #include "../matrix.h"
 #include "object.h"
+#include "lighting.h"
 
 namespace onion
 {
 	namespace world
 	{
+
 
 
 #define TILE_CORNER_BOTTOM_LEFT		0
@@ -73,6 +75,10 @@ namespace onion
 			vec2i m_Dimensions;
 
 
+			// Manages each light in the chunk.
+			LightObjectManager m_LightManager;
+
+
 			// The path to the chunk's data, from the res/data/world/ folder.
 			const char* m_Path;
 
@@ -128,6 +134,8 @@ namespace onion
 		class FlatChunk : public Chunk
 		{
 		protected:
+			using buffer_t = VertexBufferData<matrix<float, 2, 1>, matrix<float, 2, 1>>;
+
 			// 
 			static Shader<FLOAT_MAT4, Int, Int>* m_BasicFlatTileShader;
 
@@ -142,6 +150,17 @@ namespace onion
 			/// <summary>Loads the chunk from file.</summary>
 			/// <returns>The vertex data for the buffer.</returns>
 			virtual opengl::_VertexBufferData* __load();
+
+			/// <summary>Loads the data of a tile.</summary>
+			/// <param name="line">The data loaded from a line in the file.</param>
+			/// <param name="data">The buffer of data.</param>
+			virtual void __load_tile(const _StringData& line, buffer_t* data);
+
+			/// <summary>Loads the data of a static object.</summary>
+			/// <param name="id">The ID of the object.</param>
+			/// <param name="line">The data loaded from a line in the file.</param>
+			/// <param name="data">The buffer of data.</param>
+			virtual void __load_obj(std::string id, const _StringData& line);
 
 		public:
 			/// <summary>Constructs a chunk.</summary>
