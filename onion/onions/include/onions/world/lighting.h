@@ -1,6 +1,7 @@
 #pragma once
 #include <unordered_set>
 #include "../graphics/shader.h"
+#include "camera.h"
 #include "object.h"
 
 namespace onion
@@ -86,7 +87,7 @@ namespace onion
 		public:
 			/// <summary>Constructs an object that projects light.</summary>
 			/// <param name="bounds">The bounds of the object.</param>
-			LightObject(Bounds* bounds);
+			LightObject(Shape* bounds);
 
 			/// <summary>Retrieves a pointer to the data about the light.</summary>
 			/// <returns>A pointer to the data about the light.</returns>
@@ -95,42 +96,6 @@ namespace onion
 			/// <summary>Toggles whether the light is being used or not.<summary>
 			/// <param name="on">True if the light should be activated, false if it should be turned off.</param>
 			virtual void toggle(bool on) = 0;
-		};
-
-		class LightObjectManager
-		{
-		private:
-			// A cube that stores all lights that should be turned on when the cube is displayed.
-			struct Block
-			{
-				// The point at the center of the cube.
-				vec3i center;
-
-				// All lights that illuminate a point within the cube.
-				std::unordered_set<LightObject*> objects;
-			};
-
-			// The size of each block.
-			static Int m_BlockSize;
-
-			// A map of all stored blocks.
-			std::unordered_map<vec3i, Block*, std::hash<INT_VEC3>> m_Blocks;
-
-			
-			/// <summary>Inserts a light object into the block with the specified index, if and only if the light illuminates that block.</summary>
-			/// <param name="index">The index of the block.</param>
-			/// <param name="obj">The light object.</param>
-			/// <returns>True if the light illuminated the block with the specified index, false otherwise.</returns>
-			template <int N>
-			bool insert(const vec3i& index, LightObject* obj);
-
-		public:
-			/// <summary>Frees the memory of all blocks.</summary>
-			~LightObjectManager();
-
-			/// <summary>Adds a light to be managed.</summary>
-			/// <param name="obj">The light to be managed.</param>
-			void add(LightObject* obj);
 		};
 
 

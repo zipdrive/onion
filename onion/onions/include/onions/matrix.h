@@ -361,10 +361,21 @@ namespace onion
 	class vec : public matrix<T, N, 1>
 	{
 	public:
+		/// <summary>Multiplies each element of two vectors.</summary>
+		/// <param name="other">The other vector.</param>
+		/// <returns>The element-wise multiplication of two vectors.</returns>
+		vec<T, N> operator*(const matrix<T, N, 1>& other) const
+		{
+			vec<T, N> res;
+			for (int k = N - 1; k >= 0; --k)
+				res.set(k, 0, get(k) * other.get(k));
+			return res;
+		}
+
 		/// <summary>Computes the dot product of two vectors.</summary>
 		/// <param name="other">The other vector.</param>
 		/// <returns>The dot product of the two vectors.</returns>
-		T operator*(const matrix<T, N, 1>& other) const
+		T dot(const matrix<T, N, 1>& other) const
 		{
 			T sum = 0;
 			for (int k = N - 1; k >= 0; --k)
@@ -465,7 +476,7 @@ namespace onion
 		/// <summary>Computes the cross product of this three-dimensional vector with another.</summary>
 		/// <param name="other">The vector on the right-hand side of the cross product.</param>
 		/// <param name="result">Outputs the cross product of the two vectors.</param>
-		void cross(const matrix<T, 3, 1>& other, matrix<T, 3, 1>& result)
+		void cross(const matrix<T, 3, 1>& other, matrix<T, 3, 1>& result) const
 		{
 			result.set(0, 0, (get(1) * other.get(2)) - (get(2) * other.get(1)));
 			result.set(1, 0, (get(2) * other.get(0)) - (get(0) * other.get(2)));

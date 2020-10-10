@@ -52,7 +52,7 @@ namespace onion
 	}
 
 
-	void OrthogonalCamera::__activate() const
+	void OrthogonalCamera::__activate()
 	{
 		Application* app = get_application_settings();
 		Transform::projection.ortho(0.f, app->width, 0.f, app->height, -app->width, app->width);

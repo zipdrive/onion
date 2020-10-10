@@ -10,11 +10,14 @@ namespace onion
 	{
 
 		// Handles loading and displaying chunks
-		class World : public Frame
+		class World : public Frame, public UpdateListener
 		{
 		protected:
 			// The camera that displays the world.
 			WorldCamera* m_Camera;
+
+			/// <summary>Resets what is visible in response to a camera update.</summary>
+			virtual void reset_camera() = 0;
 
 		public:
 			/// <summary>Sets up the camera.</summary>
@@ -55,6 +58,12 @@ namespace onion
 		protected:
 			// The current chunk loaded into memory.
 			Chunk* m_Chunk;
+
+			/// <summary>Updates what is visible in response to a camera update.</summary>
+			void reset_camera();
+
+			/// <summary>Updates the world.</summary>
+			void update(int frames_passed);
 
 			/// <summary>Displays the world.</summary>
 			void __display() const;

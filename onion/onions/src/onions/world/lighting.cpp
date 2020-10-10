@@ -93,107 +93,11 @@ namespace onion
 	namespace world
 	{
 
-		LightObject::LightObject(Bounds* bounds) : Object(bounds) {}
-
-
-		Int LightObjectManager::m_BlockSize{ UNITS_PER_PIXEL * 200 };
-		
-		LightObjectManager::~LightObjectManager()
-		{
-			for (auto iter = m_Blocks.begin(); iter != m_Blocks.end(); ++iter)
-				delete iter->second;
-		}
-
-		template <int N>
-		bool LightObjectManager::insert(const vec3i& base_index, LightObject* obj)
-		{
-			if (!insert<N - 1>(base_index, obj))
-				return false;
-
-			// Iterate in the positive nth-direction
-			vec3i index = base_index;
-			do
-			{
-				++index(N);
-			} 
-			while (insert<N - 1>(index, obj));
-
-			// Iterate in the negative nth-direction
-			index = base_index;
-			do
-			{
-				--index(N);
-			} 
-			while (!(N == 2 && index.get(N) < 0) // Ignore negative z-indices
-				&& insert<N - 1>(index, obj));
-
-			if (base_index == index)
-				return false;
-
-			return true;
-		}
-		
-		template <>
-		bool LightObjectManager::insert<-1>(const vec3i& index, LightObject* obj)
-		{
-			// Calculate the center of the block
-			vec3i center;
-			for (int k = 2; k >= 0; --k)
-				center(k) = (index.get(k) * m_BlockSize) + (m_BlockSize / 2);
-
-			// Find the closest point on the light to the block
-			vec3i closest;
-			obj->get_bounds()->get_closest_point(center, closest);
-			
-			// Get the minimal difference vector between the light and the block
-			vec3i diff;
-			for (int k = 2; k >= 0; --k)
-			{
-				if (closest.get(k) < index.get(k) * m_BlockSize)
-					diff(k) = (index.get(k) * m_BlockSize) - closest.get(k);
-				else if (closest.get(k) > (index.get(k) + 1) * m_BlockSize)
-					diff(k) = ((index.get(k) + 1) * m_BlockSize) - closest.get(k);
-				else
-					diff(k) = 0;
-			}
-
-			// If the (squared) length of the minimal difference vector is less than or equal to the (squared) radius of the light, then add it to the block
-			Int radius = obj->get_light()->radius;
-			if (diff.square_sum() < radius * radius)
-			{
-				auto iter = m_Blocks.find(index);
-				if (iter != m_Blocks.end())
-				{
-					// Insert the light into an existing block
-					iter->second->objects.insert(obj);
-				}
-				else
-				{
-					// Construct a new block, then insert the light
-					Block* block = new Block();
-					block->center = center;
-					block->objects.insert(obj);
-					m_Blocks.emplace(index, block);
-				}
-
-				obj->toggle(true);
-				return true;
-			}
-
-			return false;
-		}
-		
-		void LightObjectManager::add(LightObject* obj)
-		{
-			const vec3i& pos = obj->get_bounds()->get_position();
-
-			vec3i base_index(pos.get(0) / m_BlockSize, pos.get(1) / m_BlockSize, pos.get(2) / m_BlockSize);
-			insert<2>(base_index, obj);
-		}
+		LightObject::LightObject(Shape* bounds) : Object(bounds) {}
 
 
 		CubeLightObject::CubeLightObject(const vec3i& position, const vec3i& dimensions, const vec3f& color, Float intensity, Int radius) :
-			LightObject(new RectangleBounds(position, dimensions))
+			LightObject(new RectangularPrism(position, dimensions))
 		{
 			m_Light.mins = vec3f(
 				position.get(0) / UNITS_PER_PIXEL, 

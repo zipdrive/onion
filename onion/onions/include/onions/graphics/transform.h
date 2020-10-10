@@ -42,7 +42,7 @@ namespace onion
 
 	protected:
 		/// <summary>Sets up the camera projection.</summary>
-		virtual void __activate() const = 0;
+		virtual void __activate() = 0;
 
 	public:
 		/// <summary>Checks whether this is the active camera.</summary>
@@ -58,7 +58,7 @@ namespace onion
 	{
 	protected:
 		/// <summary>Sets up an orthogonal camera projection.</summary>
-		virtual void __activate() const;
+		virtual void __activate();
 	};
 
 }

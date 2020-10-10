@@ -1,17 +1,32 @@
 #pragma once
 #include "../matrix.h"
 #include "../graphics/transform.h"
+#include "geometry.h"
 
 namespace onion
 {
 	namespace world
 	{
 
+
 #define UNITS_PER_PIXEL 32
 
 		// A method of projecting model space onto the screen.
 		class WorldCamera : public Camera
 		{
+		public:
+			// The geometry of the space visible from the camera.
+			struct View
+			{
+				// The ray through the center of the screen, pointing away from the screen.
+				Ray center;
+
+				/// <summary>The four planes marking the edges of the view perspective.
+				/// The normals for each plane point inwards, towards the center.
+				/// The dot product of any visible point with the normal of any plane will be greater than the dot product of any point on the plane with the normal for that plane.</summary>
+				Plane edges[4];
+			};
+
 		protected:
 			// The bounds of the frame that the camera belongs to.
 			const mat2x3i& m_FrameBounds;
@@ -19,6 +34,9 @@ namespace onion
 
 			// The camera position.
 			vec3i m_Position;
+
+			// The space visible from the camera.
+			View m_View;
 
 		public:
 			/// <summary>Constructs a camera object.</summary>
@@ -42,6 +60,10 @@ namespace onion
 			virtual void translate(const vec3i& trans);
 
 
+			/// <summary>Retrieves the visible space.</summary>
+			/// <param name="view">Outputs the space visible from the camera.</param>
+			const View& get_view() const;
+
 			/// <summary>Retrieves the 2D direction that model space is being viewed from.</summary>
 			/// <param name="direction">Outputs the direction facing towards the camera. Each element is equal to:
 			/// +1 if the positive axis is facing towards the camera;
@@ -56,7 +78,7 @@ namespace onion
 		{
 		protected:
 			/// <summary>Sets up the camera projection.</summary>
-			void __activate() const;
+			void __activate();
 
 		public:
 			/// <summary>Constructs a top-down camera object.</summary>
@@ -84,7 +106,7 @@ namespace onion
 			float m_SideViewAngle;
 
 			/// <summary>Sets up the camera projection.</summary>
-			void __activate() const;
+			void __activate();
 
 		public:
 			/// <summary>Constructs a top-down camera object.</summary>

@@ -2,3 +2,6 @@ sprites = "debug.png"
 
 tile                            x = "0"     y = "0"     dx = "25"   dy = "25"   sprite = "1"
 tile                            x = "1"     y = "1"     dx = "2"    dy = "2"    sprite = "6"    sprite_rot = "1"
+
+obj DEBUG light1                x = "150"   y = "150"   z = "30"
+obj DEBUG light1                x = "250"   y = "150"   z = "120"

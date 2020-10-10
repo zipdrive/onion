@@ -505,16 +505,10 @@ namespace onion
 
 		void FlatChunk::__load_obj(std::string id, const _StringData& line)
 		{
-			Object* obj = ObjectGenerator::generate(id, line);
-
-			if (LightObject* lightobj = static_cast<LightObject*>(obj))
+			if (Object* obj = ObjectGenerator::generate(id, line))
 			{
-				m_LightManager.add(lightobj);
+				m_Manager.add(obj);
 			}
-
-			const vec3i& pos = obj->get_bounds()->get_position();
-
-			// TODO
 		}
 
 		opengl::_VertexBufferData* FlatChunk::__load()
@@ -592,6 +586,21 @@ namespace onion
 			m_BasicFlatTileShader->activate(Transform::model.get(), 0, 1);
 			get_tile_image()->activate(0);
 			get_bluenoise_image()->activate(1);
+		}
+
+		void FlatChunk::reset_visible(const WorldCamera::View& view)
+		{
+			m_Manager.reset_visible(view);
+		}
+
+		void FlatChunk::update_visible(const WorldCamera::View& view)
+		{
+			m_Manager.update_visible(view);
+		}
+
+		void FlatChunk::display_objects() const
+		{
+			m_Manager.display();
 		}
 
 

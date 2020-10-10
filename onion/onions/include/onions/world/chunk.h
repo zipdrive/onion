@@ -2,13 +2,12 @@
 #include <unordered_set>
 #include "../matrix.h"
 #include "object.h"
-#include "lighting.h"
+#include "manager.h"
 
 namespace onion
 {
 	namespace world
 	{
-
 
 
 #define TILE_CORNER_BOTTOM_LEFT		0
@@ -75,10 +74,6 @@ namespace onion
 			vec2i m_Dimensions;
 
 
-			// Manages each light in the chunk.
-			LightObjectManager m_LightManager;
-
-
 			// The path to the chunk's data, from the res/data/world/ folder.
 			const char* m_Path;
 
@@ -126,8 +121,17 @@ namespace onion
 			void unload();
 
 
+			/// <summary>Resets what is visible, in response to the view changing.</summary>
+			virtual void reset_visible(const WorldCamera::View& view) = 0;
+
+			/// <summary>Updates what is visible, in response to the passage of time.</summary>
+			virtual void update_visible(const WorldCamera::View& view) = 0;
+
 			/// <summary>Displays tiles in the chunk.</summary>
 			void display_tiles() const;
+
+			/// <summary>Displays objects in the chunk.</summary>
+			virtual void display_objects() const = 0;
 		};
 
 
@@ -145,6 +149,10 @@ namespace onion
 
 			/// <summary>Activates and sets the uniforms for the tile shader.</summary>
 			virtual void activate_tile_shader() const;
+
+
+			// Manages all objects for the chunk.
+			ObjectManager m_Manager;
 
 
 			/// <summary>Loads the chunk from file.</summary>
@@ -173,6 +181,16 @@ namespace onion
 			/// <param name="y">The y-coordinate in the world.</param>
 			/// <returns>The z-coordinate of the ground at the given world coordinates.</returns>
 			int get_tile_height(int x, int y) const;
+
+
+			/// <summary>Resets what is visible, in response to the view changing.</summary>
+			void reset_visible(const WorldCamera::View& view);
+
+			/// <summary>Updates what is visible, in response to the passage of time.</summary>
+			void update_visible(const WorldCamera::View& view);
+
+			/// <summary>Displays objects in the chunk.</summary>
+			void display_objects() const;
 		};
 
 

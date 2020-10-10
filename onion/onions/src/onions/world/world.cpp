@@ -45,11 +45,25 @@ namespace onion
 
 			m_Camera = new StaticTopDownWorldCamera(m_Bounds);
 			m_Camera->set_position(vec3i(200, 200, 0));
+			reset_camera();
+
+			unfreeze(INT_MAX);
+		}
+
+		void BasicWorld::reset_camera()
+		{
+			m_Chunk->reset_visible(m_Camera->get_view());
+		}
+
+		void BasicWorld::update(int frames_passed)
+		{
+			m_Chunk->update_visible(m_Camera->get_view());
 		}
 		
 		void BasicWorld::__display() const
 		{
 			// Display the chunk
+			m_Chunk->display_objects();
 			m_Chunk->display_tiles();
 		}
 

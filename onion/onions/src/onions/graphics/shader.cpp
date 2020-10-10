@@ -564,7 +564,7 @@ namespace onion
 		template <typename T>
 		void _UniformBlockAttribute<T>::set(const T& value) const 
 		{
-			T* ptr = (T*)glMapBufferRange(GL_UNIFORM_BUFFER, m_Offset, type_size<T>::whole, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+			T* ptr = (T*)glMapBufferRange(GL_UNIFORM_BUFFER, m_Offset, type_size<T>::whole, GL_MAP_WRITE_BIT);//GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
 			*ptr = value;
 			glUnmapBuffer(GL_UNIFORM_BUFFER);
 		}
@@ -582,7 +582,7 @@ namespace onion
 
 			void set(const matrix<_Number, _Columns, _Rows>& value) const 
 			{
-				_Number* ptr = (_Number*)glMapBufferRange(GL_UNIFORM_BUFFER, m_Offset, type_size<matrix<_Number, _Columns, _Rows>>::whole, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+				_Number* ptr = (_Number*)glMapBufferRange(GL_UNIFORM_BUFFER, m_Offset, type_size<matrix<_Number, _Columns, _Rows>>::whole, GL_MAP_WRITE_BIT);// GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
 				for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 					ptr[k] = value.get(k);
 				glUnmapBuffer(GL_UNIFORM_BUFFER);

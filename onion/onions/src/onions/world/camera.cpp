@@ -12,6 +12,11 @@ namespace onion
 		{
 			return m_Position;
 		}
+
+		const WorldCamera::View& WorldCamera::get_view() const
+		{
+			return m_View;
+		}
 		
 		void WorldCamera::set_position(const vec3i& position)
 		{
@@ -38,9 +43,11 @@ namespace onion
 
 
 
-		StaticTopDownWorldCamera::StaticTopDownWorldCamera(const mat2x3i& frame_bounds) : WorldCamera(frame_bounds) {}
+		StaticTopDownWorldCamera::StaticTopDownWorldCamera(const mat2x3i& frame_bounds) : WorldCamera(frame_bounds) 
+		{
+		}
 		
-		void StaticTopDownWorldCamera::__activate() const
+		void StaticTopDownWorldCamera::__activate()
 		{
 			// Create a pixel-perfect orthogonal projection centered in the middle of the screen
 			vec3i halves(
@@ -65,6 +72,33 @@ namespace onion
 			
 			// Center the camera at its position in model space
 			Transform::view.translate(-m_Position.get(0), -m_Position.get(1), -m_Position.get(2));
+
+
+			// Construct a raycast through the center of the screen
+			m_View.center.origin = m_Position;
+			m_View.center.direction = vec3i(0, -1, 1);
+			
+			// Construct a position for the bottom-left and top-right corners
+			vec3i bottom_left = m_Position - halves;
+			bottom_left(2) = m_Position.get(2);
+			vec3i top_right = m_Position + halves;
+			top_right(2) = m_Position.get(2);
+
+			// Construct the plane for the left edge
+			m_View.edges[0].normal = vec3i(1, 0, 0);
+			m_View.edges[0].dot = m_View.edges[0].normal.dot(bottom_left);
+
+			// Construct the plane for the right edge
+			m_View.edges[1].normal = vec3i(-1, 0, 0);
+			m_View.edges[1].dot = m_View.edges[1].normal.dot(top_right);
+
+			// Construct the plane for the top edge
+			m_View.edges[2].normal = vec3i(0, -1, -1);
+			m_View.edges[2].dot = m_View.edges[2].normal.dot(top_right);
+
+			// Construct the plane for the bottom edge
+			m_View.edges[3].normal = vec3i(0, 1, 1);
+			m_View.edges[3].dot = m_View.edges[3].normal.dot(bottom_left);
 		}
 
 		void StaticTopDownWorldCamera::get_view(vec2i& direction) const
@@ -75,7 +109,7 @@ namespace onion
 
 		DynamicAxonometricWorldCamera::DynamicAxonometricWorldCamera(const mat2x3i& frame_bounds, float top_view_angle, float side_view_angle) : m_TopViewAngle(top_view_angle), m_SideViewAngle(side_view_angle), WorldCamera(frame_bounds) {}
 
-		void DynamicAxonometricWorldCamera::__activate() const
+		void DynamicAxonometricWorldCamera::__activate()
 		{
 			// Create a pixel-perfect orthogonal projection centered in the middle of the screen
 			vec3i halves(
@@ -103,6 +137,10 @@ namespace onion
 
 			// Center the camera at its position in model space
 			Transform::view.translate(-m_Position.get(0), -m_Position.get(1), -m_Position.get(2));
+
+
+			// Construct the view
+			// TODO
 		}
 
 		void DynamicAxonometricWorldCamera::set_top(float angle)
