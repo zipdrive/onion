@@ -27,6 +27,9 @@ namespace onion
 			// The dimensions of each block.
 			static vec3i m_BlockDimensions;
 
+			// The maximum z-coordinate inspected.
+			static Int m_UpperBound;
+
 			// A map of all stored blocks.
 			std::unordered_map<vec3i, Block*, std::hash<INT_VEC3>> m_Blocks;
 

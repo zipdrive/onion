@@ -68,7 +68,7 @@ namespace onion
 
 
 			// The size of each tile.
-			static unsigned int m_TileSize;
+			static int m_TileSize;
 
 			// The number of tiles on each axis.
 			vec2i m_Dimensions;
@@ -103,11 +103,11 @@ namespace onion
 		public:
 			/// <summary>Retrieves the size of tiles in all chunks.</summary>
 			/// <returns>The size of tiles, in pixels.</returns>
-			static unsigned int get_tile_size();
+			static int get_tile_size();
 
 			/// <summary>Sets the size of tiles in all chunks.</summary>
 			/// <param name="size">The size of each tile.</param>
-			static void set_tile_size(unsigned int size);
+			static void set_tile_size(int size);
 
 
 			/// <summary>Constructs a chunk.</summary>

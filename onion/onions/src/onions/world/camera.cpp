@@ -29,31 +29,66 @@ namespace onion
 		
 		void WorldCamera::set_position(const vec3i& position)
 		{
-			m_Position = position;
-			
-			if (is_active())
-			{
-				Transform::view.identity();
-				Transform::view.translate(-position.get(0), -position.get(1), -position.get(2));
-				Transform::set_view();
-			}
+			translate(position - m_Position);
 		}
 		
 		void WorldCamera::translate(const vec3i& trans)
 		{
-			m_Position += trans;
-
-			if (is_active())
+			vec3i prior = m_Position;
+			vec3i current = prior + trans;
+			for (int k = 2; k >= 0; --k)
 			{
-				Transform::view.translate(-trans.get(0), -trans.get(1), -trans.get(2));
+				prior(k) /= UNITS_PER_PIXEL;
+				current(k) /= UNITS_PER_PIXEL;
+			}
+
+			vec3i diff = current - prior;
+			if (diff.square_sum() > 0 && is_active())
+			{
+				Transform::view.translate(-diff.get(0), -diff.get(1), -diff.get(2));
 				Transform::set_view();
 			}
+
+			m_Position += trans;
 		}
 
 
 
-		StaticTopDownWorldCamera::StaticTopDownWorldCamera(const mat2x3i& frame_bounds) : WorldCamera(frame_bounds) 
+		StaticTopDownWorldCamera::StaticTopDownWorldCamera(const mat2x3i& frame_bounds) : WorldCamera(frame_bounds) {}
+
+		void StaticTopDownWorldCamera::reset_view()
 		{
+			vec3i halves(
+				(m_FrameBounds.get(0, 1) - m_FrameBounds.get(0, 0)) / 2,
+				(m_FrameBounds.get(1, 1) - m_FrameBounds.get(1, 0)) / 2,
+				(m_FrameBounds.get(2, 1) - m_FrameBounds.get(2, 0)) / 2
+			);
+
+			// Construct a raycast through the center of the screen
+			m_View.center.origin = UNITS_PER_PIXEL * m_Position;
+			m_View.center.direction = vec3i(0, -1, 1);
+
+			// Construct a position for the bottom-left and top-right corners
+			vec3i bottom_left = m_Position - halves;
+			bottom_left(2) = m_Position.get(2);
+			vec3i top_right = m_Position + halves;
+			top_right(2) = m_Position.get(2);
+
+			// Construct the plane for the left edge
+			m_View.edges[LEFT_VIEW_EDGE].normal = vec3i(1, 0, 0);
+			m_View.edges[LEFT_VIEW_EDGE].dot = UNITS_PER_PIXEL * m_View.edges[LEFT_VIEW_EDGE].normal.dot(bottom_left);
+
+			// Construct the plane for the right edge
+			m_View.edges[RIGHT_VIEW_EDGE].normal = vec3i(-1, 0, 0);
+			m_View.edges[RIGHT_VIEW_EDGE].dot = UNITS_PER_PIXEL * m_View.edges[RIGHT_VIEW_EDGE].normal.dot(top_right);
+
+			// Construct the plane for the top edge
+			m_View.edges[TOP_VIEW_EDGE].normal = vec3i(0, -1, -1);
+			m_View.edges[TOP_VIEW_EDGE].dot = UNITS_PER_PIXEL * m_View.edges[TOP_VIEW_EDGE].normal.dot(top_right);
+
+			// Construct the plane for the bottom edge
+			m_View.edges[BOTTOM_VIEW_EDGE].normal = vec3i(0, 1, 1);
+			m_View.edges[BOTTOM_VIEW_EDGE].dot = UNITS_PER_PIXEL * m_View.edges[BOTTOM_VIEW_EDGE].normal.dot(bottom_left);
 		}
 		
 		void StaticTopDownWorldCamera::__activate()
@@ -83,31 +118,8 @@ namespace onion
 			Transform::view.translate(-m_Position.get(0), -m_Position.get(1), -m_Position.get(2));
 
 
-			// Construct a raycast through the center of the screen
-			m_View.center.origin = m_Position;
-			m_View.center.direction = vec3i(0, -1, 1);
-			
-			// Construct a position for the bottom-left and top-right corners
-			vec3i bottom_left = m_Position - halves;
-			bottom_left(2) = m_Position.get(2);
-			vec3i top_right = m_Position + halves;
-			top_right(2) = m_Position.get(2);
-
-			// Construct the plane for the left edge
-			m_View.edges[LEFT_VIEW_EDGE].normal = vec3i(1, 0, 0);
-			m_View.edges[LEFT_VIEW_EDGE].dot = m_View.edges[LEFT_VIEW_EDGE].normal.dot(bottom_left);
-
-			// Construct the plane for the right edge
-			m_View.edges[RIGHT_VIEW_EDGE].normal = vec3i(-1, 0, 0);
-			m_View.edges[RIGHT_VIEW_EDGE].dot = m_View.edges[RIGHT_VIEW_EDGE].normal.dot(top_right);
-
-			// Construct the plane for the top edge
-			m_View.edges[TOP_VIEW_EDGE].normal = vec3i(0, -1, -1);
-			m_View.edges[TOP_VIEW_EDGE].dot = m_View.edges[TOP_VIEW_EDGE].normal.dot(top_right);
-
-			// Construct the plane for the bottom edge
-			m_View.edges[BOTTOM_VIEW_EDGE].normal = vec3i(0, 1, 1);
-			m_View.edges[BOTTOM_VIEW_EDGE].dot = m_View.edges[BOTTOM_VIEW_EDGE].normal.dot(bottom_left);
+			// Reset the visible space
+			reset_view();
 		}
 
 		void StaticTopDownWorldCamera::get_view(vec2i& direction) const
@@ -117,6 +129,11 @@ namespace onion
 
 
 		DynamicAxonometricWorldCamera::DynamicAxonometricWorldCamera(const mat2x3i& frame_bounds, float top_view_angle, float side_view_angle) : m_TopViewAngle(top_view_angle), m_SideViewAngle(side_view_angle), WorldCamera(frame_bounds) {}
+
+		void DynamicAxonometricWorldCamera::reset_view()
+		{
+			// TODO
+		}
 
 		void DynamicAxonometricWorldCamera::__activate()
 		{
@@ -148,8 +165,8 @@ namespace onion
 			Transform::view.translate(-m_Position.get(0), -m_Position.get(1), -m_Position.get(2));
 
 
-			// Construct the view
-			// TODO
+			// Reset the visible space
+			reset_view();
 		}
 
 		void DynamicAxonometricWorldCamera::set_top(float angle)

@@ -13,7 +13,8 @@ namespace onion
 		}
 
 
-		vec3i ObjectManager::m_BlockDimensions{ UNITS_PER_PIXEL * 200, UNITS_PER_PIXEL * 200, UNITS_PER_PIXEL * 2000 };
+		vec3i ObjectManager::m_BlockDimensions{ UNITS_PER_PIXEL * 320, UNITS_PER_PIXEL * 320, UNITS_PER_PIXEL * 320 };
+		Int ObjectManager::m_UpperBound = UNITS_PER_PIXEL * 320;
 
 		ObjectManager::Block::Block(const vec3i& pos, LightObject* light) : cube(pos, m_BlockDimensions)
 		{
@@ -32,30 +33,58 @@ namespace onion
 		template <typename T, int N>
 		bool ObjectManager::__insert(const vec3i& base_index, T* obj)
 		{
-			if (!__insert<T, N - 1>(base_index, obj))
-				return false;
-
-			// Iterate in the positive nth-direction
-			vec3i index = base_index;
-			do
+			if (N == 2)
 			{
-				++index(N);
-			} 
-			while (__insert<T, N - 1>(index, obj));
+				Int z = base_index.get(2) * m_BlockDimensions.get(2);
+				if (z >= 0 && z < m_UpperBound)
+				{
+					__insert<T, N - 1>(base_index, obj);
+				}
 
-			// Iterate in the negative nth-direction
-			index = base_index;
-			do
+				vec3i index = base_index;
+				do
+				{
+					++index(2);
+				} 
+				while (index.get(N) * m_BlockDimensions.get(N) < m_UpperBound
+					&& (index.get(N) < 0 || __insert<T, 1>(index, obj)));
+
+				index = base_index;
+				do
+				{
+					--index(2);
+				} 
+				while (index.get(N) >= 0
+					&& (index.get(N) * m_BlockDimensions.get(N) >= m_UpperBound || __insert<T, 1>(index, obj)));
+
+				return true;
+			}
+			else
 			{
-				--index(N);
-			} 
-			while (!(N == 2 && index.get(N) < 0) // Ignore negative z-indices
-				&& __insert<T, N - 1>(index, obj));
+				if (!__insert<T, N - 1>(base_index, obj))
+					return false;
 
-			if (base_index == index)
-				return false;
+				// Iterate in the positive nth-direction
+				vec3i index = base_index;
+				do
+				{
+					++index(N);
+				} 
+				while (__insert<T, N - 1>(index, obj));
 
-			return true;
+				// Iterate in the negative nth-direction
+				index = base_index;
+				do
+				{
+					--index(N);
+				} 
+				while (__insert<T, N - 1>(index, obj));
+
+				if (base_index == index)
+					return false;
+
+				return true;
+			}
 		}
 
 		template <typename T>
@@ -125,7 +154,7 @@ namespace onion
 			}
 
 			// If the (squared) length of the minimal difference vector is less than or equal to the (squared) radius of the light, then add it to the block
-			Int radius = obj->get_light()->radius;
+			Int radius = obj->get_light()->radius * UNITS_PER_PIXEL;
 			if (diff.square_sum() < radius * radius)
 			{
 				if (Block* block = get_block(index))

@@ -21,14 +21,14 @@ namespace onion
 		}
 
 
-		unsigned int Chunk::m_TileSize{ 0 };
+		int Chunk::m_TileSize{ 0 };
 
-		unsigned int Chunk::get_tile_size()
+		int Chunk::get_tile_size()
 		{
 			return m_TileSize;
 		}
 
-		void Chunk::set_tile_size(unsigned int size)
+		void Chunk::set_tile_size(int size)
 		{
 			m_TileSize = size;
 		}
@@ -170,7 +170,7 @@ namespace onion
 				// Add a visible row
 				if (first_i >= 0)
 				{
-					m_VisibleTiles.emplace_back(get_index(first_i, j) * 6, last_i - first_i);
+					m_VisibleTiles.emplace_back(get_index(first_i, j) * 6, last_i - first_i + 1);
 				}
 			}
 		}
@@ -374,7 +374,71 @@ namespace onion
 
 		void FlatChunk::reset_visible(const WorldCamera::View& view)
 		{
-			Chunk::reset_visible(view);
+			// Reset visible tiles
+			// TODO do this more efficiently???
+			m_VisibleTiles.clear();
+
+			int min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
+			for (int k = 3; k >= 0; --k)
+			{
+				int e1 = k % 2 == 0 ? LEFT_VIEW_EDGE : RIGHT_VIEW_EDGE;
+				int e2 = k / 2 == 0 ? BOTTOM_VIEW_EDGE : TOP_VIEW_EDGE;
+
+				int y = ((view.edges[e1].normal.get(0) * view.edges[e2].dot) - (view.edges[e2].normal.get(0) * view.edges[e1].dot))
+					/ ((view.edges[e1].normal.get(0) * view.edges[e2].normal.get(1)) - (view.edges[e2].normal.get(0) * view.edges[e1].normal.get(1)));
+				int x = (view.edges[e1].dot - (view.edges[e1].normal.get(1) * y)) / view.edges[e1].normal.get(0);
+
+				if (x < min_x)
+					min_x = x;
+				else if (x > max_x)
+					max_x = x;
+				
+				if (y < min_y)
+					min_y = y;
+				else if (y > max_y)
+					max_y = y;
+			}
+
+			int min_j = std::max<int>(0, min_y / (m_TileSize * UNITS_PER_PIXEL));
+			int max_j = std::min<int>(m_Dimensions.get(1) - 1, max_y / (m_TileSize * UNITS_PER_PIXEL));
+			for (int j = min_j; j <= max_j; ++j)
+			{
+				int first_i = INT_MIN, last_i = INT_MAX;
+
+				int min_i = std::max<int>(0, min_x / (m_TileSize * UNITS_PER_PIXEL));
+				int max_i = std::min<int>(m_Dimensions.get(0) - 1, max_x / (m_TileSize * UNITS_PER_PIXEL));
+				for (int i = min_i; i <= max_i; ++i)
+				{
+					for (int k = 3; k >= 0; --k)
+					{
+						// Calculate the 3D position of the corner
+						vec3i corner(
+							k % 2 == 0 ? m_TileSize * UNITS_PER_PIXEL * i : (m_TileSize * UNITS_PER_PIXEL * (i + 1)) - 1,
+							k / 2 == 0 ? m_TileSize * UNITS_PER_PIXEL * j : (m_TileSize * UNITS_PER_PIXEL * (j + 1)) - 1,
+							0
+						);
+
+						// Calculate whether the corner is visible
+						if (view.is_visible(corner))
+						{
+							if (first_i < 0)
+								first_i = i;
+							last_i = i;
+							break;
+						}
+					}
+
+					// Break if at the end of the visible row
+					if (last_i < i)
+						break;
+				}
+
+				// Add the visible row
+				if (first_i >= 0)
+					m_VisibleTiles.emplace_back(get_index(first_i, j) * 6, last_i - first_i + 1);
+			}
+
+			// Reset visible objects
 			m_Manager.reset_visible(view);
 		}
 

@@ -19,6 +19,8 @@ namespace onion
 			/// <summary>Resets what is visible in response to a camera update.</summary>
 			virtual void reset_camera() = 0;
 
+			virtual void __set_bounds();
+
 		public:
 			/// <summary>Sets up the camera.</summary>
 			World();

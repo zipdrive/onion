@@ -13,6 +13,12 @@ namespace onion
 			delete m_Camera;
 		}
 
+		void World::__set_bounds()
+		{
+			m_Camera->reset_view();
+			reset_camera();
+		}
+
 		void World::display() const
 		{
 			if (m_Camera)
@@ -45,7 +51,6 @@ namespace onion
 
 			m_Camera = new StaticTopDownWorldCamera(m_Bounds);
 			m_Camera->set_position(vec3i(200, 200, 0));
-			reset_camera();
 
 			unfreeze(INT_MAX);
 		}
