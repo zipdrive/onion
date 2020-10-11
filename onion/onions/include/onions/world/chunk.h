@@ -74,6 +74,25 @@ namespace onion
 			vec2i m_Dimensions;
 
 
+			// A visible row of tiles.
+			struct TileRow
+			{
+				// The index to start displaying.
+				BUFFER_KEY index;
+
+				// The number of tiles to display in this row.
+				Int count;
+
+				/// <summary>Constructs a struct representing a visible row of tiles.</summary>
+				/// <param name="index">The index to start displaying.</param>
+				/// <param name="count">The number of tiles to display in this row.</param>
+				TileRow(BUFFER_KEY index, Int count);
+			};
+
+			// All visible rows of tiles, listed from front to back.
+			std::vector<TileRow> m_VisibleTiles;
+
+
 			// The path to the chunk's data, from the res/data/world/ folder.
 			const char* m_Path;
 
@@ -122,7 +141,7 @@ namespace onion
 
 
 			/// <summary>Resets what is visible, in response to the view changing.</summary>
-			virtual void reset_visible(const WorldCamera::View& view) = 0;
+			virtual void reset_visible(const WorldCamera::View& view);
 
 			/// <summary>Updates what is visible, in response to the passage of time.</summary>
 			virtual void update_visible(const WorldCamera::View& view) = 0;

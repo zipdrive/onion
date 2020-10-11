@@ -161,18 +161,8 @@ namespace onion
 				vec3i closest;
 				block->cube.get_closest_point(view.center, closest);
 
-				// Check which side of each planar edge the closest point is on
-				bool intersects = true;
-				for (int k = 3; k >= 0; --k)
-				{
-					if (view.edges[k].normal.dot(closest) < view.edges[k].dot) // AKA the block's closest point to the ray through the middle of the screen is not inside the shape made by the four planar edges
-					{
-						intersects = false;
-						break;
-					}
-				}
-
-				if (intersects)
+				// Check if the closest point in the block to the center of the screen is visible, and add it to the list of active blocks if it is
+				if (view.is_visible(closest))
 					active_blocks.insert(block);
 			}
 

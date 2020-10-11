@@ -9,7 +9,12 @@ namespace onion
 	{
 
 
-#define UNITS_PER_PIXEL 32
+#define UNITS_PER_PIXEL		32
+
+#define LEFT_VIEW_EDGE		0
+#define RIGHT_VIEW_EDGE		1
+#define BOTTOM_VIEW_EDGE	2
+#define TOP_VIEW_EDGE		3
 
 		// A method of projecting model space onto the screen.
 		class WorldCamera : public Camera
@@ -25,6 +30,11 @@ namespace onion
 				/// The normals for each plane point inwards, towards the center.
 				/// The dot product of any visible point with the normal of any plane will be greater than the dot product of any point on the plane with the normal for that plane.</summary>
 				Plane edges[4];
+
+				/// <summary>Calculates if a point in world space is visible on screen.</summary>
+				/// <param name="pos">A point in world space.</param>
+				/// <returns>True if the point is visible, false otherwise.</returns>
+				bool is_visible(const vec3i& pos) const;
 			};
 
 		protected:

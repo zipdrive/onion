@@ -4,7 +4,7 @@
 #include "../error.h"
 #include "../matrix.h"
 
-#define BUFFER_KEY int
+#define BUFFER_KEY Int
 
 namespace onion
 {
@@ -534,7 +534,7 @@ namespace onion
 			/// <param name="start">A pointer to the start location in the buffer.
 			/// This should be equal to the index of the starting vertex in the buffer array.</param>
 			/// <param name="count">The number of sequential shapes to display.</param>
-			virtual void display(BUFFER_KEY start, int count = 1) const;
+			virtual void display(BUFFER_KEY start, Int count = 1) const;
 		};
 
 	}

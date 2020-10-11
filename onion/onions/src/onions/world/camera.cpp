@@ -6,6 +6,15 @@ namespace onion
 	namespace world
 	{
 
+		bool WorldCamera::View::is_visible(const vec3i& pos) const
+		{
+			for (int k = 3; k >= 0; --k)
+				if (edges[k].normal.dot(pos) < edges[k].dot)
+					return false;
+			return true;
+		}
+
+
 		WorldCamera::WorldCamera(const mat2x3i& frame_bounds) : m_FrameBounds(frame_bounds) {}
 		
 		const vec3i& WorldCamera::get_position() const
@@ -85,20 +94,20 @@ namespace onion
 			top_right(2) = m_Position.get(2);
 
 			// Construct the plane for the left edge
-			m_View.edges[0].normal = vec3i(1, 0, 0);
-			m_View.edges[0].dot = m_View.edges[0].normal.dot(bottom_left);
+			m_View.edges[LEFT_VIEW_EDGE].normal = vec3i(1, 0, 0);
+			m_View.edges[LEFT_VIEW_EDGE].dot = m_View.edges[LEFT_VIEW_EDGE].normal.dot(bottom_left);
 
 			// Construct the plane for the right edge
-			m_View.edges[1].normal = vec3i(-1, 0, 0);
-			m_View.edges[1].dot = m_View.edges[1].normal.dot(top_right);
+			m_View.edges[RIGHT_VIEW_EDGE].normal = vec3i(-1, 0, 0);
+			m_View.edges[RIGHT_VIEW_EDGE].dot = m_View.edges[RIGHT_VIEW_EDGE].normal.dot(top_right);
 
 			// Construct the plane for the top edge
-			m_View.edges[2].normal = vec3i(0, -1, -1);
-			m_View.edges[2].dot = m_View.edges[2].normal.dot(top_right);
+			m_View.edges[TOP_VIEW_EDGE].normal = vec3i(0, -1, -1);
+			m_View.edges[TOP_VIEW_EDGE].dot = m_View.edges[TOP_VIEW_EDGE].normal.dot(top_right);
 
 			// Construct the plane for the bottom edge
-			m_View.edges[3].normal = vec3i(0, 1, 1);
-			m_View.edges[3].dot = m_View.edges[3].normal.dot(bottom_left);
+			m_View.edges[BOTTOM_VIEW_EDGE].normal = vec3i(0, 1, 1);
+			m_View.edges[BOTTOM_VIEW_EDGE].dot = m_View.edges[BOTTOM_VIEW_EDGE].normal.dot(bottom_left);
 		}
 
 		void StaticTopDownWorldCamera::get_view(vec2i& direction) const

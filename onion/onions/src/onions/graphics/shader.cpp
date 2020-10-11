@@ -1368,7 +1368,7 @@ namespace onion
 		}
 
 
-		void _SquareBufferDisplayer::display(BUFFER_KEY start, int count) const
+		void _SquareBufferDisplayer::display(BUFFER_KEY start, Int count) const
 		{
 			// Bind the buffer
 			m_Buffer->activate();
