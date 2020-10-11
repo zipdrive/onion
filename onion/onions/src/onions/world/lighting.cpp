@@ -13,72 +13,43 @@ namespace onion
 	}
 
 
+	void Lighting::Light::reset() const
+	{
+		set<FLOAT_VEC3>("color", color);
+		set<Float>("intensity", intensity);
+		set<Float>("radius", radius);
+	}
+
+	void CubeLight::reset() const
+	{
+		Lighting::Light::reset();
+
+		set<FLOAT_VEC3>("mins", mins);
+		set<FLOAT_VEC3>("maxs", maxs);
+	}
+
+
+
 	void Lighting::set_ambient_light(const vec3f& ambient)
 	{
 		m_Buffer->set<FLOAT_VEC3>("ambient", ambient);
 	}
 
 
-	std::vector<CubeLight*> Lighting::m_CubeLights{};
+	std::vector<Lighting::_LightArray*> Lighting::m_LightArrays{};
 
-	void Lighting::set(int index, CubeLight* light)
+	void Lighting::add(Lighting::Light* light)
 	{
-		if (index >= m_CubeLights.size())
-		{
-			m_CubeLights.resize(index + 1);
-			m_Buffer->set<Int>("numCubeLights", m_CubeLights.size());
-		}
-
-		m_CubeLights[index] = light;
-
-		std::string base = "cubeLights[" + std::to_string(index) + "].";
-		
-		m_Buffer->set<FLOAT_VEC3>(base + "mins", light->mins);
-		m_Buffer->set<FLOAT_VEC3>(base + "maxs", light->maxs);
-
-		m_Buffer->set<FLOAT_VEC3>(base + "color", light->color.color);
-		m_Buffer->set<Float>(base + "intensity", light->color.intensity);
-
-		m_Buffer->set<Float>(base + "radius", light->radius);
+		for (auto iter = m_LightArrays.begin(); iter != m_LightArrays.end(); ++iter)
+			if ((*iter)->add(light))
+				break;
 	}
 
-	void Lighting::add(CubeLight* light)
+	void Lighting::remove(Lighting::Light* light)
 	{
-		// Make sure you aren't adding the same light twice
-		for (int index = 0; index < m_CubeLights.size(); ++index)
-		{
-			if (m_CubeLights[index] == light)
-			{
-				set(index, light);
-				return;
-			}
-		}
-
-		// Make sure you aren't exceeding the maximum number of allowed lights
-		if (m_CubeLights.size() < MAX_NUMBER_CUBE_LIGHTS - 1)
-		{
-			// Add the light at the back
-			set(m_CubeLights.size(), light);
-		}
-	}
-
-	void Lighting::remove(CubeLight* light)
-	{
-		for (int index = m_CubeLights.size() - 1; index >= 0; --index)
-		{
-			if (m_CubeLights[index] == light)
-			{
-				// If the light being removed isn't at the back, move the light that is at the back to replace the light being removed
-				if (index < m_CubeLights.size() - 1)
-					set(index, m_CubeLights.back());
-
-				// Resize the array
-				m_CubeLights.pop_back();
-				m_Buffer->set<Int>("numCubeLights", m_CubeLights.size());
-
-				return;
-			}
-		}
+		for (auto iter = m_LightArrays.begin(); iter != m_LightArrays.end(); ++iter)
+			if ((*iter)->remove(light))
+				break;
 	}
 
 
@@ -95,6 +66,14 @@ namespace onion
 
 		LightObject::LightObject(Shape* bounds) : Object(bounds) {}
 
+		void LightObject::toggle(bool on)
+		{
+			if (on)
+				Lighting::add(get_light());
+			else
+				Lighting::remove(get_light());
+		}
+
 
 		CubeLightObject::CubeLightObject(const vec3i& position, const vec3i& dimensions, const vec3f& color, Float intensity, Int radius) :
 			LightObject(new RectangularPrism(position, dimensions))
@@ -110,23 +89,15 @@ namespace onion
 				(position.get(2) + dimensions.get(2)) / UNITS_PER_PIXEL
 			);
 
-			m_Light.color.color = color;
-			m_Light.color.intensity = intensity;
+			m_Light.color = color;
+			m_Light.intensity = intensity;
 
 			m_Light.radius = radius / UNITS_PER_PIXEL;
 		}
 
-		const Light* CubeLightObject::get_light() const
+		Lighting::Light* CubeLightObject::get_light()
 		{
 			return &m_Light;
-		}
-
-		void CubeLightObject::toggle(bool on)
-		{
-			if (on)
-				Lighting::add(&m_Light);
-			else
-				Lighting::remove(&m_Light);
 		}
 
 
