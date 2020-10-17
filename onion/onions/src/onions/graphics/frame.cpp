@@ -180,7 +180,8 @@ namespace onion
 			// Construct cursor object
 			if (!m_CursorGraphic)
 			{
-				m_CursorGraphic = new SolidColorGraphic(0, 0, 0, 255, 1, get_font()->get_line_height() + 1);
+				// TODO this randomly stopped working and giving "unresolved external symbol" errors????
+				// m_CursorGraphic = new SolidColorGraphic(0.f, 0.f, 0.f, 1.f, 1, get_font()->get_line_height() + 1);
 			}
 
 			// Position cursor

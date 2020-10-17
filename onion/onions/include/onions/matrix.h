@@ -11,9 +11,6 @@ namespace onion
 	using Float = primitive<float>;
 	using Double = primitive<double>;
 
-	using Char = primitive<char>;
-	using String = primitive<std::string>;
-
 
 	// A matrix of numeric values
 	template <typename T, int _Columns, int _Rows>

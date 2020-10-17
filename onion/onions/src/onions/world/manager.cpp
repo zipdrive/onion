@@ -6,6 +6,8 @@ namespace onion
 	namespace world
 	{
 
+		ObjectManager::ObjectManager() : m_ActiveObjects(ObjectManager::ObjectComparer()) {}
+		
 		ObjectManager::~ObjectManager()
 		{
 			for (auto iter = m_Blocks.begin(); iter != m_Blocks.end(); ++iter)
@@ -16,6 +18,11 @@ namespace onion
 		vec3i ObjectManager::m_BlockDimensions{ UNITS_PER_PIXEL * 320, UNITS_PER_PIXEL * 320, UNITS_PER_PIXEL * 320 };
 		Int ObjectManager::m_UpperBound = UNITS_PER_PIXEL * 320;
 
+		ObjectManager::Block::Block(const vec3i& pos, Object* obj) : cube(pos, m_BlockDimensions)
+		{
+			objects.insert(obj);
+		}
+		
 		ObjectManager::Block::Block(const vec3i& pos, LightObject* light) : cube(pos, m_BlockDimensions)
 		{
 			lights.insert(light);
@@ -111,7 +118,7 @@ namespace onion
 			__insert<Object, 2>(base_index, obj);
 
 			// Add the object's lighting data, if it has any
-			if (LightObject* light = static_cast<LightObject*>(obj))
+			if (LightObject* light = dynamic_cast<LightObject*>(obj))
 			{
 				add<LightObject>(light);
 			}
@@ -121,7 +128,39 @@ namespace onion
 		template <>
 		bool ObjectManager::__insert<Object, -1>(const vec3i& index, Object* obj)
 		{
-			return false;
+			// Calculates the minimum and maximum corner of the block
+			vec3i mins = index * m_BlockDimensions;
+			vec3i maxs = mins + m_BlockDimensions;
+
+			// Calculate the center of the block
+			vec3i center = mins;
+			for (int k = 2; k >= 0; --k)
+				center(k) += (m_BlockDimensions.get(k) / 2);
+
+			// Find the closest point on the object to the block
+			vec3i closest;
+			obj->get_bounds()->get_closest_point(center, closest);
+
+			// Check whether the closest point lies within the block
+			for (int k = 2; k >= 0; --k)
+			{
+				if (closest.get(k) < mins.get(k) || closest.get(k) > maxs.get(k))
+					return false;
+			}
+
+			// Add the object to the block
+			if (Block* block = get_block(index))
+			{
+				// Insert the light into an existing block
+				block->objects.insert(obj);
+			}
+			else
+			{
+				// Construct a new block, then insert the light
+				m_Blocks.emplace(index, new Block(mins, obj));
+			}
+
+			return true;
 		}
 
 
@@ -175,6 +214,62 @@ namespace onion
 
 
 
+		WorldCamera::View ObjectManager::ObjectComparer::view{};
+		
+		bool ObjectManager::ObjectComparer::compare(const Object* lhs, const Object* rhs)
+		{
+			// TODO
+			// this is a heuristic for which should be displayed in front, but there are edge case exceptions
+			
+			// Calculate the point in the bottom-left of the screen at the upper bound for z-coordinates
+			const vec3i& n1 = view.edges[BOTTOM_VIEW_EDGE].normal;
+			Int d1 = view.edges[BOTTOM_VIEW_EDGE].dot;
+			const vec3i& n2 = view.edges[LEFT_VIEW_EDGE].normal;
+			Int d2 = view.edges[LEFT_VIEW_EDGE].dot;
+
+			Int x, y, z = m_UpperBound;
+
+			if (n1.get(0) != 0)
+			{
+				Int denom = (n1.get(0) * n2.get(1)) - (n1.get(1) * n2.get(0)); // Only 0 if both normals are parallel
+				y = ((n1.get(0) * (d2 - (n2.get(2) * z))) - (n2.get(0) * (d1 - (n1.get(2) * z)))) / denom;
+				x = (d1 - (n1.get(1) * y) - (n1.get(2) * z)) / n1.get(0);
+			}
+			else // TODO maybe check in case n1 = (0, 0, 1)?
+			{
+				y = (d1 - (n1.get(2) * z)) / n1.get(1);
+				x = (d2 - (n2.get(1) * y) - (n2.get(2) * z)) / n2.get(0);
+			}
+
+			// Create a ray spanning the bottom of the screen
+			Ray bottom_near = { vec3i(x, y, z), view.edges[LEFT_VIEW_EDGE].normal };
+			
+			// Get the point on each object's bounds that is closest to the screen depth-wise and farthest towards the bottom of the screen
+			vec3i closest_lhs, closest_rhs;
+			lhs->get_bounds()->get_closest_point(bottom_near, closest_lhs);
+			rhs->get_bounds()->get_closest_point(bottom_near, closest_rhs);
+
+			// Compare dot products with the to see which is closer to the bottom of the screen
+			Int d_lhs = n1.dot(closest_lhs) - d1;
+			Int d_rhs = n1.dot(closest_rhs) - d1;
+			if (d_lhs != d_rhs)
+				return d_lhs > d_rhs; // True if LHS is closer to top of screen
+			else if (closest_lhs.get(2) != closest_rhs.get(2))
+				return closest_lhs.get(2) < closest_rhs.get(2); // True if LHS is lower down than RHS
+			else
+			{
+				d_lhs = n2.dot(closest_lhs) - d2;
+				d_rhs = n2.dot(closest_rhs) - d2;
+				return d_lhs > d_rhs;
+			}
+		}
+
+		bool ObjectManager::ObjectComparer::operator()(const Object* lhs, const Object* rhs) const
+		{
+			return compare(lhs, rhs);
+		}
+
+
 		void ObjectManager::reset_visible(const WorldCamera::View& view)
 		{
 			// A set of all blocks within view.
@@ -195,11 +290,29 @@ namespace onion
 					active_blocks.insert(block);
 			}
 
+			std::unordered_set<Object*> active_objects; // A set of all visible objects
 			std::unordered_set<LightObject*> active_lights; // A set of all lights illuminating a block within view
 			for (auto iter = active_blocks.begin(); iter != active_blocks.end(); ++iter)
 			{
+				// Add all static objects in active blocks
+				active_objects.insert((*iter)->objects.begin(), (*iter)->objects.end());
+
 				// Add all lights illuminating the block to the set of active lights
 				active_lights.insert((*iter)->lights.begin(), (*iter)->lights.end());
+			}
+
+			// Reset which static objects are visible and in which order
+			m_ActiveObjects.clear();
+			ObjectManager::ObjectComparer::view = view;
+			for (auto iter = active_objects.begin(); iter != active_objects.end(); ++iter)
+			{
+				Object* obj = *iter;
+
+				// Check if the object is visible
+				if (view.is_visible(obj->get_bounds()))
+				{
+					m_ActiveObjects.insert(obj);
+				}
 			}
 
 			// Turn off all lights no longer in view
@@ -218,9 +331,11 @@ namespace onion
 			// TODO
 		}
 
-		void ObjectManager::display() const
+		void ObjectManager::display(const Ray& center) const
 		{
-			// TODO
+			// Display all static objects
+			for (auto iter = m_ActiveObjects.begin(); iter != m_ActiveObjects.end(); ++iter)
+				(*iter)->display(center);
 		}
 
 	}

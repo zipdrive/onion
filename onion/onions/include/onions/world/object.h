@@ -22,16 +22,15 @@ namespace onion
 			/// <summary>Virtual deconstructor.</summary>
 			virtual ~Object();
 
+			
 			/// <summary>Retrieves the bounds of the object.</summary>
 			/// <returns>An object that represents the bounds of the object.</returns>
 			const Shape* get_bounds() const;
 
+
 			/// <summary>Displays the object.</summary>
-			/// <param name="direction">The direction facing towards the camera. Each element is equal to:
-			/// +1 if the positive axis is facing towards the camera;
-			/// -1 if the negative axis is facing towards the camera;
-			/// +0 if the axis is perpendicular to the screen.</param>
-			virtual void display(const vec2i& direction) const;
+			/// <param name="center">The ray from the camera position towards the camera.</param>
+			virtual void display(const Ray& center) const;
 		};
 
 
@@ -50,7 +49,7 @@ namespace onion
 				/// <summary>Finds the type associated with the given string and constructs an instance of it.</summary>
 				/// <param name="id">The ID of the object generator.</param>
 				/// <param name="params">The parameters to pass to the constructor.</param>
-				virtual ObjectGenerator* generate(std::string id, const _StringData& params) = 0;
+				virtual ObjectGenerator* generate(std::string id, const StringData& params) = 0;
 			};
 
 			template <typename _Generator>
@@ -59,7 +58,7 @@ namespace onion
 				/// <summary>Finds the type associated with the given string and constructs an instance of it.</summary>
 				/// <param name="id">The ID of the object generator.</param>
 				/// <param name="params">The parameters to pass to the constructor.</param>
-				ObjectGenerator* generate(std::string id, const _StringData& params)
+				ObjectGenerator* generate(std::string id, const StringData& params)
 				{
 					return new _Generator(id, params);
 				}
@@ -74,12 +73,16 @@ namespace onion
 			ObjectGenerator(std::string id);
 
 		public:
-			/// <summary>Sets the type associated with a given string.</summary>
+			/// <summary>Sets the type associated with a given string. Does nothing if the string is already associated with a type.</summary>
 			/// <param name="type">The string to associate with the template parameter.</param>
 			template <typename _Generator>
 			static void set(std::string type)
 			{
-				m_GeneratorFinder.emplace(type, new TypedGenerator<_Generator>());
+				auto iter = m_GeneratorFinder.find(type);
+				if (iter == m_GeneratorFinder.end())
+				{
+					m_GeneratorFinder.emplace(type, new TypedGenerator<_Generator>());
+				}
 			}
 
 			/// <summary>Loads all objects from file.</summary>
@@ -89,11 +92,11 @@ namespace onion
 			/// <param name="id">The ID of the generator to use.</param>
 			/// <param name="params">The parameters to pass to the generator.</param>
 			/// <returns>An Object created with new by the generator with the given ID.</returns>
-			static Object* generate(std::string id, const _StringData& params);
+			static Object* generate(std::string id, const StringData& params);
 
 			/// <summary>Generates an object.</summary>
 			/// <returns>An Object created with new.</returns>
-			virtual Object* generate(const _StringData& params) const = 0;
+			virtual Object* generate(const StringData& params) const = 0;
 		};
 
 	}

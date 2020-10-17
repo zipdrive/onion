@@ -4,9 +4,15 @@
 #include <string>
 #include <unordered_map>
 
+#include "matrix.h"
+
 
 namespace onion
 {
+
+	using Boolean = primitive<bool>;
+	using Char = primitive<char>;
+	using String = primitive<std::string>;
 
 
 	template <typename _Key, typename _Value>
@@ -50,37 +56,76 @@ namespace onion
 		}
 	};
 
-	class _StringData : public _Data<std::string, std::string>
+	class StringData : public _Data<String, String>
 	{
 	public:
-		using _Data<std::string, std::string>::get;
-
-		/// <summary>Retrieves the value associated with a key.</summary>
-		/// <param name="key">The key to retrieve the value of.</param>
-		/// <param name="value">Outputs the value associated with the given key, converted to integer.</param>
-		/// <returns>True if the key exists, false otherwise.</returns>
-		bool get(std::string key, int& value) const;
+		using _Data<String, String>::get;
 
 		/// <summary>Retrieves the value associated with a key.</summary>
 		/// <param name="key">The key to retrieve the value of.</param>
 		/// <param name="value">Outputs the value associated with the given key, converted to boolean.</param>
 		/// <returns>True if the key exists, false otherwise.</returns>
-		bool get(std::string key, bool& value) const;
+		bool get(String key, Boolean& value) const;
 
-		using _Data<std::string, std::string>::set;
+		/// <summary>Retrieves the value associated with a key.</summary>
+		/// <param name="key">The key to retrieve the value of.</param>
+		/// <param name="value">Outputs the value associated with the given key, converted to integer.</param>
+		/// <returns>True if the key exists, false otherwise.</returns>
+		bool get(String key, Int& value) const;
+
+		/// <summary>Retrieves the value associated with a key.</summary>
+		/// <param name="key">The key to retrieve the value of.</param>
+		/// <param name="value">Outputs the value associated with the given key, converted to a floating point number.</param>
+		/// <returns>True if the key exists, false otherwise.</returns>
+		bool get(String key, Float& value) const;
+
+		/// <summary>Retrieves the value associated with a key.</summary>
+		/// <param name="key">The key to retrieve the value of.</param>
+		/// <param name="value">Outputs the value associated with the given key, converted to a vector of three integers.</param>
+		/// <returns>True if the key exists, false otherwise.</returns>
+		bool get(String key, INT_VEC2& value) const;
+
+		/// <summary>Retrieves the value associated with a key.</summary>
+		/// <param name="key">The key to retrieve the value of.</param>
+		/// <param name="value">Outputs the value associated with the given key, converted to a vector of three integers.</param>
+		/// <returns>True if the key exists, false otherwise.</returns>
+		bool get(String key, INT_VEC3& value) const;
+
+		/// <summary>Retrieves the value associated with a key.</summary>
+		/// <param name="key">The key to retrieve the value of.</param>
+		/// <param name="value">Outputs the value associated with the given key, converted to a vector of three floating point numbers.</param>
+		/// <returns>True if the key exists, false otherwise.</returns>
+		bool get(String key, FLOAT_VEC3& value) const;
+
+		using _Data<String, String>::set;
 
 		/// <summary>Sets the value to the key.</summary>
 		/// <param name="key">The key to set the value of.</param>
 		/// <param name="value">The value to assign to the given key.</param>
-		void set(std::string key, const int& value);
+		void set(String key, Boolean value);
 
 		/// <summary>Sets the value to the key.</summary>
 		/// <param name="key">The key to set the value of.</param>
 		/// <param name="value">The value to assign to the given key.</param>
-		void set(std::string key, const bool& value);
+		void set(String key, Int value);
+
+		/// <summary>Sets the value to the key.</summary>
+		/// <param name="key">The key to set the value of.</param>
+		/// <param name="value">The value to assign to the given key.</param>
+		void set(String key, Float value);
+
+		/// <summary>Sets the value to the key.</summary>
+		/// <param name="key">The key to set the value of.</param>
+		/// <param name="value">The value to assign to the given key.</param>
+		void set(String key, const INT_VEC3& value);
+
+		/// <summary>Sets the value to the key.</summary>
+		/// <param name="key">The key to set the value of.</param>
+		/// <param name="value">The value to assign to the given key.</param>
+		void set(String key, const FLOAT_VEC3& value);
 	};
 
-	typedef _Data<std::string, int> _IntegerData;
+	typedef _Data<std::string, int> IntegerData;
 
 
 	class SaveFile
@@ -139,12 +184,12 @@ namespace onion
 		/// <summary>Loads a line of key-value pairs from file, when stored in the format "prefix  key1 = value1  key2 = value2  ..."</summary>
 		/// <param name="data">A reference to where the key-value pairs will be stored. Keys cannot include spaces.</param>
 		/// <returns>The prefix for the line, which does not correspond to a key or value.</returns>
-		std::string load_data(_IntegerData& data);
+		std::string load_data(IntegerData& data);
 
 		/// <summary>Loads a line of key-string pairs from file, when stored in the format "prefix  key1 = "string1"  key2 = "string2"  ..."</summary>
 		/// <param name="data">A reference to where the key-string pairs will be stored. Keys cannot include spaces.</param>
 		/// <returns>The prefix for the line, which does not correspond to a key or value.</returns>
-		std::string load_data(_StringData& data);
+		std::string load_data(StringData& data);
 	};
 
 

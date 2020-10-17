@@ -216,6 +216,16 @@ namespace onion
 	};
 
 
+	struct PointLight : public Lighting::Light
+	{
+		// The position of the light, in pixel coordinates.
+		vec3f pos;
+
+
+		/// <summary>Resets all uniforms in the buffer.</summary>
+		virtual void reset() const;
+	};
+	
 	struct CubeLight : public Lighting::Light
 	{
 		// The corner of the light with minimum values, in pixel coordinates.
@@ -223,6 +233,22 @@ namespace onion
 
 		// The corner of the light with maximum values, in pixel coordinates.
 		vec3f maxs;
+
+
+		/// <summary>Resets all uniforms in the buffer.</summary>
+		virtual void reset() const;
+	};
+
+	struct ConeLight : public Lighting::Light
+	{
+		// The position of the light, in pixel coordinates.
+		vec3f pos;
+
+		// The direction of the light, normalized.
+		vec3f dir;
+
+		// The maximum angle that a point within the cone can make with the apex of the cone, in radians.
+		Float angle;
 
 
 		/// <summary>Resets all uniforms in the buffer.</summary>
@@ -267,11 +293,11 @@ namespace onion
 
 		public:
 			/// <summary>Constructs a light object.</summary>
-			/// <param name="position">The position of the light object.</param>
-			/// <param name="dimensions">The dimensions of the light object.</param>
+			/// <param name="position">The position of the light object, in unit coordinates.</param>
+			/// <param name="dimensions">The dimensions of the light object, in unit coordinates.</param>
 			/// <param name="color">The color of the light.</param>
-			/// <param name="intensity">The intensity of the light's highlight. A number from -1 (for no light) to 0 (for no highlight) to 1 (for a very intense highlight).<param>
-			/// <param name="radius">The maximum radius of the light.</param>
+			/// <param name="intensity">The intensity of the light's highlight. A number from 0 (for no light) to 1 (for no highlight) to 2+ (for a very intense highlight).<param>
+			/// <param name="radius">The maximum radius of the light, in unit coordinates.</param>
 			CubeLightObject(const vec3i& position, const vec3i& dimensions, const vec3f& color, Float intensity, Int radius);
 
 			/// <summary>Retrieves a pointer to the data about the light.</summary>
@@ -279,6 +305,7 @@ namespace onion
 			Lighting::Light* get_light();
 		};
 
+		// A generator for a cube light.
 		class CubeLightObjectGenerator : public ObjectGenerator
 		{
 		protected:
@@ -295,9 +322,64 @@ namespace onion
 			Int m_Radius;
 
 		public:
-			CubeLightObjectGenerator(std::string id, const _StringData& params);
+			/// <summary>Constructs a generator for a cube light.</summary>
+			/// <param name="id">The ID of the generator.</param>
+			/// <param name="params">The parameters to pass to the generator.</param>
+			CubeLightObjectGenerator(std::string id, const StringData& params);
 
-			Object* generate(const _StringData& params) const;
+			/// <summary>Generates a cube light object.</summary>
+			/// <returns>A CubeLightObject created with new.</returns>
+			Object* generate(const StringData& params) const;
+		};
+
+
+		// A point that projects light outward in the shape of a cone.
+		class ConeLightObject : public LightObject
+		{
+		protected:
+			// The light's data.
+			ConeLight m_Light;
+
+		public:
+			/// <summary>Constructs a light object.</summary>
+			/// <param name="position">The position of the light object.</param>
+			/// <param name="color">The color of the light.</param>
+			/// <param name="intensity">The intensity of the light's highlight. A number from -1 (for no light) to 0 (for no highlight) to 1 (for a very intense highlight).<param>
+			/// <param name="dir">The direction of the light emanating from the position.</param>
+			/// <param name="angle">The maximum angle between a point in the cone and the direction of the light, in radians.</param>
+			/// <param name="radius">The maximum radius of the light, in unit coordinates.</param>
+			ConeLightObject(const vec3i& position, const vec3f& color, Float intensity, const vec3f& dir, Float angle, Int radius);
+
+			/// <summary>Retrieves a pointer to the data about the light.</summary>
+			/// <returns>A pointer to the data about the light.</returns>
+			Lighting::Light* get_light();
+		};
+
+		// A generator for a cone light.
+		class ConeLightObjectGenerator : public ObjectGenerator
+		{
+		protected:
+			// The color of the light.
+			vec3f m_Color;
+
+			// The intensity of the light.
+			Float m_Intensity;
+
+			// The angle of the cone.
+			Int m_Angle;
+
+			// The radius of the light.
+			Int m_Radius;
+
+		public:
+			/// <summary>Constructs a generator for a cube light.</summary>
+			/// <param name="id">The ID of the generator.</param>
+			/// <param name="params">The parameters to pass to the generator.</param>
+			ConeLightObjectGenerator(std::string id, const StringData& params);
+
+			/// <summary>Generates a cone light object.</summary>
+			/// <returns>A ConeLightObject created with new.</returns>
+			Object* generate(const StringData& params) const;
 		};
 
 	}

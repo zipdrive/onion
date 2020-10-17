@@ -20,12 +20,28 @@ namespace onion
 		set<Float>("radius", radius);
 	}
 
+	void PointLight::reset() const
+	{
+		Lighting::Light::reset();
+
+		set<FLOAT_VEC3>("pos", pos);
+	}
+
 	void CubeLight::reset() const
 	{
 		Lighting::Light::reset();
 
 		set<FLOAT_VEC3>("mins", mins);
 		set<FLOAT_VEC3>("maxs", maxs);
+	}
+
+	void ConeLight::reset() const
+	{
+		Lighting::Light::reset();
+
+		set<FLOAT_VEC3>("pos", pos);
+		set<FLOAT_VEC3>("dir", dir);
+		set<Float>("angle", angle);
 	}
 
 
@@ -101,28 +117,15 @@ namespace onion
 		}
 
 
-		CubeLightObjectGenerator::CubeLightObjectGenerator(std::string id, const _StringData& params) : ObjectGenerator(id)
+		CubeLightObjectGenerator::CubeLightObjectGenerator(std::string id, const StringData& params) : ObjectGenerator(id)
 		{
-			if (!params.get("dx", m_Dimensions(0))) m_Dimensions(0) = 0;
-			if (!params.get("dy", m_Dimensions(1))) m_Dimensions(1) = 0;
-			if (!params.get("dz", m_Dimensions(2))) m_Dimensions(2) = 0;
+			if (!params.get("size", m_Dimensions)) m_Dimensions = vec3i(0, 0, 0);
 			m_Dimensions = UNITS_PER_PIXEL * m_Dimensions;
 
-			std::string color;
-			vec3i rgb(255, 255, 255);
-			if (params.get("color", color))
-			{
-				std::regex color_regex("(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)");
-				std::smatch match;
-				if (std::regex_match(color, match, color_regex))
-				{
-					rgb(0) = std::stoi(match[1].str());
-					rgb(1) = std::stoi(match[2].str());
-					rgb(2) = std::stoi(match[3].str());
-				}
-			}
+			vec3i color;
+			if (!params.get("color", color)) color = vec3i(255, 255, 255);
 			for (int k = 2; k >= 0; --k)
-				m_Color(k) = rgb(k) / 255.f;
+				m_Color(k) = color(k) / 255.f;
 
 			Int intensity;
 			if (!params.get("intensity", intensity)) intensity = 0;
@@ -132,18 +135,76 @@ namespace onion
 			m_Radius *= UNITS_PER_PIXEL;
 		}
 		
-		Object* CubeLightObjectGenerator::generate(const _StringData& params) const
+		Object* CubeLightObjectGenerator::generate(const StringData& params) const
 		{
 			vec3i pos;
-			if (!params.get("x", pos(0))) pos(0) = 0;
-			if (!params.get("y", pos(1))) pos(1) = 0;
-			if (!params.get("z", pos(2))) pos(2) = 0;
+			params.get("pos", pos);
 
 			return new CubeLightObject(
 				UNITS_PER_PIXEL * pos,
 				m_Dimensions,
 				m_Color,
 				m_Intensity,
+				m_Radius
+			);
+		}
+
+
+
+		ConeLightObject::ConeLightObject(const vec3i& position, const vec3f& color, Float intensity, const vec3f& dir, Float angle, Int radius)
+			: LightObject(new Point(position))
+		{
+			m_Light.pos = vec3f(
+				position.get(0) / UNITS_PER_PIXEL,
+				position.get(1) / UNITS_PER_PIXEL,
+				position.get(2) / UNITS_PER_PIXEL
+			);
+
+			m_Light.color = color;
+			m_Light.intensity = intensity;
+
+			dir.normalize(m_Light.dir);
+			m_Light.angle = angle;
+			m_Light.radius = radius / UNITS_PER_PIXEL;
+		}
+
+		Lighting::Light* ConeLightObject::get_light()
+		{
+			return &m_Light;
+		}
+
+
+		ConeLightObjectGenerator::ConeLightObjectGenerator(std::string id, const StringData& params) : ObjectGenerator(id)
+		{
+			vec3i color;
+			if (!params.get("color", color)) color = vec3i(255, 255, 255);
+			for (int k = 2; k >= 0; --k)
+				m_Color(k) = color(k) / 255.f;
+
+			Int intensity;
+			if (!params.get("intensity", intensity)) intensity = 0;
+			m_Intensity = 0.01f * intensity;
+
+			if (!params.get("angle", m_Angle)) m_Angle = 0;
+
+			if (!params.get("radius", m_Radius)) m_Radius = 0;
+			m_Radius *= UNITS_PER_PIXEL;
+		}
+
+		Object* ConeLightObjectGenerator::generate(const StringData& params) const
+		{
+			vec3i pos;
+			params.get("pos", pos);
+
+			vec3f dir;
+			if (!params.get("dir", dir)) dir = vec3f(0.f, 0.f, -1.f);
+
+			return new ConeLightObject(
+				UNITS_PER_PIXEL * pos,
+				m_Color,
+				m_Intensity,
+				dir,
+				m_Angle * 0.0174532925f,
 				m_Radius
 			);
 		}

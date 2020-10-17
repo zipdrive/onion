@@ -36,6 +36,10 @@ namespace onion
 
 
 
+		
+
+
+
 		struct _ID
 		{
 			GLuint id;
@@ -208,35 +212,135 @@ namespace onion
 
 
 
-		class _VertexAttributeLocation : public _VertexAttribute
+		_VertexAttrib::_VertexAttrib(Uint offset) : offset(offset) {}
+		
+		template <typename T>
+		VertexAttrib<T>::VertexAttrib(Uint offset) : _VertexAttrib(offset) {}
+		
+		template <typename T>
+		Uint VertexAttrib<T>::size() const
 		{
-		private:
-			// The location of the vertex attribute.
-			GLuint m_Location;
+			return type_size<T>::whole;
+		}
 
-		public:
-			_VertexAttributeLocation(GLuint location, GLuint size)
-			{
-				m_Location = location;
-				m_Size = size;
-			}
+		template <typename T>
+		Int VertexAttrib<T>::count() const
+		{
+			return type_size<T>::whole / type_size<T>::primitive;
+		}
 
-			void set(unsigned int offset, unsigned int stride) const
-			{
-				glEnableVertexAttribArray(m_Location);
-				glVertexAttribPointer(m_Location, m_Size, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (void*)(sizeof(float) * offset));
-			}
+		template <typename T>
+		struct type_to_glenum_primitive
+		{
+			static constexpr GLenum value = 0;
 		};
 
-		_VertexAttributeInformation::~_VertexAttributeInformation()
+		template <>
+		struct type_to_glenum_primitive<Float>
 		{
-			for (auto iter = attributes.begin(); iter != attributes.end(); ++iter)
-				delete iter->attrib;
+			static constexpr GLenum value = GL_FLOAT;
+		};
+
+		template <>
+		struct type_to_glenum_primitive<Double>
+		{
+			static constexpr GLenum value = GL_DOUBLE;
+		};
+
+		template <>
+		struct type_to_glenum_primitive<Int>
+		{
+			static constexpr GLenum value = GL_INT;
+		};
+
+		template <>
+		struct type_to_glenum_primitive<Uint>
+		{
+			static constexpr GLenum value = GL_UNSIGNED_INT;
+		};
+
+		template <typename T, int _Columns, int _Rows>
+		struct type_to_glenum_primitive<matrix<T, _Columns, _Rows>>
+		{
+			static constexpr GLenum value = type_to_glenum_primitive<T>::value;
+		};
+
+		template <typename T>
+		void VertexAttrib<T>::set(Uint index, Uint stride) const
+		{
+			static constexpr GLenum type = type_to_glenum_primitive<T>::value;
+			
+			switch (type)
+			{
+			case GL_FLOAT:
+				glVertexAttribPointer(index, count(), type, GL_FALSE, stride, (void*)offset);
+				break;
+			case GL_DOUBLE:
+				glVertexAttribLPointer(index, count(), type, stride, (void*)offset);
+				break;
+			default:
+				glVertexAttribIPointer(index, count(), type, stride, (void*)offset);
+				break;
+			}
 		}
 
 
-
+		VertexAttribs::~VertexAttribs()
+		{
+			for (auto iter = attribs.begin(); iter != attribs.end(); ++iter)
+				delete *iter;
+		}
 		
+		template <std::size_t N>
+		_VertexAttrib* generate_vertex_attribute(GLenum type, Uint offset)
+		{
+			if (glenum_at<N>::value == type)
+			{
+				return new VertexAttrib<glenum_type_at<N>>(offset);
+			}
+			else
+			{
+				return generate_vertex_attribute<N + 1>(type, offset);
+			}
+		}
+
+		template <>
+		_VertexAttrib* generate_vertex_attribute<map_glenum_to_type::count>(GLenum type, GLuint offset)
+		{
+			return nullptr;
+		}
+
+		void VertexAttribs::push(Uint type)
+		{
+			Uint offset = 0;
+			for (auto iter = attribs.begin(); iter != attribs.end(); ++iter)
+				offset += (*iter)->size();
+
+			if (_VertexAttrib* attrib = generate_vertex_attribute<0>(type, offset))
+				attribs.push_back(attrib);
+		}
+
+		void VertexAttribs::enable() const
+		{
+			if (!attribs.empty())
+			{
+				GLsizei stride = attribs.back()->offset + attribs.back()->size();
+				for (Uint index = 0; index < attribs.size(); ++index)
+				{
+					attribs[index]->set(index, stride);
+					errcheck("ONION: Error received when setting the vertex attrib with index " + std::to_string(index) + ".");
+					glEnableVertexAttribArray(index);
+					errcheck("ONION: Error received when enabling vertex attrib array with index " + std::to_string(index) + ".");
+				}
+			}
+		}
+
+		void VertexAttribs::disable() const
+		{
+			for (Uint index = 0; index < attribs.size(); ++index)
+				glDisableVertexAttribArray(index);
+		}
+
 
 
 		/// <summary>Retrieves the number of base primitives that make up the type.</summary>
@@ -871,8 +975,7 @@ namespace onion
 
 			if (vertex_attribute_count >= 0)
 			{
-				m_VertexAttributes.attributes.resize(vertex_attribute_count);
-				m_VertexAttributes.stride = 0;
+				m_VertexAttributes.attribs.reserve(vertex_attribute_count);
 
 				for (GLuint index = 0; index < vertex_attribute_count; ++index)
 				{
@@ -882,11 +985,7 @@ namespace onion
 					glGetActiveAttrib(id, index, 0, NULL, &size, &type, NULL);
 					errcheck("Error received when retrieving information about the vertex attribute with index " + std::to_string(index) + ".");
 
-					size *= retrieve_countof_type(type);
-
-					m_VertexAttributes.attributes[index].attrib = new _VertexAttributeLocation(index, size);
-					m_VertexAttributes.attributes[index].offset = m_VertexAttributes.stride;
-					m_VertexAttributes.stride += size;
+					m_VertexAttributes.push(type);
 				}
 			}
 
@@ -1065,7 +1164,7 @@ namespace onion
 			delete m_Shader;
 		}
 
-		const _VertexAttributeInformation& _Shader::get_attribs() const
+		const VertexAttribs& _Shader::get_attribs() const
 		{
 			return m_VertexAttributes;
 		}
@@ -1164,20 +1263,15 @@ namespace onion
 
 
 
-		_VertexBuffer::_VertexBuffer(const std::vector<float>& data)
+		_VertexBuffer::_VertexBuffer(const _VertexBufferData* data, const VertexAttribs& attribs)
 		{
-			// Bind the data to a buffer
-			GLuint buf;
-			glGenBuffers(1, &buf);
-			glBindBuffer(GL_ARRAY_BUFFER, buf);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(float) * data.size(), data.data(), GL_STATIC_DRAW);
+			// Generate a vertex array object
+			errcheck("ONION: Error generated at some point before creating the vertex buffer.");
+			GLuint arr;
+			glGenVertexArrays(1, &arr);
+			glBindVertexArray(arr);
+			errcheck("ONION: Error generated when generating and binding the VAO.");
 
-			// Set the ID
-			m_Buffer = new _ID(buf);
-		}
-
-		_VertexBuffer::_VertexBuffer(const _VertexBufferData* data)
-		{
 			// Generate the array of data for the buffer
 			std::size_t bytes;
 			char* ptr = data->compile(bytes);
@@ -1187,12 +1281,18 @@ namespace onion
 			glGenBuffers(1, &buf);
 			glBindBuffer(GL_ARRAY_BUFFER, buf);
 			glBufferData(GL_ARRAY_BUFFER, bytes, ptr, GL_STATIC_DRAW);
+			errcheck("ONION: Error generated when generating and binding the VBO.");
 
 			// Clean up the array of data for the buffer
 			delete[] ptr;
 
+			// Set vertex attributes
+			attribs.enable();
+			errcheck("ONION: Error generated when enabling vertex attribs.");
+
 			// Set the ID
 			m_Buffer = new _ID(buf);
+			m_VAO = new _ID(arr);
 		}
 
 		_VertexBuffer::~_VertexBuffer()
@@ -1203,6 +1303,9 @@ namespace onion
 
 			// Free the buffer
 			glDeleteBuffers(1, &m_Buffer->id);
+
+			// Free the VAO
+			glDeleteVertexArrays(1, &m_VAO->id);
 
 			// Delete the ID
 			delete m_Buffer;
@@ -1223,7 +1326,8 @@ namespace onion
 				m_ActiveBuffer = m_Buffer;
 
 				// Bind the buffer
-				glBindBuffer(GL_ARRAY_BUFFER, m_Buffer->id);
+				glBindVertexArray(m_VAO->id);
+				errcheck("ONION: Error received when binding the VAO during opengl::_VertexBuffer activation.");
 
 				// Bind the vertex attributes
 				__activate();
@@ -1384,20 +1488,7 @@ namespace onion
 
 	
 	
-	VertexBuffer::VertexBuffer(const std::vector<float>& data, const opengl::_VertexAttributeInformation& attribs) : opengl::_VertexBuffer(data), m_Attribs(attribs) {}
-
-	VertexBuffer::VertexBuffer(const opengl::_VertexBufferData* data, const opengl::_VertexAttributeInformation& attribs) : opengl::_VertexBuffer(data), m_Attribs(attribs) {}
-
-	VertexBuffer::~VertexBuffer() {}
-	
-	void VertexBuffer::__activate() const
-	{
-		for (auto iter = m_Attribs.attributes.begin(); iter != m_Attribs.attributes.end(); ++iter)
-			iter->attrib->set(iter->offset, m_Attribs.stride);
-	}
-
-
-	ImageBuffer::ImageBuffer(const std::vector<float>& data, const opengl::_VertexAttributeInformation& attribs, opengl::_Image* image) : VertexBuffer(data, attribs)
+	ImageBuffer::ImageBuffer(const opengl::_VertexBufferData* data, const opengl::VertexAttribs& attribs, opengl::_Image* image) : opengl::_VertexBuffer(data, attribs)
 	{
 		m_Image = image;
 	}
@@ -1409,9 +1500,6 @@ namespace onion
 	
 	void ImageBuffer::__activate() const
 	{
-		// Bind the buffers
-		VertexBuffer::__activate();
-
 		// Activate the image
 		m_Image->activate();
 	}

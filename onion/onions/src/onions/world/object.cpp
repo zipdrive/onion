@@ -1,5 +1,6 @@
 #include "../../../include/onions/world/object.h"
 #include "../../../include/onions/world/lighting.h"
+#include "../../../include/onions/world/graphic.h"
 
 namespace onion
 {
@@ -22,7 +23,7 @@ namespace onion
 			return m_Bounds;
 		}
 
-		void Object::display(const vec2i& direction) const {}
+		void Object::display(const Ray& center) const {}
 
 
 
@@ -37,13 +38,19 @@ namespace onion
 		void ObjectGenerator::init()
 		{
 			// Register all types included as part of the Onion library
-			set<CubeLightObjectGenerator>("light, cube");
+			// Lights
+			set<CubeLightObjectGenerator>("light:cube");
+			set<ConeLightObjectGenerator>("light:cone");
+
+			// Walls and other static objects
+			set<XAlignedWallGenerator>("wall:xalign");
+
 
 			// Load all objects from file
 			LoadFile file("res/data/world/objects.txt");
 			while (file.good())
 			{
-				_StringData line;
+				StringData line;
 				std::string id = file.load_data(line);
 
 				std::string type;
@@ -58,7 +65,7 @@ namespace onion
 			}
 		}
 
-		Object* ObjectGenerator::generate(std::string id, const _StringData& params)
+		Object* ObjectGenerator::generate(std::string id, const StringData& params)
 		{
 			auto iter = m_Generators.find(id);
 			if (iter != m_Generators.end())

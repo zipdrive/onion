@@ -17,10 +17,10 @@ namespace onion
 	template <typename T>
 	struct type_size
 	{
-		/// <summary>Retrieves the size of the primitives that compose the type.</summary>
+		// The size of the primitive(s) that compose the type.
 		static constexpr std::size_t primitive = sizeof(T);
 
-		/// <summary>Retrieves the total size of the type.</summary>
+		// The total size of the type.
 		static constexpr std::size_t whole = sizeof(T);
 	};
 

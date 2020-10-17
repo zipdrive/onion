@@ -104,7 +104,7 @@ namespace onion
 
 			// Load the chunk
 			m_Displayer = new opengl::_SquareBufferDisplayer();
-			m_Displayer->set_buffer(new VertexBuffer(__load(), get_tile_shader()->get_attribs()));
+			m_Displayer->set_buffer(new opengl::_VertexBuffer(__load(), get_tile_shader()->get_attribs()));
 
 			// Set the flag saying the chunk is loaded
 			m_IsLoaded = true;
@@ -198,7 +198,7 @@ namespace onion
 				m_BasicFlatTileShader = new Shader<FLOAT_MAT4, Int, Int>("world/flat_tile_basic");
 		}
 
-		void FlatChunk::__load_tile(const _StringData& line, FlatChunk::buffer_t* data)
+		void FlatChunk::__load_tile(const StringData& line, FlatChunk::buffer_t* data)
 		{
 			int x, y;
 			if (line.get("x", x) && line.get("y", y))
@@ -287,7 +287,7 @@ namespace onion
 			}
 		}
 
-		void FlatChunk::__load_obj(std::string id, const _StringData& line)
+		void FlatChunk::__load_obj(std::string id, const StringData& line)
 		{
 			if (Object* obj = ObjectGenerator::generate(id, line))
 			{
@@ -306,7 +306,7 @@ namespace onion
 			LoadFile file(fpath);
 			while (file.good())
 			{
-				_StringData line;
+				StringData line;
 				string id = file.load_data(line);
 
 				smatch match;
@@ -447,9 +447,9 @@ namespace onion
 			m_Manager.update_visible(view);
 		}
 
-		void FlatChunk::display_objects() const
+		void FlatChunk::display_objects(const Ray& center) const
 		{
-			m_Manager.display();
+			m_Manager.display(center);
 		}
 
 

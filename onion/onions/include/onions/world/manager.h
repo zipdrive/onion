@@ -1,4 +1,5 @@
 #pragma once
+#include <set>
 #include "lighting.h"
 
 namespace onion
@@ -15,8 +16,16 @@ namespace onion
 				// The cubic shape of the block.
 				RectangularPrism cube;
 
-				// All lights that illuminate a point within the cube.
+				// All static objects within the block.
+				std::unordered_set<Object*> objects;
+
+				// All lights that illuminate a point within the block.
 				std::unordered_set<LightObject*> lights;
+
+				/// <summary>Constructs a block and inserts a light object into it.</summary>
+				/// <param name="pos">The position of the block.</param>
+				/// <param name="obj">The first light object to insert.</param>
+				Block(const vec3i& pos, Object* obj);
 
 				/// <summary>Constructs a block and inserts a light object into it.</summary>
 				/// <param name="pos">The position of the block.</param>
@@ -47,13 +56,36 @@ namespace onion
 			bool __insert(const vec3i& base_index, T* obj);
 
 
-			// A set of all objects that were determined to be in view the last time an update pass was run.
-			std::vector<Object*> m_ActiveObjects;
+			// Struct that compares two objects and determines which should be displayed in front of the other.
+			struct ObjectComparer
+			{
+				// The view to use when comparing two objects.
+				static WorldCamera::View view;
+
+				/// <summary>Compares two objects using the WorldCamera::View stored.</summary>
+				/// <param name="lhs">One object to compare.</param>
+				/// <param name="rhs">The other object to compare.</param>
+				/// <returns>True if lhs is behind rhs, false otherwise.</returns>
+				static bool compare(const Object* lhs, const Object* rhs);
+
+				/// <summary>Compares two objects using the WorldCamera::View stored.</summary>
+				/// <param name="lhs">One object to compare.</param>
+				/// <param name="rhs">The other object to compare.</param>
+				/// <returns>True if lhs is behind rhs, false otherwise.</returns>
+				bool operator()(const Object* lhs, const Object* rhs) const;
+			};
+
+			
+			// A set of all static objects that were determined to be in view the last time an update pass was run, listed in the order that they should be displayed.
+			std::set<Object*, ObjectComparer> m_ActiveObjects;
 			
 			// A set of all lights that were activated the last time an update pass was run.
 			std::unordered_set<LightObject*> m_ActiveLights;
 
 		public:
+			/// <summary>Constructs an empty object manager.</summary>
+			ObjectManager();
+			
 			/// <summary>Deletes all blocks constructed for this manager.</summary>
 			~ObjectManager();
 
@@ -73,7 +105,8 @@ namespace onion
 			void update_visible(const WorldCamera::View& view);
 
 			/// <summary>Displays all visible managed objects.</summary>
-			void display() const;
+			/// <param name="center">The ray from the camera position towards the camera.</param>
+			void display(const Ray& center) const;
 		};
 
 	}

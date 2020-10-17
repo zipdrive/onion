@@ -68,7 +68,7 @@ namespace onion
 		void BasicWorld::__display() const
 		{
 			// Display the chunk
-			m_Chunk->display_objects();
+			m_Chunk->display_objects(m_Camera->get_view().center);
 			m_Chunk->display_tiles();
 		}
 

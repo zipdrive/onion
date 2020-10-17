@@ -7,7 +7,10 @@
 in VS_FS
 {
     // The fragment position
-    vec2 pos;
+    vec3 pos;
+    
+    // The fragment normal
+    vec3 normal;
 
     // The UV texture coordinates
     vec2 uv;
@@ -16,7 +19,7 @@ fs_in;
 
 
 
-float CalcLightStrength(vec2 pos, vec3 dir, float intensity, float maxDistance, sampler2D noiseTexture)
+float CalcLightStrength(vec3 pos, vec3 normal, vec3 dir, float intensity, float maxDistance, sampler2D noiseTexture)
 {
     float distance = length(dir);
     if (distance < maxDistance)
@@ -26,7 +29,7 @@ float CalcLightStrength(vec2 pos, vec3 dir, float intensity, float maxDistance, 
         // Calculate the base strength of the light
         float edgeDiffuseStrength = 0.081024 * strengthPerLevel;
         float attenuation = max((dir.z / (maxDistance * edgeDiffuseStrength)) - 1.0, 0.0) * pow(distance / maxDistance, 5.0);
-        float baseDiffuseStrength = dir.z / distance;
+        float baseDiffuseStrength = max(dot(normal, dir) / distance, 0.0);
         float baseStrength = baseDiffuseStrength * intensity / (1.0 + attenuation);
         
         // Calculate the discretized strength of the light
@@ -37,7 +40,7 @@ float CalcLightStrength(vec2 pos, vec3 dir, float intensity, float maxDistance, 
         float closenessSign = abs(closenessToBoundary) / closenessToBoundary;
         float strengthChange = -strengthPerLevel * closenessSign;
         closenessToBoundary = (4.0 * closenessToBoundary * closenessToBoundary * closenessToBoundary) + max(-closenessSign, 0.0);
-        float dither = texture(noiseTexture, vec2(closenessToBoundary, 0.03125 * (dot(pos, vec2(19.0 * pos.x, 167.0))))).r;
+        float dither = texture(noiseTexture, vec2(closenessToBoundary, 0.03125 * (dot(pos, vec3(19.0 * pos.x, 167.0 * pos.y, 211.0))))).r;
         strength += (dither * min(strengthChange, 0.0)) + ((1.0 - dither) * max(strengthChange, 0.0));
         
         return strength;
@@ -67,18 +70,19 @@ struct CubeLight
     float radius;
 };
 
-vec3 CalcCubeLight(CubeLight light, vec2 pos, sampler2D noiseTexture)
+vec3 CalcCubeLight(CubeLight light, vec3 pos, vec3 normal, sampler2D noiseTexture)
 {
     // Calculate the closest point on the light
     vec3 closest = vec3(
         max(light.mins.x, min(light.maxs.x, pos.x)),
         max(light.mins.y, min(light.maxs.y, pos.y)),
-        max(light.mins.z, min(light.maxs.z, 0.0))
+        max(light.mins.z, min(light.maxs.z, pos.z))
     );
-    vec3 dir = closest - vec3(pos, 0.0);
+    vec3 dir = closest - pos;
     
-    float maxDistance = sqrt((light.radius * light.radius) - (closest.z * closest.z)); // The maximum distance from the closest point
-    return CalcLightStrength(pos, dir, light.intensity, maxDistance, noiseTexture) * light.color;
+    float dist = dot(dir, normal); // The distance between the plane that this point is on and the plane parallel to it that the closest point of the light is on
+    float maxDistance = sqrt((light.radius * light.radius) - (dist * dist)); // The maximum distance from the closest point
+    return CalcLightStrength(pos, normal, dir, light.intensity, maxDistance, noiseTexture) * light.color;
 }
 
 
@@ -100,18 +104,17 @@ uniform sampler2D noiseTexture;
 
 // MAIN FUNCTION
 
-#define AddCubeLightColor(k)        if (k < numCubeLights) color += CalcCubeLight(cubeLights[k], fs_in.pos, noiseTexture)
-
 void main()
 {
     vec3 diff = vec3(texture(tileTexture, fs_in.uv));
     vec3 color = ambient;
+    vec3 norm = normalize(fs_in.normal);
     
     if (numCubeLights <= NR_CUBE_LIGHTS)
     {
         for (int k = numCubeLights - 1; k >= 0; --k)
         {
-            color += CalcCubeLight(cubeLights[k], fs_in.pos, noiseTexture);
+            color += CalcCubeLight(cubeLights[k], fs_in.pos, norm, noiseTexture);
         }
     }
     

@@ -68,7 +68,7 @@ namespace onion
 			virtual void get_closest_point(const Ray& ray, vec3i& closest) const = 0;
 		};
 
-		// A single point in three-dimensional space.
+		// A shape modeled by a single point in three-dimensional space.
 		class Point : public Shape
 		{
 		public:
@@ -93,7 +93,7 @@ namespace onion
 			virtual void get_closest_point(const Ray& ray, vec3i& closest) const;
 		};
 
-		// A bounds object modeled by a sphere, with the position as its center.
+		// A shape modeled by a sphere, with the position as its center.
 		class Sphere : public Shape
 		{
 		protected:
@@ -123,7 +123,7 @@ namespace onion
 			virtual void get_closest_point(const Ray& ray, vec3i& closest) const;
 		};
 
-		// A bounds object modeled by an axis-aligned rectangular prism, with the position as its minimum point.
+		// A shape modeled by an axis-aligned rectangular prism, with the position as its minimum point.
 		class RectangularPrism : public Shape
 		{
 		protected:
@@ -135,6 +135,36 @@ namespace onion
 			/// <param name="pos">The position of the corner with the lowest values.</param>
 			/// <param name="dimensions">The dimensions of the rectangular prism.</param>
 			RectangularPrism(const vec3i& pos, const vec3i& dimensions);
+
+			/// <summary>Retrieves the first intersection of the bounds with the given raycast.</summary>
+			/// <param name="ray">The raycast to retrieve an intersection with.</param>
+			/// <param name="intersection">Outputs the first intersection in the bounds with the given ray.</param>
+			/// <returns>True if there is an intersection with the ray, false otherwise.</returns>
+			virtual bool get_intersection(const Ray& ray, vec3i& intersection) const;
+
+			/// <summary>Retrieves the closest point within the sphere to an arbitrary 3D point.</summary>
+			/// <param name="pos">The position to retrieve the closest point to.</param>
+			/// <param name="closest">Outputs the closest point in the bounds to the given position.</param>
+			virtual void get_closest_point(const vec3i& pos, vec3i& closest) const;
+
+			/// <summary>Retrieves the closest point within the bounds to an arbitrary 3D raycast.</summary>
+			/// <param name="pos">The raycast to retrieve the closest point to.</param>
+			/// <param name="closest">Outputs the closest point in the bounds to the given raycast.</param>
+			virtual void get_closest_point(const Ray& ray, vec3i& closest) const;
+		};
+
+		// A shape modeled by an upright two-dimensional rectangle in three-dimensional space.
+		class Rectangle : public Shape
+		{
+		protected:
+			// The dimensions of the rectangle.
+			vec3i m_Dimensions;
+
+		public:
+			/// <summary>Constructs an orthogonal rectangular prism.</summary>
+			/// <param name="pos">The position of the corner with the lowest values.</param>
+			/// <param name="dimensions">The dimensions of the rectangular prism.</param>
+			Rectangle(const vec3i& pos, const vec3i& dimensions);
 
 			/// <summary>Retrieves the first intersection of the bounds with the given raycast.</summary>
 			/// <param name="ray">The raycast to retrieve an intersection with.</param>

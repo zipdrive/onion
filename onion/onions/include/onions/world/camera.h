@@ -42,6 +42,11 @@ namespace onion
 				/// <param name="pos">A point in world space.</param>
 				/// <returns>True if the point is visible, false otherwise.</returns>
 				bool is_visible(const vec3i& pos) const;
+
+				/// <summary>Calculates if a shape in world space is visible on screen.</summary>
+				/// <param name="shape">A shape in world space.</param>
+				/// <returns>True if the shape is visible, false otherwise.</returns>
+				bool is_visible(const Shape* shape) const;
 			};
 
 		protected:

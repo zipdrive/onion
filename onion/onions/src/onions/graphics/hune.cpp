@@ -770,7 +770,7 @@ HuneGraphic::HuneGraphic()
 
 		while (meta.good())
 		{
-			_IntegerData file_data;
+			IntegerData file_data;
 			string words = meta.load_data(file_data);
 
 			smatch wordmatch;

@@ -12,48 +12,84 @@ namespace onion
 	namespace opengl
 	{
 
+		// An untyped vertex attrib.
+		struct _VertexAttrib
+		{
+			// The offset of this attrib from the beginning of the vertex, in bytes.
+			const Uint offset;
+
+
+			/// <summary>Constructs a vertex attrib.</summary>
+			/// <param name="offset">The offset of this attrib from the beginning of the vertex, in bytes.</param>
+			_VertexAttrib(Uint offset);
+			
+			/// <summary>Virtual deconstructor.</summary>
+			virtual ~_VertexAttrib() = default;
+
+
+			/// <summary>Retrieves the size of the attribute.</summary>
+			/// <returns>The size of the attribute, in bytes.</returns>
+			virtual Uint size() const = 0;
+
+			/// <summary>Retrieves the number of primitives contained in the attribute.</summary>
+			/// <returns>The number of primitives contained in the attribute.</returns>
+			virtual Int count() const = 0;
+
+
+			/// <summary>Sets the vertex attrib pointer.</summary>
+			/// <param name="index">The index of the vertex attrib pointer.</param>
+			/// <param name="stride">The stride between each vertex.</param>
+			virtual void set(Uint index, Uint stride) const = 0;
+		};
+
+		// A typed vertex attrib.
+		template <typename T>
+		struct VertexAttrib : public _VertexAttrib
+		{
+			/// <summary>Constructs a typed vertex attrib.</summary>
+			/// <param name="type">The GLenum value associated with the type.</param>
+			/// <param name="offset">The offset of this attrib from the beginning of the vertex, in bytes.</param>
+			VertexAttrib(Uint offset);
+
+
+			/// <summary>Retrieves the size of the attribute.</summary>
+			/// <returns>The size of the attribute, in bytes.</returns>
+			Uint size() const;
+
+			/// <summary>Retrieves the number of primitives contained in the attribute.</summary>
+			/// <returns>The number of primitives contained in the attribute.</returns>
+			Int count() const;
+
+
+			/// <summary>Sets the vertex attrib pointer.</summary>
+			/// <param name="index">The index of the vertex attrib pointer.</param>
+			/// <param name="stride">The stride between each vertex.</param>
+			void set(Uint index, Uint stride) const;
+		};
+
+		struct VertexAttribs
+		{
+			// All vertex attribs, in order.
+			std::vector<_VertexAttrib*> attribs;
+
+			/// <summary>Deletes all vertex attribs.</summary>
+			~VertexAttribs();
+
+			/// <summary>Pushes a vertex attrib onto the back of the list of vertex attribs.</summary>
+			/// <param name="type">The GLenum value associated with the type.</param>
+			void push(Uint type);
+
+			/// <summary>Enables the vertex attribs.</summary>
+			void enable() const;
+
+			/// <summary>Disables the vertex attribs.</summary>
+			void disable() const;
+		};
+		
+		
+		
 		// Predeclaration of the ID object.
 		struct _ID;
-
-
-		// A variable passed to a vertex shader.
-		class _VertexAttribute
-		{
-		protected:
-			// The size of the vertex attribute.
-			unsigned int m_Size;
-
-		public:
-			/// <summary>Virtual deconstructor.</summary>
-			virtual ~_VertexAttribute() {}
-
-			/// <summary>Sets where shader programs should look for the vertex attribute in the vertex buffer.</summary>
-			/// <param name="offset">The number of floats between the start of listing all attributes for a vertex and the start of this attribute for a vertex.</param>
-			/// <param name="stride">The total number of floats assigned to each vertex in the buffer.</param>
-			virtual void set(unsigned int offset, unsigned int stride) const = 0;
-		};
-
-		// The data for all vertex attributes in a shader.
-		struct _VertexAttributeInformation
-		{
-			struct Attribute
-			{
-				// An object referring to the vertex attribute.
-				_VertexAttribute* attrib;
-
-				// The offset from the start.
-				unsigned int offset;
-			};
-
-			// All vertex attributes.
-			std::vector<Attribute> attributes;
-
-			// The total size of all vertex attributes.
-			unsigned int stride;
-
-			/// <summary>Cleans up the vertex attribute objects.</summary>
-			~_VertexAttributeInformation();
-		};
 
 
 		// The data passed to a vertex buffer.
@@ -170,6 +206,10 @@ namespace onion
 			};
 
 
+			/// <summary>Virtual deconstructor.</summary>
+			virtual ~_VertexBufferData() = default;
+
+
 			/// <summary>Retrieves the size of each vertex.</summary>
 			/// <returns>The size of each vertex, in bytes.</returns>
 			virtual std::size_t vertex_size() const = 0;
@@ -267,7 +307,7 @@ namespace onion
 
 
 			// A list of all vertex attributes.
-			_VertexAttributeInformation m_VertexAttributes;
+			VertexAttribs m_VertexAttributes;
 
 			/// <summary>Compiles the shader program from raw text.</summary>
 			/// <param name="vertex_shader_text">The vertex shader, in raw text form.</param>
@@ -310,7 +350,7 @@ namespace onion
 
 			/// <summary>Retrieves information about the vertex attributes of the shader program.</summary>
 			/// <returns>Information about the vertex attributes.</returns>
-			const _VertexAttributeInformation& get_attribs() const;
+			const VertexAttribs& get_attribs() const;
 		};
 
 
@@ -420,19 +460,18 @@ namespace onion
 			// The ID of this buffer.
 			_ID* m_Buffer;
 
+			// The ID of the VAO containing buffer information.
+			_ID* m_VAO;
+
 		protected:
-			/// <summary>Constructs a buffer from data.</summary>
-			/// <param name="data">The data to use in the buffer.</param>
-			_VertexBuffer(const std::vector<float>& data);
-
-			/// <summary>Constructs a buffer from data.</summary>
-			/// <param name="data">The data to use in the buffer.</param>
-			_VertexBuffer(const _VertexBufferData* data);
-
-			/// <summary>Activates the buffer.</summary>
+			/// <summary>Activates anything else that needs to be activated.</summary>
 			virtual void __activate() const;
 
 		public:
+			/// <summary>Constructs a buffer from data.</summary>
+			/// <param name="data">The data to use in the buffer.</param>
+			_VertexBuffer(const _VertexBufferData* data, const VertexAttribs& attribs);
+
 			/// <summary>Frees the buffer from memory.</summary>
 			virtual ~_VertexBuffer();
 
@@ -678,34 +717,10 @@ namespace onion
 			return buf;
 		}
 	};
-	
-	class VertexBuffer : public opengl::_VertexBuffer
-	{
-	private:
-		// The vertex attributes associated with the buffer.
-		const opengl::_VertexAttributeInformation& m_Attribs;
 
-	protected:
-		/// <summary>Activates the buffer.</summary>
-		void __activate() const;
-
-	public:
-		/// <summary>Constructs a buffer of vertex attributes.</summary>
-		/// <param name="data">The data to fill the vertex attribute buffer with.</param>
-		/// <param name="attribs">The information about the vertex attributes in the buffer.</param>
-		VertexBuffer(const std::vector<float>& data, const opengl::_VertexAttributeInformation& attribs);
-
-		/// <summary>Constructs a buffer of vertex attributes.</summary>
-		/// <param name="data">The data to fill the vertex attribute buffer with.</param>
-		/// <param name="attribs">The information about the vertex attributes in the buffer.</param>
-		VertexBuffer(const opengl::_VertexBufferData* data, const opengl::_VertexAttributeInformation& attribs);
-
-		/// <summary>Virtual deconstructor.</summary>
-		virtual ~VertexBuffer();
-	};
 
 	// A vertex buffer that also manages an image that should be bound to the 0-index slot.
-	class ImageBuffer : public VertexBuffer
+	class ImageBuffer : public opengl::_VertexBuffer
 	{
 	private:
 		// The image in the buffer.
@@ -717,10 +732,10 @@ namespace onion
 
 	public:
 		/// <summary>Constructs a buffer that also manages a image.</summary>
-		/// <param name="data">The raw data of the buffer.</param>
+		/// <param name="data">The data to fill the buffer with.</param>
 		/// <param name="attribs">The information about the vertex attributes in the buffer.</param>
 		/// <param name="image">The image to be managed by the buffer.</param>
-		ImageBuffer(const std::vector<float>& data, const opengl::_VertexAttributeInformation& attribs, opengl::_Image* image);
+		ImageBuffer(const opengl::_VertexBufferData* data, const opengl::VertexAttribs& attribs, opengl::_Image* image);
 
 		/// <summary>Frees the image.</summary>
 		~ImageBuffer();

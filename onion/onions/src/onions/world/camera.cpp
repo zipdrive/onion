@@ -14,6 +14,16 @@ namespace onion
 			return true;
 		}
 
+		bool WorldCamera::View::is_visible(const Shape* shape) const
+		{
+			// Get the closest point in the shape to the center of the screen
+			vec3i closest;
+			shape->get_closest_point(center, closest);
+
+			// Calculate whether that point is visible
+			return is_visible(closest);
+		}
+
 
 		WorldCamera::WorldCamera(const mat2x3i& frame_bounds) : m_FrameBounds(frame_bounds) {}
 		

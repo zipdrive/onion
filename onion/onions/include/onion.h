@@ -18,3 +18,4 @@
 // World
 #include "onions/world/world.h"
 #include "onions/world/lighting.h"
+#include "onions/world/graphic.h"

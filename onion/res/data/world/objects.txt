@@ -1,1 +1,17 @@
-DEBUG light1                type = "light, cube"    color = "230,115,38"   intensity = "100"      radius = "250"
+begin DEBUG light1
+    type = "light:cube"
+    color = (255, 255, 255)
+    intensity = 100
+    radius = 250
+end
+
+begin DEBUG wall1
+    type = "wall:xalign"
+    sprite_sheet = "sprites/debug.png"
+    sprite = "debug"
+end
+begin DEBUG wall2
+    type = "wall:xalign"
+    sprite_sheet = "sprites/debug2.png"
+    sprite = "debug"
+end

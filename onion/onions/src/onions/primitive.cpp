@@ -6,6 +6,12 @@ namespace onion
 {
 
 	template <>
+	struct _primitive<bool>
+	{
+		using type = GLboolean;
+	};
+	
+	template <>
 	struct _primitive<int>
 	{
 		using type = GLint;

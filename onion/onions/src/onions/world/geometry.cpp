@@ -29,24 +29,22 @@ namespace onion
 		bool Point::get_intersection(const Ray& ray, vec3i& intersection) const
 		{
 			vec3i diff = m_Position - ray.origin;
-			if (diff.get(0) < ray.direction.get(0))
+			for (int k = 2; k >= 0; --k)
 			{
-				if ((ray.direction.get(0) / diff.get(0)) * diff == ray.direction)
+				if (diff.get(k) != 0)
 				{
-					intersection = m_Position;
-					return true;
+					// Check to make sure that the difference vector (between the point and the ray origin) is parallel to the ray direction
+					if (ray.direction.get(k) * diff == diff.get(k) * ray.direction)
+					{
+						intersection = m_Position;
+						return true;
+					}
+					return false;
 				}
-				return false;
 			}
-			else
-			{
-				if ((diff.get(0) / ray.direction.get(0)) * ray.direction == diff)
-				{
-					intersection = m_Position;
-					return true;
-				}
-				return false;
-			}
+
+			intersection = m_Position;
+			return true;
 		}
 
 		void Point::get_closest_point(const vec3i& pos, vec3i& closest) const
@@ -106,7 +104,7 @@ namespace onion
 			else
 			{
 				diff *= (Int)round(sqrt(m_RadiusSquared));
-				Int denominator = ceil(sqrt(dist));
+				Int denominator = (Int)ceil(sqrt(dist));
 				closest.set(0, 0, diff.get(0) / denominator);
 				closest.set(1, 0, diff.get(1) / denominator);
 				closest.set(2, 0, diff.get(2) / denominator);
@@ -238,31 +236,115 @@ namespace onion
 
 					for (int m = 1; m >= 0; --m)
 					{
-						Int num = p[m].dot - p[m].normal.dot(ray.origin);
-						Int den = p[m].normal.dot(ray.direction);
+						Int numer = p[m].dot - p[m].normal.dot(ray.origin);
+						Int denom = p[m].normal.dot(ray.direction);
 
-						vec3i intersect = ray.origin;
-						vec3i closest_on_prism;
-						for (int n = 2; n >= 0; --n)
+						if (denom != 0) // Make sure plane isn't parallel to the ray
 						{
-							intersect(n) += ray.direction.get(n) * num / den;
-							
-							if (intersect.get(n) < m_Position.get(n))
-								closest_on_prism(n) = m_Position.get(n);
-							else if (intersect.get(n) > m_Position.get(n) + m_Dimensions.get(n))
-								closest_on_prism(n) = m_Position.get(n) + m_Dimensions.get(n);
-							else
-								closest_on_prism(n) = intersect.get(n);
-						}
-						
-						vec3i diff = intersect - closest_on_prism;
-						Int dist = diff.square_sum();
-						if (dist < smallest_dist)
-						{
-							closest = closest_on_prism;
-							smallest_dist = dist;
+							vec3i intersect = ray.origin;
+							vec3i closest_on_prism;
+							for (int n = 2; n >= 0; --n)
+							{
+								intersect(n) += ray.direction.get(n) * numer / denom;
+
+								if (intersect.get(n) < m_Position.get(n))
+									closest_on_prism(n) = m_Position.get(n);
+								else if (intersect.get(n) > m_Position.get(n) + m_Dimensions.get(n))
+									closest_on_prism(n) = m_Position.get(n) + m_Dimensions.get(n);
+								else
+									closest_on_prism(n) = intersect.get(n);
+							}
+
+							vec3i diff = intersect - closest_on_prism;
+							Int dist = diff.square_sum();
+							if (dist < smallest_dist)
+							{
+								closest = closest_on_prism;
+								smallest_dist = dist;
+							}
 						}
 					}
+				}
+			}
+		}
+
+
+		Rectangle::Rectangle(const vec3i& pos, const vec3i& dimensions)
+		{
+			m_Position = pos;
+			m_Dimensions = dimensions;
+		}
+
+		bool Rectangle::get_intersection(const Ray& ray, vec3i& intersection) const
+		{
+			Int numer = (m_Dimensions.get(1) * (m_Position.get(0) - ray.origin.get(0))) - (m_Dimensions.get(0) * (m_Position.get(1) - ray.origin.get(1)));
+			Int denom = (m_Dimensions.get(1) * ray.direction.get(0)) - (m_Dimensions.get(0) * ray.direction.get(1));
+
+			if (denom == 0)
+			{
+				// Ray is parallel to the plane that the rectangle is on
+				return false;
+			}
+			else
+			{
+				// Find the intersection between the ray and the plane that the rectangle is on
+				intersection = ray.origin;
+				for (int k = 2; k >= 0; --k)
+				{
+					intersection(k) += ray.direction.get(k) * numer / denom;
+
+					// Check if the intersection lies within the rectangle
+					if (intersection.get(k) < m_Position.get(k) || intersection.get(k) > m_Position.get(k) + m_Dimensions.get(k))
+						return false;
+				}
+
+				return true;
+			}
+		}
+
+		void Rectangle::get_closest_point(const vec3i& pos, vec3i& closest) const
+		{
+			// Find the closest point on the plane that the rectangle is on to the given point
+			Int numer = (m_Dimensions.get(1) * (m_Position.get(0) - pos.get(0))) - (m_Dimensions.get(0) * (m_Position.get(1) - pos.get(1)));
+			Int denom = (m_Dimensions.get(0) * m_Dimensions.get(0)) + (m_Dimensions.get(1) * m_Dimensions.get(1));
+
+			closest = pos;
+			closest(0) += (numer * m_Dimensions.get(1)) / denom;
+			closest(1) -= (numer * m_Dimensions.get(0)) / denom;
+
+			// Clamp the closest point to the bounds of the rectangle
+			for (int k = 2; k >= 0; --k)
+			{
+				if (closest.get(k) < m_Position.get(k))
+					closest(k) = m_Position.get(k);
+				else if (closest.get(k) > m_Position.get(k) + m_Dimensions.get(k))
+					closest(k) = m_Position.get(k) + m_Dimensions.get(k);
+			}
+		}
+
+		void Rectangle::get_closest_point(const Ray& ray, vec3i& closest) const
+		{
+			// Find the intersection between the ray and the plane that the rectangle is on
+			Int numer = (m_Dimensions.get(1) * (m_Position.get(0) - ray.origin.get(0))) - (m_Dimensions.get(0) * (m_Position.get(1) - ray.origin.get(1)));
+			Int denom = (m_Dimensions.get(1) * ray.direction.get(0)) - (m_Dimensions.get(0) * ray.direction.get(1));
+
+			if (denom == 0)
+			{
+				// Ray is parallel to the plane that the rectangle is on, so just return the closest point to the origin
+				get_closest_point(ray.origin, closest);
+			}
+			else
+			{
+				closest = ray.origin;
+				for (int k = 2; k >= 0; --k)
+				{
+					closest(k) += ray.direction.get(k) * numer / denom;
+
+					// Clamp the closest point to the bounds of the rectangle
+					if (closest.get(k) < m_Position.get(k))
+						closest(k) = m_Position.get(k);
+					else if (closest.get(k) > m_Position.get(k) + m_Dimensions.get(k))
+						closest(k) = m_Position.get(k) + m_Dimensions.get(k);
 				}
 			}
 		}

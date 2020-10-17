@@ -6,18 +6,7 @@ using namespace std;
 namespace onion
 {
 
-	bool _StringData::get(string key, int& value) const
-	{
-		string string_value;
-		if (get(key, string_value))
-		{
-			value = stoi(string_value);
-			return true;
-		}
-		return false;
-	}
-
-	bool _StringData::get(string key, bool& value) const
+	bool StringData::get(String key, Boolean& value) const
 	{
 		string string_value;
 		if (get(key, string_value))
@@ -28,14 +17,127 @@ namespace onion
 		return false;
 	}
 
-	void _StringData::set(string key, const int& value)
+	bool StringData::get(String key, Int& value) const
+	{
+		string string_value;
+		if (get(key, string_value))
+		{
+			value = stoi(string_value);
+			return true;
+		}
+		return false;
+	}
+
+	bool StringData::get(String key, Float& value) const
+	{
+		string string_value;
+		if (get(key, string_value))
+		{
+			value = stof(string_value);
+			return true;
+		}
+		return false;
+	}
+
+	bool StringData::get(String key, INT_VEC2& value) const
+	{
+		String str;
+		if (get(key, str))
+		{
+			regex pattern("\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)");
+
+			smatch match;
+			if (regex_match(str, match, pattern))
+			{
+				value(0) = stoi(match[1].str());
+				value(1) = stoi(match[2].str());
+			}
+			else
+			{
+				value(0) = 0;
+				value(1) = 0;
+			}
+
+			return true;
+		}
+		return false;
+	}
+	
+	bool StringData::get(String key, INT_VEC3& value) const
+	{
+		String str;
+		if (get(key, str))
+		{
+			regex pattern("\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)");
+
+			smatch match;
+			if (regex_match(str, match, pattern))
+			{
+				value(0) = stoi(match[1].str());
+				value(1) = stoi(match[2].str());
+				value(2) = stoi(match[3].str());
+			}
+			else
+			{
+				value(0) = 0;
+				value(1) = 0;
+				value(2) = 0;
+			}
+
+			return true;
+		}
+		return false;
+	}
+
+	bool StringData::get(String key, FLOAT_VEC3& value) const
+	{
+		String str;
+		if (get(key, str))
+		{
+			regex pattern("\\(\\s*(\\S+)\\s*,\\s*(\\S+)\\s*,\\s*(\\S+)\\s*\\)");
+
+			smatch match;
+			if (regex_match(str, match, pattern))
+			{
+				value(0) = stof(match[1].str());
+				value(1) = stof(match[2].str());
+				value(2) = stof(match[3].str());
+			}
+			else
+			{
+				value(0) = 0;
+				value(1) = 0;
+				value(2) = 0;
+			}
+
+			return true;
+		}
+		return false;
+	}
+
+	void StringData::set(String key, Boolean value)
+	{
+		set(key, value ? "true" : "false");
+	}
+
+	void StringData::set(String key, Int value)
 	{
 		set(key, to_string(value));
 	}
 
-	void _StringData::set(string key, const bool& value)
+	void StringData::set(String key, Float value)
 	{
-		set(key, value ? "true" : "false");
+		set(key, to_string(value));
+	}
+
+	void StringData::set(String key, const INT_VEC3& value)
+	{
+		set(key, "(" + to_string(value.get(0)) + "," + to_string(value.get(1)) + "," + to_string(value.get(2)) + ")");
+	}
+
+	void StringData::set(String key, const FLOAT_VEC3& value)
+	{
+		set(key, "(" + to_string(value.get(0)) + "," + to_string(value.get(1)) + "," + to_string(value.get(2)) + ")");
 	}
 
 
@@ -106,7 +208,7 @@ namespace onion
 		return "";
 	}
 
-	string LoadFile::load_data(_IntegerData& data)
+	string LoadFile::load_data(IntegerData& data)
 	{
 		string line;
 		regex line_data("((.*\\S)\\s)?\\s*(\\S+)\\s*=\\s*(-?\\d+)");
@@ -124,18 +226,39 @@ namespace onion
 		return line;
 	}
 
-	string LoadFile::load_data(_StringData& data)
+	string LoadFile::load_data(StringData& data)
 	{
 		string line;
-		regex line_data("((.*\\S)\\s)?\\s*(\\S+)\\s*=\\s*\"(.*)\"\\s*$");
+		regex begin_regex("^begin\\s+(.*)$");
+		regex enclosed_regex("^((.*\\S)\\s)?\\s*(\\S+)\\s*=\\s*\"(.*)\"\\s*$");
+		regex unenclosed_regex("^((.*\\S)\\s)?\\s*(\\S+)\\s*=\\s*(.+)\\s*$");
 
 		if (getline(m_File, line))
 		{
 			smatch match;
-			while (regex_match(line, match, line_data))
+			if (regex_match(line, match, begin_regex))
 			{
-				data.set(match[3].str(), match[4].str());
-				line = match[2].str();
+				string id = match[1].str();
+				while (getline(m_File, line))
+				{
+					if (line.compare("end") == 0)
+						break;
+
+					while (regex_match(line, match, enclosed_regex) || regex_match(line, match, unenclosed_regex))
+					{
+						data.set(match[3].str(), match[4].str());
+						line = match[2].str();
+					}
+				}
+				line = id;
+			}
+			else
+			{
+				while (regex_match(line, match, enclosed_regex) || regex_match(line, match, unenclosed_regex))
+				{
+					data.set(match[3].str(), match[4].str());
+					line = match[2].str();
+				}
 			}
 		}
 

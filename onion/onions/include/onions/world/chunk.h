@@ -150,7 +150,8 @@ namespace onion
 			void display_tiles() const;
 
 			/// <summary>Displays objects in the chunk.</summary>
-			virtual void display_objects() const = 0;
+			/// <param name="center">The ray from the camera position towards the camera.</param>
+			virtual void display_objects(const Ray& center) const = 0;
 		};
 
 
@@ -181,13 +182,13 @@ namespace onion
 			/// <summary>Loads the data of a tile.</summary>
 			/// <param name="line">The data loaded from a line in the file.</param>
 			/// <param name="data">The buffer of data.</param>
-			virtual void __load_tile(const _StringData& line, buffer_t* data);
+			virtual void __load_tile(const StringData& line, buffer_t* data);
 
 			/// <summary>Loads the data of a static object.</summary>
 			/// <param name="id">The ID of the object.</param>
 			/// <param name="line">The data loaded from a line in the file.</param>
 			/// <param name="data">The buffer of data.</param>
-			virtual void __load_obj(std::string id, const _StringData& line);
+			virtual void __load_obj(std::string id, const StringData& line);
 
 		public:
 			/// <summary>Constructs a chunk.</summary>
@@ -209,7 +210,8 @@ namespace onion
 			void update_visible(const WorldCamera::View& view);
 
 			/// <summary>Displays objects in the chunk.</summary>
-			void display_objects() const;
+			/// <param name="center">The ray from the camera position towards the camera.</param>
+			void display_objects(const Ray& center) const;
 		};
 
 

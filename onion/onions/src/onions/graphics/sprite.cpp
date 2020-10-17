@@ -226,65 +226,14 @@ namespace onion
 		return m_SpriteManager.get(id);
 	}
 
+	const Sprite* _SpriteSheet::get_sprite(SPRITE_ID id) const
+	{
+		return m_SpriteManager.get(id);
+	}
+
 	bool _SpriteSheet::is_loaded() const
 	{
 		return m_IsLoaded;
-	}
-
-	void _SpriteSheet::load(const char* path)
-	{
-		// Unset the flag that says the sprite sheet has been loaded
-		m_IsLoaded = false;
-
-		// Clear existing sprites
-		m_SpriteManager.clear();
-
-		// Load the image
-		_Image* image = load_image(path);
-
-		// Construct the path to the meta file.
-		string fpath("res/img/");
-		fpath.append(path);
-		regex fext_finder("(.*)\\.[^\\.]+"); // Regex to find the path excluding file extension
-		fpath = regex_replace(fpath, fext_finder, "$1.meta");
-
-		// Load the file
-		LoadFile file(fpath);
-		vector<float> data;
-
-		while (file.good())
-		{
-			// Load a line of data from the meta file
-			_IntegerData line;
-			SPRITE_ID id = file.load_data(line);
-
-			// Load the vertex attributes and sprite data from the line data
-			load_vertex_data(id, line, image, data);
-		}
-
-		// Generate an image buffer
-		set_buffer(image, data);
-
-		// Set the flag that says the sprite sheet has been loaded
-		m_IsLoaded = true;
-	}
-
-
-
-
-	/// <summary>Retrieves the int value associated with a key from a line of data.</summary>
-	/// <param name="data">The processed line of data.</param>
-	/// <param name="key">The key to retrieve the value of.</param>
-	/// <param name="value">Outputs the value associated with the given key.</param>
-	/// <returns>True if the key exists, false otherwise.</returns>
-	bool load_int(const unordered_map<string, int>& data, string key, int& value)
-	{
-		auto iter = data.find(key);
-		if (iter == data.end())
-			return false;
-
-		value = iter->second;
-		return true;
 	}
 
 
@@ -313,63 +262,55 @@ namespace onion
 		return m_SimpleSpriteShader;
 	}
 
-	void SimplePixelSpriteSheet::load_vertex_data(string id, _IntegerData& line, opengl::_Image* image, vector<float>& data)
+	opengl::_VertexBufferData* SimplePixelSpriteSheet::__load(LoadFile& file, opengl::_Image* image)
 	{
-		int left, top, width, height;
-		if (line.get("left", left) && line.get("top", top) && line.get("width", width) && line.get("height", height))
+		VertexBufferData<FLOAT_VEC2, FLOAT_VEC2>* data = new VertexBufferData<FLOAT_VEC2, FLOAT_VEC2>();
+
+		while (file.good())
 		{
-			// Create a sprite data object
-			m_SpriteManager.set(id, new Sprite(data.size() / 4, width, height));
+			StringData line;
+			String id = file.load_data(line);
 
-			// Calculate texcoord numbers
-			float l = (float)left / image->get_width(); // left texcoord
-			float r = (float)(left + width) / image->get_width(); // right texcoord
-			float w = (float)width;
+			vec2i pos, size;
+			if (line.get("pos", pos) && line.get("size", size))
+			{
+				// Retrieve the base index
+				int index = data->buffer_size();
 
-			float t = (float)top / image->get_height(); // top texcoord
-			float b = (float)(top + height) / image->get_height(); // bottom texcoord
-			float h = (float)height;
+				// Create a sprite data object
+				m_SpriteManager.set(id, new Sprite(index, size.get(0), size.get(1)));
 
-			// First triangle: bottom-left, bottom-right, top-right
-			// Bottom-left corner, vertices
-			data.push_back(0.0f);
-			data.push_back(0.0f);
-			// Bottom-left corner, tex coord
-			data.push_back(l);
-			data.push_back(b);
-			// Bottom-right corner, vertices
-			data.push_back(w);
-			data.push_back(0.0f);
-			// Bottom-right corner, tex coord
-			data.push_back(r);
-			data.push_back(b);
-			// Top-right corner, vertices
-			data.push_back(w);
-			data.push_back(h);
-			// Top-right corner, tex coord
-			data.push_back(r);
-			data.push_back(t);
+				// Construct the corners, in the order bottom-left -> bottom-right -> top-left -> top-right
+				vec2f vertex_pos[4], vertex_uv[4];
+				for (int k = 0; k < 4; ++k)
+				{
+					vertex_pos[k](0) = k % 2 == 0
+						? 0.f
+						: size.get(0);
+					vertex_pos[k](1) = k / 2 == 0
+						? 0.f
+						: size.get(1);
 
-			// Second triangle: bottom-left, top-left, top-right
-			// Bottom-left corner, vertices
-			data.push_back(0.0f);
-			data.push_back(0.0f);
-			// Bottom-left corner, tex coord
-			data.push_back(l);
-			data.push_back(b);
-			// Top-left corner, vertices
-			data.push_back(0.0f);
-			data.push_back(h);
-			// Top-left corner, tex coord
-			data.push_back(l);
-			data.push_back(t);
-			// Top-right corner, vertices
-			data.push_back(w);
-			data.push_back(h);
-			// Top-right corner, tex coord
-			data.push_back(r);
-			data.push_back(t);
+					vertex_uv[k](0) = k % 2 == 0 
+						? (Float)pos.get(0) / image->get_width()
+						: (Float)(pos.get(0) + size.get(0)) / image->get_width();
+					vertex_uv[k](1) = k / 2 == 0
+						? (Float)pos.get(1) / image->get_height()
+						: (Float)(pos.get(1) + size.get(1)) / image->get_height();
+				}
+
+				// Insert the data to the buffer in triangles of bottom-left -> top-right -> one of the remaining vertices
+				data->push(6);
+				for (int k = 0; k < 6; ++k)
+				{
+					int corner_index = k % 3 == 0 ? 0 : (k % 3 == 1 ? 3 : (k / 3 == 0 ? 1 : 2));
+					data->set<0>(index + k, vertex_pos[corner_index]);
+					data->set<1>(index + k, vertex_uv[corner_index]);
+				}
+			}
 		}
+
+		return data;
 	}
 
 	void SimplePixelSpriteSheet::load(const char* path, int width, int height)
@@ -384,7 +325,7 @@ namespace onion
 		_Image* image = load_image(path);
 
 		// Create the data vector
-		vector<float> data;
+		VertexBufferData<FLOAT_VEC2, FLOAT_VEC2> data;
 
 		// Partition the image into sprites
 		int xmax = image->get_width() / width;
@@ -394,9 +335,11 @@ namespace onion
 		{
 			for (int x = 0; x < xmax; ++x)
 			{
+				int index = data.buffer_size();
+
 				// Generate the tex coords
-				float xr = (float)width / image->get_width();
-				float yr = (float)height / image->get_height();
+				float xr = (Float)width / image->get_width();
+				float yr = (Float)height / image->get_height();
 
 				float l = x * xr; // left texcoord
 				float r = (x + 1) * xr; // right texcoord
@@ -406,71 +349,35 @@ namespace onion
 				float b = (y + 1) * yr; // bottom texcoord
 				float h = height;
 
-				// First triangle: bottom-left, bottom-right, top-right
-				// Bottom-left corner, vertices
-				data.push_back(0.0f);
-				data.push_back(0.0f);
-				// Bottom-left corner, tex coord
-				data.push_back(l);
-				data.push_back(b);
-				// Bottom-right corner, vertices
-				data.push_back(w);
-				data.push_back(0.0f);
-				// Bottom-right corner, tex coord
-				data.push_back(r);
-				data.push_back(b);
-				// Top-right corner, vertices
-				data.push_back(w);
-				data.push_back(h);
-				// Top-right corner, tex coord
-				data.push_back(r);
-				data.push_back(t);
+				// Construct the corners, in the order bottom-left -> bottom-right -> top-left -> top-right
+				vec2f vertex_pos[4], vertex_uv[4];
+				for (int k = 0; k < 4; ++k)
+				{
+					vertex_pos[k](0) = k % 2 == 0 ? 0.f : w;
+					vertex_pos[k](1) = k / 2 == 0 ? 0.f : h;
 
-				// Second triangle: bottom-left, top-left, top-right
-				// Bottom-left corner, vertices
-				data.push_back(0.0f);
-				data.push_back(0.0f);
-				// Bottom-left corner, tex coord
-				data.push_back(l);
-				data.push_back(b);
-				// Top-left corner, vertices
-				data.push_back(0.0f);
-				data.push_back(h);
-				// Top-left corner, tex coord
-				data.push_back(l);
-				data.push_back(t);
-				// Top-right corner, vertices
-				data.push_back(w);
-				data.push_back(h);
-				// Top-right corner, tex coord
-				data.push_back(r);
-				data.push_back(t);
+					vertex_uv[k](0) = k % 2 == 0 ? l : r;
+					vertex_uv[k](1) = k / 2 == 0 ? b : t;
+				}
+
+				// Insert the data to the buffer in triangles of bottom-left -> top-right -> one of the remaining vertices
+				data.push(6);
+				for (int k = 0; k < 6; ++k)
+				{
+					int corner_index = k % 3 == 0 ? 0 : (k % 3 == 1 ? 3 : (k / 3 == 0 ? 1 : 2));
+					data.set<0>(index + k, vertex_pos[corner_index]);
+					data.set<1>(index + k, vertex_uv[corner_index]);
+				}
 			}
 		}
 
 		// Generate an image buffer
-		set_buffer(image, data);
+		m_Displayer->set_buffer(
+			new ImageBuffer(&data, m_Shader->get_attribs(), image)
+		);
 
 		// Set the flag that says the sprite sheet has been loaded
 		m_IsLoaded = true;
-	}
-
-	void SimplePixelSpriteSheet::set_buffer(_Image* image, const vector<float>& data)
-	{
-		m_Displayer->set_buffer(
-			// Set an image buffer that sets the values of two vertex attributes, each with length 2
-			new ImageBuffer(
-
-				// The array of data
-				data,
-
-				// All vertex attributes recognized by the shader program
-				m_Shader->get_attribs(),
-
-				// The previously loaded image
-				image
-			)
-		);
 	}
 
 	void SimplePixelSpriteSheet::display(const Sprite* sprite, const Palette* palette) const
@@ -504,125 +411,81 @@ namespace onion
 		return m_TextureManager.get(id);
 	}
 
-	void ShadedTexturePixelSpriteSheet::load_vertex_data(std::string id, _IntegerData& line, opengl::_Image* image, std::vector<float>& data)
+	opengl::_VertexBufferData* ShadedTexturePixelSpriteSheet::__load(LoadFile& file, opengl::_Image* image)
 	{
+		VertexBufferData<FLOAT_VEC2, FLOAT_VEC2, FLOAT_VEC2>* data = new VertexBufferData<FLOAT_VEC2, FLOAT_VEC2, FLOAT_VEC2>();
+
 		// Regex that checks if the data is for shading or a texture
-		regex tex_checker("texture\\s+(\\S.+)");
+		regex tex_checker("^texture\\s+(\\S.+)");
 		smatch tex_idmatch;
 
-		if (regex_match(id, tex_idmatch, tex_checker)) // Load a texture
+		while (file.good())
 		{
-			int left, top, width, height;
-			if (line.get("left", left) && line.get("top", top) && line.get("width", width) && line.get("height", height))
-			{
-				// Get the ID for the texture
-				id = tex_idmatch[1].str();
+			StringData line;
+			String id = file.load_data(line);
 
-				// Set the information for the texture
-				m_TextureManager.set(id, new Texture(left, top, width, height, image->get_width(), image->get_height()));
+			if (regex_match(id, tex_idmatch, tex_checker)) // Load a texture
+			{
+				vec2i pos, size;
+				if (line.get("pos", pos) && line.get("size", size))
+				{
+					// Get the ID for the texture
+					id = tex_idmatch[1].str();
+
+					// Set the information for the texture
+					m_TextureManager.set(id, new Texture(pos.get(0), pos.get(1), size.get(0), size.get(1), image->get_width(), image->get_height()));
+				}
+			}
+			else
+			{
+				vec2i shading, mapping, size;
+				if (line.get("shading", shading) && line.get("mapping", mapping) && line.get("size", size))
+				{
+					int index = data->buffer_size();
+
+					// Set the information for the sprite
+					m_SpriteManager.set(id, new Sprite(index, size.get(0), size.get(1)));
+
+					// Construct the corners, in the order bottom-left -> bottom-right -> top-left -> top-right
+					vec2f vertex_pos[4], vertex_shading_uv[4], vertex_mapping_uv[4];
+					for (int k = 0; k < 4; ++k)
+					{
+						vertex_pos[k](0) = k % 2 == 0
+							? 0.f
+							: size.get(0);
+						vertex_pos[k](1) = k / 2 == 0
+							? 0.f
+							: size.get(1);
+
+						vertex_shading_uv[k](0) = k % 2 == 0
+							? (Float)shading.get(0) / image->get_width()
+							: (Float)(shading.get(0) + size.get(0)) / image->get_width();
+						vertex_shading_uv[k](1) = k / 2 == 0
+							? (Float)shading.get(1) / image->get_height()
+							: (Float)(shading.get(1) + size.get(1)) / image->get_height();
+
+						vertex_mapping_uv[k](0) = k % 2 == 0
+							? (Float)mapping.get(0) / image->get_width()
+							: (Float)(mapping.get(0) + size.get(0)) / image->get_width();
+						vertex_mapping_uv[k](1) = k / 2 == 0
+							? (Float)mapping.get(1) / image->get_height()
+							: (Float)(mapping.get(1) + size.get(1)) / image->get_height();
+					}
+
+					// Insert the data to the buffer in triangles of bottom-left -> top-right -> one of the remaining vertices
+					data->push(6);
+					for (int k = 0; k < 6; ++k)
+					{
+						int corner_index = k % 3 == 0 ? 0 : (k % 3 == 1 ? 3 : (k / 3 == 0 ? 1 : 2));
+						data->set<0>(index + k, vertex_pos[corner_index]);
+						data->set<1>(index + k, vertex_shading_uv[corner_index]);
+						data->set<2>(index + k, vertex_mapping_uv[corner_index]);
+					}
+				}
 			}
 		}
-		else // Load a shading sprite
-		{
-			int shading_left, shading_top, mapping_left, mapping_top, width, height;
-			if (line.get("shading_left", shading_left) && line.get("shading_top", shading_top)
-				&& line.get("mapping_left", mapping_left) && line.get("mapping_top", mapping_top)
-				&& line.get("width", width) && line.get("height", height))
-			{
-				// Set the information for the sprite
-				m_SpriteManager.set(id, new Sprite(data.size() / 6, width, height));
 
-				// Calculate texcoords
-				float w = (float)width;
-				float h = (float)height;
-
-				float sl = (float)shading_left / image->get_width(); // left texcoord for shading
-				float sr = (float)(shading_left + width) / image->get_width(); // right texcoord for shading
-				float st = (float)shading_top / image->get_height(); // top texcoord for shading
-				float sb = (float)(shading_top + height) / image->get_height(); // bottom texcoord for shading
-
-				float ml = (float)mapping_left / image->get_width(); // left texcoord for shading
-				float mr = (float)(mapping_left + width) / image->get_width(); // right texcoord for shading
-				float mt = (float)mapping_top / image->get_height(); // top texcoord for shading
-				float mb = (float)(mapping_top + height) / image->get_height(); // bottom texcoord for shading
-
-				// First triangle: bottom-left, bottom-right, top-right
-				// Bottom-left corner, vertices
-				data.push_back(0.0f);
-				data.push_back(0.0f);
-				// Bottom-left corner, shading tex coord
-				data.push_back(sl);
-				data.push_back(sb);
-				// Bottom-left corner, mapping tex coord
-				data.push_back(ml);
-				data.push_back(mb);
-				// Bottom-right corner, vertices
-				data.push_back(w);
-				data.push_back(0.0f);
-				// Bottom-right corner, shading tex coord
-				data.push_back(sr);
-				data.push_back(sb);
-				// Bottom-right corner, mapping tex coord
-				data.push_back(mr);
-				data.push_back(mb);
-				// Top-right corner, vertices
-				data.push_back(w);
-				data.push_back(h);
-				// Top-right corner, shading tex coord
-				data.push_back(sr);
-				data.push_back(st);
-				// Top-right corner, mapping tex coord
-				data.push_back(mr);
-				data.push_back(mt);
-
-				// Second triangle: bottom-left, top-left, top-right
-				// Bottom-left corner, vertices
-				data.push_back(0.0f);
-				data.push_back(0.0f);
-				// Bottom-left corner, shading tex coord
-				data.push_back(sl);
-				data.push_back(sb);
-				// Bottom-left corner, mapping tex coord
-				data.push_back(ml);
-				data.push_back(mb);
-				// Top-left corner, vertices
-				data.push_back(0.0f);
-				data.push_back(h);
-				// Top-left corner, shading tex coord
-				data.push_back(sl);
-				data.push_back(st);
-				// Top-left corner, shading tex coord
-				data.push_back(ml);
-				data.push_back(mt);
-				// Top-right corner, vertices
-				data.push_back(w);
-				data.push_back(h);
-				// Top-right corner, shading tex coord
-				data.push_back(sr);
-				data.push_back(st);
-				// Top-right corner, mapping tex coord
-				data.push_back(mr);
-				data.push_back(mt);
-			}
-		}
-	}
-
-	void ShadedTexturePixelSpriteSheet::set_buffer(_Image* image, const vector<float>& data)
-	{
-		m_Displayer->set_buffer(
-			// Set an image buffer that sets the values of three vertex attributes, each with length 2
-			new ImageBuffer(
-
-				// The array of data
-				data,
-
-				// All vertex attributes recognized by the program
-				m_Shader->get_attribs(),
-
-				// The previously loaded image
-				image
-			)
-		);
+		return data;
 	}
 
 	void ShadedTexturePixelSpriteSheet::display(const Sprite* sprite, bool flip_horizontally, const Texture* texture, const Palette* palette) const

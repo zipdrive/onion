@@ -5,6 +5,10 @@ using namespace onion;
 
 void worldtest_main()
 {
+	// Load the sprite sheet
+	new world::Flat3DPixelSpriteSheet("sprites/debug.png");
+	new world::Flat3DPixelSpriteSheet("sprites/debug2.png");
+
 	// Load the chunk
 	world::Chunk::set_tile_size(16);
 
