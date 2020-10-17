@@ -596,6 +596,9 @@ void character_creator_setup()
 
 	g_Pages->set_bounds(200, 40, -1, app->width - 240, app->height - 80, 0);
 
+	OrthogonalCamera cam;
+	cam.activate();
+
 	// Run the main function
 	main(character_creator_display_func);
 }

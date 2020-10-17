@@ -1,465 +1,2252 @@
-texture monochrome                          width = 1     height = 1     left = 526           top = 1
-
-
-
-torso lean nude front walk0                 width = 13    height = 23    shading_left = 1     shading_top = 0     mapping_left = 417    mapping_top = 0
-torso lean nude front walk1                 width = 13    height = 23    shading_left = 17    shading_top = 0     mapping_left = 433    mapping_top = 0
-torso lean nude front walk2                 width = 13    height = 23    shading_left = 33    shading_top = 0     mapping_left = 433    mapping_top = 0
-torso lean clothed front walk0              width = 13    height = 23    shading_left = 49    shading_top = 0     mapping_left = 417    mapping_top = 0
-torso lean clothed front walk1              width = 13    height = 23    shading_left = 65    shading_top = 0     mapping_left = 433    mapping_top = 0
-torso lean clothed front walk2              width = 13    height = 23    shading_left = 81    shading_top = 0     mapping_left = 433    mapping_top = 0
-torso lean hooded front walk0               width = 13    height = 23    shading_left = 97    shading_top = 0     mapping_left = 417    mapping_top = 0
-torso lean hooded front walk1               width = 13    height = 23    shading_left = 113   shading_top = 0     mapping_left = 433    mapping_top = 0
-torso lean hooded front walk2               width = 13    height = 23    shading_left = 129   shading_top = 0     mapping_left = 433    mapping_top = 0
-
-torso lean nude back walk0                  width = 13    height = 23    shading_left = 145   shading_top = 0     mapping_left = 449    mapping_top = 0
-torso lean nude back walk1                  width = 13    height = 23    shading_left = 161   shading_top = 0     mapping_left = 465    mapping_top = 0
-torso lean nude back walk2                  width = 13    height = 23    shading_left = 177   shading_top = 0     mapping_left = 465    mapping_top = 0
-torso lean clothed back walk0               width = 13    height = 23    shading_left = 193   shading_top = 0     mapping_left = 449    mapping_top = 0
-torso lean clothed back walk1               width = 13    height = 23    shading_left = 209   shading_top = 0     mapping_left = 465    mapping_top = 0
-torso lean clothed back walk2               width = 13    height = 23    shading_left = 225   shading_top = 0     mapping_left = 465    mapping_top = 0
-torso lean hooded back walk0                width = 13    height = 23    shading_left = 241   shading_top = 0     mapping_left = 449    mapping_top = 0
-torso lean hooded back walk1                width = 13    height = 23    shading_left = 257   shading_top = 0     mapping_left = 465    mapping_top = 0
-torso lean hooded back walk2                width = 13    height = 23    shading_left = 273   shading_top = 0     mapping_left = 465    mapping_top = 0
-
-torso lean nude right walk0                 width = 14    height = 23    shading_left = 289   shading_top = 0     mapping_left = 480    mapping_top = 0
-torso lean nude right walk1                 width = 14    height = 23    shading_left = 303   shading_top = 0     mapping_left = 510    mapping_top = 0
-torso lean nude right walk2                 width = 14    height = 23    shading_left = 303   shading_top = 0     mapping_left = 510    mapping_top = 0
-torso lean nude right walk3                 width = 14    height = 23    shading_left = 289   shading_top = 0     mapping_left = 495    mapping_top = 0
-torso lean nude right walk4                 width = 14    height = 23    shading_left = 317   shading_top = 0     mapping_left = 495    mapping_top = 0
-torso lean clothed right walk0              width = 14    height = 23    shading_left = 331   shading_top = 0     mapping_left = 480    mapping_top = 0
-torso lean clothed right walk1              width = 14    height = 23    shading_left = 345   shading_top = 0     mapping_left = 510    mapping_top = 0
-torso lean clothed right walk2              width = 14    height = 23    shading_left = 345   shading_top = 0     mapping_left = 510    mapping_top = 0
-torso lean clothed right walk3              width = 14    height = 23    shading_left = 331   shading_top = 0     mapping_left = 495    mapping_top = 0
-torso lean clothed right walk4              width = 14    height = 23    shading_left = 359   shading_top = 0     mapping_left = 495    mapping_top = 0
-torso lean hooded right walk0               width = 14    height = 23    shading_left = 373   shading_top = 0     mapping_left = 480    mapping_top = 0
-torso lean hooded right walk1               width = 14    height = 23    shading_left = 387   shading_top = 0     mapping_left = 510    mapping_top = 0
-torso lean hooded right walk2               width = 14    height = 23    shading_left = 387   shading_top = 0     mapping_left = 510    mapping_top = 0
-torso lean hooded right walk3               width = 14    height = 23    shading_left = 373   shading_top = 0     mapping_left = 495    mapping_top = 0
-torso lean hooded right walk4               width = 14    height = 23    shading_left = 401   shading_top = 0     mapping_left = 495    mapping_top = 0
-
-torso stocky nude front walk0               width = 15    height = 23    shading_left = 0     shading_top = 24    mapping_left = 416    mapping_top = 24
-torso stocky nude front walk1               width = 15    height = 23    shading_left = 16    shading_top = 24    mapping_left = 432    mapping_top = 24
-torso stocky nude front walk2               width = 15    height = 23    shading_left = 32    shading_top = 24    mapping_left = 432    mapping_top = 24
-torso stocky clothed front walk0            width = 15    height = 23    shading_left = 48    shading_top = 24    mapping_left = 416    mapping_top = 24
-torso stocky clothed front walk1            width = 15    height = 23    shading_left = 64    shading_top = 24    mapping_left = 432    mapping_top = 24
-torso stocky clothed front walk2            width = 15    height = 23    shading_left = 80    shading_top = 24    mapping_left = 432    mapping_top = 24
-torso stocky hooded front walk0             width = 15    height = 23    shading_left = 96    shading_top = 24    mapping_left = 416    mapping_top = 24
-torso stocky hooded front walk1             width = 15    height = 23    shading_left = 112   shading_top = 24    mapping_left = 432    mapping_top = 24
-torso stocky hooded front walk2             width = 15    height = 23    shading_left = 128   shading_top = 24    mapping_left = 432    mapping_top = 24
-
-torso stocky nude back walk0                width = 15    height = 23    shading_left = 144   shading_top = 24    mapping_left = 448    mapping_top = 24
-torso stocky nude back walk1                width = 15    height = 23    shading_left = 160   shading_top = 24    mapping_left = 464    mapping_top = 24
-torso stocky nude back walk2                width = 15    height = 23    shading_left = 176   shading_top = 24    mapping_left = 464    mapping_top = 24
-torso stocky clothed back walk0             width = 15    height = 23    shading_left = 192   shading_top = 24    mapping_left = 448    mapping_top = 24
-torso stocky clothed back walk1             width = 15    height = 23    shading_left = 208   shading_top = 24    mapping_left = 464    mapping_top = 24
-torso stocky clothed back walk2             width = 15    height = 23    shading_left = 224   shading_top = 24    mapping_left = 464    mapping_top = 24
-torso stocky hooded back walk0              width = 15    height = 23    shading_left = 240   shading_top = 24    mapping_left = 448    mapping_top = 24
-torso stocky hooded back walk1              width = 15    height = 23    shading_left = 256   shading_top = 24    mapping_left = 464    mapping_top = 24
-torso stocky hooded back walk2              width = 15    height = 23    shading_left = 272   shading_top = 24    mapping_left = 464    mapping_top = 24
-
-torso stocky nude right walk0               width = 14    height = 23    shading_left = 289   shading_top = 24    mapping_left = 480    mapping_top = 24
-torso stocky nude right walk1               width = 14    height = 23    shading_left = 303   shading_top = 24    mapping_left = 510    mapping_top = 24
-torso stocky nude right walk2               width = 14    height = 23    shading_left = 303   shading_top = 24    mapping_left = 510    mapping_top = 24
-torso stocky nude right walk3               width = 14    height = 23    shading_left = 289   shading_top = 24    mapping_left = 495    mapping_top = 24
-torso stocky nude right walk4               width = 14    height = 23    shading_left = 317   shading_top = 24    mapping_left = 495    mapping_top = 24
-torso stocky clothed right walk0            width = 14    height = 23    shading_left = 331   shading_top = 24    mapping_left = 480    mapping_top = 24
-torso stocky clothed right walk1            width = 14    height = 23    shading_left = 345   shading_top = 24    mapping_left = 510    mapping_top = 24
-torso stocky clothed right walk2            width = 14    height = 23    shading_left = 345   shading_top = 24    mapping_left = 510    mapping_top = 24
-torso stocky clothed right walk3            width = 14    height = 23    shading_left = 331   shading_top = 24    mapping_left = 495    mapping_top = 24
-torso stocky clothed right walk4            width = 14    height = 23    shading_left = 359   shading_top = 24    mapping_left = 495    mapping_top = 24
-torso stocky hooded right walk0             width = 14    height = 23    shading_left = 373   shading_top = 24    mapping_left = 480    mapping_top = 24
-torso stocky hooded right walk1             width = 14    height = 23    shading_left = 387   shading_top = 24    mapping_left = 510    mapping_top = 24
-torso stocky hooded right walk2             width = 14    height = 23    shading_left = 387   shading_top = 24    mapping_left = 510    mapping_top = 24
-torso stocky hooded right walk3             width = 14    height = 23    shading_left = 373   shading_top = 24    mapping_left = 495    mapping_top = 24
-torso stocky hooded right walk4             width = 14    height = 23    shading_left = 401   shading_top = 24    mapping_left = 495    mapping_top = 24
-
-
-
-
-leg lean nude front walk0                   width = 9     height = 23    shading_left = 0     shading_top = 48    mapping_left = 442    mapping_top = 48
-leg lean nude front walk1                   width = 9     height = 22    shading_left = 9     shading_top = 48    mapping_left = 452    mapping_top = 48
-leg lean nude front walk2                   width = 9     height = 21    shading_left = 18    shading_top = 48    mapping_left = 462    mapping_top = 48
-leg lean nude front walk3                   width = 9     height = 22    shading_left = 27    shading_top = 48    mapping_left = 472    mapping_top = 48
-leg lean nude front walk4                   width = 9     height = 23    shading_left = 36    shading_top = 48    mapping_left = 482    mapping_top = 48
-leg lean nude front walk5                   width = 9     height = 22    shading_left = 45    shading_top = 48    mapping_left = 492    mapping_top = 48
-leg lean nude front walk6                   width = 9     height = 21    shading_left = 54    shading_top = 48    mapping_left = 502    mapping_top = 48
-leg lean nude front walk7                   width = 9     height = 22    shading_left = 63    shading_top = 48    mapping_left = 512    mapping_top = 48
-leg lean pants front walk0                  width = 9     height = 23    shading_left = 0     shading_top = 71    mapping_left = 442    mapping_top = 48
-leg lean pants front walk1                  width = 9     height = 22    shading_left = 9     shading_top = 71    mapping_left = 452    mapping_top = 48
-leg lean pants front walk2                  width = 9     height = 21    shading_left = 18    shading_top = 71    mapping_left = 462    mapping_top = 48
-leg lean pants front walk3                  width = 9     height = 22    shading_left = 27    shading_top = 71    mapping_left = 472    mapping_top = 48
-leg lean pants front walk4                  width = 9     height = 23    shading_left = 36    shading_top = 71    mapping_left = 482    mapping_top = 48
-leg lean pants front walk5                  width = 9     height = 22    shading_left = 45    shading_top = 71    mapping_left = 492    mapping_top = 48
-leg lean pants front walk6                  width = 9     height = 21    shading_left = 54    shading_top = 71    mapping_left = 402    mapping_top = 48
-leg lean pants front walk7                  width = 9     height = 22    shading_left = 63    shading_top = 71    mapping_left = 512    mapping_top = 48
-leg lean skirt front walk0                  width = 9     height = 23    shading_left = 0     shading_top = 94    mapping_left = 442    mapping_top = 48
-leg lean skirt front walk1                  width = 9     height = 22    shading_left = 9     shading_top = 94    mapping_left = 452    mapping_top = 48
-leg lean skirt front walk2                  width = 9     height = 21    shading_left = 18    shading_top = 94    mapping_left = 462    mapping_top = 48
-leg lean skirt front walk3                  width = 9     height = 22    shading_left = 27    shading_top = 94    mapping_left = 472    mapping_top = 48
-leg lean skirt front walk4                  width = 9     height = 23    shading_left = 36    shading_top = 94    mapping_left = 482    mapping_top = 48
-leg lean skirt front walk5                  width = 9     height = 22    shading_left = 45    shading_top = 94    mapping_left = 492    mapping_top = 48
-leg lean skirt front walk6                  width = 9     height = 21    shading_left = 54    shading_top = 94    mapping_left = 502    mapping_top = 48
-leg lean skirt front walk7                  width = 9     height = 22    shading_left = 63    shading_top = 94    mapping_left = 512    mapping_top = 48
-
-leg lean nude back walk0                    width = 9     height = 23    shading_left = 72    shading_top = 48    mapping_left = 522    mapping_top = 48
-leg lean nude back walk1                    width = 9     height = 22    shading_left = 81    shading_top = 48    mapping_left = 532    mapping_top = 48
-leg lean nude back walk2                    width = 9     height = 21    shading_left = 90    shading_top = 48    mapping_left = 542    mapping_top = 48
-leg lean nude back walk3                    width = 9     height = 22    shading_left = 99    shading_top = 48    mapping_left = 552    mapping_top = 48
-leg lean nude back walk4                    width = 9     height = 23    shading_left = 108   shading_top = 48    mapping_left = 562    mapping_top = 48
-leg lean nude back walk5                    width = 9     height = 22    shading_left = 117   shading_top = 48    mapping_left = 572    mapping_top = 48
-leg lean nude back walk6                    width = 9     height = 21    shading_left = 126   shading_top = 48    mapping_left = 582    mapping_top = 48
-leg lean nude back walk7                    width = 9     height = 22    shading_left = 135   shading_top = 48    mapping_left = 592    mapping_top = 48
-leg lean pants back walk0                   width = 9     height = 23    shading_left = 72    shading_top = 71    mapping_left = 522    mapping_top = 48
-leg lean pants back walk1                   width = 9     height = 22    shading_left = 81    shading_top = 71    mapping_left = 532    mapping_top = 48
-leg lean pants back walk2                   width = 9     height = 21    shading_left = 90    shading_top = 71    mapping_left = 542    mapping_top = 48
-leg lean pants back walk3                   width = 9     height = 22    shading_left = 99    shading_top = 71    mapping_left = 552    mapping_top = 48
-leg lean pants back walk4                   width = 9     height = 23    shading_left = 108   shading_top = 71    mapping_left = 562    mapping_top = 48
-leg lean pants back walk5                   width = 9     height = 22    shading_left = 117   shading_top = 71    mapping_left = 572    mapping_top = 48
-leg lean pants back walk6                   width = 9     height = 21    shading_left = 126   shading_top = 71    mapping_left = 582    mapping_top = 48
-leg lean pants back walk7                   width = 9     height = 22    shading_left = 135   shading_top = 71    mapping_left = 592    mapping_top = 48
-leg lean skirt back walk0                   width = 9     height = 23    shading_left = 72    shading_top = 94    mapping_left = 522    mapping_top = 48
-leg lean skirt back walk1                   width = 9     height = 22    shading_left = 81    shading_top = 94    mapping_left = 532    mapping_top = 48
-leg lean skirt back walk2                   width = 9     height = 21    shading_left = 90    shading_top = 94    mapping_left = 542    mapping_top = 48
-leg lean skirt back walk3                   width = 9     height = 22    shading_left = 99    shading_top = 94    mapping_left = 552    mapping_top = 48
-leg lean skirt back walk4                   width = 9     height = 23    shading_left = 108   shading_top = 94    mapping_left = 562    mapping_top = 48
-leg lean skirt back walk5                   width = 9     height = 22    shading_left = 117   shading_top = 94    mapping_left = 572    mapping_top = 48
-leg lean skirt back walk6                   width = 9     height = 21    shading_left = 126   shading_top = 94    mapping_left = 582    mapping_top = 48
-leg lean skirt back walk7                   width = 9     height = 22    shading_left = 135   shading_top = 94    mapping_left = 592    mapping_top = 48
-
-leg lean nude right_front walk0             width = 15    height = 22    shading_left = 144   shading_top = 48    mapping_left = 602    mapping_top = 48
-leg lean nude right_front walk2             width = 15    height = 21    shading_left = 159   shading_top = 48    mapping_left = 618    mapping_top = 48
-leg lean nude right_front walk3             width = 16    height = 20    shading_left = 174   shading_top = 48    mapping_left = 634    mapping_top = 48
-leg lean nude right_front walk4             width = 16    height = 21    shading_left = 190   shading_top = 48    mapping_left = 651    mapping_top = 48
-leg lean nude right_front walk5             width = 18    height = 18    shading_left = 206   shading_top = 48    mapping_left = 668    mapping_top = 48
-leg lean nude right_front walk6             width = 19    height = 20    shading_left = 224   shading_top = 48    mapping_left = 687    mapping_top = 48
-leg lean nude right_front walk7             width = 22    height = 20    shading_left = 243   shading_top = 48    mapping_left = 707    mapping_top = 48
-leg lean nude right_front walk8             width = 20    height = 21    shading_left = 265   shading_top = 48    mapping_left = 730    mapping_top = 48
-leg lean nude right_front walk1             width = 15    height = 22    shading_left = 285   shading_top = 48    mapping_left = 602    mapping_top = 48
-leg lean pants right_front walk0            width = 15    height = 22    shading_left = 144   shading_top = 71    mapping_left = 602    mapping_top = 48
-leg lean pants right_front walk2            width = 15    height = 21    shading_left = 159   shading_top = 71    mapping_left = 618    mapping_top = 48
-leg lean pants right_front walk3            width = 16    height = 20    shading_left = 174   shading_top = 71    mapping_left = 634    mapping_top = 48
-leg lean pants right_front walk4            width = 16    height = 21    shading_left = 190   shading_top = 71    mapping_left = 651    mapping_top = 48
-leg lean pants right_front walk5            width = 18    height = 19    shading_left = 206   shading_top = 71    mapping_left = 668    mapping_top = 48
-leg lean pants right_front walk6            width = 19    height = 20    shading_left = 224   shading_top = 71    mapping_left = 687    mapping_top = 48
-leg lean pants right_front walk7            width = 22    height = 20    shading_left = 243   shading_top = 71    mapping_left = 707    mapping_top = 48
-leg lean pants right_front walk8            width = 20    height = 21    shading_left = 265   shading_top = 71    mapping_left = 730    mapping_top = 48
-leg lean pants right_front walk1            width = 15    height = 22    shading_left = 285   shading_top = 71    mapping_left = 602    mapping_top = 48
-leg lean skirt right_front walk0            width = 15    height = 22    shading_left = 144   shading_top = 94    mapping_left = 602    mapping_top = 48
-leg lean skirt right_front walk2            width = 15    height = 21    shading_left = 159   shading_top = 94    mapping_left = 618    mapping_top = 48
-leg lean skirt right_front walk3            width = 16    height = 20    shading_left = 174   shading_top = 94    mapping_left = 634    mapping_top = 48
-leg lean skirt right_front walk4            width = 16    height = 21    shading_left = 190   shading_top = 94    mapping_left = 651    mapping_top = 48
-leg lean skirt right_front walk5            width = 18    height = 19    shading_left = 206   shading_top = 94    mapping_left = 668    mapping_top = 48
-leg lean skirt right_front walk6            width = 19    height = 20    shading_left = 224   shading_top = 94    mapping_left = 687    mapping_top = 48
-leg lean skirt right_front walk7            width = 22    height = 20    shading_left = 243   shading_top = 94    mapping_left = 707    mapping_top = 48
-leg lean skirt right_front walk8            width = 20    height = 21    shading_left = 265   shading_top = 94    mapping_left = 730    mapping_top = 48
-leg lean skirt right_front walk1            width = 15    height = 22    shading_left = 285   shading_top = 94    mapping_left = 602    mapping_top = 48
-
-leg lean nude right_back walk2              width = 19    height = 21    shading_left = 300   shading_top = 48    mapping_left = 687    mapping_top = 48
-leg lean nude right_back walk3              width = 22    height = 20    shading_left = 319   shading_top = 48    mapping_left = 707    mapping_top = 48
-leg lean nude right_back walk4              width = 20    height = 21    shading_left = 341   shading_top = 48    mapping_left = 730    mapping_top = 48
-leg lean nude right_back walk5              width = 15    height = 22    shading_left = 361   shading_top = 48    mapping_left = 602    mapping_top = 48
-leg lean nude right_back walk6              width = 14    height = 21    shading_left = 376   shading_top = 48    mapping_left = 618    mapping_top = 48
-leg lean nude right_back walk7              width = 16    height = 20    shading_left = 391   shading_top = 48    mapping_left = 634    mapping_top = 48
-leg lean nude right_back walk8              width = 16    height = 21    shading_left = 407   shading_top = 48    mapping_left = 651    mapping_top = 48
-leg lean nude right_back walk1              width = 18    height = 18    shading_left = 423   shading_top = 48    mapping_left = 668    mapping_top = 48
-leg lean pants right_back walk2             width = 19    height = 21    shading_left = 300   shading_top = 71    mapping_left = 687    mapping_top = 48
-leg lean pants right_back walk3             width = 22    height = 20    shading_left = 319   shading_top = 71    mapping_left = 707    mapping_top = 48
-leg lean pants right_back walk4             width = 20    height = 21    shading_left = 341   shading_top = 71    mapping_left = 730    mapping_top = 48
-leg lean pants right_back walk5             width = 15    height = 22    shading_left = 361   shading_top = 71    mapping_left = 602    mapping_top = 48
-leg lean pants right_back walk6             width = 14    height = 21    shading_left = 376   shading_top = 71    mapping_left = 618    mapping_top = 48
-leg lean pants right_back walk7             width = 16    height = 20    shading_left = 391   shading_top = 71    mapping_left = 634    mapping_top = 48
-leg lean pants right_back walk8             width = 16    height = 21    shading_left = 407   shading_top = 71    mapping_left = 651    mapping_top = 48
-leg lean pants right_back walk1             width = 18    height = 18    shading_left = 423   shading_top = 71    mapping_left = 668    mapping_top = 48
-leg lean skirt right_back walk2             width = 19    height = 21    shading_left = 300   shading_top = 94    mapping_left = 687    mapping_top = 48
-leg lean skirt right_back walk3             width = 22    height = 20    shading_left = 319   shading_top = 94    mapping_left = 707    mapping_top = 48
-leg lean skirt right_back walk4             width = 20    height = 21    shading_left = 341   shading_top = 94    mapping_left = 730    mapping_top = 48
-leg lean skirt right_back walk5             width = 15    height = 22    shading_left = 361   shading_top = 94    mapping_left = 602    mapping_top = 48
-leg lean skirt right_back walk6             width = 14    height = 21    shading_left = 376   shading_top = 94    mapping_left = 618    mapping_top = 48
-leg lean skirt right_back walk7             width = 16    height = 20    shading_left = 391   shading_top = 94    mapping_left = 634    mapping_top = 48
-leg lean skirt right_back walk8             width = 16    height = 21    shading_left = 407   shading_top = 94    mapping_left = 651    mapping_top = 48
-leg lean skirt right_back walk1             width = 18    height = 18    shading_left = 423   shading_top = 94    mapping_left = 668    mapping_top = 48
-
-leg stocky nude front walk0                 width = 9     height = 23    shading_left = 0     shading_top = 117   mapping_left = 442    mapping_top = 117
-leg stocky nude front walk1                 width = 9     height = 22    shading_left = 9     shading_top = 117   mapping_left = 452    mapping_top = 117
-leg stocky nude front walk2                 width = 9     height = 21    shading_left = 18    shading_top = 117   mapping_left = 462    mapping_top = 117
-leg stocky nude front walk3                 width = 9     height = 22    shading_left = 27    shading_top = 117   mapping_left = 472    mapping_top = 117
-leg stocky nude front walk4                 width = 9     height = 23    shading_left = 36    shading_top = 117   mapping_left = 482    mapping_top = 117
-leg stocky nude front walk5                 width = 9     height = 22    shading_left = 45    shading_top = 117   mapping_left = 492    mapping_top = 117
-leg stocky nude front walk6                 width = 9     height = 21    shading_left = 54    shading_top = 117   mapping_left = 502    mapping_top = 117
-leg stocky nude front walk7                 width = 9     height = 22    shading_left = 63    shading_top = 117   mapping_left = 512    mapping_top = 117
-leg stocky pants front walk0                width = 9     height = 23    shading_left = 0     shading_top = 140   mapping_left = 442    mapping_top = 117
-leg stocky pants front walk1                width = 9     height = 22    shading_left = 9     shading_top = 140   mapping_left = 452    mapping_top = 117
-leg stocky pants front walk2                width = 9     height = 21    shading_left = 18    shading_top = 140   mapping_left = 462    mapping_top = 117
-leg stocky pants front walk3                width = 9     height = 22    shading_left = 27    shading_top = 140   mapping_left = 472    mapping_top = 117
-leg stocky pants front walk4                width = 9     height = 23    shading_left = 36    shading_top = 140   mapping_left = 482    mapping_top = 117
-leg stocky pants front walk5                width = 9     height = 22    shading_left = 45    shading_top = 140   mapping_left = 492    mapping_top = 117
-leg stocky pants front walk6                width = 9     height = 21    shading_left = 54    shading_top = 140   mapping_left = 502    mapping_top = 117
-leg stocky pants front walk7                width = 9     height = 22    shading_left = 63    shading_top = 140   mapping_left = 512    mapping_top = 117
-leg stocky skirt front walk0                width = 9     height = 23    shading_left = 0     shading_top = 163   mapping_left = 442    mapping_top = 117
-leg stocky skirt front walk1                width = 9     height = 22    shading_left = 9     shading_top = 163   mapping_left = 452    mapping_top = 117
-leg stocky skirt front walk2                width = 9     height = 21    shading_left = 18    shading_top = 163   mapping_left = 462    mapping_top = 117
-leg stocky skirt front walk3                width = 9     height = 22    shading_left = 27    shading_top = 163   mapping_left = 472    mapping_top = 117
-leg stocky skirt front walk4                width = 9     height = 23    shading_left = 36    shading_top = 163   mapping_left = 482    mapping_top = 117
-leg stocky skirt front walk5                width = 9     height = 22    shading_left = 45    shading_top = 163   mapping_left = 492    mapping_top = 117
-leg stocky skirt front walk6                width = 9     height = 21    shading_left = 54    shading_top = 163   mapping_left = 502    mapping_top = 117
-leg stocky skirt front walk7                width = 9     height = 22    shading_left = 63    shading_top = 163   mapping_left = 512    mapping_top = 117
-
-leg stocky nude back walk0                  width = 9     height = 23    shading_left = 72    shading_top = 117   mapping_left = 522    mapping_top = 117
-leg stocky nude back walk1                  width = 9     height = 22    shading_left = 81    shading_top = 117   mapping_left = 532    mapping_top = 117
-leg stocky nude back walk2                  width = 9     height = 21    shading_left = 90    shading_top = 117   mapping_left = 542    mapping_top = 117
-leg stocky nude back walk3                  width = 9     height = 22    shading_left = 99    shading_top = 117   mapping_left = 552    mapping_top = 117
-leg stocky nude back walk4                  width = 9     height = 23    shading_left = 108   shading_top = 117   mapping_left = 562    mapping_top = 117
-leg stocky nude back walk5                  width = 9     height = 22    shading_left = 117   shading_top = 117   mapping_left = 572    mapping_top = 117
-leg stocky nude back walk6                  width = 9     height = 21    shading_left = 126   shading_top = 117   mapping_left = 582    mapping_top = 117
-leg stocky nude back walk7                  width = 9     height = 22    shading_left = 135   shading_top = 117   mapping_left = 592    mapping_top = 117
-leg stocky pants back walk0                 width = 9     height = 23    shading_left = 72    shading_top = 140   mapping_left = 522    mapping_top = 117
-leg stocky pants back walk1                 width = 9     height = 22    shading_left = 81    shading_top = 140   mapping_left = 532    mapping_top = 117
-leg stocky pants back walk2                 width = 9     height = 21    shading_left = 90    shading_top = 140   mapping_left = 542    mapping_top = 117
-leg stocky pants back walk3                 width = 9     height = 22    shading_left = 99    shading_top = 140   mapping_left = 552    mapping_top = 117
-leg stocky pants back walk4                 width = 9     height = 23    shading_left = 108   shading_top = 140   mapping_left = 562    mapping_top = 117
-leg stocky pants back walk5                 width = 9     height = 22    shading_left = 117   shading_top = 140   mapping_left = 572    mapping_top = 117
-leg stocky pants back walk6                 width = 9     height = 21    shading_left = 126   shading_top = 140   mapping_left = 582    mapping_top = 117
-leg stocky pants back walk7                 width = 9     height = 22    shading_left = 135   shading_top = 140   mapping_left = 592    mapping_top = 117
-leg stocky skirt back walk0                 width = 9     height = 23    shading_left = 72    shading_top = 163   mapping_left = 522    mapping_top = 117
-leg stocky skirt back walk1                 width = 9     height = 22    shading_left = 81    shading_top = 163   mapping_left = 532    mapping_top = 117
-leg stocky skirt back walk2                 width = 9     height = 21    shading_left = 90    shading_top = 163   mapping_left = 542    mapping_top = 117
-leg stocky skirt back walk3                 width = 9     height = 22    shading_left = 99    shading_top = 163   mapping_left = 552    mapping_top = 117
-leg stocky skirt back walk4                 width = 9     height = 23    shading_left = 108   shading_top = 163   mapping_left = 562    mapping_top = 117
-leg stocky skirt back walk5                 width = 9     height = 22    shading_left = 117   shading_top = 163   mapping_left = 572    mapping_top = 117
-leg stocky skirt back walk6                 width = 9     height = 21    shading_left = 126   shading_top = 163   mapping_left = 582    mapping_top = 117
-leg stocky skirt back walk7                 width = 9     height = 22    shading_left = 135   shading_top = 163   mapping_left = 592    mapping_top = 117
-
-leg stocky nude right_front walk0           width = 15    height = 22    shading_left = 144   shading_top = 117   mapping_left = 602    mapping_top = 117
-leg stocky nude right_front walk2           width = 15    height = 21    shading_left = 159   shading_top = 117   mapping_left = 618    mapping_top = 117
-leg stocky nude right_front walk3           width = 16    height = 20    shading_left = 174   shading_top = 117   mapping_left = 634    mapping_top = 117
-leg stocky nude right_front walk4           width = 16    height = 21    shading_left = 190   shading_top = 117   mapping_left = 651    mapping_top = 117
-leg stocky nude right_front walk5           width = 18    height = 18    shading_left = 206   shading_top = 117   mapping_left = 668    mapping_top = 117
-leg stocky nude right_front walk6           width = 19    height = 20    shading_left = 224   shading_top = 117   mapping_left = 687    mapping_top = 117
-leg stocky nude right_front walk7           width = 22    height = 20    shading_left = 243   shading_top = 117   mapping_left = 707    mapping_top = 117
-leg stocky nude right_front walk8           width = 20    height = 21    shading_left = 265   shading_top = 117   mapping_left = 730    mapping_top = 117
-leg stocky nude right_front walk1           width = 15    height = 22    shading_left = 285   shading_top = 117   mapping_left = 602    mapping_top = 117
-leg stocky pants right_front walk0          width = 15    height = 22    shading_left = 144   shading_top = 140   mapping_left = 602    mapping_top = 117
-leg stocky pants right_front walk2          width = 15    height = 21    shading_left = 159   shading_top = 140   mapping_left = 618    mapping_top = 117
-leg stocky pants right_front walk3          width = 16    height = 20    shading_left = 174   shading_top = 140   mapping_left = 634    mapping_top = 117
-leg stocky pants right_front walk4          width = 16    height = 21    shading_left = 190   shading_top = 140   mapping_left = 651    mapping_top = 117
-leg stocky pants right_front walk5          width = 18    height = 18    shading_left = 206   shading_top = 140   mapping_left = 668    mapping_top = 117
-leg stocky pants right_front walk6          width = 19    height = 20    shading_left = 224   shading_top = 140   mapping_left = 687    mapping_top = 117
-leg stocky pants right_front walk7          width = 22    height = 20    shading_left = 243   shading_top = 140   mapping_left = 707    mapping_top = 117
-leg stocky pants right_front walk8          width = 20    height = 21    shading_left = 265   shading_top = 140   mapping_left = 730    mapping_top = 117
-leg stocky pants right_front walk1          width = 15    height = 22    shading_left = 285   shading_top = 140   mapping_left = 602    mapping_top = 117
-leg stocky skirt right_front walk0          width = 15    height = 22    shading_left = 144   shading_top = 163   mapping_left = 602    mapping_top = 117
-leg stocky skirt right_front walk2          width = 15    height = 21    shading_left = 159   shading_top = 163   mapping_left = 618    mapping_top = 117
-leg stocky skirt right_front walk3          width = 16    height = 20    shading_left = 174   shading_top = 163   mapping_left = 634    mapping_top = 117
-leg stocky skirt right_front walk4          width = 16    height = 21    shading_left = 190   shading_top = 163   mapping_left = 651    mapping_top = 117
-leg stocky skirt right_front walk5          width = 18    height = 18    shading_left = 206   shading_top = 163   mapping_left = 668    mapping_top = 117
-leg stocky skirt right_front walk6          width = 19    height = 20    shading_left = 224   shading_top = 163   mapping_left = 687    mapping_top = 117
-leg stocky skirt right_front walk7          width = 22    height = 20    shading_left = 243   shading_top = 163   mapping_left = 707    mapping_top = 117
-leg stocky skirt right_front walk8          width = 20    height = 21    shading_left = 265   shading_top = 163   mapping_left = 730    mapping_top = 117
-leg stocky skirt right_front walk1          width = 15    height = 22    shading_left = 285   shading_top = 163   mapping_left = 602    mapping_top = 117
-
-leg stocky nude right_back walk2            width = 19    height = 21    shading_left = 300   shading_top = 117   mapping_left = 687    mapping_top = 117
-leg stocky nude right_back walk3            width = 22    height = 20    shading_left = 319   shading_top = 117   mapping_left = 707    mapping_top = 117
-leg stocky nude right_back walk4            width = 20    height = 21    shading_left = 341   shading_top = 117   mapping_left = 730    mapping_top = 117
-leg stocky nude right_back walk5            width = 15    height = 22    shading_left = 361   shading_top = 117   mapping_left = 602    mapping_top = 117
-leg stocky nude right_back walk6            width = 14    height = 21    shading_left = 376   shading_top = 117   mapping_left = 618    mapping_top = 117
-leg stocky nude right_back walk7            width = 16    height = 20    shading_left = 391   shading_top = 117   mapping_left = 634    mapping_top = 117
-leg stocky nude right_back walk8            width = 16    height = 21    shading_left = 407   shading_top = 117   mapping_left = 651    mapping_top = 117
-leg stocky nude right_back walk1            width = 18    height = 18    shading_left = 423   shading_top = 117   mapping_left = 668    mapping_top = 117
-leg stocky pants right_back walk2           width = 19    height = 21    shading_left = 300   shading_top = 140   mapping_left = 687    mapping_top = 117
-leg stocky pants right_back walk3           width = 22    height = 20    shading_left = 319   shading_top = 140   mapping_left = 707    mapping_top = 117
-leg stocky pants right_back walk4           width = 20    height = 21    shading_left = 341   shading_top = 140   mapping_left = 730    mapping_top = 117
-leg stocky pants right_back walk5           width = 15    height = 22    shading_left = 361   shading_top = 140   mapping_left = 602    mapping_top = 117
-leg stocky pants right_back walk6           width = 14    height = 21    shading_left = 376   shading_top = 140   mapping_left = 618    mapping_top = 117
-leg stocky pants right_back walk7           width = 16    height = 20    shading_left = 391   shading_top = 140   mapping_left = 634    mapping_top = 117
-leg stocky pants right_back walk8           width = 16    height = 21    shading_left = 407   shading_top = 140   mapping_left = 651    mapping_top = 117
-leg stocky pants right_back walk1           width = 18    height = 18    shading_left = 423   shading_top = 140   mapping_left = 668    mapping_top = 117
-leg stocky skirt right_back walk2           width = 19    height = 21    shading_left = 300   shading_top = 163   mapping_left = 687    mapping_top = 117
-leg stocky skirt right_back walk3           width = 22    height = 20    shading_left = 319   shading_top = 163   mapping_left = 707    mapping_top = 117
-leg stocky skirt right_back walk4           width = 20    height = 21    shading_left = 341   shading_top = 163   mapping_left = 730    mapping_top = 117
-leg stocky skirt right_back walk5           width = 15    height = 22    shading_left = 361   shading_top = 163   mapping_left = 602    mapping_top = 117
-leg stocky skirt right_back walk6           width = 14    height = 21    shading_left = 376   shading_top = 163   mapping_left = 618    mapping_top = 117
-leg stocky skirt right_back walk7           width = 16    height = 20    shading_left = 391   shading_top = 163   mapping_left = 634    mapping_top = 117
-leg stocky skirt right_back walk8           width = 16    height = 21    shading_left = 407   shading_top = 163   mapping_left = 651    mapping_top = 117
-leg stocky skirt right_back walk1           width = 18    height = 18    shading_left = 423   shading_top = 163   mapping_left = 668    mapping_top = 117
-
-
-
-
-arm paw front walk0                         width = 7     height = 23    shading_left = 0     shading_top = 186   mapping_left = 165    mapping_top = 186
-arm paw front walk1                         width = 7     height = 22    shading_left = 6     shading_top = 186   mapping_left = 173    mapping_top = 186
-arm paw front walk2                         width = 7     height = 21    shading_left = 12    shading_top = 186   mapping_left = 181    mapping_top = 186
-arm paw front walk3                         width = 7     height = 23    shading_left = 18    shading_top = 186   mapping_left = 189    mapping_top = 186
-arm paw front walk4                         width = 7     height = 24    shading_left = 24    shading_top = 186   mapping_left = 197    mapping_top = 186
-
-arm paw back walk0                          width = 7     height = 23    shading_left = 0     shading_top = 186   mapping_left = 205    mapping_top = 186
-arm paw back walk1                          width = 7     height = 22    shading_left = 6     shading_top = 186   mapping_left = 213    mapping_top = 186
-arm paw back walk2                          width = 7     height = 21    shading_left = 12    shading_top = 186   mapping_left = 221    mapping_top = 186
-arm paw back walk3                          width = 7     height = 23    shading_left = 31    shading_top = 186   mapping_left = 229    mapping_top = 186
-arm paw back walk4                          width = 7     height = 24    shading_left = 38    shading_top = 186   mapping_left = 237    mapping_top = 186
-
-arm paw right_front walk0                   width = 13    height = 24    shading_left = 71    shading_top = 186   mapping_left = 271    mapping_top = 186
-arm paw right_front walk1                   width = 12    height = 23    shading_left = 58    shading_top = 186   mapping_left = 258    mapping_top = 186
-arm paw right_front walk2                   width = 12    height = 23    shading_left = 45    shading_top = 186   mapping_left = 245    mapping_top = 186
-arm paw right_front walk3                   width = 15    height = 24    shading_left = 85    shading_top = 186   mapping_left = 285    mapping_top = 186
-arm paw right_front walk4                   width = 20    height = 23    shading_left = 100   shading_top = 186   mapping_left = 300    mapping_top = 186
-
-arm paw right_back walk1                    width = 19    height = 24    shading_left = 125   shading_top = 186   mapping_left = 285    mapping_top = 186
-arm paw right_back walk2                    width = 20    height = 23    shading_left = 144   shading_top = 186   mapping_left = 300    mapping_top = 186
-arm paw right_back walk4                    width = 5     height = 23    shading_left = 120   shading_top = 186   mapping_left = 245    mapping_top = 186
-
-
-
-
-texture torso monochrome                                    width = 1     height = 1     left = 526     top = 1
-texture arm monochrome                                      width = 1     height = 1     left = 526     top = 1
-
-texture torso neck_chest_stomach                            width = 25    height = 23    left = 577     top = 0
-texture arm neck_chest_stomach                              width = 9     height = 24    left = 165     top = 211
-
-texture torso chest                                         width = 25    height = 23    left = 525     top = 0
-texture arm chest                                           width = 9     height = 24    left = 165     top = 211
-
-texture torso chest_stomach                                 width = 25    height = 23    left = 551     top = 0
-texture arm chest_stomach                                   width = 9     height = 24    left = 165     top = 211
-
-texture torso neck                                          width = 25    height = 23    left = 603     top = 0
-texture arm neck                                            width = 9     height = 24    left = 165     top = 211
-
-texture torso medium_spots all_over                         width = 25    height = 23    left = 629     top = 0
-texture arm medium_spots all_over                           width = 9     height = 24    left = 245     top = 211
-
-texture torso small_spots                                   width = 25    height = 23    left = 733     top = 0
-texture arm small_spots                                     width = 9     height = 24    left = 235     top = 211
-
-texture torso medium_spots                                  width = 25    height = 23    left = 655     top = 0
-texture arm medium_spots                                    width = 9     height = 24    left = 245     top = 211
-
-texture torso large_spots                                   width = 25    height = 23    left = 707     top = 0
-texture arm large_spots                                     width = 9     height = 24    left = 225     top = 211
-
-texture torso stripes                                       width = 25    height = 23    left = 681     top = 0
-texture arm stripes                                         width = 9     height = 24    left = 215     top = 211
-
-texture torso solid                                         width = 25    height = 23    left = 759     top = 0
-
-
-
-
-texture top torso nude none                                 width = 1     height = 1     left = 15      top = 23
-texture top arm nude none                                   width = 1     height = 1     left = 15      top = 23
-texture top torso clothed thick striped shirt               width = 25    height = 23    left = 525     top = 24
-texture top arm clothed thick striped shirt                 width = 9     height = 24    left = 205     top = 211
-texture top torso clothed thin striped shirt                width = 25    height = 23    left = 551     top = 24
-texture top arm clothed thin striped shirt                  width = 9     height = 24    left = 195     top = 211
-texture top torso clothed thick striped sweater             width = 25    height = 23    left = 525     top = 24
-texture top arm clothed thick striped sweater               width = 9     height = 24    left = 185     top = 211
-texture top torso clothed patterned sweater                 width = 25    height = 23    left = 577     top = 24
-texture top arm clothed patterned sweater                   width = 9     height = 24    left = 175     top = 211
-texture top torso clothed collar and tie                    width = 25    height = 23    left = 655     top = 24
-texture top arm clothed collar and tie                      width = 9     height = 24    left = 175     top = 211
-
-texture jacket torso nude none                              width = 1     height = 1     left = 15      top = 23
-texture jacket arm nude none                                width = 1     height = 1     left = 15      top = 23
-texture jacket torso hooded zipped hoodie                   width = 25    height = 23    left = 603     top = 24
-texture jacket arm hooded zipped hoodie                     width = 9     height = 24    left = 175     top = 211
-texture jacket torso hooded unzipped hoodie                 width = 25    height = 23    left = 629     top = 24
-texture jacket arm hooded unzipped hoodie                   width = 9     height = 24    left = 175     top = 211
-texture jacket torso clothed zipped overcoat                width = 25    height = 23    left = 681     top = 24
-texture jacket arm clothed zipped overcoat                  width = 9     height = 24    left = 175     top = 211
-texture jacket torso clothed unzipped overcoat              width = 25    height = 23    left = 707     top = 24
-texture jacket arm clothed unzipped overcoat                width = 9     height = 24    left = 175     top = 211
-texture jacket torso clothed blazer                         width = 25    height = 23    left = 733     top = 24
-texture jacket arm clothed blazer                           width = 9     height = 24    left = 175     top = 211
-
-texture bottom leg nude none                                width = 1     height = 1     left = 15      top = 23
-
-texture shoe leg nude none                                  width = 1     height = 1     left = 15      top = 23
-
-
-
-
-skull thin front                            width = 11    height = 12    shading_left = 14    shading_top = 236   mapping_left = 89     mapping_top = 236
-skull thin back                             width = 11    height = 12    shading_left = 40    shading_top = 236   mapping_left = 101    mapping_top = 236
-skull thin right                            width = 10    height = 12    shading_left = 64    shading_top = 236   mapping_left = 115    mapping_top = 236
-
-skull large front                           width = 13    height = 12    shading_left = 0     shading_top = 236   mapping_left = 75     mapping_top = 236
-skull large back                            width = 13    height = 12    shading_left = 26    shading_top = 236   mapping_left = 101    mapping_top = 236
-skull large right                           width = 11    height = 12    shading_left = 52    shading_top = 236   mapping_left = 115    mapping_top = 236
-
-
-
-
-snout short nose front                      width = 7     height = 7     shading_left = 0     shading_top = 249   mapping_left = 78     mapping_top = 241
-snout short nose right                      width = 4     height = 7     shading_left = 29    shading_top = 249   mapping_left = 125    mapping_top = 241
-
-snout long nose front                       width = 7     height = 7     shading_left = 7     shading_top = 249   mapping_left = 78     mapping_top = 241
-snout long nose right                       width = 5     height = 7     shading_left = 34    shading_top = 249   mapping_left = 124    mapping_top = 241
-
-snout short nostrils front                  width = 7     height = 7     shading_left = 14    shading_top = 249   mapping_left = 78     mapping_top = 241
-snout short nostrils right                  width = 4     height = 7     shading_left = 40    shading_top = 249   mapping_left = 125    mapping_top = 241
-
-snout long nostrils front                   width = 7     height = 7     shading_left = 21    shading_top = 249   mapping_left = 78     mapping_top = 241
-snout long nostrils right                   width = 5     height = 7     shading_left = 45    shading_top = 249   mapping_left = 124    mapping_top = 241
-
-
-
-
-upper_head none front                       width = 1     height = 1     shading_left = 15    shading_top = 23
-upper_head none back                        width = 1     height = 1     shading_left = 15    shading_top = 23
-upper_head none right                       width = 1     height = 1     shading_left = 15    shading_top = 23
-
-upper_head peaked ears front                width = 7     height = 8     shading_left = 0     shading_top = 257   mapping_left = 20     mapping_top = 257
-upper_head peaked ears back                 width = 7     height = 8     shading_left = 7     shading_top = 257   mapping_left = 28     mapping_top = 257
-upper_head peaked ears right                width = 4     height = 8     shading_left = 14    shading_top = 257   mapping_left = 36     mapping_top = 257
-
-upper_head small ears front                 width = 7     height = 8     shading_left = 0     shading_top = 266   mapping_left = 20     mapping_top = 266
-upper_head small ears back                  width = 7     height = 8     shading_left = 7     shading_top = 266   mapping_left = 28     mapping_top = 257
-upper_head small ears right                 width = 5     height = 8     shading_left = 14    shading_top = 266   mapping_left = 36     mapping_top = 266
-
-upper_head round ears front                 width = 7     height = 8     shading_left = 0     shading_top = 275   mapping_left = 20     mapping_top = 275
-upper_head round ears back                  width = 7     height = 8     shading_left = 7     shading_top = 275   mapping_left = 28     mapping_top = 257
-upper_head round ears right                 width = 6     height = 8     shading_left = 14    shading_top = 275   mapping_left = 36     mapping_top = 275
-
-upper_head pointed ears front               width = 7     height = 8     shading_left = 0     shading_top = 284   mapping_left = 20     mapping_top = 284
-upper_head pointed ears back                width = 7     height = 8     shading_left = 7     shading_top = 284   mapping_left = 28     mapping_top = 257
-upper_head pointed ears right               width = 6     height = 8     shading_left = 14    shading_top = 284   mapping_left = 36     mapping_top = 284
-
-upper_head long ears front                  width = 7     height = 8     shading_left = 43    shading_top = 257   mapping_left = 66     mapping_top = 257
-upper_head long ears back                   width = 7     height = 8     shading_left = 51    shading_top = 257   mapping_left = 28     mapping_top = 257
-upper_head long ears right                  width = 6     height = 8     shading_left = 59    shading_top = 257   mapping_left = 84     mapping_top = 257
-
-upper_head steer horns front                width = 8     height = 8     shading_left = 43    shading_top = 266   mapping_left = 66     mapping_top = 266
-upper_head steer horns back                 width = 8     height = 8     shading_left = 51    shading_top = 266   mapping_left = 75     mapping_top = 266
-upper_head steer horns right                width = 6     height = 8     shading_left = 59    shading_top = 266   mapping_left = 84     mapping_top = 266
-
-upper_head double horns front               width = 7     height = 8     shading_left = 43    shading_top = 275   mapping_left = 66     mapping_top = 266
-upper_head double horns back                width = 7     height = 8     shading_left = 51    shading_top = 275   mapping_left = 75     mapping_top = 266
-upper_head double horns right               width = 6     height = 8     shading_left = 59    shading_top = 275   mapping_left = 84     mapping_top = 266
-
-upper_head pointed horns front              width = 7     height = 8     shading_left = 43    shading_top = 284   mapping_left = 66     mapping_top = 266
-upper_head pointed horns back               width = 7     height = 8     shading_left = 51    shading_top = 284   mapping_left = 75     mapping_top = 266
-upper_head pointed horns right              width = 6     height = 8     shading_left = 59    shading_top = 284   mapping_left = 84     mapping_top = 266
-
-
-
-
-lower_head none front                       width = 1     height = 1     shading_left = 15    shading_top = 23
-lower_head none back                        width = 1     height = 1     shading_left = 15    shading_top = 23
-lower_head none right                       width = 1     height = 1     shading_left = 15    shading_top = 23
-
-lower_head tufts front                      width = 4     height = 8     shading_left = 0     shading_top = 302   mapping_left = 20     mapping_top = 293
-lower_head tufts back                       width = 4     height = 8     shading_left = 7     shading_top = 302   mapping_left = 28     mapping_top = 293
-lower_head tufts right                      width = 4     height = 8     shading_left = 14    shading_top = 302   mapping_left = 36     mapping_top = 293
-
-lower_head scales front                     width = 4     height = 8     shading_left = 0     shading_top = 293   mapping_left = 20     mapping_top = 293
-lower_head scales back                      width = 4     height = 8     shading_left = 7     shading_top = 293   mapping_left = 28     mapping_top = 293
-lower_head scales right                     width = 4     height = 8     shading_left = 14    shading_top = 293   mapping_left = 36     mapping_top = 293
-
-
-
-
-texture head monochrome                                     width = 1     height = 1     left = 526     top = 1
-texture head snout_underside                                width = 23    height = 13    left = 130     top = 236
-texture head snout_underside slight                         width = 23    height = 13    left = 178     top = 236
-texture head stripes                                        width = 23    height = 13    left = 154     top = 236
+begin texture monochrome
+	pos = "(526,0)"
+	size = "(1,1)"
+end
+
+begin torso lean nude front walk0
+	mapping = "(417,0)"
+	shading = "(1,0)"
+	size = "(13,23)"
+end
+
+begin torso lean nude front walk1
+	mapping = "(433,0)"
+	shading = "(17,0)"
+	size = "(13,23)"
+end
+
+begin torso lean nude front walk2
+	mapping = "(433,0)"
+	shading = "(33,0)"
+	size = "(13,23)"
+end
+
+begin torso lean clothed front walk0
+	mapping = "(417,0)"
+	shading = "(49,0)"
+	size = "(13,23)"
+end
+
+begin torso lean clothed front walk1
+	mapping = "(433,0)"
+	shading = "(65,0)"
+	size = "(13,23)"
+end
+
+begin torso lean clothed front walk2
+	mapping = "(433,0)"
+	shading = "(81,0)"
+	size = "(13,23)"
+end
+
+begin torso lean hooded front walk0
+	mapping = "(417,0)"
+	shading = "(97,0)"
+	size = "(13,23)"
+end
+
+begin torso lean hooded front walk1
+	mapping = "(433,0)"
+	shading = "(113,0)"
+	size = "(13,23)"
+end
+
+begin torso lean hooded front walk2
+	mapping = "(433,0)"
+	shading = "(129,0)"
+	size = "(13,23)"
+end
+
+begin torso lean nude back walk0
+	mapping = "(449,0)"
+	shading = "(145,0)"
+	size = "(13,23)"
+end
+
+begin torso lean nude back walk1
+	mapping = "(465,0)"
+	shading = "(161,0)"
+	size = "(13,23)"
+end
+
+begin torso lean nude back walk2
+	mapping = "(465,0)"
+	shading = "(177,0)"
+	size = "(13,23)"
+end
+
+begin torso lean clothed back walk0
+	mapping = "(449,0)"
+	shading = "(193,0)"
+	size = "(13,23)"
+end
+
+begin torso lean clothed back walk1
+	mapping = "(465,0)"
+	shading = "(209,0)"
+	size = "(13,23)"
+end
+
+begin torso lean clothed back walk2
+	mapping = "(465,0)"
+	shading = "(225,0)"
+	size = "(13,23)"
+end
+
+begin torso lean hooded back walk0
+	mapping = "(449,0)"
+	shading = "(241,0)"
+	size = "(13,23)"
+end
+
+begin torso lean hooded back walk1
+	mapping = "(465,0)"
+	shading = "(257,0)"
+	size = "(13,23)"
+end
+
+begin torso lean hooded back walk2
+	mapping = "(465,0)"
+	shading = "(273,0)"
+	size = "(13,23)"
+end
+
+begin torso lean nude right walk0
+	mapping = "(480,0)"
+	shading = "(289,0)"
+	size = "(14,23)"
+end
+
+begin torso lean nude right walk1
+	mapping = "(510,0)"
+	shading = "(303,0)"
+	size = "(14,23)"
+end
+
+begin torso lean nude right walk2
+	mapping = "(510,0)"
+	shading = "(303,0)"
+	size = "(14,23)"
+end
+
+begin torso lean nude right walk3
+	mapping = "(495,0)"
+	shading = "(289,0)"
+	size = "(14,23)"
+end
+
+begin torso lean nude right walk4
+	mapping = "(495,0)"
+	shading = "(317,0)"
+	size = "(14,23)"
+end
+
+begin torso lean clothed right walk0
+	mapping = "(480,0)"
+	shading = "(331,0)"
+	size = "(14,23)"
+end
+
+begin torso lean clothed right walk1
+	mapping = "(510,0)"
+	shading = "(345,0)"
+	size = "(14,23)"
+end
+
+begin torso lean clothed right walk2
+	mapping = "(510,0)"
+	shading = "(345,0)"
+	size = "(14,23)"
+end
+
+begin torso lean clothed right walk3
+	mapping = "(495,0)"
+	shading = "(331,0)"
+	size = "(14,23)"
+end
+
+begin torso lean clothed right walk4
+	mapping = "(495,0)"
+	shading = "(359,0)"
+	size = "(14,23)"
+end
+
+begin torso lean hooded right walk0
+	mapping = "(480,0)"
+	shading = "(373,0)"
+	size = "(14,23)"
+end
+
+begin torso lean hooded right walk1
+	mapping = "(510,0)"
+	shading = "(387,0)"
+	size = "(14,23)"
+end
+
+begin torso lean hooded right walk2
+	mapping = "(510,0)"
+	shading = "(387,0)"
+	size = "(14,23)"
+end
+
+begin torso lean hooded right walk3
+	mapping = "(495,0)"
+	shading = "(373,0)"
+	size = "(14,23)"
+end
+
+begin torso lean hooded right walk4
+	mapping = "(495,0)"
+	shading = "(401,0)"
+	size = "(14,23)"
+end
+
+begin torso stocky nude front walk0
+	mapping = "(416,24)"
+	shading = "(0,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky nude front walk1
+	mapping = "(432,24)"
+	shading = "(16,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky nude front walk2
+	mapping = "(432,24)"
+	shading = "(32,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky clothed front walk0
+	mapping = "(416,24)"
+	shading = "(48,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky clothed front walk1
+	mapping = "(432,24)"
+	shading = "(64,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky clothed front walk2
+	mapping = "(432,24)"
+	shading = "(80,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky hooded front walk0
+	mapping = "(416,24)"
+	shading = "(96,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky hooded front walk1
+	mapping = "(432,24)"
+	shading = "(112,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky hooded front walk2
+	mapping = "(432,24)"
+	shading = "(128,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky nude back walk0
+	mapping = "(448,24)"
+	shading = "(144,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky nude back walk1
+	mapping = "(464,24)"
+	shading = "(160,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky nude back walk2
+	mapping = "(464,24)"
+	shading = "(176,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky clothed back walk0
+	mapping = "(448,24)"
+	shading = "(192,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky clothed back walk1
+	mapping = "(464,24)"
+	shading = "(208,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky clothed back walk2
+	mapping = "(464,24)"
+	shading = "(224,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky hooded back walk0
+	mapping = "(448,24)"
+	shading = "(240,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky hooded back walk1
+	mapping = "(464,24)"
+	shading = "(256,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky hooded back walk2
+	mapping = "(464,24)"
+	shading = "(272,24)"
+	size = "(15,23)"
+end
+
+begin torso stocky nude right walk0
+	mapping = "(480,24)"
+	shading = "(289,24)"
+	size = "(14,23)"
+end
+
+begin torso stocky nude right walk1
+	mapping = "(510,24)"
+	shading = "(303,24)"
+	size = "(14,23)"
+end
+
+begin torso stocky nude right walk2
+	mapping = "(510,24)"
+	shading = "(303,24)"
+	size = "(14,23)"
+end
+
+begin torso stocky nude right walk3
+	mapping = "(495,24)"
+	shading = "(289,24)"
+	size = "(14,23)"
+end
+
+begin torso stocky nude right walk4
+	mapping = "(495,24)"
+	shading = "(317,24)"
+	size = "(14,23)"
+end
+
+begin torso stocky clothed right walk0
+	mapping = "(480,24)"
+	shading = "(331,24)"
+	size = "(14,23)"
+end
+
+begin torso stocky clothed right walk1
+	mapping = "(510,24)"
+	shading = "(345,24)"
+	size = "(14,23)"
+end
+
+begin torso stocky clothed right walk2
+	mapping = "(510,24)"
+	shading = "(345,24)"
+	size = "(14,23)"
+end
+
+begin torso stocky clothed right walk3
+	mapping = "(495,24)"
+	shading = "(331,24)"
+	size = "(14,23)"
+end
+
+begin torso stocky clothed right walk4
+	mapping = "(495,24)"
+	shading = "(359,24)"
+	size = "(14,23)"
+end
+
+begin torso stocky hooded right walk0
+	mapping = "(480,24)"
+	shading = "(373,24)"
+	size = "(14,23)"
+end
+
+begin torso stocky hooded right walk1
+	mapping = "(510,24)"
+	shading = "(387,24)"
+	size = "(14,23)"
+end
+
+begin torso stocky hooded right walk2
+	mapping = "(510,24)"
+	shading = "(387,24)"
+	size = "(14,23)"
+end
+
+begin torso stocky hooded right walk3
+	mapping = "(495,24)"
+	shading = "(373,24)"
+	size = "(14,23)"
+end
+
+begin torso stocky hooded right walk4
+	mapping = "(495,24)"
+	shading = "(401,24)"
+	size = "(14,23)"
+end
+
+begin leg lean nude front walk0
+	mapping = "(442,48)"
+	shading = "(0,48)"
+	size = "(9,23)"
+end
+
+begin leg lean nude front walk1
+	mapping = "(452,48)"
+	shading = "(9,48)"
+	size = "(9,22)"
+end
+
+begin leg lean nude front walk2
+	mapping = "(462,48)"
+	shading = "(18,48)"
+	size = "(9,21)"
+end
+
+begin leg lean nude front walk3
+	mapping = "(472,48)"
+	shading = "(27,48)"
+	size = "(9,22)"
+end
+
+begin leg lean nude front walk4
+	mapping = "(482,48)"
+	shading = "(36,48)"
+	size = "(9,23)"
+end
+
+begin leg lean nude front walk5
+	mapping = "(492,48)"
+	shading = "(45,48)"
+	size = "(9,22)"
+end
+
+begin leg lean nude front walk6
+	mapping = "(502,48)"
+	shading = "(54,48)"
+	size = "(9,21)"
+end
+
+begin leg lean nude front walk7
+	mapping = "(512,48)"
+	shading = "(63,48)"
+	size = "(9,22)"
+end
+
+begin leg lean pants front walk0
+	mapping = "(442,48)"
+	shading = "(0,71)"
+	size = "(9,23)"
+end
+
+begin leg lean pants front walk1
+	mapping = "(452,48)"
+	shading = "(9,71)"
+	size = "(9,22)"
+end
+
+begin leg lean pants front walk2
+	mapping = "(462,48)"
+	shading = "(18,71)"
+	size = "(9,21)"
+end
+
+begin leg lean pants front walk3
+	mapping = "(472,48)"
+	shading = "(27,71)"
+	size = "(9,22)"
+end
+
+begin leg lean pants front walk4
+	mapping = "(482,48)"
+	shading = "(36,71)"
+	size = "(9,23)"
+end
+
+begin leg lean pants front walk5
+	mapping = "(492,48)"
+	shading = "(45,71)"
+	size = "(9,22)"
+end
+
+begin leg lean pants front walk6
+	mapping = "(402,48)"
+	shading = "(54,71)"
+	size = "(9,21)"
+end
+
+begin leg lean pants front walk7
+	mapping = "(512,48)"
+	shading = "(63,71)"
+	size = "(9,22)"
+end
+
+begin leg lean skirt front walk0
+	mapping = "(442,48)"
+	shading = "(0,94)"
+	size = "(9,23)"
+end
+
+begin leg lean skirt front walk1
+	mapping = "(452,48)"
+	shading = "(9,94)"
+	size = "(9,22)"
+end
+
+begin leg lean skirt front walk2
+	mapping = "(462,48)"
+	shading = "(18,94)"
+	size = "(9,21)"
+end
+
+begin leg lean skirt front walk3
+	mapping = "(472,48)"
+	shading = "(27,94)"
+	size = "(9,22)"
+end
+
+begin leg lean skirt front walk4
+	mapping = "(482,48)"
+	shading = "(36,94)"
+	size = "(9,23)"
+end
+
+begin leg lean skirt front walk5
+	mapping = "(492,48)"
+	shading = "(45,94)"
+	size = "(9,22)"
+end
+
+begin leg lean skirt front walk6
+	mapping = "(502,48)"
+	shading = "(54,94)"
+	size = "(9,21)"
+end
+
+begin leg lean skirt front walk7
+	mapping = "(512,48)"
+	shading = "(63,94)"
+	size = "(9,22)"
+end
+
+begin leg lean nude back walk0
+	mapping = "(522,48)"
+	shading = "(72,48)"
+	size = "(9,23)"
+end
+
+begin leg lean nude back walk1
+	mapping = "(532,48)"
+	shading = "(81,48)"
+	size = "(9,22)"
+end
+
+begin leg lean nude back walk2
+	mapping = "(542,48)"
+	shading = "(90,48)"
+	size = "(9,21)"
+end
+
+begin leg lean nude back walk3
+	mapping = "(552,48)"
+	shading = "(99,48)"
+	size = "(9,22)"
+end
+
+begin leg lean nude back walk4
+	mapping = "(562,48)"
+	shading = "(108,48)"
+	size = "(9,23)"
+end
+
+begin leg lean nude back walk5
+	mapping = "(572,48)"
+	shading = "(117,48)"
+	size = "(9,22)"
+end
+
+begin leg lean nude back walk6
+	mapping = "(582,48)"
+	shading = "(126,48)"
+	size = "(9,21)"
+end
+
+begin leg lean nude back walk7
+	mapping = "(592,48)"
+	shading = "(135,48)"
+	size = "(9,22)"
+end
+
+begin leg lean pants back walk0
+	mapping = "(522,48)"
+	shading = "(72,71)"
+	size = "(9,23)"
+end
+
+begin leg lean pants back walk1
+	mapping = "(532,48)"
+	shading = "(81,71)"
+	size = "(9,22)"
+end
+
+begin leg lean pants back walk2
+	mapping = "(542,48)"
+	shading = "(90,71)"
+	size = "(9,21)"
+end
+
+begin leg lean pants back walk3
+	mapping = "(552,48)"
+	shading = "(99,71)"
+	size = "(9,22)"
+end
+
+begin leg lean pants back walk4
+	mapping = "(562,48)"
+	shading = "(108,71)"
+	size = "(9,23)"
+end
+
+begin leg lean pants back walk5
+	mapping = "(572,48)"
+	shading = "(117,71)"
+	size = "(9,22)"
+end
+
+begin leg lean pants back walk6
+	mapping = "(582,48)"
+	shading = "(126,71)"
+	size = "(9,21)"
+end
+
+begin leg lean pants back walk7
+	mapping = "(592,48)"
+	shading = "(135,71)"
+	size = "(9,22)"
+end
+
+begin leg lean skirt back walk0
+	mapping = "(522,48)"
+	shading = "(72,94)"
+	size = "(9,23)"
+end
+
+begin leg lean skirt back walk1
+	mapping = "(532,48)"
+	shading = "(81,94)"
+	size = "(9,22)"
+end
+
+begin leg lean skirt back walk2
+	mapping = "(542,48)"
+	shading = "(90,94)"
+	size = "(9,21)"
+end
+
+begin leg lean skirt back walk3
+	mapping = "(552,48)"
+	shading = "(99,94)"
+	size = "(9,22)"
+end
+
+begin leg lean skirt back walk4
+	mapping = "(562,48)"
+	shading = "(108,94)"
+	size = "(9,23)"
+end
+
+begin leg lean skirt back walk5
+	mapping = "(572,48)"
+	shading = "(117,94)"
+	size = "(9,22)"
+end
+
+begin leg lean skirt back walk6
+	mapping = "(582,48)"
+	shading = "(126,94)"
+	size = "(9,21)"
+end
+
+begin leg lean skirt back walk7
+	mapping = "(592,48)"
+	shading = "(135,94)"
+	size = "(9,22)"
+end
+
+begin leg lean nude right_front walk0
+	mapping = "(602,48)"
+	shading = "(144,48)"
+	size = "(15,22)"
+end
+
+begin leg lean nude right_front walk2
+	mapping = "(618,48)"
+	shading = "(159,48)"
+	size = "(15,21)"
+end
+
+begin leg lean nude right_front walk3
+	mapping = "(634,48)"
+	shading = "(174,48)"
+	size = "(16,20)"
+end
+
+begin leg lean nude right_front walk4
+	mapping = "(651,48)"
+	shading = "(190,48)"
+	size = "(16,21)"
+end
+
+begin leg lean nude right_front walk5
+	mapping = "(668,48)"
+	shading = "(206,48)"
+	size = "(18,18)"
+end
+
+begin leg lean nude right_front walk6
+	mapping = "(687,48)"
+	shading = "(224,48)"
+	size = "(19,20)"
+end
+
+begin leg lean nude right_front walk7
+	mapping = "(707,48)"
+	shading = "(243,48)"
+	size = "(22,20)"
+end
+
+begin leg lean nude right_front walk8
+	mapping = "(730,48)"
+	shading = "(265,48)"
+	size = "(20,21)"
+end
+
+begin leg lean nude right_front walk1
+	mapping = "(602,48)"
+	shading = "(285,48)"
+	size = "(15,22)"
+end
+
+begin leg lean pants right_front walk0
+	mapping = "(602,48)"
+	shading = "(144,71)"
+	size = "(15,22)"
+end
+
+begin leg lean pants right_front walk2
+	mapping = "(618,48)"
+	shading = "(159,71)"
+	size = "(15,21)"
+end
+
+begin leg lean pants right_front walk3
+	mapping = "(634,48)"
+	shading = "(174,71)"
+	size = "(16,20)"
+end
+
+begin leg lean pants right_front walk4
+	mapping = "(651,48)"
+	shading = "(190,71)"
+	size = "(16,21)"
+end
+
+begin leg lean pants right_front walk5
+	mapping = "(668,48)"
+	shading = "(206,71)"
+	size = "(18,19)"
+end
+
+begin leg lean pants right_front walk6
+	mapping = "(687,48)"
+	shading = "(224,71)"
+	size = "(19,20)"
+end
+
+begin leg lean pants right_front walk7
+	mapping = "(707,48)"
+	shading = "(243,71)"
+	size = "(22,20)"
+end
+
+begin leg lean pants right_front walk8
+	mapping = "(730,48)"
+	shading = "(265,71)"
+	size = "(20,21)"
+end
+
+begin leg lean pants right_front walk1
+	mapping = "(602,48)"
+	shading = "(285,71)"
+	size = "(15,22)"
+end
+
+begin leg lean skirt right_front walk0
+	mapping = "(602,48)"
+	shading = "(144,94)"
+	size = "(15,22)"
+end
+
+begin leg lean skirt right_front walk2
+	mapping = "(618,48)"
+	shading = "(159,94)"
+	size = "(15,21)"
+end
+
+begin leg lean skirt right_front walk3
+	mapping = "(634,48)"
+	shading = "(174,94)"
+	size = "(16,20)"
+end
+
+begin leg lean skirt right_front walk4
+	mapping = "(651,48)"
+	shading = "(190,94)"
+	size = "(16,21)"
+end
+
+begin leg lean skirt right_front walk5
+	mapping = "(668,48)"
+	shading = "(206,94)"
+	size = "(18,19)"
+end
+
+begin leg lean skirt right_front walk6
+	mapping = "(687,48)"
+	shading = "(224,94)"
+	size = "(19,20)"
+end
+
+begin leg lean skirt right_front walk7
+	mapping = "(707,48)"
+	shading = "(243,94)"
+	size = "(22,20)"
+end
+
+begin leg lean skirt right_front walk8
+	mapping = "(730,48)"
+	shading = "(265,94)"
+	size = "(20,21)"
+end
+
+begin leg lean skirt right_front walk1
+	mapping = "(602,48)"
+	shading = "(285,94)"
+	size = "(15,22)"
+end
+
+begin leg lean nude right_back walk2
+	mapping = "(687,48)"
+	shading = "(300,48)"
+	size = "(19,21)"
+end
+
+begin leg lean nude right_back walk3
+	mapping = "(707,48)"
+	shading = "(319,48)"
+	size = "(22,20)"
+end
+
+begin leg lean nude right_back walk4
+	mapping = "(730,48)"
+	shading = "(341,48)"
+	size = "(20,21)"
+end
+
+begin leg lean nude right_back walk5
+	mapping = "(602,48)"
+	shading = "(361,48)"
+	size = "(15,22)"
+end
+
+begin leg lean nude right_back walk6
+	mapping = "(618,48)"
+	shading = "(376,48)"
+	size = "(14,21)"
+end
+
+begin leg lean nude right_back walk7
+	mapping = "(634,48)"
+	shading = "(391,48)"
+	size = "(16,20)"
+end
+
+begin leg lean nude right_back walk8
+	mapping = "(651,48)"
+	shading = "(407,48)"
+	size = "(16,21)"
+end
+
+begin leg lean nude right_back walk1
+	mapping = "(668,48)"
+	shading = "(423,48)"
+	size = "(18,18)"
+end
+
+begin leg lean pants right_back walk2
+	mapping = "(687,48)"
+	shading = "(300,71)"
+	size = "(19,21)"
+end
+
+begin leg lean pants right_back walk3
+	mapping = "(707,48)"
+	shading = "(319,71)"
+	size = "(22,20)"
+end
+
+begin leg lean pants right_back walk4
+	mapping = "(730,48)"
+	shading = "(341,71)"
+	size = "(20,21)"
+end
+
+begin leg lean pants right_back walk5
+	mapping = "(602,48)"
+	shading = "(361,71)"
+	size = "(15,22)"
+end
+
+begin leg lean pants right_back walk6
+	mapping = "(618,48)"
+	shading = "(376,71)"
+	size = "(14,21)"
+end
+
+begin leg lean pants right_back walk7
+	mapping = "(634,48)"
+	shading = "(391,71)"
+	size = "(16,20)"
+end
+
+begin leg lean pants right_back walk8
+	mapping = "(651,48)"
+	shading = "(407,71)"
+	size = "(16,21)"
+end
+
+begin leg lean pants right_back walk1
+	mapping = "(668,48)"
+	shading = "(423,71)"
+	size = "(18,18)"
+end
+
+begin leg lean skirt right_back walk2
+	mapping = "(687,48)"
+	shading = "(300,94)"
+	size = "(19,21)"
+end
+
+begin leg lean skirt right_back walk3
+	mapping = "(707,48)"
+	shading = "(319,94)"
+	size = "(22,20)"
+end
+
+begin leg lean skirt right_back walk4
+	mapping = "(730,48)"
+	shading = "(341,94)"
+	size = "(20,21)"
+end
+
+begin leg lean skirt right_back walk5
+	mapping = "(602,48)"
+	shading = "(361,94)"
+	size = "(15,22)"
+end
+
+begin leg lean skirt right_back walk6
+	mapping = "(618,48)"
+	shading = "(376,94)"
+	size = "(14,21)"
+end
+
+begin leg lean skirt right_back walk7
+	mapping = "(634,48)"
+	shading = "(391,94)"
+	size = "(16,20)"
+end
+
+begin leg lean skirt right_back walk8
+	mapping = "(651,48)"
+	shading = "(407,94)"
+	size = "(16,21)"
+end
+
+begin leg lean skirt right_back walk1
+	mapping = "(668,48)"
+	shading = "(423,94)"
+	size = "(18,18)"
+end
+
+begin leg stocky nude front walk0
+	mapping = "(442,117)"
+	shading = "(0,117)"
+	size = "(9,23)"
+end
+
+begin leg stocky nude front walk1
+	mapping = "(452,117)"
+	shading = "(9,117)"
+	size = "(9,22)"
+end
+
+begin leg stocky nude front walk2
+	mapping = "(462,117)"
+	shading = "(18,117)"
+	size = "(9,21)"
+end
+
+begin leg stocky nude front walk3
+	mapping = "(472,117)"
+	shading = "(27,117)"
+	size = "(9,22)"
+end
+
+begin leg stocky nude front walk4
+	mapping = "(482,117)"
+	shading = "(36,117)"
+	size = "(9,23)"
+end
+
+begin leg stocky nude front walk5
+	mapping = "(492,117)"
+	shading = "(45,117)"
+	size = "(9,22)"
+end
+
+begin leg stocky nude front walk6
+	mapping = "(502,117)"
+	shading = "(54,117)"
+	size = "(9,21)"
+end
+
+begin leg stocky nude front walk7
+	mapping = "(512,117)"
+	shading = "(63,117)"
+	size = "(9,22)"
+end
+
+begin leg stocky pants front walk0
+	mapping = "(442,117)"
+	shading = "(0,140)"
+	size = "(9,23)"
+end
+
+begin leg stocky pants front walk1
+	mapping = "(452,117)"
+	shading = "(9,140)"
+	size = "(9,22)"
+end
+
+begin leg stocky pants front walk2
+	mapping = "(462,117)"
+	shading = "(18,140)"
+	size = "(9,21)"
+end
+
+begin leg stocky pants front walk3
+	mapping = "(472,117)"
+	shading = "(27,140)"
+	size = "(9,22)"
+end
+
+begin leg stocky pants front walk4
+	mapping = "(482,117)"
+	shading = "(36,140)"
+	size = "(9,23)"
+end
+
+begin leg stocky pants front walk5
+	mapping = "(492,117)"
+	shading = "(45,140)"
+	size = "(9,22)"
+end
+
+begin leg stocky pants front walk6
+	mapping = "(502,117)"
+	shading = "(54,140)"
+	size = "(9,21)"
+end
+
+begin leg stocky pants front walk7
+	mapping = "(512,117)"
+	shading = "(63,140)"
+	size = "(9,22)"
+end
+
+begin leg stocky skirt front walk0
+	mapping = "(442,117)"
+	shading = "(0,163)"
+	size = "(9,23)"
+end
+
+begin leg stocky skirt front walk1
+	mapping = "(452,117)"
+	shading = "(9,163)"
+	size = "(9,22)"
+end
+
+begin leg stocky skirt front walk2
+	mapping = "(462,117)"
+	shading = "(18,163)"
+	size = "(9,21)"
+end
+
+begin leg stocky skirt front walk3
+	mapping = "(472,117)"
+	shading = "(27,163)"
+	size = "(9,22)"
+end
+
+begin leg stocky skirt front walk4
+	mapping = "(482,117)"
+	shading = "(36,163)"
+	size = "(9,23)"
+end
+
+begin leg stocky skirt front walk5
+	mapping = "(492,117)"
+	shading = "(45,163)"
+	size = "(9,22)"
+end
+
+begin leg stocky skirt front walk6
+	mapping = "(502,117)"
+	shading = "(54,163)"
+	size = "(9,21)"
+end
+
+begin leg stocky skirt front walk7
+	mapping = "(512,117)"
+	shading = "(63,163)"
+	size = "(9,22)"
+end
+
+begin leg stocky nude back walk0
+	mapping = "(522,117)"
+	shading = "(72,117)"
+	size = "(9,23)"
+end
+
+begin leg stocky nude back walk1
+	mapping = "(532,117)"
+	shading = "(81,117)"
+	size = "(9,22)"
+end
+
+begin leg stocky nude back walk2
+	mapping = "(542,117)"
+	shading = "(90,117)"
+	size = "(9,21)"
+end
+
+begin leg stocky nude back walk3
+	mapping = "(552,117)"
+	shading = "(99,117)"
+	size = "(9,22)"
+end
+
+begin leg stocky nude back walk4
+	mapping = "(562,117)"
+	shading = "(108,117)"
+	size = "(9,23)"
+end
+
+begin leg stocky nude back walk5
+	mapping = "(572,117)"
+	shading = "(117,117)"
+	size = "(9,22)"
+end
+
+begin leg stocky nude back walk6
+	mapping = "(582,117)"
+	shading = "(126,117)"
+	size = "(9,21)"
+end
+
+begin leg stocky nude back walk7
+	mapping = "(592,117)"
+	shading = "(135,117)"
+	size = "(9,22)"
+end
+
+begin leg stocky pants back walk0
+	mapping = "(522,117)"
+	shading = "(72,140)"
+	size = "(9,23)"
+end
+
+begin leg stocky pants back walk1
+	mapping = "(532,117)"
+	shading = "(81,140)"
+	size = "(9,22)"
+end
+
+begin leg stocky pants back walk2
+	mapping = "(542,117)"
+	shading = "(90,140)"
+	size = "(9,21)"
+end
+
+begin leg stocky pants back walk3
+	mapping = "(552,117)"
+	shading = "(99,140)"
+	size = "(9,22)"
+end
+
+begin leg stocky pants back walk4
+	mapping = "(562,117)"
+	shading = "(108,140)"
+	size = "(9,23)"
+end
+
+begin leg stocky pants back walk5
+	mapping = "(572,117)"
+	shading = "(117,140)"
+	size = "(9,22)"
+end
+
+begin leg stocky pants back walk6
+	mapping = "(582,117)"
+	shading = "(126,140)"
+	size = "(9,21)"
+end
+
+begin leg stocky pants back walk7
+	mapping = "(592,117)"
+	shading = "(135,140)"
+	size = "(9,22)"
+end
+
+begin leg stocky skirt back walk0
+	mapping = "(522,117)"
+	shading = "(72,163)"
+	size = "(9,23)"
+end
+
+begin leg stocky skirt back walk1
+	mapping = "(532,117)"
+	shading = "(81,163)"
+	size = "(9,22)"
+end
+
+begin leg stocky skirt back walk2
+	mapping = "(542,117)"
+	shading = "(90,163)"
+	size = "(9,21)"
+end
+
+begin leg stocky skirt back walk3
+	mapping = "(552,117)"
+	shading = "(99,163)"
+	size = "(9,22)"
+end
+
+begin leg stocky skirt back walk4
+	mapping = "(562,117)"
+	shading = "(108,163)"
+	size = "(9,23)"
+end
+
+begin leg stocky skirt back walk5
+	mapping = "(572,117)"
+	shading = "(117,163)"
+	size = "(9,22)"
+end
+
+begin leg stocky skirt back walk6
+	mapping = "(582,117)"
+	shading = "(126,163)"
+	size = "(9,21)"
+end
+
+begin leg stocky skirt back walk7
+	mapping = "(592,117)"
+	shading = "(135,163)"
+	size = "(9,22)"
+end
+
+begin leg stocky nude right_front walk0
+	mapping = "(602,117)"
+	shading = "(144,117)"
+	size = "(15,22)"
+end
+
+begin leg stocky nude right_front walk2
+	mapping = "(618,117)"
+	shading = "(159,117)"
+	size = "(15,21)"
+end
+
+begin leg stocky nude right_front walk3
+	mapping = "(634,117)"
+	shading = "(174,117)"
+	size = "(16,20)"
+end
+
+begin leg stocky nude right_front walk4
+	mapping = "(651,117)"
+	shading = "(190,117)"
+	size = "(16,21)"
+end
+
+begin leg stocky nude right_front walk5
+	mapping = "(668,117)"
+	shading = "(206,117)"
+	size = "(18,18)"
+end
+
+begin leg stocky nude right_front walk6
+	mapping = "(687,117)"
+	shading = "(224,117)"
+	size = "(19,20)"
+end
+
+begin leg stocky nude right_front walk7
+	mapping = "(707,117)"
+	shading = "(243,117)"
+	size = "(22,20)"
+end
+
+begin leg stocky nude right_front walk8
+	mapping = "(730,117)"
+	shading = "(265,117)"
+	size = "(20,21)"
+end
+
+begin leg stocky nude right_front walk1
+	mapping = "(602,117)"
+	shading = "(285,117)"
+	size = "(15,22)"
+end
+
+begin leg stocky pants right_front walk0
+	mapping = "(602,117)"
+	shading = "(144,140)"
+	size = "(15,22)"
+end
+
+begin leg stocky pants right_front walk2
+	mapping = "(618,117)"
+	shading = "(159,140)"
+	size = "(15,21)"
+end
+
+begin leg stocky pants right_front walk3
+	mapping = "(634,117)"
+	shading = "(174,140)"
+	size = "(16,20)"
+end
+
+begin leg stocky pants right_front walk4
+	mapping = "(651,117)"
+	shading = "(190,140)"
+	size = "(16,21)"
+end
+
+begin leg stocky pants right_front walk5
+	mapping = "(668,117)"
+	shading = "(206,140)"
+	size = "(18,18)"
+end
+
+begin leg stocky pants right_front walk6
+	mapping = "(687,117)"
+	shading = "(224,140)"
+	size = "(19,20)"
+end
+
+begin leg stocky pants right_front walk7
+	mapping = "(707,117)"
+	shading = "(243,140)"
+	size = "(22,20)"
+end
+
+begin leg stocky pants right_front walk8
+	mapping = "(730,117)"
+	shading = "(265,140)"
+	size = "(20,21)"
+end
+
+begin leg stocky pants right_front walk1
+	mapping = "(602,117)"
+	shading = "(285,140)"
+	size = "(15,22)"
+end
+
+begin leg stocky skirt right_front walk0
+	mapping = "(602,117)"
+	shading = "(144,163)"
+	size = "(15,22)"
+end
+
+begin leg stocky skirt right_front walk2
+	mapping = "(618,117)"
+	shading = "(159,163)"
+	size = "(15,21)"
+end
+
+begin leg stocky skirt right_front walk3
+	mapping = "(634,117)"
+	shading = "(174,163)"
+	size = "(16,20)"
+end
+
+begin leg stocky skirt right_front walk4
+	mapping = "(651,117)"
+	shading = "(190,163)"
+	size = "(16,21)"
+end
+
+begin leg stocky skirt right_front walk5
+	mapping = "(668,117)"
+	shading = "(206,163)"
+	size = "(18,18)"
+end
+
+begin leg stocky skirt right_front walk6
+	mapping = "(687,117)"
+	shading = "(224,163)"
+	size = "(19,20)"
+end
+
+begin leg stocky skirt right_front walk7
+	mapping = "(707,117)"
+	shading = "(243,163)"
+	size = "(22,20)"
+end
+
+begin leg stocky skirt right_front walk8
+	mapping = "(730,117)"
+	shading = "(265,163)"
+	size = "(20,21)"
+end
+
+begin leg stocky skirt right_front walk1
+	mapping = "(602,117)"
+	shading = "(285,163)"
+	size = "(15,22)"
+end
+
+begin leg stocky nude right_back walk2
+	mapping = "(687,117)"
+	shading = "(300,117)"
+	size = "(19,21)"
+end
+
+begin leg stocky nude right_back walk3
+	mapping = "(707,117)"
+	shading = "(319,117)"
+	size = "(22,20)"
+end
+
+begin leg stocky nude right_back walk4
+	mapping = "(730,117)"
+	shading = "(341,117)"
+	size = "(20,21)"
+end
+
+begin leg stocky nude right_back walk5
+	mapping = "(602,117)"
+	shading = "(361,117)"
+	size = "(15,22)"
+end
+
+begin leg stocky nude right_back walk6
+	mapping = "(618,117)"
+	shading = "(376,117)"
+	size = "(14,21)"
+end
+
+begin leg stocky nude right_back walk7
+	mapping = "(634,117)"
+	shading = "(391,117)"
+	size = "(16,20)"
+end
+
+begin leg stocky nude right_back walk8
+	mapping = "(651,117)"
+	shading = "(407,117)"
+	size = "(16,21)"
+end
+
+begin leg stocky nude right_back walk1
+	mapping = "(668,117)"
+	shading = "(423,117)"
+	size = "(18,18)"
+end
+
+begin leg stocky pants right_back walk2
+	mapping = "(687,117)"
+	shading = "(300,140)"
+	size = "(19,21)"
+end
+
+begin leg stocky pants right_back walk3
+	mapping = "(707,117)"
+	shading = "(319,140)"
+	size = "(22,20)"
+end
+
+begin leg stocky pants right_back walk4
+	mapping = "(730,117)"
+	shading = "(341,140)"
+	size = "(20,21)"
+end
+
+begin leg stocky pants right_back walk5
+	mapping = "(602,117)"
+	shading = "(361,140)"
+	size = "(15,22)"
+end
+
+begin leg stocky pants right_back walk6
+	mapping = "(618,117)"
+	shading = "(376,140)"
+	size = "(14,21)"
+end
+
+begin leg stocky pants right_back walk7
+	mapping = "(634,117)"
+	shading = "(391,140)"
+	size = "(16,20)"
+end
+
+begin leg stocky pants right_back walk8
+	mapping = "(651,117)"
+	shading = "(407,140)"
+	size = "(16,21)"
+end
+
+begin leg stocky pants right_back walk1
+	mapping = "(668,117)"
+	shading = "(423,140)"
+	size = "(18,18)"
+end
+
+begin leg stocky skirt right_back walk2
+	mapping = "(687,117)"
+	shading = "(300,163)"
+	size = "(19,21)"
+end
+
+begin leg stocky skirt right_back walk3
+	mapping = "(707,117)"
+	shading = "(319,163)"
+	size = "(22,20)"
+end
+
+begin leg stocky skirt right_back walk4
+	mapping = "(730,117)"
+	shading = "(341,163)"
+	size = "(20,21)"
+end
+
+begin leg stocky skirt right_back walk5
+	mapping = "(602,117)"
+	shading = "(361,163)"
+	size = "(15,22)"
+end
+
+begin leg stocky skirt right_back walk6
+	mapping = "(618,117)"
+	shading = "(376,163)"
+	size = "(14,21)"
+end
+
+begin leg stocky skirt right_back walk7
+	mapping = "(634,117)"
+	shading = "(391,163)"
+	size = "(16,20)"
+end
+
+begin leg stocky skirt right_back walk8
+	mapping = "(651,117)"
+	shading = "(407,163)"
+	size = "(16,21)"
+end
+
+begin leg stocky skirt right_back walk1
+	mapping = "(668,117)"
+	shading = "(423,163)"
+	size = "(18,18)"
+end
+
+begin arm paw front walk0
+	mapping = "(165,186)"
+	shading = "(0,186)"
+	size = "(7,23)"
+end
+
+begin arm paw front walk1
+	mapping = "(173,186)"
+	shading = "(6,186)"
+	size = "(7,22)"
+end
+
+begin arm paw front walk2
+	mapping = "(181,186)"
+	shading = "(12,186)"
+	size = "(7,21)"
+end
+
+begin arm paw front walk3
+	mapping = "(189,186)"
+	shading = "(18,186)"
+	size = "(7,23)"
+end
+
+begin arm paw front walk4
+	mapping = "(197,186)"
+	shading = "(24,186)"
+	size = "(7,24)"
+end
+
+begin arm paw back walk0
+	mapping = "(205,186)"
+	shading = "(0,186)"
+	size = "(7,23)"
+end
+
+begin arm paw back walk1
+	mapping = "(213,186)"
+	shading = "(6,186)"
+	size = "(7,22)"
+end
+
+begin arm paw back walk2
+	mapping = "(221,186)"
+	shading = "(12,186)"
+	size = "(7,21)"
+end
+
+begin arm paw back walk3
+	mapping = "(229,186)"
+	shading = "(31,186)"
+	size = "(7,23)"
+end
+
+begin arm paw back walk4
+	mapping = "(237,186)"
+	shading = "(38,186)"
+	size = "(7,24)"
+end
+
+begin arm paw right_front walk0
+	mapping = "(271,186)"
+	shading = "(71,186)"
+	size = "(13,24)"
+end
+
+begin arm paw right_front walk1
+	mapping = "(258,186)"
+	shading = "(58,186)"
+	size = "(12,23)"
+end
+
+begin arm paw right_front walk2
+	mapping = "(245,186)"
+	shading = "(45,186)"
+	size = "(12,23)"
+end
+
+begin arm paw right_front walk3
+	mapping = "(285,186)"
+	shading = "(85,186)"
+	size = "(15,24)"
+end
+
+begin arm paw right_front walk4
+	mapping = "(300,186)"
+	shading = "(100,186)"
+	size = "(20,23)"
+end
+
+begin arm paw right_back walk1
+	mapping = "(285,186)"
+	shading = "(125,186)"
+	size = "(19,24)"
+end
+
+begin arm paw right_back walk2
+	mapping = "(300,186)"
+	shading = "(144,186)"
+	size = "(20,23)"
+end
+
+begin arm paw right_back walk4
+	mapping = "(245,186)"
+	shading = "(120,186)"
+	size = "(5,23)"
+end
+
+begin texture torso monochrome
+	pos = "(526,0)"
+	size = "(1,1)"
+end
+
+begin texture arm monochrome
+	pos = "(526,0)"
+	size = "(1,1)"
+end
+
+begin texture torso neck_chest_stomach
+	pos = "(577,0)"
+	size = "(25,23)"
+end
+
+begin texture arm neck_chest_stomach
+	pos = "(165,0)"
+	size = "(9,24)"
+end
+
+begin texture torso chest
+	pos = "(525,0)"
+	size = "(25,23)"
+end
+
+begin texture arm chest
+	pos = "(165,0)"
+	size = "(9,24)"
+end
+
+begin texture torso chest_stomach
+	pos = "(551,0)"
+	size = "(25,23)"
+end
+
+begin texture arm chest_stomach
+	pos = "(165,0)"
+	size = "(9,24)"
+end
+
+begin texture torso neck
+	pos = "(603,0)"
+	size = "(25,23)"
+end
+
+begin texture arm neck
+	pos = "(165,0)"
+	size = "(9,24)"
+end
+
+begin texture torso medium_spots all_over
+	pos = "(629,0)"
+	size = "(25,23)"
+end
+
+begin texture arm medium_spots all_over
+	pos = "(245,0)"
+	size = "(9,24)"
+end
+
+begin texture torso small_spots
+	pos = "(733,0)"
+	size = "(25,23)"
+end
+
+begin texture arm small_spots
+	pos = "(235,0)"
+	size = "(9,24)"
+end
+
+begin texture torso medium_spots
+	pos = "(655,0)"
+	size = "(25,23)"
+end
+
+begin texture arm medium_spots
+	pos = "(245,0)"
+	size = "(9,24)"
+end
+
+begin texture torso large_spots
+	pos = "(707,0)"
+	size = "(25,23)"
+end
+
+begin texture arm large_spots
+	pos = "(225,0)"
+	size = "(9,24)"
+end
+
+begin texture torso stripes
+	pos = "(681,0)"
+	size = "(25,23)"
+end
+
+begin texture arm stripes
+	pos = "(215,0)"
+	size = "(9,24)"
+end
+
+begin texture torso solid
+	pos = "(759,0)"
+	size = "(25,23)"
+end
+
+begin texture top torso nude none
+	pos = "(15,0)"
+	size = "(1,1)"
+end
+
+begin texture top arm nude none
+	pos = "(15,0)"
+	size = "(1,1)"
+end
+
+begin texture top torso clothed thick striped shirt
+	pos = "(525,0)"
+	size = "(25,23)"
+end
+
+begin texture top arm clothed thick striped shirt
+	pos = "(205,0)"
+	size = "(9,24)"
+end
+
+begin texture top torso clothed thin striped shirt
+	pos = "(551,0)"
+	size = "(25,23)"
+end
+
+begin texture top arm clothed thin striped shirt
+	pos = "(195,0)"
+	size = "(9,24)"
+end
+
+begin texture top torso clothed thick striped sweater
+	pos = "(525,0)"
+	size = "(25,23)"
+end
+
+begin texture top arm clothed thick striped sweater
+	pos = "(185,0)"
+	size = "(9,24)"
+end
+
+begin texture top torso clothed patterned sweater
+	pos = "(577,0)"
+	size = "(25,23)"
+end
+
+begin texture top arm clothed patterned sweater
+	pos = "(175,0)"
+	size = "(9,24)"
+end
+
+begin texture top torso clothed collar and tie
+	pos = "(655,0)"
+	size = "(25,23)"
+end
+
+begin texture top arm clothed collar and tie
+	pos = "(175,0)"
+	size = "(9,24)"
+end
+
+begin texture jacket torso nude none
+	pos = "(15,0)"
+	size = "(1,1)"
+end
+
+begin texture jacket arm nude none
+	pos = "(15,0)"
+	size = "(1,1)"
+end
+
+begin texture jacket torso hooded zipped hoodie
+	pos = "(603,0)"
+	size = "(25,23)"
+end
+
+begin texture jacket arm hooded zipped hoodie
+	pos = "(175,0)"
+	size = "(9,24)"
+end
+
+begin texture jacket torso hooded unzipped hoodie
+	pos = "(629,0)"
+	size = "(25,23)"
+end
+
+begin texture jacket arm hooded unzipped hoodie
+	pos = "(175,0)"
+	size = "(9,24)"
+end
+
+begin texture jacket torso clothed zipped overcoat
+	pos = "(681,0)"
+	size = "(25,23)"
+end
+
+begin texture jacket arm clothed zipped overcoat
+	pos = "(175,0)"
+	size = "(9,24)"
+end
+
+begin texture jacket torso clothed unzipped overcoat
+	pos = "(707,0)"
+	size = "(25,23)"
+end
+
+begin texture jacket arm clothed unzipped overcoat
+	pos = "(175,0)"
+	size = "(9,24)"
+end
+
+begin texture jacket torso clothed blazer
+	pos = "(733,0)"
+	size = "(25,23)"
+end
+
+begin texture jacket arm clothed blazer
+	pos = "(175,0)"
+	size = "(9,24)"
+end
+
+begin texture bottom leg nude none
+	pos = "(15,0)"
+	size = "(1,1)"
+end
+
+begin texture shoe leg nude none
+	pos = "(15,0)"
+	size = "(1,1)"
+end
+
+begin skull thin front
+	mapping = "(89,236)"
+	shading = "(14,236)"
+	size = "(11,12)"
+end
+
+begin skull thin back
+	mapping = "(101,236)"
+	shading = "(40,236)"
+	size = "(11,12)"
+end
+
+begin skull thin right
+	mapping = "(115,236)"
+	shading = "(64,236)"
+	size = "(10,12)"
+end
+
+begin skull large front
+	mapping = "(75,236)"
+	shading = "(0,236)"
+	size = "(13,12)"
+end
+
+begin skull large back
+	mapping = "(101,236)"
+	shading = "(26,236)"
+	size = "(13,12)"
+end
+
+begin skull large right
+	mapping = "(115,236)"
+	shading = "(52,236)"
+	size = "(11,12)"
+end
+
+begin snout short nose front
+	mapping = "(78,241)"
+	shading = "(0,249)"
+	size = "(7,7)"
+end
+
+begin snout short nose right
+	mapping = "(125,241)"
+	shading = "(29,249)"
+	size = "(4,7)"
+end
+
+begin snout long nose front
+	mapping = "(78,241)"
+	shading = "(7,249)"
+	size = "(7,7)"
+end
+
+begin snout long nose right
+	mapping = "(124,241)"
+	shading = "(34,249)"
+	size = "(5,7)"
+end
+
+begin snout short nostrils front
+	mapping = "(78,241)"
+	shading = "(14,249)"
+	size = "(7,7)"
+end
+
+begin snout short nostrils right
+	mapping = "(125,241)"
+	shading = "(40,249)"
+	size = "(4,7)"
+end
+
+begin snout long nostrils front
+	mapping = "(78,241)"
+	shading = "(21,249)"
+	size = "(7,7)"
+end
+
+begin snout long nostrils right
+	mapping = "(124,241)"
+	shading = "(45,249)"
+	size = "(5,7)"
+end
+
+begin upper_head none front
+	mapping = "(0,0)"
+	shading = "(15,23)"
+	size = "(1,1)"
+end
+
+begin upper_head none back
+	mapping = "(0,0)"
+	shading = "(15,23)"
+	size = "(1,1)"
+end
+
+begin upper_head none right
+	mapping = "(0,0)"
+	shading = "(15,23)"
+	size = "(1,1)"
+end
+
+begin upper_head peaked ears front
+	mapping = "(20,257)"
+	shading = "(0,257)"
+	size = "(7,8)"
+end
+
+begin upper_head peaked ears back
+	mapping = "(28,257)"
+	shading = "(7,257)"
+	size = "(7,8)"
+end
+
+begin upper_head peaked ears right
+	mapping = "(36,257)"
+	shading = "(14,257)"
+	size = "(4,8)"
+end
+
+begin upper_head small ears front
+	mapping = "(20,266)"
+	shading = "(0,266)"
+	size = "(7,8)"
+end
+
+begin upper_head small ears back
+	mapping = "(28,257)"
+	shading = "(7,266)"
+	size = "(7,8)"
+end
+
+begin upper_head small ears right
+	mapping = "(36,266)"
+	shading = "(14,266)"
+	size = "(5,8)"
+end
+
+begin upper_head round ears front
+	mapping = "(20,275)"
+	shading = "(0,275)"
+	size = "(7,8)"
+end
+
+begin upper_head round ears back
+	mapping = "(28,257)"
+	shading = "(7,275)"
+	size = "(7,8)"
+end
+
+begin upper_head round ears right
+	mapping = "(36,275)"
+	shading = "(14,275)"
+	size = "(6,8)"
+end
+
+begin upper_head pointed ears front
+	mapping = "(20,284)"
+	shading = "(0,284)"
+	size = "(7,8)"
+end
+
+begin upper_head pointed ears back
+	mapping = "(28,257)"
+	shading = "(7,284)"
+	size = "(7,8)"
+end
+
+begin upper_head pointed ears right
+	mapping = "(36,284)"
+	shading = "(14,284)"
+	size = "(6,8)"
+end
+
+begin upper_head long ears front
+	mapping = "(66,257)"
+	shading = "(43,257)"
+	size = "(7,8)"
+end
+
+begin upper_head long ears back
+	mapping = "(28,257)"
+	shading = "(51,257)"
+	size = "(7,8)"
+end
+
+begin upper_head long ears right
+	mapping = "(84,257)"
+	shading = "(59,257)"
+	size = "(6,8)"
+end
+
+begin upper_head steer horns front
+	mapping = "(66,266)"
+	shading = "(43,266)"
+	size = "(8,8)"
+end
+
+begin upper_head steer horns back
+	mapping = "(75,266)"
+	shading = "(51,266)"
+	size = "(8,8)"
+end
+
+begin upper_head steer horns right
+	mapping = "(84,266)"
+	shading = "(59,266)"
+	size = "(6,8)"
+end
+
+begin upper_head double horns front
+	mapping = "(66,266)"
+	shading = "(43,275)"
+	size = "(7,8)"
+end
+
+begin upper_head double horns back
+	mapping = "(75,266)"
+	shading = "(51,275)"
+	size = "(7,8)"
+end
+
+begin upper_head double horns right
+	mapping = "(84,266)"
+	shading = "(59,275)"
+	size = "(6,8)"
+end
+
+begin upper_head pointed horns front
+	mapping = "(66,266)"
+	shading = "(43,284)"
+	size = "(7,8)"
+end
+
+begin upper_head pointed horns back
+	mapping = "(75,266)"
+	shading = "(51,284)"
+	size = "(7,8)"
+end
+
+begin upper_head pointed horns right
+	mapping = "(84,266)"
+	shading = "(59,284)"
+	size = "(6,8)"
+end
+
+begin lower_head none front
+	mapping = "(0,0)"
+	shading = "(15,23)"
+	size = "(1,1)"
+end
+
+begin lower_head none back
+	mapping = "(0,0)"
+	shading = "(15,23)"
+	size = "(1,1)"
+end
+
+begin lower_head none right
+	mapping = "(0,0)"
+	shading = "(15,23)"
+	size = "(1,1)"
+end
+
+begin lower_head tufts front
+	mapping = "(20,293)"
+	shading = "(0,302)"
+	size = "(4,8)"
+end
+
+begin lower_head tufts back
+	mapping = "(28,293)"
+	shading = "(7,302)"
+	size = "(4,8)"
+end
+
+begin lower_head tufts right
+	mapping = "(36,293)"
+	shading = "(14,302)"
+	size = "(4,8)"
+end
+
+begin lower_head scales front
+	mapping = "(20,293)"
+	shading = "(0,293)"
+	size = "(4,8)"
+end
+
+begin lower_head scales back
+	mapping = "(28,293)"
+	shading = "(7,293)"
+	size = "(4,8)"
+end
+
+begin lower_head scales right
+	mapping = "(36,293)"
+	shading = "(14,293)"
+	size = "(4,8)"
+end
+
+begin texture head monochrome
+	pos = "(526,0)"
+	size = "(1,1)"
+end
+
+begin texture head snout_underside
+	pos = "(130,0)"
+	size = "(23,13)"
+end
+
+begin texture head snout_underside slight
+	pos = "(178,0)"
+	size = "(23,13)"
+end
+
+begin texture head stripes
+	pos = "(154,0)"
+	size = "(23,13)"
+end
+

@@ -214,10 +214,66 @@ void test_font_main()
 
 
 
+void convert_hune()
+{
+	LoadFile loader("res/img/sprites/hune.meta.txt");
+	SaveFile saver("res/img/sprites/hune.meta");
+
+	std::regex texture("^texture\\s+(.*)");
+
+	while (loader.good())
+	{
+		StringData line;
+		String id = loader.load_data(line);
+
+		if (!id.empty())
+		{
+			StringData newline;
+
+			std::smatch match;
+			if (std::regex_match(id, match, texture))
+			{
+				// Load a texture
+				vec2i size, pos;
+
+				line.get("width", size(0));
+				line.get("height", size(1));
+				line.get("left", pos(0));
+				line.get("right", pos(1));
+
+				newline.set("pos", pos);
+				newline.set("size", size);
+			}
+			else
+			{
+				// Load a sprite
+				vec2i size, shading, mapping;
+
+				line.get("width", size(0));
+				line.get("height", size(1));
+				line.get("shading_left", shading(0));
+				line.get("shading_top", shading(1));
+				line.get("mapping_left", mapping(0));
+				line.get("mapping_top", mapping(1));
+
+				newline.set("shading", shading);
+				newline.set("mapping", mapping);
+				newline.set("size", size);
+			}
+
+			saver.save_data(id, newline);
+		}
+	}
+}
+
+
+
 // The entry point for the program.
 int main()
 {
 	init("settings.ini");
-	worldtest_main();
+
+	//worldtest_main();
+	character_creator_setup();
 	return 0;
 }

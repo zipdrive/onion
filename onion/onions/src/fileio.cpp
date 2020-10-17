@@ -130,6 +130,11 @@ namespace onion
 		set(key, to_string(value));
 	}
 
+	void StringData::set(String key, const INT_VEC2& value)
+	{
+		set(key, "(" + to_string(value.get(0)) + "," + to_string(value.get(1)) + ")");
+	}
+
 	void StringData::set(String key, const INT_VEC3& value)
 	{
 		set(key, "(" + to_string(value.get(0)) + "," + to_string(value.get(1)) + "," + to_string(value.get(2)) + ")");
@@ -148,7 +153,7 @@ namespace onion
 		m_File.close();
 	}
 
-	void SaveFile::save_int(int16_t value)
+	void SaveFile::save_int_binary(int16_t value)
 	{
 		if (!m_File.good()) return;
 
@@ -159,10 +164,28 @@ namespace onion
 		m_File.write(buffer, 2);
 	}
 
-	void SaveFile::save_string(string value)
+	void SaveFile::save_string_binary(string value)
 	{
-		save_int(value.size());
+		save_int_binary(value.size());
 		m_File.write(value.c_str(), value.size());
+	}
+
+	void SaveFile::save_data(String id, const StringData& data)
+	{
+		if (data.m_Data.size() == 1)
+		{
+			if (!id.empty())
+				m_File << id << "\t";
+			auto iter = data.m_Data.begin();
+			m_File << iter->first << " = \"" << iter->second << "\"\n\n";
+		}
+		else
+		{
+			m_File << "begin " << id << "\n";
+			for (auto iter = data.m_Data.begin(); iter != data.m_Data.end(); ++iter)
+				m_File << "\t" << iter->first << " = \"" << iter->second << "\"\n";
+			m_File << "end\n\n";
+		}
 	}
 
 
@@ -178,7 +201,7 @@ namespace onion
 		return m_File.good();
 	}
 
-	int16_t LoadFile::load_int()
+	int16_t LoadFile::load_int_binary()
 	{
 		if (!m_File.good()) return 0;
 
@@ -188,9 +211,9 @@ namespace onion
 		return buffer[0] | ((int16_t)buffer[1] << 8);
 	}
 
-	string LoadFile::load_string()
+	string LoadFile::load_string_binary()
 	{
-		int len = load_int();
+		int len = load_int_binary();
 		if (len == 0 || !m_File.good()) return string();
 
 		char* buffer = new char[len + 1];
@@ -200,7 +223,7 @@ namespace onion
 		return string(buffer);
 	}
 
-	string LoadFile::load_line()
+	String LoadFile::load_line()
 	{
 		string line;
 		if (getline(m_File, line))
@@ -208,7 +231,7 @@ namespace onion
 		return "";
 	}
 
-	string LoadFile::load_data(IntegerData& data)
+	String LoadFile::load_data(IntegerData& data)
 	{
 		string line;
 		regex line_data("((.*\\S)\\s)?\\s*(\\S+)\\s*=\\s*(-?\\d+)");
@@ -226,7 +249,7 @@ namespace onion
 		return line;
 	}
 
-	string LoadFile::load_data(StringData& data)
+	String LoadFile::load_data(StringData& data)
 	{
 		string line;
 		regex begin_regex("^begin\\s+(.*)$");
