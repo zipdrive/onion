@@ -72,6 +72,22 @@ namespace onion
 			}
 		}
 
+		/// <summary>Erases the key-value pair whose value is equal to the given value.</summary>
+		/// <param name="value">The value to erase.</param>
+		/// <returns>The value that was erased. NULL if the value was not managed, and therefore not erased.</returns>
+		_Value* erase(_Value* value)
+		{
+			for (auto iter = m_Values.begin(); iter != m_Values.end(); ++iter)
+			{
+				if (iter->second == value)
+				{
+					m_Values.erase(iter);
+					return value;
+				}
+			}
+			return nullptr;
+		}
+
 		/// <summary>Frees the memory of all managed values.</summary>
 		virtual ~_Manager()
 		{
@@ -327,12 +343,24 @@ namespace onion
 	// An object that loads and stores data about sprites.
 	class _SpriteSheet
 	{
+	private:
+		// All loaded sprite sheets.
+		static _Manager<String, _SpriteSheet> m_SpriteSheetManager;
+
 	protected:
+		/// <summary>Sets which sprite sheet is associated with the given path.</summary>
+		/// <param name="path">The path to the image file, from the res/img/ folder.</param>
+		/// <param name="sprite_sheet">The sprite sheet associated with the path.</param>
+		static void set_sprite_sheet(String path, _SpriteSheet* sprite_sheet);
+
+
 		// True if the sprite sheet has been loaded, false otherwise.
 		bool m_IsLoaded = false;
 
+		
 		// The manager for all sprites contained in the sprite sheet.
 		_SpriteManager m_SpriteManager;
+
 
 		/// <summary>Loads a image from an image file.</summary>
 		/// <param name="path">The path to the image file, from the res/img/ folder.</param>
@@ -347,7 +375,14 @@ namespace onion
 
 	public:
 		/// <summary>Virtual deconstructor.</summary>
-		virtual ~_SpriteSheet() {}
+		virtual ~_SpriteSheet();
+
+
+		/// <summary>Retrieves the sprite sheet that was loaded with the given image file.</summary>
+		/// <param name="path">The path to the image file, from the res/img/ folder.</param>
+		/// <returns>The sprite sheet with the image. NULL if the image has not been loaded.</returns>
+		static _SpriteSheet* get_sprite_sheet(String path);
+
 
 		/// <summary>Retrieves the sprite associated with the given ID.</summary>
 		/// <param name="id">The ID to retrieve the sprite of.</param>
@@ -358,6 +393,7 @@ namespace onion
 		/// <param name="id">The ID to retrieve the sprite of.</param>
 		/// <returns>The sprite associated with the ID, if there is one. NULL otherwise.</returns>
 		const Sprite* get_sprite(SPRITE_ID id) const;
+
 
 		/// <summary>Checks whether the sprite sheet has finished loading.</summary>
 		/// <returns>True if it has finished loading, false otherwise.</returns>
@@ -459,6 +495,7 @@ namespace onion
 		/// <returns>The loaded image.</returns>
 		opengl::_Image* load_image(const char* path)
 		{
+			set_sprite_sheet(path, this);
 			return new opengl::_Image(path, true);
 		}
 	};
@@ -490,6 +527,7 @@ namespace onion
 		/// <param name="path">The path to the image file, from the res/img/ folder.</param>
 		SimplePixelSpriteSheet(const char* path);
 
+		
 		using _SpriteSheet::load;
 
 		/// <summary>Loads data into buffer by partitioning an image file into equally sized sprites.</summary>
@@ -497,6 +535,7 @@ namespace onion
 		/// <param name="width">The width of each sprite.</param>
 		/// <param name="height">The height of each sprite.</param>
 		virtual void load(const char* path, int width, int height);
+
 
 		using PixelSpriteSheet<FLOAT_MAT4, Int>::display;
 
@@ -535,6 +574,7 @@ namespace onion
 		/// <param name="id">The ID to retrieve the texture of.</param>
 		/// <returns>The texture associated with the ID, if there is one. NULL otherwise.</returns>
 		Texture* get_texture(TEXTURE_ID id);
+
 
 		using PixelSpriteSheet<FLOAT_MAT4X2, FLOAT_MAT4, FLOAT_MAT4, FLOAT_MAT4, Int>::display;
 

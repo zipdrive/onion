@@ -1327,7 +1327,6 @@ namespace onion
 
 				// Bind the buffer
 				glBindVertexArray(m_VAO->id);
-				errcheck("ONION: Error received when binding the VAO during opengl::_VertexBuffer activation.");
 
 				// Bind the vertex attributes
 				__activate();
@@ -1448,7 +1447,7 @@ namespace onion
 
 		void _Image::activate(int slot) const
 		{
-			if (slot >= 0 && slot < 15) // Make sure the slot is valid
+			if (slot >= 0 && slot < 16) // Make sure the slot is valid
 			{
 				// Change the active texture
 				glActiveTexture(GL_TEXTURE0 + slot);

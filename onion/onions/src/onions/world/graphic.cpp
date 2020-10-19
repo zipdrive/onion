@@ -5,41 +5,10 @@ namespace onion
 {
 	namespace world
 	{
-
-		std::unordered_map<String, const Generic3DSpriteSheet*> Generic3DSpriteSheet::m_SpriteSheets{};
-		
-		Generic3DSpriteSheet::Generic3DSpriteSheet(const char* path)
-		{
-			m_Path = path;
-
-			// Register the sprite sheet
-			auto iter = m_SpriteSheets.find(m_Path);
-			if (iter != m_SpriteSheets.end())
-			{
-				delete iter->second;
-				m_SpriteSheets.emplace_hint(iter, m_Path, this);
-			}
-			else
-			{
-				m_SpriteSheets.emplace(m_Path, this);
-			}
-		}
-
-		Generic3DSpriteSheet::~Generic3DSpriteSheet()
-		{
-			m_SpriteSheets.erase(m_Path);
-		}
-
-		const Generic3DSpriteSheet* Generic3DSpriteSheet::get_sprite_sheet(String path)
-		{
-			auto iter = m_SpriteSheets.find(path);
-			return iter != m_SpriteSheets.end() ? iter->second : nullptr;
-		}
-		
 		
 		Flat3DPixelSpriteSheet::_SpriteShader* Flat3DPixelSpriteSheet::m_Flat3DPixelShader{ nullptr };
 
-		Flat3DPixelSpriteSheet::Flat3DPixelSpriteSheet(const char* path) : Generic3DSpriteSheet(path)
+		Flat3DPixelSpriteSheet::Flat3DPixelSpriteSheet(const char* path)
 		{
 			if (!m_Flat3DPixelShader)
 			{
@@ -57,11 +26,6 @@ namespace onion
 		Flat3DPixelSpriteSheet::_SpriteShader* Flat3DPixelSpriteSheet::get_shader()
 		{
 			return m_Flat3DPixelShader;
-		}
-
-		const Sprite* Flat3DPixelSpriteSheet::get_sprite(SPRITE_ID id) const
-		{
-			return _SpriteSheet::get_sprite(id);
 		}
 		
 		opengl::_VertexBufferData* Flat3DPixelSpriteSheet::__load(LoadFile& file, opengl::_Image* image)
@@ -146,113 +110,181 @@ namespace onion
 		}
 
 
-		
-		SpriteGraphic3D::SpriteGraphic3D(const Generic3DSpriteSheet* sprite_sheet) : m_SpriteSheet(sprite_sheet) {}
-		
-		
-		BillboardedSpriteGraphic3D::BillboardedSpriteGraphic3D(const Generic3DSpriteSheet* sprite_sheet) : SpriteGraphic3D(sprite_sheet) {}
 
-		void BillboardedSpriteGraphic3D::display(const Ray& center) const
+		Textured3DPixelSpriteSheet::_SpriteShader* Textured3DPixelSpriteSheet::m_Textured3DPixelShader{ nullptr };
+
+		Textured3DPixelSpriteSheet::Textured3DPixelSpriteSheet(const char* path)
 		{
-			const Sprite* sprite = get_sprite(center);
+			if (!m_Textured3DPixelShader)
+			{
+				m_Textured3DPixelShader = new Textured3DPixelSpriteSheet::_SpriteShader("world/textured_object");
+			}
 
-			// Push a new transform matrix onto the stack
-			Transform::model.push();
+			m_Shader = m_Textured3DPixelShader;
 
-			// Pivot the sprite around the bottom-center, so that dir => (0, -1)
-			Int x = center.direction.get(0), y = center.direction.get(1);
-			Float len = sqrtf((x * x) + (y * y));
-			Float c = -y / len;
-			Float s = abs(x) / len;
+			String fpath("world/");
+			fpath += path;
 
-			Int middle = -sprite->width / 2;
-
-			Transform::model.custom(
-				TransformMatrix(
-					c, -s, 0.f, c * middle,
-					s,  c, 0.f, s * middle
-				)
-			);
-
-			// Display the sprite
-			m_SpriteSheet->display(sprite);
-
-			// Clean up the transformation
-			Transform::model.pop();
+			load(fpath.c_str());
 		}
 
-
-		XAlignedSpriteGraphic3D::XAlignedSpriteGraphic3D(const Generic3DSpriteSheet* sprite_sheet) : SpriteGraphic3D(sprite_sheet) {}
-		
-		void XAlignedSpriteGraphic3D::display(const Ray& center) const
+		Textured3DPixelSpriteSheet::_SpriteShader* Textured3DPixelSpriteSheet::get_shader()
 		{
-			const Sprite* sprite = get_sprite(center);
+			return m_Textured3DPixelShader;
+		}
 
-			if (center.direction.get(1) > 0)
+		Texture* Textured3DPixelSpriteSheet::get_texture(TEXTURE_ID id)
+		{
+			return m_TextureManager.get(id);
+		}
+
+		const Texture* Textured3DPixelSpriteSheet::get_texture(TEXTURE_ID id) const
+		{
+			return m_TextureManager.get(id);
+		}
+
+		opengl::_VertexBufferData* Textured3DPixelSpriteSheet::__load(LoadFile& file, opengl::_Image* image)
+		{
+			auto data = new VertexBufferData<FLOAT_VEC3, FLOAT_VEC2, FLOAT_VEC2>();
+
+			// Regex that checks if the data is for shading or a texture
+			std::regex tex_checker("^texture\\s+(\\S.+)");
+			std::smatch tex_idmatch;
+
+			while (file.good())
 			{
-				// Push a new transform matrix onto the stack
+				StringData line;
+				String id = file.load_data(line);
+
+				if (regex_match(id, tex_idmatch, tex_checker)) // Load a texture
+				{
+					vec2i pos, size;
+					if (line.get("pos", pos) && line.get("size", size))
+					{
+						// Get the ID for the texture
+						id = tex_idmatch[1].str();
+
+						// Set the information for the texture
+						m_TextureManager.set(id, new Texture(pos.get(0), pos.get(1), size.get(0), size.get(1), image->get_width(), image->get_height()));
+					}
+				}
+				else
+				{
+					vec2i shading, mapping, size;
+					if (line.get("shading", shading) && line.get("mapping", mapping) && line.get("size", size))
+					{
+						int index = data->buffer_size();
+
+						// Set the information for the sprite
+						m_SpriteManager.set(id, new Sprite(index, size.get(0), size.get(1)));
+
+						// Construct the corners, in the order bottom-left -> bottom-right -> top-left -> top-right
+						vec3f vertex_pos[4];
+						vec2f vertex_shading_uv[4], vertex_mapping_uv[4];
+						for (int k = 0; k < 4; ++k)
+						{
+							vertex_pos[k](0) = k % 2 == 0
+								? 0.f
+								: size.get(0);
+							vertex_pos[k](1) = 0.f;
+							vertex_pos[k](2) = k / 2 == 0
+								? 0.f
+								: size.get(1);
+
+							vertex_shading_uv[k](0) = k % 2 == 0
+								? (Float)shading.get(0) / image->get_width()
+								: (Float)(shading.get(0) + size.get(0)) / image->get_width();
+							vertex_shading_uv[k](1) = k / 2 == 0
+								? (Float)shading.get(1) / image->get_height()
+								: (Float)(shading.get(1) + size.get(1)) / image->get_height();
+
+							vertex_mapping_uv[k](0) = k % 2 == 0
+								? (Float)mapping.get(0) / image->get_width()
+								: (Float)(mapping.get(0) + size.get(0)) / image->get_width();
+							vertex_mapping_uv[k](1) = k / 2 == 0
+								? (Float)mapping.get(1) / image->get_height()
+								: (Float)(mapping.get(1) + size.get(1)) / image->get_height();
+						}
+
+						// Insert the data to the buffer in triangles of bottom-left -> top-right -> one of the remaining vertices
+						data->push(6);
+						for (int k = 0; k < 6; ++k)
+						{
+							int corner_index = k % 3 == 0 ? 0 : (k % 3 == 1 ? 3 : (k / 3 == 0 ? 1 : 2));
+							data->set<0>(index + k, vertex_pos[corner_index]);
+							data->set<1>(index + k, vertex_shading_uv[corner_index]);
+							data->set<2>(index + k, vertex_mapping_uv[corner_index]);
+						}
+					}
+				}
+			}
+
+			return data;
+		}
+
+		void Textured3DPixelSpriteSheet::display(const Sprite* sprite, bool flip_horizontally, const Texture* texture, const Palette* palette) const
+		{
+			if (flip_horizontally)
+			{
+				// Flip where red and green map to on the texture
+				const mat4x2f& tex = texture->tex;
+				mat4x2f trans_tex(
+					-tex.get(0, 0), -tex.get(0, 1), tex.get(0, 2), tex.get(0, 3),
+					-tex.get(1, 0), -tex.get(1, 1), tex.get(1, 2), tex.get(1, 3)
+				);
+
+				// Flip and display the textured sprite
 				Transform::model.push();
-
-				// Flip the sprite 180 degrees
-				Transform::model.custom(TransformMatrix(-1.f, 0.f, 0.f, sprite->width));
-
-				// Display the sprite
-				m_SpriteSheet->display(sprite);
-
-				// Clean up the transformation
+				Transform::model.translate(sprite->width);
+				Transform::model.scale(-1.f);
+				display(sprite, trans_tex, palette->get_red_palette_matrix(), palette->get_green_palette_matrix(), palette->get_blue_palette_matrix(), 0);
 				Transform::model.pop();
 			}
 			else
 			{
-				// Just display the sprite using the default vertex attributes
-				m_SpriteSheet->display(sprite);
+				display(sprite, texture->tex, palette->get_red_palette_matrix(), palette->get_green_palette_matrix(), palette->get_blue_palette_matrix(), 0);
 			}
 		}
 
 
-		template <typename T>
-		StaticSpriteGraphic3D<T>::StaticSpriteGraphic3D(const Generic3DSpriteSheet* sprite_sheet, const Sprite* sprite) : T(sprite_sheet), m_Sprite(sprite) {}
+		
+		FlatWallGraphic3D::FlatWallGraphic3D(const Flat3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite) : SpriteGraphic3D<Flat3DPixelSpriteSheet>(sprite_sheet), m_Sprite(sprite) {}
 
-		template <typename T>
-		const Sprite* StaticSpriteGraphic3D<T>::get_sprite(const Ray& center) const
+		void FlatWallGraphic3D::display(const Ray& center) const
 		{
-			return m_Sprite;
+			m_SpriteSheet->display(m_Sprite);
 		}
 
 
-
-		Graphic3DObject::Graphic3DObject(Shape* bounds, Graphic3D* graphic) : Object(bounds)
+		TransformedFlatWallGraphic3D::TransformedFlatWallGraphic3D(const Flat3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite, const vec2f& scale) : FlatWallGraphic3D(sprite_sheet, sprite)
 		{
-			m_Graphic = graphic;
-		}
-
-		Graphic3DObject::~Graphic3DObject()
-		{
-			if (m_Graphic)
-				delete m_Graphic;
+			m_Transform.identity();
+			for (int k = 1; k >= 0; --k)
+			{
+				m_Transform.set(k, 0, scale.get(k));
+				if (scale.get(k) < 0)
+					m_Transform.set(k, 3, -scale.get(k) * m_Sprite->width);
+			}
 		}
 		
-		void Graphic3DObject::display(const Ray& center) const
+		TransformedFlatWallGraphic3D::TransformedFlatWallGraphic3D(const Flat3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite, Float angle) : FlatWallGraphic3D(sprite_sheet, sprite)
 		{
-			if (m_Graphic)
-			{
-				const vec3i pos = m_Bounds->get_position();
-
-				// Translate to the position of the object, then display the sprite, then translate back
-				Transform::model.push();
-				Transform::model.translate(pos.get(0) / UNITS_PER_PIXEL, pos.get(1) / UNITS_PER_PIXEL, pos.get(2) / UNITS_PER_PIXEL);
-				m_Graphic->display(center);
-				Transform::model.pop();
-			}
+			m_Transform.identity();
+			m_Transform.rotatez(angle);
 		}
 
+		void TransformedFlatWallGraphic3D::display(const Ray& center) const
+		{
+			// Set up the transform
+			Transform::model.push();
+			Transform::model.custom(m_Transform);
 
+			// Display the sprite
+			m_SpriteSheet->display(m_Sprite);
 
-		XAlignedWall::XAlignedWall(const vec3i& pos, const Generic3DSpriteSheet* sprite_sheet, const Sprite* sprite) : 
-			Graphic3DObject(
-				new Rectangle(pos, vec3i(UNITS_PER_PIXEL * sprite->width, 0, UNITS_PER_PIXEL * sprite->height)), 
-				(sprite_sheet != nullptr && sprite != nullptr) ? new StaticXAlignedSpriteGraphic3D(sprite_sheet, sprite) : nullptr
-			) {}
+			// Clean up
+			Transform::model.pop();
+		}
 
 	}
 }

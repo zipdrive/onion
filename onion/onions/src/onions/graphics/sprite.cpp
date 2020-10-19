@@ -221,6 +221,26 @@ namespace onion
 
 
 
+	_Manager<String, _SpriteSheet> _SpriteSheet::m_SpriteSheetManager{};
+
+	_SpriteSheet* _SpriteSheet::get_sprite_sheet(String path)
+	{
+		return m_SpriteSheetManager.get(path);
+	}
+
+	void _SpriteSheet::set_sprite_sheet(String path, _SpriteSheet* sprite_sheet)
+	{
+		m_SpriteSheetManager.erase(sprite_sheet);
+		m_SpriteSheetManager.set(path, sprite_sheet);
+	}
+
+
+	_SpriteSheet::~_SpriteSheet()
+	{
+		m_SpriteSheetManager.erase(this);
+	}
+	
+	
 	Sprite* _SpriteSheet::get_sprite(SPRITE_ID id)
 	{
 		return m_SpriteManager.get(id);

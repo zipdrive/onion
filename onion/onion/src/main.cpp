@@ -273,7 +273,7 @@ int main()
 {
 	init("settings.ini");
 
-	//worldtest_main();
-	character_creator_setup();
+	worldtest_main();
+	//character_creator_setup();
 	return 0;
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "../graphics/graphic.h"
-#include "geometry.h"
+#include "graphic.h"
+#include "camera.h"
 
 namespace onion
 {
@@ -14,10 +15,14 @@ namespace onion
 			// The bounds of the object
 			Shape* m_Bounds;
 
+			// The graphic used to display the object.
+			Graphic3D* m_Graphic;
+
 		public:
 			/// <summary>Constructs an object.</summary>
 			/// <param name="bounds">The bounds of the object. Should be constructed with new specifically for this object.</param>
-			Object(Shape* bounds);
+			/// <param name="graphic">The graphic used to display the object. Should be constructed with new specifically for this object.</param>
+			Object(Shape* bounds, Graphic3D* graphic = nullptr);
 
 			/// <summary>Virtual deconstructor.</summary>
 			virtual ~Object();
@@ -98,6 +103,84 @@ namespace onion
 			/// <returns>An Object created with new.</returns>
 			virtual Object* generate(const StringData& params) const = 0;
 		};
+
+
+
+
+		
+		// A dimensionless wall aligned with the x-axis, represented graphically by a single fixed sprite.
+		class XAlignedWall : public Object
+		{
+		public:
+			/// <summary>Constructs an x-aligned wall.</summary>
+			/// <param name="pos">The position on the wall with the lowest x- and z- coordinates.</param>
+			/// <param name="sprite_sheet">The sprite sheet that the wall's sprite is on.</param>
+			/// <param name="sprite">The sprite to use for the wall.</param>
+			XAlignedWall(const vec3i& pos, const Flat3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite);
+		};
+
+		// A dimensionless wall aligned with the y-axis, represented graphically by a single fixed sprite.
+		class YAlignedWall : public Object
+		{
+		public:
+			/// <summary>Constructs an x-aligned wall.</summary>
+			/// <param name="pos">The position on the wall with the lowest x- and z- coordinates.</param>
+			/// <param name="sprite_sheet">The sprite sheet that the wall's sprite is on.</param>
+			/// <param name="sprite">The sprite to use for the wall.</param>
+			YAlignedWall(const vec3i& pos, const Flat3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite);
+		};
+
+
+		// A dimensionless wall aligned with either the x or y-axis.
+		template <typename T>
+		class WallGenerator : public ObjectGenerator
+		{
+		protected:
+			// The sprite sheet that the wall's sprite comes from.
+			const Flat3DPixelSpriteSheet* m_SpriteSheet;
+
+			// The sprite used when displaying the wall.
+			const Sprite* m_Sprite;
+
+		public:
+			/// <summary>Constructs a generator for a wall aligned to the x or y-axis.</summary>
+			/// <param name="id">The ID of the generator.</param>
+			/// <param name="params">The parameters to pass to the generator.</param>
+			WallGenerator(std::string id, const StringData& params) : ObjectGenerator(id)
+			{
+				m_SpriteSheet = nullptr;
+				m_Sprite = nullptr;
+
+				String sprite_sheet;
+				if (params.get("sprite_sheet", sprite_sheet))
+				{
+					if (const _SpriteSheet* ptr = _SpriteSheet::get_sprite_sheet("world/" + sprite_sheet))
+					{
+						if (m_SpriteSheet = dynamic_cast<const Flat3DPixelSpriteSheet*>(ptr))
+						{
+							String sprite;
+							params.get("sprite", sprite);
+
+							m_Sprite = m_SpriteSheet->get_sprite(sprite);
+						}
+					}
+				}
+			}
+
+			/// <summary>Generates an object.</summary>
+			/// <returns>An Object created with new.</returns>
+			virtual Object* generate(const StringData& params) const
+			{
+				vec3i pos;
+				params.get("pos", pos);
+				pos = UNITS_PER_PIXEL * (INT_VEC3)pos;
+
+				return new T(pos, m_SpriteSheet, m_Sprite);
+			}
+		};
+
+		typedef WallGenerator<XAlignedWall> XAlignedWallGenerator;
+		typedef WallGenerator<YAlignedWall> YAlignedWallGenerator;
 
 	}
 }
