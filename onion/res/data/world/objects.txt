@@ -15,3 +15,10 @@ begin DEBUG wall2
     sprite_sheet = "sprites/debug2.png"
     sprite = "debug"
 end
+
+begin DEBUG texture
+    type = "__DEBUG:texture"
+    sprite_sheet = "sprites/debugtexture.png"
+    sprite = "debug"
+    texture = "debug"
+end

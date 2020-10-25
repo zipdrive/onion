@@ -35,7 +35,7 @@ namespace onion
 		void WorldState::set_bounds(int width, int height)
 		{
 			int depth = width > height ? width : height;
-			m_World->set_bounds(0, 0, -depth, width, height, depth);
+			m_World->set_bounds(0, 0, depth, width, height, -depth);
 		}
 
 		void WorldState::display() const

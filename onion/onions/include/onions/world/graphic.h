@@ -50,7 +50,7 @@ namespace onion
 		};
 
 		// A sprite shader that does NOT use dither shading, that samples a normal vector from an image.
-		class Textured3DPixelSpriteSheet : public PixelSpriteSheet<FLOAT_MAT4X2, FLOAT_MAT4, FLOAT_MAT4, FLOAT_MAT4, Int>
+		class Textured3DPixelSpriteSheet : public PixelSpriteSheet<FLOAT_MAT4X2, FLOAT_MAT4, Int>
 		{
 		protected:
 			// The shader program for the sprite sheet.
@@ -88,7 +88,7 @@ namespace onion
 			const Texture* get_texture(TEXTURE_ID id) const;
 
 
-			using PixelSpriteSheet<FLOAT_MAT4X2, FLOAT_MAT4, FLOAT_MAT4, FLOAT_MAT4, Int>::display;
+			using PixelSpriteSheet<FLOAT_MAT4X2, FLOAT_MAT4, Int>::display;
 
 			/// <summary>Displays a sprite from the sprite sheet.</summary>
 			/// <param name="sprite">The sprite to display.</param>
@@ -156,6 +156,40 @@ namespace onion
 			TransformedFlatWallGraphic3D(const Flat3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite, Float angle);
 
 			/// <summary>Displays the wall.</summary>
+			/// <param name="center">The ray from the camera position towards the camera.</param>
+			virtual void display(const Ray& center) const;
+		};
+
+
+		// A textured sprite graphic that uses the same texture but different sprites for shading.
+		class DynamicShadingSpriteGraphic3D : public SpriteGraphic3D<Textured3DPixelSpriteSheet>
+		{
+		protected:
+			// The sprites for shading.
+			std::vector<const Sprite*> m_Sprites;
+
+			// The index of the current sprite to display.
+			int m_SpriteIndex;
+
+			// True if the sprite should be flipped horizontally, false otherwise.
+			bool m_FlipHorizontally;
+
+			// The texture to use.
+			const Texture* m_Texture;
+
+			// The palette to use.
+			Palette* m_Palette;
+
+		public:
+			/// <summary>Constructs a textured sprite graphic with one texture and multiple sprites.</summary>
+			/// <param name="sprite_sheet">The sprite sheet that the sprite is on.</param>
+			/// <param name="sprites">All sprites that the graphic can use.</param>
+			/// <param name="flip_horizontally">True if the sprite should be flipped horizontally, false otherwise.</param>
+			/// <param name="texture">The texture to use when displaying the graphic.</param>
+			/// <param name="palette">The palette to use when displaying the graphic.</param>
+			DynamicShadingSpriteGraphic3D(const Textured3DPixelSpriteSheet* sprite_sheet, const std::vector<const Sprite*>& sprites, bool flip_horizontally, const Texture* texture, Palette* palette);
+
+			/// <summary>Displays the sprite using the current index.</summary>
 			/// <param name="center">The ray from the camera position towards the camera.</param>
 			virtual void display(const Ray& center) const;
 		};

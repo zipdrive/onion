@@ -3,11 +3,82 @@
 
 using namespace onion;
 
+
+class TestTexturedObject : public world::Object
+{
+public:
+	TestTexturedObject(const vec3i pos, const world::Textured3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite, const Texture* texture)
+		: world::Object(
+			new world::Rectangle(pos, vec3i(sprite->width, 0, sprite->height)),
+			new world::DynamicShadingSpriteGraphic3D(
+				sprite_sheet,
+				{ sprite },
+				false,
+				texture,
+				new SinglePalette(
+					vec4f(1.f, 0.f, 0.f, 0.f),
+					vec4f(0.f, 1.f, 0.f, 0.f),
+					vec4f(0.f, 0.f, 1.f, 0.f)
+				)
+			)
+		) {}
+};
+
+class TestTexturedObjectGenerator : public world::ObjectGenerator
+{
+private:
+	// The sprite sheet.
+	const world::Textured3DPixelSpriteSheet* m_SpriteSheet;
+
+	// The sprite.
+	const Sprite* m_Sprite;
+
+	// The texture.
+	const Texture* m_Texture;
+
+public:
+	TestTexturedObjectGenerator(String id, const StringData& params) : world::ObjectGenerator(id)
+	{
+		String path;
+		if (params.get("sprite_sheet", path))
+		{
+			if (const _SpriteSheet* sprite_sheet = _SpriteSheet::get_sprite_sheet("world/" + path))
+			{
+				if (m_SpriteSheet = dynamic_cast<const world::Textured3DPixelSpriteSheet*>(sprite_sheet))
+				{
+					String sprite;
+					params.get("sprite", sprite);
+					m_Sprite = m_SpriteSheet->get_sprite(sprite);
+
+					String texture;
+					params.get("texture", texture);
+					m_Texture = m_SpriteSheet->get_texture(texture);
+				}
+			}
+		}
+	}
+
+	world::Object* generate(const StringData& params) const
+	{
+		vec3i pos;
+		params.get("pos", pos);
+		pos = UNITS_PER_PIXEL * (INT_VEC3)pos;
+
+		return new TestTexturedObject(pos, m_SpriteSheet, m_Sprite, m_Texture);
+	}
+};
+
+
+
 void worldtest_main()
 {
-	// Load the sprite sheet
+	// Load the sprite sheets
 	new world::Flat3DPixelSpriteSheet("sprites/debug.png");
 	new world::Flat3DPixelSpriteSheet("sprites/debug2.png");
+	new world::Textured3DPixelSpriteSheet("sprites/debugtexture.png");
+
+	// Set up the object types
+	world::ObjectGenerator::set<TestTexturedObjectGenerator>("__DEBUG:texture");
 
 	// Load the chunk
 	world::Chunk::set_tile_size(16);

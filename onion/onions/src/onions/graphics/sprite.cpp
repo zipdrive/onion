@@ -276,7 +276,10 @@ namespace onion
 		if (!m_SimpleSpriteShader)
 		{
 			// Generate the shader for simple pixel sprite sheets, if it hasn't been generated already
-			m_SimpleSpriteShader = new SimplePixelSpriteSheet::_SpriteShader("simple_pixel");
+			m_SimpleSpriteShader = new SimplePixelSpriteSheet::_SpriteShader(
+				"simple_pixel",
+				{ "model", "tintMatrix", "tex2D" }
+			);
 		}
 
 		return m_SimpleSpriteShader;
@@ -414,7 +417,10 @@ namespace onion
 		if (!m_ShadedTextureSpriteShader)
 		{
 			// Generate the shader for simple pixel sprite sheets, if it hasn't been generated already
-			m_ShadedTextureSpriteShader = new ShadedTexturePixelSpriteSheet::_SpriteShader("shaded_texture_pixel");
+			m_ShadedTextureSpriteShader = new ShadedTexturePixelSpriteSheet::_SpriteShader(
+				"shaded_texture_pixel",
+				{ "model", "mappingMatrix", "redPaletteMatrix", "greenPaletteMatrix", "bluePaletteMatrix", "tex2D" }
+			);
 		}
 
 		m_Shader = m_ShadedTextureSpriteShader;

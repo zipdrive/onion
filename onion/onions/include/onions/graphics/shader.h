@@ -2,6 +2,7 @@
 #include <vector>
 #include <unordered_map>
 #include "../error.h"
+#include "../fileio.h"
 #include "../matrix.h"
 
 #define BUFFER_KEY Int
@@ -312,16 +313,16 @@ namespace onion
 			/// <summary>Compiles the shader program from raw text.</summary>
 			/// <param name="vertex_shader_text">The vertex shader, in raw text form.</param>
 			/// <param name="fragment_shader_text">The fragment shader, in raw text form.</param>
-			void compile(const char* vertex_shader_text, const char* fragment_shader_text);
+			void compile(const char* vertex_shader_text, const char* fragment_shader_text, const std::vector<String>& uniform_names);
 			
 			/// <summary>Compiles the shader program from raw text.</summary>
 			/// <param name="vertex_shader_text">The vertex shader, in raw text form.</param>
 			/// <param name="geometry_shader_text">The geometry shader, in raw text form.</param>
 			/// <param name="fragment_shader_text">The fragment shader, in raw text form.</param>
-			void compile(const char* vertex_shader_text, const char* geometry_shader_text, const char* fragment_shader_text);
+			void compile(const char* vertex_shader_text, const char* geometry_shader_text, const char* fragment_shader_text, const std::vector<String>& uniform_names);
 
 			/// <summary>Processes information about vertex and uniform attributes from the compiled shader program.</summary>
-			void process();
+			void process(const std::vector<String>& uniform_names);
 
 		protected:
 			// A list of all uniform attributes (that aren't in blocks).
@@ -330,12 +331,12 @@ namespace onion
 
 			/// <summary>Loads shaders from vertex and fragment shader files.</summary>
 			/// <param name="path">The path to the vertex and fragment shader files, from the res/data/shaders/ folder, omitting file extensions.</param>
-			_Shader(const char* path);
+			_Shader(const char* path, const std::vector<String>& uniform_names);
 			
 			/// <summary>Constructs a shader from raw text.</summary>
 			/// <param name="vertex_shader_text">The vertex shader, in raw text form.</param>
 			/// <param name="fragment_shader_text">The fragment shader, in raw text form.</param>
-			_Shader(const char* vertex_shader_text, const char* fragment_shader_text);
+			_Shader(const char* vertex_shader_text, const char* fragment_shader_text, const std::vector<String>& uniform_names);
 
 			/// <summary>Activates the shader.</summary>
 			void __activate() const;
@@ -769,14 +770,18 @@ namespace onion
 			{
 				u->set(first);
 			}
+			else
+			{
+				errlog("ONION: Type of shader uniform does not correspond to template argument.\n");
+			}
 
 			set_uniforms(++iter, others...);
 		}
 
 	public:
 		/// <summary>Loads shaders from a file.</summary>
-		/// <param name="path">The path to the vertex and fragment shader files, from the res/data/shaders/ folder, omitting file extensions.</param>
-		Shader(const char* path) : opengl::_Shader(path)
+		/// <param name="path">The path to the vertex and fragment shader files, from the res/shaders/ folder, omitting file extensions.</param>
+		Shader(const char* path, const std::vector<String>& uniform_names) : opengl::_Shader(path, uniform_names)
 		{
 			if (sizeof...(_Uniforms) != m_UniformAttributes.size())
 			{
@@ -792,7 +797,7 @@ namespace onion
 		/// <summary>Constructs a shader program.</summary>
 		/// <param name="vertex_shader_text">The vertex shader, in raw text form.</param>
 		/// <param name="fragment_shader_text">The fragment shader, in raw text form.</param>
-		Shader(const char* vertex_shader_text, const char* fragment_shader_text) : opengl::_Shader(vertex_shader_text, fragment_shader_text)
+		Shader(const char* vertex_shader_text, const char* fragment_shader_text, const std::vector<String>& uniform_names) : opengl::_Shader(vertex_shader_text, fragment_shader_text, uniform_names)
 		{
 			if (sizeof...(_Uniforms) != m_UniformAttributes.size() + 1)
 			{

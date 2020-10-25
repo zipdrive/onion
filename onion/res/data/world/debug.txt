@@ -26,3 +26,7 @@ end
 begin obj DEBUG wall2
     pos = (240, 240, 0)
 end
+
+begin obj DEBUG texture
+    pos = (180, 220, 0)
+end

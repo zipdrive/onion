@@ -195,7 +195,10 @@ namespace onion
 		FlatChunk::FlatChunk(const char* path) : Chunk(path)
 		{
 			if (!m_BasicFlatTileShader)
-				m_BasicFlatTileShader = new Shader<FLOAT_MAT4, Int, Int>("world/flat_tile_basic");
+				m_BasicFlatTileShader = new Shader<FLOAT_MAT4, Int, Int>(
+					"world/flat_tile_basic",
+					{ "model", "tileTexture", "noiseTexture" }
+				);
 		}
 
 		void FlatChunk::__load_tile(const StringData& line, FlatChunk::buffer_t* data)

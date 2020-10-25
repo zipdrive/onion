@@ -12,7 +12,10 @@ namespace onion
 		{
 			if (!m_Flat3DPixelShader)
 			{
-				m_Flat3DPixelShader = new Flat3DPixelSpriteSheet::_SpriteShader("world/dithered_object");
+				m_Flat3DPixelShader = new Flat3DPixelSpriteSheet::_SpriteShader(
+					"world/dithered_object",
+					{ "model", "tileTexture", "noiseTexture" }
+				);
 			}
 
 			m_Shader = m_Flat3DPixelShader;
@@ -62,8 +65,8 @@ namespace onion
 							? (Float)pos.get(0) / image->get_width()
 							: (Float)(pos.get(0) + size.get(0)) / image->get_width();
 						vertex_uv[k](1) = k / 2 == 0
-							? (Float)pos.get(1) / image->get_height()
-							: (Float)(pos.get(1) + size.get(1)) / image->get_height();
+							? (Float)(pos.get(1) + size.get(1)) / image->get_height()
+							: (Float)pos.get(1) / image->get_height();
 					}
 
 					// Construct the normal vectors for each corner, using the same order as above
@@ -117,7 +120,10 @@ namespace onion
 		{
 			if (!m_Textured3DPixelShader)
 			{
-				m_Textured3DPixelShader = new Textured3DPixelSpriteSheet::_SpriteShader("world/textured_object");
+				m_Textured3DPixelShader = new Textured3DPixelSpriteSheet::_SpriteShader(
+					"world/textured_object",
+					{ "model", "mappingMatrix", "paletteMatrix", "objTexture" }
+				);
 			}
 
 			m_Shader = m_Textured3DPixelShader;
@@ -195,15 +201,15 @@ namespace onion
 								? (Float)shading.get(0) / image->get_width()
 								: (Float)(shading.get(0) + size.get(0)) / image->get_width();
 							vertex_shading_uv[k](1) = k / 2 == 0
-								? (Float)shading.get(1) / image->get_height()
-								: (Float)(shading.get(1) + size.get(1)) / image->get_height();
+								? (Float)(shading.get(1) + size.get(1)) / image->get_height()
+								: (Float)shading.get(1) / image->get_height();
 
 							vertex_mapping_uv[k](0) = k % 2 == 0
 								? (Float)mapping.get(0) / image->get_width()
 								: (Float)(mapping.get(0) + size.get(0)) / image->get_width();
 							vertex_mapping_uv[k](1) = k / 2 == 0
-								? (Float)mapping.get(1) / image->get_height()
-								: (Float)(mapping.get(1) + size.get(1)) / image->get_height();
+								? (Float)(mapping.get(1) + size.get(1)) / image->get_height()
+								: (Float)mapping.get(1) / image->get_height();
 						}
 
 						// Insert the data to the buffer in triangles of bottom-left -> top-right -> one of the remaining vertices
@@ -237,12 +243,12 @@ namespace onion
 				Transform::model.push();
 				Transform::model.translate(sprite->width);
 				Transform::model.scale(-1.f);
-				display(sprite, trans_tex, palette->get_red_palette_matrix(), palette->get_green_palette_matrix(), palette->get_blue_palette_matrix(), 0);
+				display(sprite, trans_tex, palette->get_red_palette_matrix(), 0);
 				Transform::model.pop();
 			}
 			else
 			{
-				display(sprite, texture->tex, palette->get_red_palette_matrix(), palette->get_green_palette_matrix(), palette->get_blue_palette_matrix(), 0);
+				display(sprite, texture->tex, palette->get_red_palette_matrix(), 0);
 			}
 		}
 
@@ -284,6 +290,23 @@ namespace onion
 
 			// Clean up
 			Transform::model.pop();
+		}
+
+
+
+		DynamicShadingSpriteGraphic3D::DynamicShadingSpriteGraphic3D(const Textured3DPixelSpriteSheet* sprite_sheet, const std::vector<const Sprite*>& sprites, bool flip_horizontally, const Texture* texture, Palette* palette) : SpriteGraphic3D(sprite_sheet)
+		{
+			m_Sprites = sprites;
+			m_Texture = texture;
+			m_Palette = palette;
+
+			m_FlipHorizontally = flip_horizontally;
+			m_SpriteIndex = 0;
+		}
+
+		void DynamicShadingSpriteGraphic3D::display(const Ray& center) const
+		{
+			m_SpriteSheet->display(m_Sprites[m_SpriteIndex], false, m_Texture, m_Palette);
 		}
 
 	}

@@ -765,12 +765,12 @@ namespace onion
 
 
 
-		_Shader::_Shader(const char* path)
+		_Shader::_Shader(const char* path, const std::vector<String>& uniform_names)
 		{
 			std::string vertex_shader, fragment_shader;
 
 			// Load the files of the shaders
-			std::string fpath("res/data/shaders/");
+			std::string fpath("res/shaders/");
 			fpath += path;
 
 			LoadFile vertex(fpath + ".vertex");
@@ -791,24 +791,24 @@ namespace onion
 					geometry_shader += geometry.load_line() + "\n";
 
 				// Compile the shaders
-				compile(vertex_shader.c_str(), geometry_shader.c_str(), fragment_shader.c_str());
+				compile(vertex_shader.c_str(), geometry_shader.c_str(), fragment_shader.c_str(), uniform_names);
 			}
 			else // No geometry shader
 			{
 				// Compile the shaders
-				compile(vertex_shader.c_str(), fragment_shader.c_str());
+				compile(vertex_shader.c_str(), fragment_shader.c_str(), uniform_names);
 			}
 		}
 
-		_Shader::_Shader(const char* vertex_shader_text, const char* fragment_shader_text)
+		_Shader::_Shader(const char* vertex_shader_text, const char* fragment_shader_text, const std::vector<String>& uniform_names)
 		{
-			compile(vertex_shader_text, fragment_shader_text);
+			compile(vertex_shader_text, fragment_shader_text, uniform_names);
 		}
 		
 
 #define SHADER_INFO_BUFFER_SIZE 500
 
-		void _Shader::compile(const char* vertex_shader_text, const char* fragment_shader_text)
+		void _Shader::compile(const char* vertex_shader_text, const char* fragment_shader_text, const std::vector<String>& uniform_names)
 		{
 			errcheck("Error received at some point before beginning shader compilation.");
 
@@ -873,10 +873,10 @@ namespace onion
 			errcheck("Error received when deleting the fragment shader after linking it to the shader program.");
 
 			// Process the variables
-			process();
+			process(uniform_names);
 		}
 
-		void _Shader::compile(const char* vertex_shader_text, const char* geometry_shader_text, const char* fragment_shader_text)
+		void _Shader::compile(const char* vertex_shader_text, const char* geometry_shader_text, const char* fragment_shader_text, const std::vector<String>& uniform_names)
 		{
 			errcheck("Error received at some point before beginning shader compilation.");
 
@@ -961,10 +961,10 @@ namespace onion
 			errcheck("Error received when deleting the fragment shader after linking it to the shader program.");
 
 			// Process the variables
-			process();
+			process(uniform_names);
 		}
 
-		void _Shader::process()
+		void _Shader::process(const std::vector<String>& uniform_names)
 		{
 			GLuint id = m_Shader->id;
 
@@ -1092,6 +1092,8 @@ namespace onion
 			glGetProgramiv(id, GL_ACTIVE_UNIFORMS, &uniform_count);
 			errcheck("Error retrieving the number of uniforms of the shader program.");
 
+			m_UniformAttributes.resize(uniform_names.size());
+
 			for (unsigned int uniform_index = 0; uniform_index < uniform_count; ++uniform_index)
 			{
 				GLint uniform_block_index;
@@ -1143,7 +1145,14 @@ namespace onion
 							// Generate the object managing the uniform attribute
 							if (_UniformAttribute* u = generate_uniform_program_attribute(type, uname, uniform_location))
 							{
-								m_UniformAttributes.push_back(u);
+								for (int k = uniform_names.size() - 1; k >= 0; --k)
+								{
+									if (uname.compare(uniform_names[k]) == 0)
+									{
+										m_UniformAttributes[k] = u;
+										break;
+									}
+								}
 							}
 						}
 					}

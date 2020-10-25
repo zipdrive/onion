@@ -121,7 +121,7 @@ namespace onion
 			Transform::projection.get() *= TransformMatrix(
 				1.f, 0.f, 0.f, 0.f,
 				0.f, 1.f, 1.f, 0.f,
-				0.f, 1.f, -1.f, 0.f
+				0.f, 0.f, -1.f, 0.f
 			);
 			
 			// Center the camera at its position in model space

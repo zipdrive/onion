@@ -13,7 +13,10 @@ namespace onion
 	{
 		if (!m_Shader)
 		{
-			m_Shader = new SolidColorGraphic::SolidColorShader("solid_color");
+			m_Shader = new SolidColorGraphic::SolidColorShader(
+				"solid_color",
+				{ "model", "color" }
+			);
 		}
 
 		// Construct the data buffer
