@@ -133,15 +133,16 @@ namespace onion
 		}
 	}
 
-	TransformMatrix& TransformMatrix::operator=(const matrix<float, 4, 4>& other)
+	TransformMatrix& TransformMatrix::operator=(const FLOAT_MAT4& other)
 	{
-		matrix<float, 4, 4>::operator=(other);
+		FLOAT_MAT4::operator=(other);
 		return *this;
 	}
 
-	TransformMatrix& TransformMatrix::operator*=(const matrix<float, 4, 4>& other)
+	TransformMatrix& TransformMatrix::operator*=(const FLOAT_MAT4& other)
 	{
-		return operator=(operator*(other));
+		*this = *this * other;
+		return *this;
 	}
 
 

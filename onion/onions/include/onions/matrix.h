@@ -11,6 +11,28 @@ namespace onion
 	using Float = primitive<float>;
 	using Double = primitive<double>;
 
+	template <typename T, typename U>
+	struct _primitive_multiplication
+	{
+		using type = T;
+	};
+
+	template <typename T>
+	struct _primitive_multiplication<T, Float>
+	{
+		using type = Float;
+	};
+
+	template <>
+	struct _primitive_multiplication<Uint, Int>
+	{
+		using type = Int;
+	};
+
+	template <typename T, typename U>
+	using primitive_multiplication = typename _primitive_multiplication<T, U>::type;
+
+
 
 	// A matrix of numeric values
 	template <typename T, int _Columns, int _Rows>
@@ -86,6 +108,20 @@ namespace onion
 			return result;
 		}
 
+		/// <summary>Adds another matrix to this one in-place.</summary>
+		/// <param name="other">The other matrix.</param>
+		/// <returns>A reference to this matrix.</returns>
+		matrix<T, _Columns, _Rows>& operator+=(const matrix<T, _Columns, _Rows>& other)
+		{
+			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+			{
+				mat[k] += other.get(k);
+			}
+
+			return *this;
+		}
+
+
 		/// <summary>Subtracts another matrix from this one and returns the result.</summary>
 		/// <param name="other">The other matrix.</param>
 		/// <returns>The subtraction of this matrix and the other one.</returns>
@@ -101,71 +137,6 @@ namespace onion
 			return result;
 		}
 
-		/// <summary>Multiplies another matrix to this one and returns the result.</summary>
-		/// <param name="other">The other matrix.</param>
-		/// <returns>The multiplication of this matrix and the other one.</returns>
-		template <int _ColumnsRHS>
-		matrix<T, _ColumnsRHS, _Rows> operator*(const matrix<T, _ColumnsRHS, _Columns>& other) const
-		{
-			matrix<T, _ColumnsRHS, _Rows> result;
-
-			for (int r = _Rows - 1; r >= 0; --r)
-			{
-				for (int c = _ColumnsRHS - 1; c >= 0; --c)
-				{
-					T val = 0;
-					for (int k = _Columns - 1; k >= 0; --k)
-						val += get(r, k) * other.get(k, c);
-					result.set(r, c, val);
-				}
-			}
-
-			return result;
-		}
-
-
-
-		/// <summary>Multiplies a scalar to this one and returns the result.</summary>
-		/// <param name="scalar">The scalar value.</param>
-		/// <returns>The multiplication of this matrix and the scalar.</returns>
-		matrix<T, _Columns, _Rows> operator*(int scalar) const
-		{
-			matrix<T, _Columns, _Rows> result;
-
-			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
-				result.mat[k] = scalar * mat[k];
-
-			return result;
-		}
-
-		/// <summary>Multiplies a scalar to this one and returns the result.</summary>
-		/// <param name="scalar">The scalar value.</param>
-		/// <returns>The multiplication of this matrix and the scalar.</returns>
-		matrix<T, _Columns, _Rows> operator*(float scalar) const
-		{
-			matrix<T, _Columns, _Rows> result;
-
-			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
-				result.mat[k] = scalar * mat[k];
-
-			return result;
-		}
-
-
-
-		/// <summary>Adds another matrix to this one in-place.</summary>
-		/// <param name="other">The other matrix.</param>
-		/// <returns>A reference to this matrix.</returns>
-		matrix<T, _Columns, _Rows>& operator+=(const matrix<T, _Columns, _Rows>& other)
-		{
-			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
-			{
-				mat[k] += other.get(k);
-			}
-
-			return *this;
-		}
-
 		/// <summary>Subtracts another matrix from this one in-place.</summary>
 		/// <param name="other">The other matrix.</param>
 		/// <returns>A reference to this matrix.</returns>
@@ -179,10 +150,14 @@ namespace onion
 			return *this;
 		}
 
+		
+
+		
+
 		/// <summary>Multiplies a scalar value to this matrix in-place.</summary>
 		/// <param name="scalar">The scalar value.</param>
 		/// <returns>A reference to this matrix.</returns>
-		matrix<T, _Columns, _Rows>& operator*=(int scalar)
+		matrix<T, _Columns, _Rows>& operator*=(Int scalar)
 		{
 			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 			{
@@ -195,7 +170,7 @@ namespace onion
 		/// <summary>Multiplies a scalar value to this matrix in-place.</summary>
 		/// <param name="scalar">The scalar value.</param>
 		/// <returns>A reference to this matrix.</returns>
-		matrix<T, _Columns, _Rows>& operator*=(float scalar)
+		matrix<T, _Columns, _Rows>& operator*=(Float scalar)
 		{
 			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 			{
@@ -266,30 +241,84 @@ namespace onion
 	};
 
 
-	/// <summary>Multiplies a scalar to a matrix and returns the result.</summary>
-	/// <param name="scalar">The scalar value.</param>
-	/// <param name="matrix">The matrix.</param>
-	/// <returns>The multiplication of this matrix and the scalar.</returns>
 	template <typename T, int _Columns, int _Rows>
-	matrix<T, _Columns, _Rows> operator*(int scalar, matrix<T, _Columns, _Rows> matrix)
+	matrix<Float, _Columns, _Rows> operator*(const matrix<T, _Columns, _Rows>& lhs, Float rhs)
 	{
-		return matrix * scalar;
+		matrix<Float, _Columns, _Rows> res;
+		for (int k = (_Columns * _Rows) - 1; k >= 0; --k)
+			res(k) = lhs.get(k) * rhs;
+		return res;
 	}
 
-	/// <summary>Multiplies a scalar to a matrix and returns the result.</summary>
-	/// <param name="scalar">The scalar value.</param>
-	/// <param name="matrix">The matrix.</param>
-	/// <returns>The multiplication of this matrix and the scalar.</returns>
 	template <typename T, int _Columns, int _Rows>
-	matrix<T, _Columns, _Rows> operator*(float scalar, matrix<T, _Columns, _Rows> matrix)
+	matrix<Float, _Columns, _Rows> operator*(Float lhs, const matrix<T, _Columns, _Rows>& rhs)
 	{
-		return matrix * scalar;
+		matrix<Float, _Columns, _Rows> res;
+		for (int k = (_Columns * _Rows) - 1; k >= 0; --k)
+			res(k) = lhs * rhs.get(k);
+		return res;
+	}
+
+	template <typename T, int _Columns, int _Rows>
+	matrix<primitive_multiplication<T, Int>, _Columns, _Rows> operator*(const matrix<T, _Columns, _Rows>& lhs, Int rhs)
+	{
+		matrix<primitive_multiplication<T, Int>, _Columns, _Rows> res;
+		for (int k = (_Columns * _Rows) - 1; k >= 0; --k)
+			res(k) = lhs.get(k) * rhs;
+		return res;
+	}
+
+	template <typename T, int _Columns, int _Rows>
+	matrix<primitive_multiplication<T, Int>, _Columns, _Rows> operator*(Int lhs, const matrix<T, _Columns, _Rows>& rhs)
+	{
+		matrix<primitive_multiplication<T, Int>, _Columns, _Rows> res;
+		for (int k = (_Columns * _Rows) - 1; k >= 0; --k)
+			res(k) = lhs * rhs.get(k);
+		return res;
+	}
+
+	template <typename T, typename U, int _Columns, int _Rows>
+	matrix<primitive_multiplication<T, U>, _Columns, _Rows> operator/(const matrix<T, _Columns, _Rows>& lhs, U rhs)
+	{
+		matrix<primitive_multiplication<T, U>, _Columns, _Rows> res;
+		for (int k = (_Columns * _Rows) - 1; k >= 0; --k)
+			res(k) = lhs.get(k) / rhs;
+		return res;
 	}
 
 
-#define FLOAT_VEC2				matrix<Float, 2, 1>
-#define FLOAT_VEC3				matrix<Float, 3, 1>
-#define FLOAT_VEC4				matrix<Float, 4, 1>
+
+	template <typename T, typename U, int _Columns, int _Middle, int _Rows>
+	matrix<primitive_multiplication<T, U>, _Columns, _Rows> operator*(const matrix<T, _Middle, _Rows>& lhs, const matrix<U, _Columns, _Middle>& rhs)
+	{
+		matrix<primitive_multiplication<T, U>, _Columns, _Rows> res;
+		for (int i = _Rows - 1; i >= 0; --i)
+		{
+			for (int j = _Columns - 1; j >= 0; --j)
+			{
+				res(i, j) = 0;
+				for (int k = _Middle - 1; k >= 0; --k)
+				{
+					res(i, j) += lhs.get(i, k) * rhs.get(k, j);
+				}
+			}
+		}
+		return res;
+	}
+
+	template <typename T, typename U, int _Rows>
+	matrix<primitive_multiplication<T, U>, 1, _Rows> operator*(const matrix<T, 1, _Rows>& lhs, const matrix<U, 1, _Rows>& rhs)
+	{
+		matrix<primitive_multiplication<T, U>, 1, _Rows> res;
+		for (int k = _Rows - 1; k >= 0; --k)
+			res(k) = lhs.get(k) * rhs.get(k);
+		return res;
+	}
+
+
+#define FLOAT_VEC2				matrix<Float, 1, 2>
+#define FLOAT_VEC3				matrix<Float, 1, 3>
+#define FLOAT_VEC4				matrix<Float, 1, 4>
 #define FLOAT_MAT2				matrix<Float, 2, 2>
 #define FLOAT_MAT3X2			matrix<Float, 3, 2>
 #define FLOAT_MAT4X2			matrix<Float, 4, 2>
@@ -300,9 +329,9 @@ namespace onion
 #define FLOAT_MAT3X4			matrix<Float, 3, 4>
 #define FLOAT_MAT4				matrix<Float, 4, 4>
 
-#define DOUBLE_VEC2				matrix<Double, 2, 1>
-#define DOUBLE_VEC3				matrix<Double, 3, 1>
-#define DOUBLE_VEC4				matrix<Double, 4, 1>
+#define DOUBLE_VEC2				matrix<Double, 1, 2>
+#define DOUBLE_VEC3				matrix<Double, 1, 3>
+#define DOUBLE_VEC4				matrix<Double, 1, 4>
 #define DOUBLE_MAT2				matrix<Double, 2, 2>
 #define DOUBLE_MAT3X2			matrix<Double, 3, 2>
 #define DOUBLE_MAT4X2			matrix<Double, 4, 2>
@@ -313,9 +342,9 @@ namespace onion
 #define DOUBLE_MAT3X4			matrix<Double, 3, 4>
 #define DOUBLE_MAT4				matrix<Double, 4, 4>
 
-#define INT_VEC2				matrix<Int, 2, 1>
-#define INT_VEC3				matrix<Int, 3, 1>
-#define INT_VEC4				matrix<Int, 4, 1>
+#define INT_VEC2				matrix<Int, 1, 2>
+#define INT_VEC3				matrix<Int, 1, 3>
+#define INT_VEC4				matrix<Int, 1, 4>
 #define INT_MAT2				matrix<Int, 2, 2>
 #define INT_MAT3X2				matrix<Int, 3, 2>
 #define INT_MAT4X2				matrix<Int, 4, 2>
@@ -326,9 +355,9 @@ namespace onion
 #define INT_MAT3X4				matrix<Int, 3, 4>
 #define INT_MAT4				matrix<Int, 4, 4>
 
-#define UINT_VEC2				matrix<Uint, 2, 1>
-#define UINT_VEC3				matrix<Uint, 3, 1>
-#define UINT_VEC4				matrix<Uint, 4, 1>
+#define UINT_VEC2				matrix<Uint, 1, 2>
+#define UINT_VEC3				matrix<Uint, 1, 3>
+#define UINT_VEC4				matrix<Uint, 1, 4>
 #define UINT_MAT2				matrix<Uint, 2, 2>
 #define UINT_MAT3X2				matrix<Uint, 3, 2>
 #define UINT_MAT4X2				matrix<Uint, 4, 2>
@@ -355,24 +384,13 @@ namespace onion
 
 	// A vector of numeric values
 	template <typename T, int N>
-	class vec : public matrix<T, N, 1>
+	class vec : public matrix<T, 1, N>
 	{
 	public:
-		/// <summary>Multiplies each element of two vectors.</summary>
-		/// <param name="other">The other vector.</param>
-		/// <returns>The element-wise multiplication of two vectors.</returns>
-		vec<T, N> operator*(const matrix<T, N, 1>& other) const
-		{
-			vec<T, N> res;
-			for (int k = N - 1; k >= 0; --k)
-				res.set(k, 0, get(k) * other.get(k));
-			return res;
-		}
-
 		/// <summary>Computes the dot product of two vectors.</summary>
 		/// <param name="other">The other vector.</param>
 		/// <returns>The dot product of the two vectors.</returns>
-		T dot(const matrix<T, N, 1>& other) const
+		T dot(const matrix<T, 1, N>& other) const
 		{
 			T sum = 0;
 			for (int k = N - 1; k >= 0; --k)
@@ -392,11 +410,10 @@ namespace onion
 
 		/// <summary>Normalizes the vector.</summary>
 		/// <param name="normalized">Outputs the normalized vector.</param>
-		void normalize(matrix<float, N, 1>& normalized) const
+		void normalize(matrix<Float, 1, N>& normalized) const
 		{
-			float mag = sqrt(square_sum());
-			for (int k = N - 1; k >= 0; --k)
-				normalized.set(k, 0, get(k) / mag);
+			Float mag = sqrt(square_sum());
+			normalized = *this / mag;
 		}
 	};
 
@@ -418,16 +435,16 @@ namespace onion
 		}
 
 		template <typename U, int _Rows>
-		vec2(const matrix<U, _Rows, 1>& m)
+		vec2(const matrix<U, 1, _Rows>& m)
 		{
 			set(0, 0, m.get(0));
 			set(1, 0, m.get(1));
 		}
 
 
-		vec2& operator=(const matrix<T, 2, 1>& other)
+		vec2& operator=(const matrix<T, 1, 2>& other)
 		{
-			matrix<T, 2, 1>::operator=(other);
+			matrix<T, 1, 2>::operator=(other);
 			return *this;
 		}
 	};
@@ -447,7 +464,7 @@ namespace onion
 		}
 
 		template <typename U, int _Rows>
-		vec3(const matrix<U, _Rows, 1>& m)
+		vec3(const matrix<U, 1, _Rows>& m)
 		{
 			set(0, 0, m.get(0));
 			set(1, 0, m.get(1));
@@ -455,7 +472,7 @@ namespace onion
 		}
 
 		template <typename U>
-		vec3(const matrix<U, 2, 1>& v, T a3)
+		vec3(const matrix<U, 1, 2>& v, T a3)
 		{
 			set(0, 0, v.get(0));
 			set(1, 0, v.get(1));
@@ -463,9 +480,9 @@ namespace onion
 		}
 
 
-		vec3& operator=(const matrix<T, 3, 1>& other)
+		vec3& operator=(const matrix<T, 1, 3>& other)
 		{
-			matrix<T, 3, 1>::operator=(other);
+			matrix<T, 1, 3>::operator=(other);
 			return *this;
 		}
 
@@ -473,7 +490,7 @@ namespace onion
 		/// <summary>Computes the cross product of this three-dimensional vector with another.</summary>
 		/// <param name="other">The vector on the right-hand side of the cross product.</param>
 		/// <param name="result">Outputs the cross product of the two vectors.</param>
-		void cross(const matrix<T, 3, 1>& other, matrix<T, 3, 1>& result) const
+		void cross(const matrix<T, 1, 3>& other, matrix<T, 1, 3>& result) const
 		{
 			result.set(0, 0, (get(1) * other.get(2)) - (get(2) * other.get(1)));
 			result.set(1, 0, (get(2) * other.get(0)) - (get(0) * other.get(2)));
@@ -497,7 +514,7 @@ namespace onion
 		}
 
 		template <typename U, int _Rows>
-		vec4(const matrix<U, _Rows, 1>& m)
+		vec4(const matrix<U, 1, _Rows>& m)
 		{
 			set(0, 0, m.get(0));
 			set(1, 0, m.get(1));
@@ -506,7 +523,7 @@ namespace onion
 		}
 
 		template <typename U>
-		vec4(const matrix<U, 2, 1>& v, T a3, T a4)
+		vec4(const matrix<U, 1, 2>& v, T a3, T a4)
 		{
 			set(0, 0, v.get(0));
 			set(1, 0, v.get(1));
@@ -515,7 +532,7 @@ namespace onion
 		}
 
 		template <typename U>
-		vec4(const matrix<U, 3, 1>& v, T a4)
+		vec4(const matrix<U, 1, 3>& v, T a4)
 		{
 			set(0, 0, v.get(0));
 			set(1, 0, v.get(1));
@@ -524,9 +541,9 @@ namespace onion
 		}
 
 
-		vec4& operator=(const matrix<T, 4, 1>& other)
+		vec4& operator=(const matrix<T, 1, 4>& other)
 		{
-			matrix<T, 4, 1>::operator=(other);
+			matrix<T, 1, 4>::operator=(other);
 			return *this;
 		}
 	};
@@ -870,12 +887,12 @@ namespace onion
 		/// <summary>Sets this matrix equal to the right-hand side of the operator.</summary>
 		/// <param name="other">The matrix to set this one equal to.</param>
 		/// <returns>A reference to this matrix.</returns>
-		TransformMatrix& operator=(const matrix<float, 4, 4>& other);
+		TransformMatrix& operator=(const FLOAT_MAT4& other);
 
 		/// <summary>Multiplies this matrix by another one, in place.</summary>
 		/// <param name="other">The matrix to multiply this one by.</param>
 		/// <returns>A reference to this matrix.</returns>
-		TransformMatrix& operator*=(const matrix<float, 4, 4>& other);
+		TransformMatrix& operator*=(const FLOAT_MAT4& other);
 	};
 
 

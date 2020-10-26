@@ -155,12 +155,13 @@ namespace onion
 		};
 
 
+		// A chunk where all tiles are flat with a height of 0.
 		class FlatChunk : public Chunk
 		{
 		protected:
-			using buffer_t = VertexBufferData<matrix<float, 2, 1>, matrix<float, 2, 1>>;
+			using buffer_t = VertexBufferData<FLOAT_VEC2, FLOAT_VEC2>;
 
-			// 
+			// The shader used for flat chunks.
 			static Shader<FLOAT_MAT4, Int, Int>* m_BasicFlatTileShader;
 
 			/// <summary>Retrieves the tile shader.</summary>
@@ -188,12 +189,74 @@ namespace onion
 			/// <param name="id">The ID of the object.</param>
 			/// <param name="line">The data loaded from a line in the file.</param>
 			/// <param name="data">The buffer of data.</param>
-			virtual void __load_obj(std::string id, const StringData& line);
+			virtual void __load_obj(String id, const StringData& line);
 
 		public:
 			/// <summary>Constructs a chunk.</summary>
 			/// <param name="path">The path to the data file, from the res/data/world/ folder.</param>
 			FlatChunk(const char* path);
+
+
+			/// <summary>Retrieves the height of the tile at the given world coordinates.</summary>
+			/// <param name="x">The x-coordinate in the world.</param>
+			/// <param name="y">The y-coordinate in the world.</param>
+			/// <returns>The z-coordinate of the ground at the given world coordinates.</returns>
+			int get_tile_height(int x, int y) const;
+
+
+			/// <summary>Resets what is visible, in response to the view changing.</summary>
+			void reset_visible(const WorldCamera::View& view);
+
+			/// <summary>Updates what is visible, in response to the passage of time.</summary>
+			void update_visible(const WorldCamera::View& view);
+
+			/// <summary>Displays objects in the chunk.</summary>
+			/// <param name="center">The ray from the camera position towards the camera.</param>
+			void display_objects(const Ray& center) const;
+		};
+
+
+		// A chunk where the geometry of the ground is continuous.
+		class SmoothChunk : public Chunk
+		{
+		protected:
+			using buffer_t = VertexBufferData<FLOAT_VEC3, FLOAT_VEC3, FLOAT_VEC2>;
+
+			/// <summary>Retrieves the tile shader.</summary>
+			/// <returns>A pointer to the tile shader.</returns>
+			virtual const opengl::_Shader* get_tile_shader() const;
+
+			/// <summary>Activates and sets the uniforms for the tile shader.</summary>
+			virtual void activate_tile_shader() const;
+
+
+			// The heights of the ground at each corner of a tile.
+			std::vector<Int> m_TileCornerHeights;
+
+
+			// Manages all objects for the chunk.
+			ObjectManager m_Manager;
+
+
+			/// <summary>Loads the chunk from file.</summary>
+			/// <returns>The vertex data for the buffer.</returns>
+			virtual opengl::_VertexBufferData* __load();
+
+			/// <summary>Loads the data of a tile.</summary>
+			/// <param name="line">The data loaded from a line in the file.</param>
+			/// <param name="data">The buffer of data.</param>
+			virtual void __load_tile(const StringData& line, buffer_t* data);
+
+			/// <summary>Loads the data of a static object.</summary>
+			/// <param name="id">The ID of the object.</param>
+			/// <param name="line">The data loaded from a line in the file.</param>
+			/// <param name="data">The buffer of data.</param>
+			virtual void __load_obj(String id, const StringData& line);
+
+		public:
+			/// <summary>Constructs a chunk.</summary>
+			/// <param name="path">The path to the data file, from the res/data/world/ folder.</param>
+			SmoothChunk(const char* path);
 
 
 			/// <summary>Retrieves the height of the tile at the given world coordinates.</summary>

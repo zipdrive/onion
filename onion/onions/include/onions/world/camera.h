@@ -17,6 +17,7 @@ namespace onion
 
 
 #define UNITS_PER_PIXEL		32
+#define PIXELS_PER_UNIT		0.03125f
 
 #define LEFT_VIEW_EDGE		0
 #define BOTTOM_VIEW_EDGE	1

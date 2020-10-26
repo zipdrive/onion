@@ -613,7 +613,7 @@ namespace onion
 			std::get<_UniformProgramAttribute<matrix<_Number, _Columns, _Rows>>::m_FunctionIndex>(UniformMatrixProgramFunctions<_Number>::functions);
 		
 		template <typename _Number, int _Rows>
-		class _UniformProgramAttribute<matrix<_Number, _Rows, 1>> : public _UniformTypedAttribute<matrix<_Number, _Rows, 1>>
+		class _UniformProgramAttribute<matrix<_Number, 1, _Rows>> : public _UniformTypedAttribute<matrix<_Number, 1, _Rows>>
 		{
 		private:
 			// The index of the function.
@@ -628,17 +628,17 @@ namespace onion
 			const GLint m_Location;
 
 		public:
-			_UniformProgramAttribute(std::string name, GLint location) : _UniformTypedAttribute<matrix<_Number, _Rows, 1>>(name), m_Location(location) {}
+			_UniformProgramAttribute(std::string name, GLint location) : _UniformTypedAttribute<matrix<_Number, 1, _Rows>>(name), m_Location(location) {}
 
-			void set(const matrix<_Number, _Rows, 1>& value) const
+			void set(const matrix<_Number, 1, _Rows>& value) const
 			{
 				(*m_Function)(m_Location, 1, value.matrix_values());
 			}
 		};
 
 		template <typename _Number, int _Rows>
-		typename _UniformProgramAttribute<matrix<_Number, _Rows, 1>>::FunctionPtr _UniformProgramAttribute<matrix<_Number, _Rows, 1>>::m_Function =
-			std::get<_UniformProgramAttribute<matrix<_Number, _Rows, 1>>::m_FunctionIndex>(UniformMatrixProgramFunctions<_Number>::functions);
+		typename _UniformProgramAttribute<matrix<_Number, 1, _Rows>>::FunctionPtr _UniformProgramAttribute<matrix<_Number, 1, _Rows>>::m_Function =
+			std::get<_UniformProgramAttribute<matrix<_Number, 1, _Rows>>::m_FunctionIndex>(UniformMatrixProgramFunctions<_Number>::functions);
 
 
 		template <std::size_t N = 0>

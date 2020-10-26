@@ -83,7 +83,7 @@ void worldtest_main()
 	// Load the chunk
 	world::Chunk::set_tile_size(16);
 
-	world::Chunk* chunk = new world::FlatChunk("debug.txt");
+	world::Chunk* chunk = new world::SmoothChunk("debug.txt");
 	world::World* world = new world::BasicWorld(chunk);
 
 	// Lighting setup
