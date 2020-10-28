@@ -11,19 +11,31 @@ namespace onion
 		string string_value;
 		if (get(key, string_value))
 		{
-			value = (string_value.compare("true") == 0);
-			return true;
+			if (string_value.compare("true") == 0)
+			{
+				value = true;
+				return true;
+			}
+			else if (string_value.compare("false") == 0)
+			{
+				value = false;
+				return true;
+			}
 		}
 		return false;
 	}
 
 	bool StringData::get(String key, Int& value) const
 	{
-		string string_value;
+		String string_value;
 		if (get(key, string_value))
 		{
-			value = stoi(string_value);
-			return true;
+			regex pattern("(\\d+)");
+			if (regex_match(string_value, pattern))
+			{
+				value = stoi(string_value);
+				return true;
+			}
 		}
 		return false;
 	}
@@ -33,8 +45,12 @@ namespace onion
 		string string_value;
 		if (get(key, string_value))
 		{
-			value = stof(string_value);
-			return true;
+			regex pattern("(\\d*(\\.\\d*)?)");
+			if (regex_match(string_value, pattern) && !string_value.empty())
+			{
+				value = stof(string_value);
+				return true;
+			}
 		}
 		return false;
 	}
@@ -51,14 +67,8 @@ namespace onion
 			{
 				value(0) = stoi(match[1].str());
 				value(1) = stoi(match[2].str());
+				return true;
 			}
-			else
-			{
-				value(0) = 0;
-				value(1) = 0;
-			}
-
-			return true;
 		}
 		return false;
 	}
@@ -76,15 +86,9 @@ namespace onion
 				value(0) = stoi(match[1].str());
 				value(1) = stoi(match[2].str());
 				value(2) = stoi(match[3].str());
-			}
-			else
-			{
-				value(0) = 0;
-				value(1) = 0;
-				value(2) = 0;
-			}
 
-			return true;
+				return true;
+			}
 		}
 		return false;
 	}
@@ -102,15 +106,9 @@ namespace onion
 				value(0) = stof(match[1].str());
 				value(1) = stof(match[2].str());
 				value(2) = stof(match[3].str());
-			}
-			else
-			{
-				value(0) = 0;
-				value(1) = 0;
-				value(2) = 0;
-			}
 
-			return true;
+				return true;
+			}
 		}
 		return false;
 	}

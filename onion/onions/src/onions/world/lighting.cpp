@@ -71,7 +71,7 @@ namespace onion
 
 	opengl::_Image* get_bluenoise_image()
 	{
-		static opengl::_Image* bluenoise = new opengl::_Image("world/bluenoise.png");
+		static opengl::_Image* bluenoise = new opengl::_Image("world/greynoise.png");
 		return bluenoise;
 	}
 
@@ -94,16 +94,8 @@ namespace onion
 		CubeLightObject::CubeLightObject(const vec3i& position, const vec3i& dimensions, const vec3f& color, Float intensity, Int radius) :
 			LightObject(new RectangularPrism(position, dimensions))
 		{
-			m_Light.mins = vec3f(
-				position.get(0) / UNITS_PER_PIXEL, 
-				position.get(1) / UNITS_PER_PIXEL, 
-				position.get(2) / UNITS_PER_PIXEL
-			);
-			m_Light.maxs = vec3f(
-				(position.get(0) + dimensions.get(0)) / UNITS_PER_PIXEL, 
-				(position.get(1) + dimensions.get(1)) / UNITS_PER_PIXEL, 
-				(position.get(2) + dimensions.get(2)) / UNITS_PER_PIXEL
-			);
+			m_Light.mins = position / UNITS_PER_PIXEL;
+			m_Light.maxs = (position + dimensions) / UNITS_PER_PIXEL;
 
 			m_Light.color = color;
 			m_Light.intensity = intensity;
@@ -124,8 +116,7 @@ namespace onion
 
 			vec3i color;
 			if (!params.get("color", color)) color = vec3i(255, 255, 255);
-			for (int k = 2; k >= 0; --k)
-				m_Color(k) = color(k) / 255.f;
+			m_Color = color / 255.f;
 
 			Int intensity;
 			if (!params.get("intensity", intensity)) intensity = 0;
@@ -208,7 +199,6 @@ namespace onion
 				m_Radius
 			);
 		}
-
 
 	}
 

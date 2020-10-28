@@ -1,22 +1,15 @@
 #pragma once
 #include <unordered_set>
 #include "../graphics/shader.h"
+#include "../event.h"
 #include "camera.h"
 #include "object.h"
 
 namespace onion
 {
 
-	class Lighting;
-
-	
-
-
-
 #define MAX_NUMBER_CUBE_LIGHTS 8
 	
-	
-
 
 	class Lighting
 	{
@@ -329,7 +322,7 @@ namespace onion
 
 			/// <summary>Generates a cube light object.</summary>
 			/// <returns>A CubeLightObject created with new.</returns>
-			Object* generate(const StringData& params) const;
+			virtual Object* generate(const StringData& params) const;
 		};
 
 
@@ -379,8 +372,142 @@ namespace onion
 
 			/// <summary>Generates a cone light object.</summary>
 			/// <returns>A ConeLightObject created with new.</returns>
-			Object* generate(const StringData& params) const;
+			virtual Object* generate(const StringData& params) const;
 		};
+
+
+		template <typename T>
+		class _FlickeringLightObject : public T, public UpdateListener
+		{
+		protected:
+			// The minimum possible intensity for the light.
+			Float m_IntensityMinimum;
+
+			// The difference between the maximum and minimum intensity for the light.
+			Float m_IntensityDifferential;
+
+			// The probability that, on any frame, the light will have intensity less than or equal to the median intensity.
+			Float m_Probability;
+
+			/// <summary>Sets the intensity of the light to a random value between the minimum and maximum.</summary>
+			/// <param name="frames_passed">The number of frames since the last update call.</param>
+			virtual void update(int frames_passed)
+			{
+				Float r = (rand() % 100) * 0.01f;
+				m_Light.intensity = m_IntensityMinimum + (m_IntensityDifferential *
+					(cbrt(r - m_Probability) + cbrt(m_Probability)) / (cbrt(1 - m_Probability) + cbrt(m_Probability))
+				);
+				m_Light.set<Float>("intensity", m_Light.intensity);
+			}
+
+		public:
+			/// <summary>Constructs a light object that flickers between intensities.</summary>
+			/// <param name="minimum_intensity">The minimum intensity of the light.</param>
+			/// <param name="probability">The probability that, on any frame, the light will have intensity less than or equal to the median intensity of the light.</param>
+			/// <param name="args">The other arguments passed to the light.</param>
+			template <typename... _Args>
+			_FlickeringLightObject(Float minimum_intensity, Float probability, const _Args&... args) : T(args...)
+			{
+				m_IntensityMinimum = minimum_intensity;
+				m_IntensityDifferential = m_Light.intensity - minimum_intensity;
+				m_Probability = probability;
+
+				// TODO make it so that only unfreezes when visible??
+				unfreeze(INT_MIN);
+			}
+		};
+
+		template <typename _Generator>
+		class _FlickeringLightObjectGenerator : public _Generator
+		{
+		protected:
+			// The minimum possible intensity for the light.
+			Float m_IntensityMinimum;
+
+			// The probability that, on any frame, the light will have intensity less than or equal to the median intensity of the light.
+			Float m_Probability;
+
+			virtual Object* __generate(const StringData& params) const
+			{
+				return nullptr;
+			}
+
+		public:
+			/// <summary>Constructs a generator for a cube light.</summary>
+			/// <param name="id">The ID of the generator.</param>
+			/// <param name="params">The parameters to pass to the generator.</param>
+			_FlickeringLightObjectGenerator(std::string id, const StringData& params) : _Generator(id, params)
+			{
+				vec2i intensities;
+				if (params.get("intensity", intensities))
+				{
+					m_IntensityMinimum = intensities.get(0) * 0.01f;
+					m_Intensity = intensities.get(1) * 0.01f;
+				}
+				else
+				{
+					m_IntensityMinimum = m_Intensity;
+				}
+
+				if (!params.get("ratio", m_Probability))
+					m_Probability = 0.5f;
+			}
+
+			/// <summary>Generates a flickering light object.</summary>
+			/// <returns>A _FlickeringLightObject created with new.</returns>
+			virtual Object* generate(const StringData& params) const
+			{
+				if (m_Intensity == m_IntensityMinimum)
+				{
+					return _Generator::generate(params);
+				}
+				else
+				{
+					return __generate(params);
+				}
+			}
+		};
+
+		template <>
+		Object* _FlickeringLightObjectGenerator<CubeLightObjectGenerator>::__generate(const StringData& params) const
+		{
+			vec3i pos;
+			params.get("pos", pos);
+
+			return new _FlickeringLightObject<CubeLightObject>(
+				m_IntensityMinimum,
+				m_Probability,
+				UNITS_PER_PIXEL * pos,
+				m_Dimensions,
+				m_Color,
+				m_Intensity,
+				m_Radius
+			);
+		}
+
+		template <>
+		Object* _FlickeringLightObjectGenerator<ConeLightObjectGenerator>::__generate(const StringData& params) const
+		{
+			vec3i pos;
+			params.get("pos", pos);
+
+			vec3f dir;
+			if (!params.get("dir", dir)) dir = vec3f(0.f, 0.f, -1.f);
+
+			return new _FlickeringLightObject<ConeLightObject>(
+				m_IntensityMinimum,
+				m_Probability,
+				UNITS_PER_PIXEL * pos,
+				m_Color,
+				m_Intensity,
+				dir,
+				m_Angle * 0.0174532925f,
+				m_Radius
+			);
+		}
+
+		typedef _FlickeringLightObjectGenerator<CubeLightObjectGenerator> FlickeringCubeLightObjectGenerator;
+		typedef _FlickeringLightObjectGenerator<ConeLightObjectGenerator> FlickeringConeLightObjectGenerator;
 
 	}
 

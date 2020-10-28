@@ -1,7 +1,8 @@
 begin DEBUG light1
-    type = "light:cube"
+    type = "light:cube:flickering"
     color = (255, 255, 255)
-    intensity = 100
+    intensity = (90, 100)
+    ratio = 0.05
     radius = 250
 end
 

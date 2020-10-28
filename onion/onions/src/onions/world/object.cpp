@@ -77,7 +77,9 @@ namespace onion
 			// Register all types included as part of the Onion library
 			// Lights
 			set<CubeLightObjectGenerator>("light:cube");
+			set<FlickeringCubeLightObjectGenerator>("light:cube:flickering");
 			set<ConeLightObjectGenerator>("light:cone");
+			set<FlickeringConeLightObjectGenerator>("light:cone:flickering");
 
 			// Walls and other static objects
 			set<XAlignedWallGenerator>("wall:xalign");
