@@ -29,6 +29,21 @@ namespace onion
 			return m_Bounds;
 		}
 
+		bool Object::__collision(Object* obj)
+		{
+			return false;
+		}
+
+		bool Object::collision(Object* obj)
+		{
+			if (m_Bounds->get_intersection(obj->get_bounds()))
+			{
+				return __collision(obj);
+			}
+
+			return false;
+		}
+
 		void Object::display(const Ray& center) const 
 		{
 			if (m_Graphic)
@@ -109,15 +124,22 @@ namespace onion
 
 
 
+		Wall::Wall(Shape* bounds, Graphic3D* graphic) : Object(bounds, graphic) {}
+		
+		bool Wall::__collision(Object* obj)
+		{
+			return true;
+		}
+
 
 		XAlignedWall::XAlignedWall(const vec3i& pos, const Flat3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite) :
-			Object(
+			Wall(
 				new Rectangle(pos, vec3i(UNITS_PER_PIXEL * sprite->width, 0, UNITS_PER_PIXEL * sprite->height)),
 				(sprite_sheet != nullptr && sprite != nullptr) ? new FlatWallGraphic3D(sprite_sheet, sprite) : nullptr
 			) {}
 
 		YAlignedWall::YAlignedWall(const vec3i& pos, const Flat3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite) :
-			Object(
+			Wall(
 				new Rectangle(pos, vec3i(0, UNITS_PER_PIXEL * sprite->width, UNITS_PER_PIXEL * sprite->height)),
 				(sprite_sheet != nullptr && sprite != nullptr) ? new TransformedFlatWallGraphic3D(sprite_sheet, sprite, vec2f(0.f, 1.f)) : nullptr
 			) {}

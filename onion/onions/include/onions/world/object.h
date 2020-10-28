@@ -18,6 +18,11 @@ namespace onion
 			// The graphic used to display the object.
 			Graphic3D* m_Graphic;
 
+			/// <summary>Responds to another object colliding with this one.</summary>
+			/// <param name="obj">The object that collided with this one.</param>
+			/// <returns>True if the object should be pushed back, false otherwise.</returns>
+			virtual bool __collision(Object* obj);
+
 		public:
 			/// <summary>Constructs an object.</summary>
 			/// <param name="bounds">The bounds of the object. Should be constructed with new specifically for this object.</param>
@@ -31,6 +36,12 @@ namespace onion
 			/// <summary>Retrieves the bounds of the object.</summary>
 			/// <returns>An object that represents the bounds of the object.</returns>
 			const Shape* get_bounds() const;
+
+
+			/// <summary>Checks if an object intersects with this one.</summary>
+			/// <param name="obj">The object to check.</param>
+			/// <returns>True if the object needs to be pushed back.</returns>
+			bool collision(Object* obj);
 
 
 			/// <summary>Displays the object.</summary>
@@ -107,9 +118,24 @@ namespace onion
 
 
 
+		// A solid object that blocks movement.
+		class Wall : public Object
+		{
+		protected:
+			/// <summary>Responds to another object colliding with this one.</summary>
+			/// <param name="obj">The object that collided with this one.</param>
+			/// <returns>True if the object should be pushed back, false otherwise.</returns>
+			bool __collision(Object* obj);
+
+		public:
+			/// <summary>Constructs an object.</summary>
+			/// <param name="bounds">The bounds of the object. Should be constructed with new specifically for this object.</param>
+			/// <param name="graphic">The graphic used to display the object. Should be constructed with new specifically for this object.</param>
+			Wall(Shape* bounds, Graphic3D* graphic = nullptr);
+		};
 		
 		// A dimensionless wall aligned with the x-axis, represented graphically by a single fixed sprite.
-		class XAlignedWall : public Object
+		class XAlignedWall : public Wall
 		{
 		public:
 			/// <summary>Constructs an x-aligned wall.</summary>
@@ -120,7 +146,7 @@ namespace onion
 		};
 
 		// A dimensionless wall aligned with the y-axis, represented graphically by a single fixed sprite.
-		class YAlignedWall : public Object
+		class YAlignedWall : public Wall
 		{
 		public:
 			/// <summary>Constructs an x-aligned wall.</summary>
