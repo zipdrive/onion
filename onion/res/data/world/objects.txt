@@ -3,7 +3,7 @@ begin DEBUG light1
     color = (255, 255, 255)
     intensity = (90, 100)
     ratio = 0.05
-    radius = 250
+    radius = 1000
 end
 
 begin DEBUG wall1
@@ -22,4 +22,10 @@ begin DEBUG texture
     sprite_sheet = "sprites/debugtexture.png"
     sprite = "debug"
     texture = "debug"
+end
+
+begin DEBUG actor
+    type = "__DEBUG:actor"
+    sprite_sheet = "sprites/debug.png"
+    sprite = "debug"
 end

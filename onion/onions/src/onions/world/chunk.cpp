@@ -381,15 +381,16 @@ namespace onion
 			// TODO do this more efficiently???
 			m_VisibleTiles.clear();
 
-			int min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
+			Int min_x = std::numeric_limits<Int>::min(), max_x = std::numeric_limits<Int>::max();
+			Int min_y = min_x, max_y = max_x;
 			for (int k = 3; k >= 0; --k)
 			{
 				int e1 = k % 2 == 0 ? LEFT_VIEW_EDGE : RIGHT_VIEW_EDGE;
 				int e2 = k / 2 == 0 ? BOTTOM_VIEW_EDGE : TOP_VIEW_EDGE;
 
-				int y = ((view.edges[e1].normal.get(0) * view.edges[e2].dot) - (view.edges[e2].normal.get(0) * view.edges[e1].dot))
+				Int y = ((view.edges[e1].normal.get(0) * view.edges[e2].dot) - (view.edges[e2].normal.get(0) * view.edges[e1].dot))
 					/ ((view.edges[e1].normal.get(0) * view.edges[e2].normal.get(1)) - (view.edges[e2].normal.get(0) * view.edges[e1].normal.get(1)));
-				int x = (view.edges[e1].dot - (view.edges[e1].normal.get(1) * y)) / view.edges[e1].normal.get(0);
+				Int x = (view.edges[e1].dot - (view.edges[e1].normal.get(1) * y)) / view.edges[e1].normal.get(0);
 
 				if (x < min_x)
 					min_x = x;
@@ -402,15 +403,15 @@ namespace onion
 					max_y = y;
 			}
 
-			int min_j = std::max<int>(0, min_y / (m_TileSize * UNITS_PER_PIXEL));
-			int max_j = std::min<int>(m_Dimensions.get(1) - 1, max_y / (m_TileSize * UNITS_PER_PIXEL));
-			for (int j = min_j; j <= max_j; ++j)
+			Int min_j = std::max<Int>(0, min_y / (m_TileSize * UNITS_PER_PIXEL));
+			Int max_j = std::min<Int>(m_Dimensions.get(1) - 1, max_y / (m_TileSize * UNITS_PER_PIXEL));
+			for (Int j = min_j; j <= max_j; ++j)
 			{
-				int first_i = INT_MIN, last_i = INT_MAX;
+				Int first_i = std::numeric_limits<Int>::min(), last_i = std::numeric_limits<Int>::max();
 
-				int min_i = std::max<int>(0, min_x / (m_TileSize * UNITS_PER_PIXEL));
-				int max_i = std::min<int>(m_Dimensions.get(0) - 1, max_x / (m_TileSize * UNITS_PER_PIXEL));
-				for (int i = min_i; i <= max_i; ++i)
+				Int min_i = std::max<Int>(0, min_x / (m_TileSize * UNITS_PER_PIXEL));
+				Int max_i = std::min<Int>(m_Dimensions.get(0) - 1, max_x / (m_TileSize * UNITS_PER_PIXEL));
+				for (Int i = min_i; i <= max_i; ++i)
 				{
 					for (int k = 3; k >= 0; --k)
 					{
@@ -445,9 +446,9 @@ namespace onion
 			m_Manager.reset_visible(view);
 		}
 
-		void FlatChunk::update_visible(const WorldCamera::View& view)
+		void FlatChunk::update_visible(const WorldCamera::View& view, int frames_passed)
 		{
-			m_Manager.update_visible(view);
+			m_Manager.update_visible(view, frames_passed);
 		}
 
 		void FlatChunk::display_objects(const Ray& center) const
@@ -879,18 +880,19 @@ namespace onion
 		void SmoothChunk::reset_visible(const WorldCamera::View& view)
 		{
 			// Reset visible tiles
-			// TODO do this more efficiently???
+			// TODO take height into account
 			m_VisibleTiles.clear();
 
-			int min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
+			Int min_x = std::numeric_limits<Int>::min(), max_x = std::numeric_limits<Int>::max();
+			Int min_y = min_x, max_y = max_x;
 			for (int k = 3; k >= 0; --k)
 			{
 				int e1 = k % 2 == 0 ? LEFT_VIEW_EDGE : RIGHT_VIEW_EDGE;
 				int e2 = k / 2 == 0 ? BOTTOM_VIEW_EDGE : TOP_VIEW_EDGE;
 
-				int y = ((view.edges[e1].normal.get(0) * view.edges[e2].dot) - (view.edges[e2].normal.get(0) * view.edges[e1].dot))
+				Int y = ((view.edges[e1].normal.get(0) * view.edges[e2].dot) - (view.edges[e2].normal.get(0) * view.edges[e1].dot))
 					/ ((view.edges[e1].normal.get(0) * view.edges[e2].normal.get(1)) - (view.edges[e2].normal.get(0) * view.edges[e1].normal.get(1)));
-				int x = (view.edges[e1].dot - (view.edges[e1].normal.get(1) * y)) / view.edges[e1].normal.get(0);
+				Int x = (view.edges[e1].dot - (view.edges[e1].normal.get(1) * y)) / view.edges[e1].normal.get(0);
 
 				if (x < min_x)
 					min_x = x;
@@ -903,15 +905,15 @@ namespace onion
 					max_y = y;
 			}
 
-			int min_j = std::max<int>(0, min_y / (m_TileSize * UNITS_PER_PIXEL));
-			int max_j = std::min<int>(m_Dimensions.get(1) - 1, max_y / (m_TileSize * UNITS_PER_PIXEL));
-			for (int j = min_j; j <= max_j; ++j)
+			Int min_j = std::max<Int>(0, min_y / (m_TileSize * UNITS_PER_PIXEL));
+			Int max_j = std::min<Int>(m_Dimensions.get(1) - 1, max_y / (m_TileSize * UNITS_PER_PIXEL));
+			for (Int j = min_j; j <= max_j; ++j)
 			{
-				int first_i = INT_MIN, last_i = INT_MAX;
+				Int first_i = std::numeric_limits<Int>::min(), last_i = std::numeric_limits<Int>::max();
 
-				int min_i = std::max<int>(0, min_x / (m_TileSize * UNITS_PER_PIXEL));
-				int max_i = std::min<int>(m_Dimensions.get(0) - 1, max_x / (m_TileSize * UNITS_PER_PIXEL));
-				for (int i = min_i; i <= max_i; ++i)
+				Int min_i = std::max<Int>(0, min_x / (m_TileSize * UNITS_PER_PIXEL));
+				Int max_i = std::min<Int>(m_Dimensions.get(0) - 1, max_x / (m_TileSize * UNITS_PER_PIXEL));
+				for (Int i = min_i; i <= max_i; ++i)
 				{
 					for (int k = 3; k >= 0; --k)
 					{
@@ -946,9 +948,9 @@ namespace onion
 			m_Manager.reset_visible(view);
 		}
 
-		void SmoothChunk::update_visible(const WorldCamera::View& view)
+		void SmoothChunk::update_visible(const WorldCamera::View& view, int frames_passed)
 		{
-			m_Manager.update_visible(view);
+			m_Manager.update_visible(view, frames_passed);
 		}
 
 		void SmoothChunk::display_objects(const Ray& center) const

@@ -1,6 +1,7 @@
 #pragma once
 #include <set>
 #include "lighting.h"
+#include "agent.h"
 
 namespace onion
 {
@@ -31,6 +32,11 @@ namespace onion
 				/// <param name="pos">The position of the block.</param>
 				/// <param name="obj">The first light object to insert.</param>
 				Block(const vec3i& pos, LightObject* obj);
+
+				/// <summary>Tests whether the given object has any collisions with an object inside the block.</summary>
+				/// <param name="obj">The object to test.</param>
+				/// <returns>True if there is a collision and the object needs to be reset to its original position, false otherwise.</returns>
+				bool collision(Object* obj);
 			};
 
 			// The dimensions of each block.
@@ -47,6 +53,17 @@ namespace onion
 			/// <returns>A pointer to the block.</returns>
 			Block* get_block(const vec3i& index);
 
+			/// <summary>Tests whether the object intersects with the block with the specified index.</summary>
+			/// <param name="index">The index of the block to be tested.</param>
+			/// <param name="obj">The object to be tested.</param>
+			/// <returns>True if the object intersects the block, false if it does not.</returns>
+			bool contains(const vec3i& index, Object* obj) const;
+
+			/// <summary>Tests whether the object has any collisions with another object being managed.</summary>
+			/// <param name="obj">The object being tested.</param>
+			/// <returns>True if there is a collision and the object needs to be reset to its original position, false otherwise.</returns>
+			bool collision(Object* obj);
+
 
 			/// <summary>Inserts the given object into all blocks it affects, by checking all blocks radiating outward from the block with the base index.</summary>
 			/// <param name="base_index">The index at the block at the center of what is being checked.</param>
@@ -54,6 +71,10 @@ namespace onion
 			/// <returns>True if the object affects the block with the given index, false otherwise.</returns>
 			template <typename T, int N>
 			bool __insert(const vec3i& base_index, T* obj);
+
+
+			// The objects that move around.
+			std::unordered_set<Actor*> m_Actors;
 
 
 			// Struct that compares two objects and determines which should be displayed in front of the other.
@@ -102,7 +123,7 @@ namespace onion
 
 			/// <summary>Updates which dynamic objects are visible, in response to the passage of time.</summary>
 			/// <param name="view">The geometry of what is visible.</param>
-			void update_visible(const WorldCamera::View& view);
+			void update_visible(const WorldCamera::View& view, int frames_passed);
 
 			/// <summary>Displays all visible managed objects.</summary>
 			/// <param name="center">The ray from the camera position towards the camera.</param>

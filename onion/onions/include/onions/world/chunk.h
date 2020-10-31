@@ -144,7 +144,7 @@ namespace onion
 			virtual void reset_visible(const WorldCamera::View& view);
 
 			/// <summary>Updates what is visible, in response to the passage of time.</summary>
-			virtual void update_visible(const WorldCamera::View& view) = 0;
+			virtual void update_visible(const WorldCamera::View& view, int frames_passed) = 0;
 
 			/// <summary>Displays tiles in the chunk.</summary>
 			void display_tiles() const;
@@ -208,7 +208,7 @@ namespace onion
 			void reset_visible(const WorldCamera::View& view);
 
 			/// <summary>Updates what is visible, in response to the passage of time.</summary>
-			void update_visible(const WorldCamera::View& view);
+			void update_visible(const WorldCamera::View& view, int frames_passed);
 
 			/// <summary>Displays objects in the chunk.</summary>
 			/// <param name="center">The ray from the camera position towards the camera.</param>
@@ -270,7 +270,7 @@ namespace onion
 			void reset_visible(const WorldCamera::View& view);
 
 			/// <summary>Updates what is visible, in response to the passage of time.</summary>
-			void update_visible(const WorldCamera::View& view);
+			void update_visible(const WorldCamera::View& view, int frames_passed);
 
 			/// <summary>Displays objects in the chunk.</summary>
 			/// <param name="center">The ray from the camera position towards the camera.</param>

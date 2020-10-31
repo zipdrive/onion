@@ -17,7 +17,7 @@ begin tile
 end
 
 begin obj DEBUG light1
-    pos = (200, 200, 30)
+    pos = (200, 0, 75)
 end
 
 begin obj DEBUG wall1
@@ -27,6 +27,6 @@ begin obj DEBUG wall2
     pos = (240, 240, 0)
 end
 
-begin obj DEBUG texture
+begin obj DEBUG actor
     pos = (180, 220, 0)
 end

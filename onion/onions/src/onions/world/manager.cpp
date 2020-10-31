@@ -12,6 +12,9 @@ namespace onion
 		{
 			for (auto iter = m_Blocks.begin(); iter != m_Blocks.end(); ++iter)
 				delete iter->second;
+
+			for (auto iter = m_Actors.begin(); iter != m_Actors.end(); ++iter)
+				delete *iter;
 		}
 
 
@@ -34,6 +37,71 @@ namespace onion
 			if (iter != m_Blocks.end())
 				return iter->second;
 			return nullptr;
+		}
+
+		bool ObjectManager::Block::collision(Object* obj)
+		{
+			for (auto iter = objects.begin(); iter != objects.end(); ++iter)
+				if ((*iter)->collision(obj))
+					return true;
+			return false;
+		}
+
+		bool ObjectManager::contains(const vec3i& index, Object* obj) const
+		{
+			// Calculates the minimum and maximum corner of the block
+			vec3i mins = index * m_BlockDimensions;
+			vec3i maxs = mins + m_BlockDimensions;
+
+			// Calculate the center of the block
+			vec3i center = mins;
+			for (int k = 2; k >= 0; --k)
+				center(k) += (m_BlockDimensions.get(k) / 2);
+
+			// Find the closest point on the object to the block
+			vec3i closest;
+			obj->get_bounds()->get_closest_point(center, closest);
+
+			// Check whether the closest point lies within the block
+			for (int k = 2; k >= 0; --k)
+			{
+				if (closest.get(k) < mins.get(k) || closest.get(k) > maxs.get(k))
+					return false;
+			}
+
+			return true;
+		}
+
+		bool ObjectManager::collision(Object* obj)
+		{
+			const Shape* bounds = obj->get_bounds();
+			vec3i base_index = bounds->get_position();
+			for (int k = 2; k >= 0; --k)
+				base_index(k) /= m_BlockDimensions.get(k);
+
+			for (Int i = -1; i <= 1; ++i)
+			{
+				for (Int j = -1; j <= 1; ++j)
+				{
+					for (Int k = -1; k <= 1; ++k)
+					{
+						vec3i index = base_index + vec3i(i, j, k);
+						if (index.get(2) >= 0)
+						{
+							if (Block* block = get_block(index))
+							{
+								if (contains(index, obj))
+								{
+									if (block->collision(obj))
+										return true;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			return false;
 		}
 
 
@@ -109,18 +177,25 @@ namespace onion
 		template <>
 		void ObjectManager::add<Object>(Object* obj)
 		{
-			// Calculates the index of the block that the position of the object is in
-			vec3i base_index = obj->get_bounds()->get_position();
-			for (int k = 2; k >= 0; --k)
-				base_index(k) /= m_BlockDimensions.get(k);
-
-			// Starting from the base index and radiating outwards, inserts the object into all blocks that it affects
-			__insert<Object, 2>(base_index, obj);
-
-			// Add the object's lighting data, if it has any
-			if (LightObject* light = dynamic_cast<LightObject*>(obj))
+			if (Actor* actor = dynamic_cast<Actor*>(obj))
 			{
-				add<LightObject>(light);
+				m_Actors.insert(actor);
+			}
+			else
+			{
+				// Calculates the index of the block that the position of the object is in
+				vec3i base_index = obj->get_bounds()->get_position();
+				for (int k = 2; k >= 0; --k)
+					base_index(k) /= m_BlockDimensions.get(k);
+
+				// Starting from the base index and radiating outwards, inserts the object into all blocks that it affects
+				__insert<Object, 2>(base_index, obj);
+
+				// Add the object's lighting data, if it has any
+				if (LightObject* light = dynamic_cast<LightObject*>(obj))
+				{
+					add<LightObject>(light);
+				}
 			}
 		}
 
@@ -128,25 +203,9 @@ namespace onion
 		template <>
 		bool ObjectManager::__insert<Object, -1>(const vec3i& index, Object* obj)
 		{
-			// Calculates the minimum and maximum corner of the block
-			vec3i mins = index * m_BlockDimensions;
-			vec3i maxs = mins + m_BlockDimensions;
-
-			// Calculate the center of the block
-			vec3i center = mins;
-			for (int k = 2; k >= 0; --k)
-				center(k) += (m_BlockDimensions.get(k) / 2);
-
-			// Find the closest point on the object to the block
-			vec3i closest;
-			obj->get_bounds()->get_closest_point(center, closest);
-
-			// Check whether the closest point lies within the block
-			for (int k = 2; k >= 0; --k)
-			{
-				if (closest.get(k) < mins.get(k) || closest.get(k) > maxs.get(k))
-					return false;
-			}
+			// Check that the object lies inside the block
+			if (!contains(index, obj))
+				return false;
 
 			// Add the object to the block
 			if (Block* block = get_block(index))
@@ -157,7 +216,7 @@ namespace onion
 			else
 			{
 				// Construct a new block, then insert the light
-				m_Blocks.emplace(index, new Block(mins, obj));
+				m_Blocks.emplace(index, new Block(index * m_BlockDimensions, obj));
 			}
 
 			return true;
@@ -315,6 +374,18 @@ namespace onion
 				}
 			}
 
+			// Add any dynamic objects that are visible
+			for (auto iter = m_Actors.begin(); iter != m_Actors.end(); ++iter)
+			{
+				Object* obj = *iter;
+
+				// Check if the actor is visible
+				if (view.is_visible(obj->get_bounds()))
+				{
+					m_ActiveObjects.insert(obj);
+				}
+			}
+
 			// Turn off all lights no longer in view
 			for (auto iter = m_ActiveLights.begin(); iter != m_ActiveLights.end(); ++iter)
 				if (active_lights.count(*iter) < 1)
@@ -326,9 +397,42 @@ namespace onion
 			m_ActiveLights = active_lights;
 		}
 
-		void ObjectManager::update_visible(const WorldCamera::View& view)
+		void ObjectManager::update_visible(const WorldCamera::View& view, int frames_passed)
 		{
-			// TODO
+			for (auto iter = m_Actors.begin(); iter != m_Actors.end(); ++iter)
+			{
+				Actor* actor = *iter;
+				Shape* bounds = actor->get_bounds();
+				vec3i original = bounds->get_position();
+
+				// Calculate how the actor should (ideally) be translated
+				vec3i trans = actor->update(view, frames_passed);
+
+				if (trans.square_sum() > 0)
+				{
+					// Test whether there are any collisions if the actor is translated as it is supposed to be
+					bounds->translate(trans);
+					if (collision(actor))
+					{
+						// If there was a collision, reset the position
+						bounds->set_position(original);
+
+						// TODO test whether there isn't a collision if the actor is only translated on one axis, or if it is pushed upwards
+					}
+
+					// Check if the actor is visible
+					if (view.is_visible(bounds))
+					{
+						// Add the actor to the set of visible objects, if it isn't already included
+						m_ActiveObjects.insert(actor);
+					}
+					else
+					{
+						// Remove the actor from the set of visible objects, if it is currently in the set
+						m_ActiveObjects.erase(actor);
+					}
+				}
+			}
 		}
 
 		void ObjectManager::display(const Ray& center) const

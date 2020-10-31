@@ -10,6 +10,19 @@
 #define EVENT_PRIORITY int
 
 
+
+// Default key controls
+
+#define ONION_KEY_LEFT		0x100
+#define ONION_KEY_RIGHT		0x101
+#define ONION_KEY_DOWN		0x102
+#define ONION_KEY_UP		0x103
+
+#define ONION_KEY_SELECT	0x200
+#define ONION_KEY_CANCEL	0x201
+
+
+
 namespace onion
 {
 
@@ -113,7 +126,6 @@ namespace onion
 		/// <param name="event_data">The data for the event.</param>
 		virtual int trigger(const UnicodeEvent& event_data);
 	};
-
 
 
 	/// <summary>Registers a keyboard control to be recognized by the application.</summary>

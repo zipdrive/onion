@@ -69,9 +69,55 @@ public:
 };
 
 
+class TestActorGenerator : public world::ObjectGenerator
+{
+protected:
+	const world::Flat3DPixelSpriteSheet* m_SpriteSheet;
+	const Sprite* m_Sprite;
+
+public:
+	TestActorGenerator(String id, const StringData& params) : ObjectGenerator(id)
+	{
+		m_SpriteSheet = nullptr;
+		m_Sprite = nullptr;
+
+		String sprite_sheet;
+		if (params.get("sprite_sheet", sprite_sheet))
+		{
+			if (const _SpriteSheet* ptr = _SpriteSheet::get_sprite_sheet("world/" + sprite_sheet))
+			{
+				if (m_SpriteSheet = dynamic_cast<const world::Flat3DPixelSpriteSheet*>(ptr))
+				{
+					String sprite;
+					params.get("sprite", sprite);
+
+					m_Sprite = m_SpriteSheet->get_sprite(sprite);
+				}
+			}
+		}
+	}
+
+	world::Object* generate(const StringData& params) const
+	{
+		vec3i pos;
+		params.get("pos", pos);
+		pos *= UNITS_PER_PIXEL;
+
+		return new world::Actor(new world::Point(pos), new world::PlayerMovementControlledAgent(UNITS_PER_PIXEL * 32), new world::FlatWallGraphic3D(m_SpriteSheet, m_Sprite));
+	}
+};
+
+
+
 
 void worldtest_main()
 {
+	// Register keys
+	register_keyboard_control(ONION_KEY_LEFT);
+	register_keyboard_control(ONION_KEY_RIGHT);
+	register_keyboard_control(ONION_KEY_DOWN);
+	register_keyboard_control(ONION_KEY_UP);
+
 	// Load the sprite sheets
 	new world::Flat3DPixelSpriteSheet("sprites/debug.png");
 	new world::Flat3DPixelSpriteSheet("sprites/debug2.png");
@@ -79,6 +125,7 @@ void worldtest_main()
 
 	// Set up the object types
 	world::ObjectGenerator::set<TestTexturedObjectGenerator>("__DEBUG:texture");
+	world::ObjectGenerator::set<TestActorGenerator>("__DEBUG:actor");
 
 	// Load the chunk
 	world::Chunk::set_tile_size(16);

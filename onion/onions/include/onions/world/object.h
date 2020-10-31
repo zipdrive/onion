@@ -35,9 +35,13 @@ namespace onion
 			
 			/// <summary>Retrieves the bounds of the object.</summary>
 			/// <returns>An object that represents the bounds of the object.</returns>
+			Shape* get_bounds();
+			
+			/// <summary>Retrieves the bounds of the object.</summary>
+			/// <returns>An object that represents the bounds of the object.</returns>
 			const Shape* get_bounds() const;
 
-
+			
 			/// <summary>Checks if an object intersects with this one.</summary>
 			/// <param name="obj">The object to check.</param>
 			/// <returns>True if the object needs to be pushed back.</returns>

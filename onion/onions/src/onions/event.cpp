@@ -340,6 +340,22 @@ namespace onion
 
 	void register_keyboard_control(int control, int key)
 	{
+		if (key < 0)
+		{
+			if (control == ONION_KEY_LEFT)
+				key = GLFW_KEY_LEFT;
+			else if (control == ONION_KEY_RIGHT)
+				key = GLFW_KEY_RIGHT;
+			else if (control == ONION_KEY_DOWN)
+				key = GLFW_KEY_DOWN;
+			else if (control == ONION_KEY_UP)
+				key = GLFW_KEY_UP;
+			else if (control == ONION_KEY_SELECT)
+				key = GLFW_KEY_Z;
+			else if (control == ONION_KEY_CANCEL)
+				key = GLFW_KEY_X;
+		}
+
 		g_KeyboardManager.assign_key_to_control(control, key);
 	}
 

@@ -62,7 +62,7 @@ namespace onion
 
 		void BasicWorld::update(int frames_passed)
 		{
-			m_Chunk->update_visible(m_Camera->get_view());
+			m_Chunk->update_visible(m_Camera->get_view(), frames_passed);
 		}
 		
 		void BasicWorld::__display() const

@@ -24,6 +24,11 @@ namespace onion
 				delete m_Graphic;
 		}
 
+		Shape* Object::get_bounds()
+		{
+			return m_Bounds;
+		}
+
 		const Shape* Object::get_bounds() const
 		{
 			return m_Bounds;
