@@ -5,39 +5,6 @@ namespace onion
 	namespace world
 	{
 
-		/// <summary>Implements the binary GCD algorithm to find the greatest common divisor of two integers.</summary>
-		/// <param name="a">The first integer.</param>
-		/// <param name="b">The second integer.</param>
-		/// <returns>The greatest common divisor of both integers.</returns>
-		template <typename T>
-		T gcd(T a, T b)
-		{
-			if (a < b)
-			{
-				return gcd(b, a);
-			}
-			else if (b == 0)
-			{
-				return a;
-			}
-			else if (a % b == 0)
-			{
-				return b;
-			}
-			else if (a % 2 == 0 && b % 2 == 0)
-			{
-				return gcd(a / 2, b / 2);
-			}
-			else if (a % 2 != b % 2)
-			{
-				return a % 2 == 0 ? gcd(a / 2, b) : gcd(a, b / 2);
-			}
-			else
-			{
-				return gcd(a - b, b);
-			}
-		}
-
 		/// <summary>Implements the extended Euclidean algorithm to find the greatest common divisor of two integers, as well as integers A, B such that Aa + Bb = gcd(a, b).</summary>
 		/// <param name="r0">The first integer.</param>
 		/// <param name="r1">The second integer.</param>
@@ -125,8 +92,8 @@ namespace onion
 			while (--a_mod >= 0);
 		}
 
-		/// <summary>Calculates x to minimize both (a1 - b1x % n1) and (a2 - b2x % n2).</summary>
-		/// <returns>The value of x that minimizes both (a1 - b1x % n1) and (a2 - b2x % n2).</returns>
+		/// <summary>Calculates x to minimize both (a1 - (b1 * x) % n1) and (a2 - (b2 * x) % n2).</summary>
+		/// <returns>The value of x that minimizes both (a1 - (b1 * x) % n1) and (a2 - (b2 * x) % n2).</returns>
 		template <typename T>
 		T minimize_double_modulo_difference(T a1, T b1, T n1, T a2, T b2, T n2)
 		{
@@ -406,11 +373,8 @@ namespace onion
 				return;
 			}
 
-			Int ab = diff.dot(ray.direction);
-			Int bb = ray.direction.square_sum();
-			vec3i to_closest_on_line = diff;
-			for (int k = 2; k >= 0; --k)
-				to_closest_on_line(k) += ray.direction.get(k) * ab / bb;
+			Frac t(diff.dot(ray.direction), ray.direction.square_sum());
+			vec3i to_closest_on_line = diff + (ray.direction * t);
 
 			vec3f dir;
 			to_closest_on_line.normalize(dir);
@@ -685,43 +649,49 @@ namespace onion
 		void Rectangle::get_closest_point(const vec3i& pos, vec3i& closest) const
 		{
 			// Find the closest point on the plane that the rectangle is on to the given point
-			Int numer = (m_Dimensions.get(1) * (m_Position.get(0) - pos.get(0))) - (m_Dimensions.get(0) * (m_Position.get(1) - pos.get(1)));
-			Int denom = (m_Dimensions.get(0) * m_Dimensions.get(0)) + (m_Dimensions.get(1) * m_Dimensions.get(1));
+			Frac t(
+				(m_Dimensions.get(0) * (m_Position.get(0) - pos.get(0))) + (m_Dimensions.get(1) * (m_Position.get(1) - pos.get(1))),
+				(m_Dimensions.get(0) * m_Dimensions.get(0)) + (m_Dimensions.get(1) * m_Dimensions.get(1))
+			);
 
-			closest = pos;
-			closest(0) += (numer * m_Dimensions.get(1)) / denom;
-			closest(1) -= (numer * m_Dimensions.get(0)) / denom;
+			closest = m_Position - (m_Dimensions * t);
 
 			// Clamp the closest point to the bounds of the rectangle
-			for (int k = 2; k >= 0; --k)
+			for (int k = 1; k >= 0; --k)
 			{
 				if (closest.get(k) < m_Position.get(k))
 					closest(k) = m_Position.get(k);
 				else if (closest.get(k) > m_Position.get(k) + m_Dimensions.get(k))
 					closest(k) = m_Position.get(k) + m_Dimensions.get(k);
 			}
+			
+			// Determine the z-coordinate of the closest point
+			if (pos.get(2) < m_Position.get(2))
+				closest(2) = m_Position.get(2);
+			else if (pos.get(2) > m_Position.get(2) + m_Dimensions.get(2))
+				closest(2) = m_Position.get(2) + m_Dimensions.get(2);
+			else
+				closest(2) = pos.get(2);
 		}
 
 		void Rectangle::get_closest_point(const Ray& ray, vec3i& closest) const
 		{
-
-
 			// Find the intersection between the ray and the plane that the rectangle is on
-			Int numer = (m_Dimensions.get(1) * (m_Position.get(0) - ray.origin.get(0))) - (m_Dimensions.get(0) * (m_Position.get(1) - ray.origin.get(1)));
-			Int denom = (m_Dimensions.get(1) * ray.direction.get(0)) - (m_Dimensions.get(0) * ray.direction.get(1));
+			Frac t(
+				(m_Dimensions.get(1) * (m_Position.get(0) - ray.origin.get(0))) - (m_Dimensions.get(0) * (m_Position.get(1) - ray.origin.get(1))),
+				(m_Dimensions.get(1) * ray.direction.get(0)) - (m_Dimensions.get(0) * ray.direction.get(1))
+			);
 
-			if (denom == 0)
+			if (t.denominator == 0)
 			{
 				// Ray is parallel to the plane that the rectangle is on, so just return the closest point to the origin
 				get_closest_point(ray.origin, closest);
 			}
 			else
 			{
-				closest = ray.origin;
+				closest = ray.origin + (ray.direction * t);
 				for (int k = 2; k >= 0; --k)
 				{
-					closest(k) += ray.direction.get(k) * numer / denom;
-
 					// Clamp the closest point to the bounds of the rectangle
 					if (closest.get(k) < m_Position.get(k))
 						closest(k) = m_Position.get(k);

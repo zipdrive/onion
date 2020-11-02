@@ -103,7 +103,49 @@ public:
 		params.get("pos", pos);
 		pos *= UNITS_PER_PIXEL;
 
-		return new world::Actor(new world::Point(pos), new world::PlayerMovementControlledAgent(UNITS_PER_PIXEL * 32), new world::FlatWallGraphic3D(m_SpriteSheet, m_Sprite));
+		world::Actor* actor = new world::Actor(new world::Point(pos), new world::PlayerMovementControlledAgent(UNITS_PER_PIXEL * 32), new world::FlatWallGraphic3D(m_SpriteSheet, m_Sprite));
+		world::_Interactable::set_interactor(actor);
+		return actor;
+	}
+};
+
+
+class TestInteractableWall : public world::_InteractableObject<world::XAlignedWall>
+{
+public:
+	TestInteractableWall(const vec3i& pos, const world::Flat3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite, Int maximum_radius, Int priority) : world::_InteractableObject<world::XAlignedWall>(maximum_radius, priority, pos, sprite_sheet, sprite) {}
+
+	bool interact()
+	{
+		errlog("TEST: TestInteractableWall interacted with successfully!");
+		return true;
+	}
+};
+
+class TestInteractableWallGenerator : public world::XAlignedWallGenerator
+{
+protected:
+	Int m_MaximumRadius;
+	Int m_Priority;
+
+public:
+	TestInteractableWallGenerator(String id, const StringData& params) : world::XAlignedWallGenerator(id, params) 
+	{
+		if (!params.get("interact_radius", m_MaximumRadius))
+			m_MaximumRadius = 0;
+		m_MaximumRadius *= UNITS_PER_PIXEL;
+
+		if (!params.get("priority", m_Priority))
+			m_Priority = std::numeric_limits<Int>::max();
+	}
+
+	virtual world::Object* generate(const StringData& params) const
+	{
+		vec3i pos;
+		params.get("pos", pos);
+		pos = UNITS_PER_PIXEL * pos;
+
+		return new TestInteractableWall(pos, m_SpriteSheet, m_Sprite, m_MaximumRadius, m_Priority);
 	}
 };
 
@@ -117,6 +159,7 @@ void worldtest_main()
 	register_keyboard_control(ONION_KEY_RIGHT);
 	register_keyboard_control(ONION_KEY_DOWN);
 	register_keyboard_control(ONION_KEY_UP);
+	register_keyboard_control(ONION_KEY_SELECT);
 
 	// Load the sprite sheets
 	new world::Flat3DPixelSpriteSheet("sprites/debug.png");
@@ -126,6 +169,7 @@ void worldtest_main()
 	// Set up the object types
 	world::ObjectGenerator::set<TestTexturedObjectGenerator>("__DEBUG:texture");
 	world::ObjectGenerator::set<TestActorGenerator>("__DEBUG:actor");
+	world::ObjectGenerator::set<TestInteractableWallGenerator>("__DEBUG:interactable");
 
 	// Load the chunk
 	world::Chunk::set_tile_size(16);

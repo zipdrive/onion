@@ -1,38 +1,10 @@
 #pragma once
 #include <stack>
-#include "primitive.h"
+#include "math.h"
 
 
 namespace onion
 {
-
-	using Int = primitive<int>;
-	using Uint = primitive<unsigned int>;
-	using Float = primitive<float>;
-	using Double = primitive<double>;
-
-	template <typename T, typename U>
-	struct _primitive_multiplication
-	{
-		using type = T;
-	};
-
-	template <typename T>
-	struct _primitive_multiplication<T, Float>
-	{
-		using type = Float;
-	};
-
-	template <>
-	struct _primitive_multiplication<Uint, Int>
-	{
-		using type = Int;
-	};
-
-	template <typename T, typename U>
-	using primitive_multiplication = typename _primitive_multiplication<T, U>::type;
-
-
 
 	// A matrix of numeric values
 	template <typename T, int _Columns, int _Rows>
@@ -274,6 +246,15 @@ namespace onion
 		matrix<primitive_multiplication<T, Int>, _Columns, _Rows> res;
 		for (int k = (_Columns * _Rows) - 1; k >= 0; --k)
 			res(k) = lhs * rhs.get(k);
+		return res;
+	}
+
+	template <int _Columns, int _Rows>
+	matrix<Int, _Columns, _Rows> operator*(const matrix<Int, _Columns, _Rows>& lhs, const Frac& rhs)
+	{
+		matrix<Int, _Columns, _Rows> res;
+		for (int k = (_Columns * _Rows) - 1; k >= 0; --k)
+			res(k) = lhs.get(k) * rhs;
 		return res;
 	}
 

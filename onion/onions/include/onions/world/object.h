@@ -203,7 +203,7 @@ namespace onion
 			{
 				vec3i pos;
 				params.get("pos", pos);
-				pos = UNITS_PER_PIXEL * (INT_VEC3)pos;
+				pos = UNITS_PER_PIXEL * pos;
 
 				return new T(pos, m_SpriteSheet, m_Sprite);
 			}

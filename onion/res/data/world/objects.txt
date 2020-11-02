@@ -29,3 +29,10 @@ begin DEBUG actor
     sprite_sheet = "sprites/debug.png"
     sprite = "debug"
 end
+
+begin DEBUG interactable
+    type = "__DEBUG:interactable"
+    sprite_sheet = "sprites/debug2.png"
+    sprite = "debug"
+    interact_radius = 10
+end

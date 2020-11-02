@@ -23,7 +23,7 @@ end
 begin obj DEBUG wall1
     pos = (120, 240, 0)
 end
-begin obj DEBUG wall2
+begin obj DEBUG interactable
     pos = (240, 240, 0)
 end
 
