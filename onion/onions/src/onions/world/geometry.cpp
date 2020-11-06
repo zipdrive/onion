@@ -71,7 +71,7 @@ namespace onion
 			T a_mod = a % n;
 			if (a_mod == 0)
 				return 0;
-			else if (a_mod < 0) 
+			else if (a_mod < 0)
 				a_mod += abs(n);
 
 			T b_mod = b % n;
@@ -88,8 +88,7 @@ namespace onion
 					// There is a perfect solution to make ax == b mod n
 					return (B * a_mod) / divisor;
 				}
-			} 
-			while (--a_mod >= 0);
+			} while (--a_mod >= 0);
 		}
 
 		/// <summary>Calculates x to minimize both (a1 - (b1 * x) % n1) and (a2 - (b2 * x) % n2).</summary>
@@ -111,7 +110,7 @@ namespace onion
 					a[k] += n[k];
 				if (b[k] < 0)
 					b[k] += n[k];
-				
+
 				divisors[k] = gcd(n[k], b[k], N[k], B[k]);
 				while (a[k] % divisors[k] != 0)
 					--a[k];
@@ -120,14 +119,43 @@ namespace onion
 			T r = (divisors[0] * B[1] * a[1]) - (divisors[1] * B[0] * a[0]);
 			T s[2] = { -divisors[1] * n[0], divisors[0] * n[1] };
 			T x = minimize_modulo_difference(r, s[0], s[1]);
-			
+
 			return ((B[0] * a[0]) + (x * n[0])) / divisors[0];
 		}
 
 
 
-		bool Plane::get_intersection(const Plane& other, Ray& intersection) const
+		bool solve(const vec3i& a1, const vec3i& a2, const vec3i& b, Frac& t1, Frac& t2)
 		{
+			INT_MAT2X3 A;
+			for (int r = 2; r >= 0; --r)
+			{
+				A.set(r, 0, a1.get(r));
+				A.set(r, 1, a2.get(r));
+			}
+
+			FRAC_VEC2 x0;
+			std::vector<INT_VEC2> x;
+
+			if (solve(A, b, x0, x))
+			{
+				t1 = x0.get(0);
+				t2 = x0.get(1);
+
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+
+
+		bool Plane::get_intersection(const Plane& other, Line& intersection) const
+		{
+			// TODO replace with solve function for readability?
+
 			if (normal.get(0) == 0)
 			{
 				if (normal.get(1) == 0)
@@ -224,41 +252,191 @@ namespace onion
 			return true;
 		}
 
+		bool Plane::get_intersection(const Line& line, Line& intersection) const
+		{
+			// Check if line is not parallel to the plane
+			if (Int denom = normal.dot(line.direction))
+			{
+				line.get(Frac(dot - (normal.dot(line.origin)), denom), intersection.origin);
+				return normal.dot(intersection.origin) == dot;
+			}
+
+			// If the line is parallel to the plane, check if the line lies on the plane
+			else if (normal.dot(line.origin) == dot)
+			{
+				intersection = line;
+				return true;
+			}
+
+			return false;
+		}
+
 		void Plane::get_closest_point(const vec3i& point, vec3i& closest) const
 		{
-			Int denom = normal.square_sum();
-			closest = (normal * (dot - normal.dot(point))) / denom;
-			closest += point;
+			closest = point + (normal * Frac(dot - normal.dot(point), normal.square_sum()));
 		}
 
 
-		bool Ray::get_intersection(const Plane& plane, vec3i& intersection) const
+		void Parallelogram::clamp(vec3i& point) const
 		{
-			if (Int denom = plane.normal.dot(direction))
+			// The coefficients for each of the radius vectors
+			Frac t[2];
+
+			// Solve for the coefficients
+			solve(sides[0], sides[1], point, t[0], t[1]);
+
+			// Clamp each coefficient to the range [0, 1]
+			for (int k = 1; k >= 0; --k)
 			{
-				Int t = (plane.dot - (plane.normal.dot(origin))) / denom;
-				intersection = origin + (t * direction);
-				return true;
+				if (t[k] < 0)
+					t[k] = 0;
+				else if (t[k] > 1)
+					t[k] = 1;
 			}
-			else if (plane.normal.dot(origin) == plane.dot)
+
+			// Solve for the clamped point
+			point = pos + (sides[0] * t[0]) + (sides[1] * t[1]);
+		}
+		
+		void Parallelogram::get_closest_point(const vec3i& point, vec3i& closest) const
+		{
+			// Calculate the closest point on the parallelogram's plane to the given point
+			vec3i normal;
+			sides[0].cross(sides[1], normal);
+
+			closest = point + (normal * Frac(normal.dot(pos - point), normal.square_sum()));
+
+			// Clamp the closest point to the bounds of the parallelogram
+			clamp(closest);
+		}
+
+		void Parallelogram::get_closest_point(const Line& line, vec3i& closest) const
+		{
+			// TODO see if this can be done more efficiently?
+
+			// Construct five planes: one representing the plane that the parallelogram is on, and the others representing the planes parallel to one of the sides and perpendicular to the parallelogram itself
+			Plane p[5];
+			sides[0].cross(sides[1], p[4].normal);
+			p[4].dot = p[4].normal.dot(pos);
+
+			for (int k = 3; k >= 0; --k)
 			{
-				intersection = origin;
-				return true;
+				sides[k / 2].cross(p[4].normal, p[k].normal);
+				p[k].dot = p[k].normal.dot(k % 2 == 0 ? pos : (pos + sides[k / 2]));
+			}
+
+			Int smallest_dist = std::numeric_limits<Int>::max();
+			for (int k = 4; k >= 0; --k)
+			{
+				// Calculate the intersection between the line and each of the planes
+				Line plane_intersection;
+				if (p[k].get_intersection(line, plane_intersection))
+				{
+					// Determine the closest point on the parallelogram to the intersection of the line and the plane
+					vec3i diff;
+					if (plane_intersection.direction.square_sum() > 0)
+					{
+						// Plane is parallel to line
+						diff = plane_intersection.origin; // TODO pick point closest to center of parallelogram
+					}
+					else
+					{
+						// Plane is not parallel to line
+						diff = plane_intersection.origin;
+					}
+
+					vec3i closest_on_parallelogram;
+					get_closest_point(diff, closest_on_parallelogram);
+					diff -= closest_on_parallelogram;
+
+					// If this point is closer than the prior closest, replace it
+					Int dist = diff.square_sum();
+					if (dist < smallest_dist)
+					{
+						closest = closest_on_parallelogram;
+						smallest_dist = dist;
+					}
+				}
+			}
+		}
+
+		void Parallelogram::get_closest_point(const Parallelogram& quad, vec3i& closest) const
+		{
+			// Construct the planes that each parallelogram occupies
+			Plane p[2];
+
+			sides[0].cross(sides[1], p[0].normal);
+			p[0].dot = pos.dot(p[0].normal);
+
+			quad.sides[0].cross(quad.sides[1], p[1].normal);
+			p[1].dot = quad.pos.dot(p[1].normal);
+
+			// Calculate the intersection between the two planes
+			Line plane_intersection;
+			if (p[0].get_intersection(p[1], plane_intersection))
+			{
+				// The two parallelograms are not parallel or occupy the same plane
+				vec3i closest_on_quad;
+				quad.get_closest_point(plane_intersection, closest_on_quad);
+
+				get_closest_point(closest_on_quad, closest);
 			}
 			else
 			{
-				return false;
+				// The two parallelograms exist on parallel planes that do not intersect
 			}
 		}
 
-		void Ray::get_closest_point(const vec3i& point, vec3i& closest) const
+
+		
+		void Line::get(Int t, vec3i& point) const
 		{
-			closest = origin - point;
-			Int ab = closest.dot(direction);
-			Int bb = direction.square_sum();
-			
-			for (int k = 2; k >= 0; --k)
-				closest(k) += direction.get(k) * ab / bb;
+			point = origin + (direction * t);
+		}
+
+		void Line::get(const Frac& t, vec3i& point) const
+		{
+			point = origin + (direction * t);
+		}
+
+		void Line::get_closest_point(const vec3i& point, vec3i& closest) const
+		{
+			get(Frac(direction.dot(origin - point), direction.square_sum()), closest);
+		}
+
+
+		void Ray::get(Int t, vec3i& point) const
+		{
+			point = t <= 0 ? origin : (origin + (direction * t));
+		}
+
+		void Ray::get(const Frac& t, vec3i& point) const
+		{
+			if ((t.numerator < 0 && t.denominator > 0) || (t.numerator > 0 && t.denominator < 0))
+				point = origin;
+			else
+				point = origin + (direction * t);
+		}
+
+
+		void Segment::get(Int t, vec3i& point) const
+		{
+			point = t <= 0 ? origin : (origin + direction);
+		}
+
+		void Segment::get(const Frac& t, vec3i& point) const
+		{
+			// t < 0
+			if ((t.numerator < 0 && t.denominator > 0) || (t.numerator > 0 && t.denominator < 0))
+				point = origin;
+
+			// t > 1
+			else if (abs(t.numerator) > abs(t.denominator))
+				point = origin + direction;
+
+			// 0 <= t <= 1
+			else
+				point = origin + (direction * t);
 		}
 
 
@@ -283,35 +461,29 @@ namespace onion
 		{
 			m_Position = pos;
 		}
-		
-		bool Point::get_intersection(const Ray& ray) const
-		{
-			vec3i closest;
-			ray.get_closest_point(m_Position, closest);
-
-			return closest == m_Position;
-		}
-
-		bool Point::get_intersection(const Shape* shape) const
-		{
-			vec3i p;
-			shape->get_closest_point(m_Position, p);
-			return p == m_Position;
-		}
 
 		void Point::get_closest_point(const vec3i& pos, vec3i& closest) const
 		{
 			closest = m_Position;
 		}
 
-		void Point::get_closest_point(const Ray& ray, vec3i& closest) const
+		void Point::get_closest_point(const Line& line, vec3i& closest) const
 		{
 			closest = m_Position;
 		}
 
-		void Point::get_closest_point(const Plane& plane, vec3i& closest) const
+		void Point::get_closest_point(const Parallelogram& quad, vec3i& closest) const
 		{
 			closest = m_Position;
+		}
+
+		Int Point::get_distance(const Shape* other) const
+		{
+			vec3i diff;
+			other->get_closest_point(m_Position, diff);
+			diff -= m_Position;
+
+			return diff.square_sum();
 		}
 
 
@@ -319,33 +491,6 @@ namespace onion
 		{
 			m_Position = pos;
 			m_RadiusSquared = radius * radius;
-		}
-		
-		bool Sphere::get_intersection(const Ray& ray) const
-		{
-			// Check if the origin is inside or on the sphere
-			vec3i diff = ray.origin - m_Position;
-
-			if (diff.square_sum() <= m_RadiusSquared)
-			{
-				return true;
-			}
-			else
-			{
-				ray.get_closest_point(m_Position, diff);
-				
-				diff -= m_Position;
-				return diff.square_sum() <= m_RadiusSquared;
-			}
-		}
-
-		bool Sphere::get_intersection(const Shape* shape) const
-		{
-			vec3i p;
-			shape->get_closest_point(m_Position, p);
-			p -= m_Position;
-
-			return p.square_sum() <= m_RadiusSquared;
 		}
 
 		void Sphere::get_closest_point(const vec3i& pos, vec3i& closest) const
@@ -364,32 +509,26 @@ namespace onion
 			}
 		}
 
-		void Sphere::get_closest_point(const Ray& ray, vec3i& closest) const
+		void Sphere::get_closest_point(const Line& line, vec3i& closest) const
 		{
-			vec3i diff = ray.origin - m_Position;
-			if (diff.square_sum() < m_RadiusSquared)
-			{
-				closest = ray.origin;
-				return;
-			}
-
-			Frac t(diff.dot(ray.direction), ray.direction.square_sum());
-			vec3i to_closest_on_line = diff + (ray.direction * t);
+			vec3i diff;
+			line.get_closest_point(m_Position, diff);
+			diff -= m_Position;
 
 			vec3f dir;
-			to_closest_on_line.normalize(dir);
-			dir *= sqrtf(m_RadiusSquared);
+			diff.normalize(dir);
+			dir *= (Float)sqrtf(m_RadiusSquared);
 
 			closest = m_Position;
 			for (int k = 2; k >= 0; --k)
 				closest(k) += (Int)round(dir.get(k));
 		}
 
-		void Sphere::get_closest_point(const Plane& plane, vec3i& closest) const
+		void Sphere::get_closest_point(const Parallelogram& quad, vec3i& closest) const
 		{
 			// Calculate the closest point on the plane to the center of the sphere
 			vec3i dir;
-			plane.get_closest_point(m_Position, dir);
+			quad.get_closest_point(m_Position, dir);
 
 			// Calculate the direction from the sphere to the plane
 			dir -= m_Position;
@@ -403,18 +542,28 @@ namespace onion
 				// Scale the direction to have length equal to the radius of the sphere
 				vec3f dir_f;
 				dir.normalize(dir_f);
-				dir_f *= sqrtf(m_RadiusSquared);
+				dir_f *= (Float)sqrtf(m_RadiusSquared);
 
 				// Convert to integers
 				closest = m_Position;
 				for (int k = 2; k >= 0; --k)
 				{
-					closest(k) += (Int)(dir.get(k) < 0 
-						? ceil(dir_f.get(k)) 
+					closest(k) += (Int)(dir.get(k) < 0
+						? ceil(dir_f.get(k))
 						: floor(dir_f.get(k))
-					);
+						);
 				}
 			}
+		}
+
+		Int Sphere::get_distance(const Shape* other) const
+		{
+			vec3i diff;
+			other->get_closest_point(m_Position, diff);
+			diff -= m_Position;
+
+			Int dist = diff.square_sum() - m_RadiusSquared;
+			return dist < 0 ? 0 : dist;
 		}
 
 
@@ -424,79 +573,15 @@ namespace onion
 			m_Dimensions = dimensions;
 		}
 
-		bool RectangularPrism::get_intersection(const Ray& ray) const
-		{
-			// Check if the ray's origin is in the bounds
-			for (int k = 0; k <= 3; ++k)
-			{
-				if (k == 3)
-				{
-					return true;
-				}
-
-				if (ray.origin.get(k) < m_Position.get(k) || ray.origin.get(k) > m_Position.get(k) + m_Dimensions.get(k))
-					break;
-			}
-
-			// Check the intersection of the ray with each planar face of the prism
-			for (int k = 0; k < 3; ++k)
-			{
-				Plane plane;
-				plane.normal(k) = 1;
-
-				if (ray.origin.get(k) <= m_Position.get(k) && ray.direction.get(k) > 0)
-				{
-					plane.dot = m_Position.get(k);
-				}
-				else if (ray.origin.get(k) >= m_Position.get(k) + m_Dimensions.get(k) && ray.direction.get(k) < 0)
-				{
-					plane.dot = m_Position.get(k) + m_Dimensions.get(k);
-				}
-				else
-				{
-					continue;
-				}
-
-				vec3i intersection;
-				if (ray.get_intersection(plane, intersection))
-				{
-					int k1 = (k + 1) % 3, k2 = (k + 2) % 3;
-					if (intersection.get(k1) >= m_Position.get(k1)
-						&& intersection.get(k1) <= m_Position.get(k1) + m_Dimensions.get(k1)
-						&& intersection.get(k2) >= m_Position.get(k2)
-						&& intersection.get(k2) <= m_Position.get(k2) + m_Dimensions.get(k2))
-						return true;
-				}
-			}
-
-			return false;
-		}
-
-		bool RectangularPrism::get_intersection(const Shape* shape) const
+		void RectangularPrism::clamp(vec3i& point) const
 		{
 			for (int k = 2; k >= 0; --k)
 			{
-				// Construct a plane aligned with the k-th axis that cuts through the center of the prism
-				vec3i normal;
-				normal(k) = 1;
-
-				Plane plane = {
-					normal,
-					m_Position.get(k) + (m_Dimensions.get(k) / 2)
-				};
-
-				// Find the closest point on the shape to the midplane
-				vec3i closest;
-				shape->get_closest_point(plane, closest);
-
-				// 
-				if (closest.get(k) < m_Position.get(k)
-					|| closest.get(k) > m_Position.get(k) + m_Dimensions.get(k))
-					return false;
+				if (point.get(k) < m_Position.get(k))
+					point(k) = m_Position.get(k);
+				else if (point.get(k) > m_Position.get(k) + m_Dimensions.get(k))
+					point(k) = m_Position.get(k) + m_Dimensions.get(k);
 			}
-
-			// This is a heuristic; there are edge cases (like with a sphere) where you can get to this point with a shape that doesn't intersect the prism
-			return true;
 		}
 
 		void RectangularPrism::get_closest_point(const vec3i& pos, vec3i& closest) const
@@ -514,7 +599,7 @@ namespace onion
 			}
 		}
 
-		void RectangularPrism::get_closest_point(const Ray& ray, vec3i& closest) const
+		void RectangularPrism::get_closest_point(const Line& line, vec3i& closest) const
 		{
 			// TODO do this more efficiently?
 			Int smallest_dist = std::numeric_limits<Int>::max();
@@ -522,44 +607,36 @@ namespace onion
 			// Check the intersection of the ray with every planar edge, and see which intersection is the closest
 			for (int k = 2; k >= 0; --k)
 			{
-				if (ray.direction.get(k) != 0)
+				for (int m = 1; m >= 0; --m)
 				{
-					Plane p[2];
-					p[0].normal(k) = 1;
-					p[0].dot = m_Position.get(k) + m_Dimensions.get(k);
-					p[1].normal(k) = -1;
-					p[1].dot = -m_Position.get(k);
+					// Construct a parallelogram for the face
+					Parallelogram p;
 
-					for (int m = 1; m >= 0; --m)
-					{
-						vec3i closest_on_face;
-						if (ray.get_intersection(p[m], closest_on_face))
-						{
-							for (int n = 2; n >= 0; --n)
-							{
-								if (closest_on_face.get(n) < m_Position.get(n))
-									closest_on_face(n) = m_Position.get(n);
-								else if (closest_on_face.get(n) > m_Position.get(n) + m_Dimensions.get(n))
-									closest_on_face(n) = m_Position.get(n) + m_Dimensions.get(n);
-							}
+					p.pos = m_Position;
+					if (m == 1)
+						p.pos(k) += m_Dimensions.get(k);
 
-							vec3i diff;
-							ray.get_closest_point(closest_on_face, diff);
-							diff -= closest_on_face;
-							
-							Int dist = diff.square_sum();
-							if (dist < smallest_dist)
-							{
-								closest = closest_on_face;
-								smallest_dist = dist;
-							}
-						}
-					}
+					p.sides[0]((k + 1) % 3) = m_Dimensions.get((k + 1) % 3);
+					p.sides[1]((k + 2) % 3) = m_Dimensions.get((k + 2) % 3);
+
+					// Calculate the closest point to the line on that face
+					vec3i closest_on_face;
+					p.get_closest_point(line, closest_on_face);
+
+					// Calculate the difference between the face and the line
+					vec3i diff;
+					line.get_closest_point(closest_on_face, diff);
+					diff -= closest_on_face;
+
+					// Calculate the distance from the line
+					Int dist = diff.square_sum();
+					if (dist < smallest_dist)
+						smallest_dist = dist;
 				}
 			}
 		}
 
-		void RectangularPrism::get_closest_point(const Plane& plane, vec3i& closest) const
+		void RectangularPrism::get_closest_point(const Parallelogram& quad, vec3i& closest) const
 		{
 			Int smallest_dist = std::numeric_limits<Int>::max();
 
@@ -567,84 +644,82 @@ namespace onion
 			{
 				for (int m = 1; m >= 0; --m)
 				{
-					Plane p;
-					p.normal(k) = 1;
-					p.dot = m_Position.get(k) + (m * m_Dimensions.get(k));
-
-					Ray intersection;
-					plane.get_intersection(p, intersection);
-
-					// TODO this next bit is a heuristic, figure out a better way to do it!
-					vec3i closest_on_ray;
-					intersection.get_closest_point(m_Position + (m_Dimensions / 2), closest_on_ray);
-
-					vec3i diff;
-					for (int n = 2; n >= 0; --n)
+					// Construct the parallelogram for the face
+					Parallelogram p =
 					{
-						if (closest_on_ray.get(n) < m_Position.get(n))
-							diff(n) = m_Position.get(n) - closest_on_ray.get(n);
-						else if (closest_on_ray.get(n) > m_Position.get(n) + m_Dimensions.get(n))
-							diff(n) = m_Position.get(n) + m_Dimensions.get(n) - closest_on_ray.get(n);
-						else
-							diff(n) = 0;
-					}
+						m_Position,
+						{
+							vec3i(0, 0, 0),
+							vec3i(0, 0, 0)
+						}
+					};
+					if (m > 0)
+						p.pos(k) += m_Dimensions.get(k);
+					p.sides[0]((k + 1) % 3) = m_Dimensions.get((k + 1) % 3);
+					p.sides[1]((k + 2) % 3) = m_Dimensions.get((k + 2) % 3);
 
+					// Calculate the closest point on the face
+					vec3i closest_on_face;
+					p.get_closest_point(quad, closest_on_face);
+					vec3i diff;
+					quad.get_closest_point(closest_on_face, diff);
+					diff -= closest_on_face;
+
+					// Calculate distance between the face and the parallelogram
 					Int dist = diff.square_sum();
 					if (dist < smallest_dist)
 					{
-						closest = diff + closest_on_ray;
+						closest = closest_on_face;
 						smallest_dist = dist;
 					}
 				}
 			}
 		}
 
-
-		Rectangle::Rectangle(const vec3i& pos, const vec3i& dimensions)
+		Int RectangularPrism::get_distance(const Shape* other) const
 		{
-			m_Position = pos;
-			m_Dimensions = dimensions;
-		}
+			Int smallest_dist = std::numeric_limits<Int>::max();
 
-		bool Rectangle::get_intersection(const Ray& ray) const
-		{
-			Plane plane = {
-				vec3i(-m_Dimensions.get(1), m_Dimensions.get(0), 0),
-				(m_Dimensions.get(0) * m_Position.get(1)) - (m_Dimensions.get(1) * m_Position.get(0))
-			};
-
-			vec3i intersection;
-			if (ray.get_intersection(plane, intersection))
+			for (int k = 2; k >= 0; --k)
 			{
-				// Check if the intersection lies within the rectangle
-				for (int k = 2; k >= 0; --k)
-					if (intersection.get(k) < m_Position.get(k) || intersection.get(k) > m_Position.get(k) + m_Dimensions.get(k))
-						return false;
-				return true;
+				for (int m = 1; m >= 0; --m)
+				{
+					Parallelogram p = 
+					{
+						m_Position,
+						{
+							vec3i(0, 0, 0),
+							vec3i(0, 0, 0)
+						}
+					};
+					if (m > 0)
+						p.pos(k) += m_Dimensions.get(k);
+					p.sides[0]((k + 1) % 3) = m_Dimensions.get((k + 1) % 3);
+					p.sides[1]((k + 2) % 3) = m_Dimensions.get((k + 2) % 3);
+
+					vec3i diff;
+					other->get_closest_point(p, diff);
+					for (int n = 2; n >= 0; --n)
+					{
+						if (diff.get(n) < m_Position.get(n))
+							diff(n) -= m_Position.get(n);
+						else if (diff.get(n) > m_Position.get(n) + m_Dimensions.get(n))
+							diff(n) -= m_Position.get(n) + m_Dimensions.get(n);
+						else
+							diff(n) = 0;
+					}
+
+					Int dist = diff.square_sum();
+					if (dist < smallest_dist)
+						smallest_dist = dist;
+				}
 			}
 
-			return false;
+			return smallest_dist;
 		}
 
-		bool Rectangle::get_intersection(const Shape* shape) const
-		{
-			Plane plane = {
-				vec3i(-m_Dimensions.get(1), m_Dimensions.get(0), 0),
-				(m_Position.get(1) * m_Dimensions.get(0)) - (m_Position.get(0) * m_Dimensions.get(1))
-			};
 
-			vec3i closest;
-			shape->get_closest_point(plane, closest);
-
-			if (closest.dot(plane.normal) == plane.dot) // TODO there are cases where the shape might intersect but this returns false just due to dealing with integers
-			{
-				// Ensure closest point lies within rectangle
-				for (int k = 2; k >= 0; --k)
-					if (closest.get(k) < m_Position.get(k) || closest.get(k) > m_Position.get(k) + m_Dimensions.get(k))
-						return false;
-				return true;
-			}
-		}
+		Rectangle::Rectangle(const vec3i& pos, const vec3i& dimensions) : RectangularPrism(pos, dimensions) {}
 
 		void Rectangle::get_closest_point(const vec3i& pos, vec3i& closest) const
 		{
@@ -655,109 +730,69 @@ namespace onion
 			);
 
 			closest = m_Position - (m_Dimensions * t);
+			closest(2) = pos.get(2);
 
 			// Clamp the closest point to the bounds of the rectangle
-			for (int k = 1; k >= 0; --k)
-			{
-				if (closest.get(k) < m_Position.get(k))
-					closest(k) = m_Position.get(k);
-				else if (closest.get(k) > m_Position.get(k) + m_Dimensions.get(k))
-					closest(k) = m_Position.get(k) + m_Dimensions.get(k);
-			}
-			
-			// Determine the z-coordinate of the closest point
-			if (pos.get(2) < m_Position.get(2))
-				closest(2) = m_Position.get(2);
-			else if (pos.get(2) > m_Position.get(2) + m_Dimensions.get(2))
-				closest(2) = m_Position.get(2) + m_Dimensions.get(2);
-			else
-				closest(2) = pos.get(2);
+			clamp(closest);
 		}
 
-		void Rectangle::get_closest_point(const Ray& ray, vec3i& closest) const
+		void Rectangle::get_closest_point(const Line& line, vec3i& closest) const
 		{
-			// Find the intersection between the ray and the plane that the rectangle is on
-			Frac t(
-				(m_Dimensions.get(1) * (m_Position.get(0) - ray.origin.get(0))) - (m_Dimensions.get(0) * (m_Position.get(1) - ray.origin.get(1))),
-				(m_Dimensions.get(1) * ray.direction.get(0)) - (m_Dimensions.get(0) * ray.direction.get(1))
-			);
-
-			if (t.denominator == 0)
+			// Find the intersection between the line and the plane that the rectangle is on
+			if (Int denom = (m_Dimensions.get(1) * line.direction.get(0)) - (m_Dimensions.get(0) * line.direction.get(1)))
 			{
-				// Ray is parallel to the plane that the rectangle is on, so just return the closest point to the origin
-				get_closest_point(ray.origin, closest);
+				Frac t(
+					(m_Dimensions.get(1) * (m_Position.get(0) - line.origin.get(0))) - (m_Dimensions.get(0) * (m_Position.get(1) - line.origin.get(1))),
+					denom
+				);
+
+				line.get(t, closest);
+				clamp(closest);
 			}
 			else
 			{
-				closest = ray.origin + (ray.direction * t);
-				for (int k = 2; k >= 0; --k)
-				{
-					// Clamp the closest point to the bounds of the rectangle
-					if (closest.get(k) < m_Position.get(k))
-						closest(k) = m_Position.get(k);
-					else if (closest.get(k) > m_Position.get(k) + m_Dimensions.get(k))
-						closest(k) = m_Position.get(k) + m_Dimensions.get(k);
-				}
+				// Line is parallel to the plane that the rectangle is on, so just return the closest point to the origin
+				get_closest_point(line.origin, closest);
 			}
 		}
 
-		void Rectangle::get_closest_point(const Plane& plane, vec3i& closest) const
+		void Rectangle::get_closest_point(const Parallelogram& quad, vec3i& closest) const
 		{
-			// Calculate the line that forms the intersection between the given plane and the plane this rectangle is on
-			// If there is a free variable, set it equal to the midpoint of the rectangle
-			vec3i normal(-m_Dimensions.get(1), m_Dimensions.get(0), 0);
-
-			if (normal.get(0) == 0)
+			// Construct the parallelogram that constitutes the bounds of the rectangle
+			Parallelogram p =
 			{
-				closest(1) = m_Position.dot(normal) / normal.get(1);
-
-				Int Z = normal.get(1) * plane.normal.get(2);
-				Int D = (normal.get(1) * plane.dot) - (m_Position.dot(normal) * plane.normal.get(1));
-
-				if (plane.normal.get(0) == 0)
+				m_Position,
 				{
-					closest(0) = m_Position.get(0) + (m_Dimensions.get(0) / 2);
-					closest(2) = D / Z;
+					vec3i(m_Dimensions.get(0), m_Dimensions.get(1), 0),
+					vec3i(0, 0, m_Dimensions.get(2))
 				}
-				else
+			};
+
+			// Use the parallelogram to get the closest point
+			p.get_closest_point(quad, closest);
+		}
+
+		Int Rectangle::get_distance(const Shape* other) const
+		{
+			// Calculate the closest point to the rectangle on the other shape
+			Parallelogram quad = {
+				m_Position,
 				{
-					closest(2) = m_Position.get(2) + (m_Dimensions.get(2) / 2);
-					closest(0) = (D - (closest.get(2) * Z)) / (plane.normal.get(0) * normal.get(1));
+					vec3i(m_Dimensions.get(0), m_Dimensions.get(1), 0),
+					vec3i(0, 0, m_Dimensions.get(2))
 				}
-			}
-			else if (Int Y = (normal.get(0) * plane.normal.get(1)) - (normal.get(1) * plane.normal.get(0)))
-			{
-				closest(2) = m_Position.get(2) + (m_Dimensions.get(2) / 2);
+			};
 
-				Int Z = normal.get(0) * plane.normal.get(2);
-				Int D = (normal.get(0) * plane.dot) - (m_Position.dot(normal) * plane.normal.get(0));
+			vec3i closest_on_other;
+			other->get_closest_point(quad, closest_on_other);
 
-				closest(1) = (D - (closest.get(2) * Z)) / Y;
-				
-				Z = -Z * normal.get(1);
-				D = (m_Position.dot(normal) * Y) - (D * normal.get(1));
-				Int X = normal.get(0) * Y;
+			// Calculate the closest point to that point
+			vec3i closest_on_rectangle;
+			get_closest_point(closest_on_other, closest_on_rectangle);
 
-				closest(0) = (D - (closest.get(2) * Z)) / X;
-			}
-			else
-			{
-				Int Z = normal.get(0) * plane.normal.get(2);
-				Int D = (normal.get(0) * plane.dot) - (m_Position.dot(normal) * plane.normal.get(0));
-
-				closest(2) = D / Z;
-				closest(1) = m_Position.get(1) + (m_Dimensions.get(1) / 2);
-				closest(0) = (m_Position.dot(normal) - (closest.get(1) * normal.get(1))) / normal.get(0);
-			}
-
-			// Clamp closest point to inside of rectangle
-			for (int k = 2; k >= 0; --k)
-			{
-				if (closest.get(k) < m_Position.get(k))
-					closest(k) = m_Position.get(k);
-				else if (closest.get(k) > m_Position.get(k) + m_Dimensions.get(k))
-					closest(k) = m_Position.get(k) + m_Dimensions.get(k);
-			}
+			// Calculate the (squared) distance between the two points
+			vec3i diff = closest_on_rectangle - closest_on_other;
+			return diff.square_sum();
 		}
 
 	}

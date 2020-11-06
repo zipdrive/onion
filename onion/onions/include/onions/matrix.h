@@ -336,6 +336,10 @@ namespace onion
 #define INT_MAT3X4				matrix<Int, 3, 4>
 #define INT_MAT4				matrix<Int, 4, 4>
 
+#define FRAC_VEC2				matrix<Frac, 1, 2>
+#define FRAC_VEC3				matrix<Frac, 1, 3>
+#define FRAC_VEC4				matrix<Frac, 1, 4>
+
 #define UINT_VEC2				matrix<Uint, 1, 2>
 #define UINT_VEC3				matrix<Uint, 1, 3>
 #define UINT_VEC4				matrix<Uint, 1, 4>

@@ -40,13 +40,33 @@ namespace onion
 		// The denominator of the fraction.
 		Int denominator;
 
+		/// <summary>Constructs a fraction with 0 in the numerator and 1 in the denominator.</summary>
+		Frac();
+
 		/// <summary>Constructs a fraction.</summary>
 		/// <param name="numerator">The numerator of the fraction.</param>
 		/// <param name="denominator">The denominator of the fraction.</param>
-		Frac(Int numerator, Int denominator);
+		/// <param name="reduce">True if the fraction should be reduced, false otherwise.</param>
+		Frac(Int numerator, Int denominator, bool reduce = false);
+
+		/// <summary>Determines if the fraction is less than the given integer.</summary>
+		/// <param name="n">The integer to compare the fraction with.</param>
+		/// <returns>True if the fraction is less than the given integer, false otherwise.</returns>
+		bool operator<(Int n) const;
+
+		/// <summary>Determines if the fraction is greater than the given integer.</summary>
+		/// <param name="n">The integer to compare the fraction with.</param>
+		/// <returns>True if the fraction is less than the given integer, false otherwise.</returns>
+		bool operator>(Int n) const;
+
+		Frac& operator=(Int n);
+
+		Frac& operator=(const Frac& other);
 	};
 
 	Int operator*(Int lhs, const Frac& rhs);
+
+	Frac operator*(const Frac& lhs, const Frac& rhs);
 
 
 
