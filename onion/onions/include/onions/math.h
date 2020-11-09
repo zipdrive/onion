@@ -9,27 +9,6 @@ namespace onion
 	using Float = primitive<float>;
 	using Double = primitive<double>;
 
-	template <typename T, typename U>
-	struct _primitive_multiplication
-	{
-		using type = T;
-	};
-
-	template <typename T>
-	struct _primitive_multiplication<T, Float>
-	{
-		using type = Float;
-	};
-
-	template <>
-	struct _primitive_multiplication<Uint, Int>
-	{
-		using type = Int;
-	};
-
-	template <typename T, typename U>
-	using primitive_multiplication = typename _primitive_multiplication<T, U>::type;
-
 
 
 	struct Frac
@@ -59,6 +38,18 @@ namespace onion
 		/// <returns>True if the fraction is less than the given integer, false otherwise.</returns>
 		bool operator>(Int n) const;
 
+		/// <summary>Determines if the fraction is less than or equal to the given integer.</summary>
+		/// <param name="n">The integer to compare the fraction with.</param>
+		/// <returns>True if the fraction is less than the given integer, false otherwise.</returns>
+		bool operator<=(Int n) const;
+
+		/// <summary>Determines if the fraction is greater than or equal to the given integer.</summary>
+		/// <param name="n">The integer to compare the fraction with.</param>
+		/// <returns>True if the fraction is less than the given integer, false otherwise.</returns>
+		bool operator>=(Int n) const;
+
+
+
 		Frac& operator=(Int n);
 
 		Frac& operator=(const Frac& other);
@@ -67,6 +58,36 @@ namespace onion
 	Int operator*(Int lhs, const Frac& rhs);
 
 	Frac operator*(const Frac& lhs, const Frac& rhs);
+
+	
+
+
+	template <typename T, typename U>
+	struct _primitive_arithmetic
+	{
+		using type = T;
+	};
+
+	template <typename T>
+	struct _primitive_arithmetic<T, Float>
+	{
+		using type = Float;
+	};
+
+	template <>
+	struct _primitive_arithmetic<Uint, Int>
+	{
+		using type = Int;
+	};
+
+	template <>
+	struct _primitive_arithmetic<Int, Frac>
+	{
+		using type = Int;
+	};
+
+	template <typename T, typename U>
+	using primitive_arithmetic = typename _primitive_arithmetic<T, U>::type;
 
 
 

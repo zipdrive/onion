@@ -6,35 +6,14 @@ namespace onion
 	namespace world
 	{
 
-		bool WorldCamera::View::is_visible(const vec3i& pos) const
-		{
-			for (int k = 3; k >= 0; --k)
-				if (edges[k].normal.dot(pos) < edges[k].dot)
-					return false;
-			return true;
-		}
-
-		bool WorldCamera::View::is_visible(const Shape* shape) const
-		{
-			// Get the closest point in the shape to the center of the screen
-			vec3i closest;
-			shape->get_closest_point(center, closest);
-
-			// Calculate whether that point is visible
-			return is_visible(closest);
-		}
-
-
+		WorldCamera::View::View(const mat2x3i& frame_bounds) : m_FrameBounds(frame_bounds) {}
+		
+		
 		WorldCamera::WorldCamera(const mat2x3i& frame_bounds) : m_FrameBounds(frame_bounds) {}
 		
 		const vec3i& WorldCamera::get_position() const
 		{
 			return m_Position;
-		}
-
-		const WorldCamera::View& WorldCamera::get_view() const
-		{
-			return m_View;
 		}
 		
 		void WorldCamera::set_position(const vec3i& position)
@@ -46,11 +25,6 @@ namespace onion
 		{
 			vec3i prior = m_Position;
 			vec3i current = prior + trans;
-			for (int k = 2; k >= 0; --k)
-			{
-				prior(k) /= UNITS_PER_PIXEL;
-				current(k) /= UNITS_PER_PIXEL;
-			}
 
 			vec3i diff = current - prior;
 			if (diff.square_sum() > 0 && is_active())
@@ -64,41 +38,125 @@ namespace onion
 
 
 
-		StaticTopDownWorldCamera::StaticTopDownWorldCamera(const mat2x3i& frame_bounds) : WorldCamera(frame_bounds) {}
+		StaticTopDownWorldCamera::StaticTopDownView::StaticTopDownView(const mat2x3i& frame_bounds) : View(frame_bounds) {}
+		
+		vec3i StaticTopDownWorldCamera::StaticTopDownView::get_position() const
+		{
+			return m_Position;
+		}
+
+		void StaticTopDownWorldCamera::StaticTopDownView::set_position(const vec3i& pos)
+		{
+			const vec3i halves(
+				(m_FrameBounds.get(0, 1) - m_FrameBounds.get(0, 0)) / 2,
+				(m_FrameBounds.get(1, 1) - m_FrameBounds.get(1, 0)) / 2,
+				0
+			);
+
+			m_Position = pos - halves - (get_normal() * pos.get(2));
+		}
+
+		void StaticTopDownWorldCamera::StaticTopDownView::translate(const vec3i& trans)
+		{
+			m_Position += vec2i(trans - (get_normal() * trans.get(2)));
+		}
+
+		vec3i StaticTopDownWorldCamera::StaticTopDownView::get_normal() const
+		{
+			static const vec3i normal(0, -1, 1);
+			return normal;
+		}
+
+		vec3i StaticTopDownWorldCamera::StaticTopDownView::support(const vec3i& dir) const
+		{
+			const Int near = m_FrameBounds.get(2, 1) - m_FrameBounds.get(2, 0);
+			const vec3i n(0, -near, near);
+
+			vec3i res;
+			Int d_max = std::numeric_limits<Int>::min();
+
+			for (int c = 7; c >= 0; --c)
+			{
+				vec3i p(m_Position, 0);
+
+				if (c % 2 == 0)
+					p(0) += m_FrameBounds.get(0, 1) - m_FrameBounds.get(0, 0);
+				if ((c / 2) % 2 == 0)
+					p(1) += m_FrameBounds.get(1, 1) - m_FrameBounds.get(1, 0);
+				if (c / 4 == 0)
+					p += n;
+
+				Int d = p.dot(dir);
+				if (d > d_max)
+				{
+					res = p;
+					d_max = d;
+				}
+			}
+
+			return res;
+		}
+
+		bool StaticTopDownWorldCamera::StaticTopDownView::compare(const Shape* lhs, const Shape* rhs) const
+		{
+			const Int near = m_FrameBounds.get(2, 1) - m_FrameBounds.get(2, 0);
+			const vec3i n(0, -near, near);
+			const vec3i dx(m_FrameBounds.get(0, 1) - m_FrameBounds.get(0, 0), 0, 0);
+			const vec3i dy(0, m_FrameBounds.get(1, 1) - m_FrameBounds.get(1, 0), 0);
+
+			// Check if the highest z-coordinate of lhs is below the lowest z-coordinate of rhs
+			Parallelogram r(m_Position, dx, dy);
+			Parallelogram t(vec3i(m_Position, 0) + n, dx, dy);
+			Int dl = near - t.get_distance(lhs);
+			Int dr = r.get_distance(rhs);
+			if (dl <= dr)
+			{
+				return true;
+			}
+
+			// Check if the highest z-coordinate of rhs is below the lowest z-coordinate of lhs
+			dl = r.get_distance(lhs);
+			dr = near - t.get_distance(rhs);
+			if (dr <= dl)
+			{
+				return false;
+			}
+
+			// Check if rhs is closer to the bottom of the screen than lhs
+			r = Parallelogram(m_Position, dx, n);
+			dl = r.get_distance(lhs);
+			dr = r.get_distance(rhs);
+			if (dr < dl)
+				return true;
+			else if (dl < dr)
+				return false;
+
+			// Check if rhs is closer to the left side of the screen than lhs
+			r = Parallelogram(m_Position, dy, n);
+			dl = r.get_distance(lhs);
+			dr = r.get_distance(rhs);
+			if (dr < dl)
+				return true;
+			return false;
+		}
+		
+		
+		StaticTopDownWorldCamera::StaticTopDownWorldCamera(const mat2x3i& frame_bounds) : WorldCamera(frame_bounds), m_View(frame_bounds) {}
+
+		void StaticTopDownWorldCamera::translate(const vec3i& trans)
+		{
+			WorldCamera::translate(trans);
+			m_View.translate(trans);
+		}
+
+		const WorldCamera::View* StaticTopDownWorldCamera::get_view() const
+		{
+			return &m_View;
+		}
 
 		void StaticTopDownWorldCamera::reset_view()
 		{
-			vec3i halves(
-				(m_FrameBounds.get(0, 1) - m_FrameBounds.get(0, 0)) / 2,
-				(m_FrameBounds.get(1, 1) - m_FrameBounds.get(1, 0)) / 2,
-				(m_FrameBounds.get(2, 1) - m_FrameBounds.get(2, 0)) / 2
-			);
-
-			// Construct a raycast through the center of the screen
-			m_View.center.origin = UNITS_PER_PIXEL * m_Position;
-			m_View.center.direction = vec3i(0, -1, 1);
-
-			// Construct a position for the bottom-left and top-right corners
-			vec3i bottom_left = m_Position - halves;
-			bottom_left(2) = m_Position.get(2);
-			vec3i top_right = m_Position + halves;
-			top_right(2) = m_Position.get(2);
-
-			// Construct the plane for the left edge
-			m_View.edges[LEFT_VIEW_EDGE].normal = vec3i(1, 0, 0);
-			m_View.edges[LEFT_VIEW_EDGE].dot = UNITS_PER_PIXEL * m_View.edges[LEFT_VIEW_EDGE].normal.dot(bottom_left);
-
-			// Construct the plane for the right edge
-			m_View.edges[RIGHT_VIEW_EDGE].normal = vec3i(-1, 0, 0);
-			m_View.edges[RIGHT_VIEW_EDGE].dot = UNITS_PER_PIXEL * m_View.edges[RIGHT_VIEW_EDGE].normal.dot(top_right);
-
-			// Construct the plane for the top edge
-			m_View.edges[TOP_VIEW_EDGE].normal = vec3i(0, -1, -1);
-			m_View.edges[TOP_VIEW_EDGE].dot = UNITS_PER_PIXEL * m_View.edges[TOP_VIEW_EDGE].normal.dot(top_right);
-
-			// Construct the plane for the bottom edge
-			m_View.edges[BOTTOM_VIEW_EDGE].normal = vec3i(0, 1, 1);
-			m_View.edges[BOTTOM_VIEW_EDGE].dot = UNITS_PER_PIXEL * m_View.edges[BOTTOM_VIEW_EDGE].normal.dot(bottom_left);
+			m_View.set_position(m_Position);
 		}
 		
 		void StaticTopDownWorldCamera::__activate()
@@ -132,13 +190,114 @@ namespace onion
 			reset_view();
 		}
 
-		void StaticTopDownWorldCamera::get_view(vec2i& direction) const
+
+
+
+		DynamicAxonometricWorldCamera::DynamicAxonometricView::DynamicAxonometricView(const mat2x3i& frame_bounds) : View(frame_bounds) {}
+
+		vec3i DynamicAxonometricWorldCamera::DynamicAxonometricView::get_position() const
 		{
-			direction = vec2i(0, -1);
+			return m_Position;
+		}
+
+		void DynamicAxonometricWorldCamera::DynamicAxonometricView::set_position(const vec3i& pos)
+		{
+			// TODO
+			const vec3i halves(
+				(m_FrameBounds.get(0, 1) - m_FrameBounds.get(0, 0)) / 2,
+				(m_FrameBounds.get(1, 1) - m_FrameBounds.get(1, 0)) / 2,
+				0
+			);
+
+			m_Position = pos - halves - (get_normal() * pos.get(2));
+		}
+
+		void DynamicAxonometricWorldCamera::DynamicAxonometricView::translate(const vec3i& trans)
+		{
+			m_Position += vec2i(trans - (get_normal() * trans.get(2)));
+		}
+
+		vec3i DynamicAxonometricWorldCamera::DynamicAxonometricView::get_normal() const
+		{
+			return m_Normal;
+		}
+
+		vec3i DynamicAxonometricWorldCamera::DynamicAxonometricView::support(const vec3i& dir) const
+		{
+			const vec3i n = m_Normal * Frac(m_FrameBounds.get(2, 1) - m_FrameBounds.get(2, 0), m_Normal.get(2));
+
+			vec3i res;
+			Int d_max = std::numeric_limits<Int>::min();
+
+			for (int c = 7; c >= 0; --c)
+			{
+				vec3i p(m_Position, 0);
+
+				if (c % 2 == 0)
+					p += vec3i(m_Radii[0], 0);
+				if ((c / 2) % 2 == 0)
+					p += vec3i(m_Radii[1], 0);
+				if (c / 4 == 0)
+					p += m_Normal;
+
+				Int d = p.dot(dir);
+				if (d > d_max)
+				{
+					res = p;
+					d_max = d;
+				}
+			}
+
+			return res;
+		}
+
+		bool DynamicAxonometricWorldCamera::DynamicAxonometricView::compare(const Shape* lhs, const Shape* rhs) const
+		{
+			// TODO
+
+			const Int near = m_FrameBounds.get(2, 1) - m_FrameBounds.get(2, 0);
+			const vec3i n(0, -near, near);
+			const vec3i dx(m_FrameBounds.get(0, 1) - m_FrameBounds.get(0, 0), 0, 0);
+			const vec3i dy(0, m_FrameBounds.get(1, 1) - m_FrameBounds.get(1, 0), 0);
+
+			// Check if the highest z-coordinate of lhs is below the lowest z-coordinate of rhs
+			Parallelogram r(m_Position, dx, dy);
+			Parallelogram t(vec3i(m_Position, 0) + n, dx, dy);
+			Int dl = near - t.get_distance(lhs);
+			Int dr = r.get_distance(rhs);
+			if (dl <= dr)
+			{
+				return true;
+			}
+
+			// Check if the highest z-coordinate of rhs is below the lowest z-coordinate of lhs
+			dl = r.get_distance(lhs);
+			dr = near - t.get_distance(rhs);
+			if (dr <= dl)
+			{
+				return false;
+			}
+
+			// Check if rhs is closer to the bottom of the screen than lhs
+			r = Parallelogram(m_Position, dx, n);
+			dl = r.get_distance(lhs);
+			dr = r.get_distance(rhs);
+			if (dr < dl)
+				return true;
+			else if (dl < dr)
+				return false;
+
+			// Check if rhs is closer to the left side of the screen than lhs
+			r = Parallelogram(m_Position, dy, n);
+			dl = r.get_distance(lhs);
+			dr = r.get_distance(rhs);
+			if (dr < dl)
+				return true;
+			return false;
 		}
 
 
-		DynamicAxonometricWorldCamera::DynamicAxonometricWorldCamera(const mat2x3i& frame_bounds, float top_view_angle, float side_view_angle) : m_TopViewAngle(top_view_angle), m_SideViewAngle(side_view_angle), WorldCamera(frame_bounds) {}
+		DynamicAxonometricWorldCamera::DynamicAxonometricWorldCamera(const mat2x3i& frame_bounds, float top_view_angle, float side_view_angle) : m_TopViewAngle(top_view_angle), m_SideViewAngle(side_view_angle), m_View(frame_bounds), WorldCamera(frame_bounds) {}
 
 		void DynamicAxonometricWorldCamera::reset_view()
 		{

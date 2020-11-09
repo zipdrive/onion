@@ -15,7 +15,7 @@ namespace onion
 			struct Block
 			{
 				// The cubic shape of the block.
-				RectangularPrism cube;
+				OrthogonalPrism cube;
 
 				// All static objects within the block.
 				std::unordered_set<Object*> objects;
@@ -81,13 +81,7 @@ namespace onion
 			struct ObjectComparer
 			{
 				// The view to use when comparing two objects.
-				static WorldCamera::View view;
-
-				/// <summary>Compares two objects using the WorldCamera::View stored.</summary>
-				/// <param name="lhs">One object to compare.</param>
-				/// <param name="rhs">The other object to compare.</param>
-				/// <returns>True if lhs is behind rhs, false otherwise.</returns>
-				static bool compare(const Object* lhs, const Object* rhs);
+				static const WorldCamera::View* view;
 
 				/// <summary>Compares two objects using the WorldCamera::View stored.</summary>
 				/// <param name="lhs">One object to compare.</param>
@@ -119,15 +113,15 @@ namespace onion
 
 			/// <summary>Resets what is visible, in response to a change in the camera view.</summary>
 			/// <param name="view">The geometry of what is visible.</param>
-			void reset_visible(const WorldCamera::View& view);
+			void reset_visible(const WorldCamera::View* view);
 
 			/// <summary>Updates which dynamic objects are visible, in response to the passage of time.</summary>
 			/// <param name="view">The geometry of what is visible.</param>
-			void update_visible(const WorldCamera::View& view, int frames_passed);
+			void update_visible(const WorldCamera::View* view, int frames_passed);
 
 			/// <summary>Displays all visible managed objects.</summary>
-			/// <param name="center">The ray from the camera position towards the camera.</param>
-			void display(const Ray& center) const;
+			/// <param name="normal">The direction facing towards the camera.</param>
+			void display(const vec3i& normal) const;
 		};
 
 	}

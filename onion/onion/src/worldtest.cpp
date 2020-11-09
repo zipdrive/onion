@@ -9,7 +9,7 @@ class TestTexturedObject : public world::Object
 public:
 	TestTexturedObject(const vec3i pos, const world::Textured3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite, const Texture* texture)
 		: world::Object(
-			new world::Rectangle(pos, vec3i(sprite->width, 0, sprite->height)),
+			new world::UprightRectangle(pos, vec3i(sprite->width, 0, sprite->height)),
 			new world::DynamicShadingSpriteGraphic3D(
 				sprite_sheet,
 				{ sprite },
@@ -62,7 +62,6 @@ public:
 	{
 		vec3i pos;
 		params.get("pos", pos);
-		pos = UNITS_PER_PIXEL * (INT_VEC3)pos;
 
 		return new TestTexturedObject(pos, m_SpriteSheet, m_Sprite, m_Texture);
 	}
@@ -101,9 +100,13 @@ public:
 	{
 		vec3i pos;
 		params.get("pos", pos);
-		pos *= UNITS_PER_PIXEL;
 
-		world::Actor* actor = new world::Actor(new world::Point(pos), new world::PlayerMovementControlledAgent(UNITS_PER_PIXEL * 32), new world::FlatWallGraphic3D(m_SpriteSheet, m_Sprite));
+		world::Actor* actor = new world::Actor(
+			new world::OrthogonalPrism(pos, vec3i(m_Sprite->width, m_Sprite->width / 2, m_Sprite->height)), 
+			new world::PlayerMovementControlledAgent(world::SubpixelHandler::num_subpixels * 32), 
+			new world::FlatWallGraphic3D(m_SpriteSheet, m_Sprite)
+		);
+
 		world::_Interactable::set_interactor(actor);
 		return actor;
 	}
@@ -133,7 +136,6 @@ public:
 	{
 		if (!params.get("interact_radius", m_MaximumRadius))
 			m_MaximumRadius = 0;
-		m_MaximumRadius *= UNITS_PER_PIXEL;
 
 		if (!params.get("priority", m_Priority))
 			m_Priority = std::numeric_limits<Int>::max();
@@ -143,7 +145,6 @@ public:
 	{
 		vec3i pos;
 		params.get("pos", pos);
-		pos = UNITS_PER_PIXEL * pos;
 
 		return new TestInteractableWall(pos, m_SpriteSheet, m_Sprite, m_MaximumRadius, m_Priority);
 	}

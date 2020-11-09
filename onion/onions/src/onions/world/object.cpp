@@ -41,7 +41,7 @@ namespace onion
 
 		bool Object::collision(Object* obj)
 		{
-			if (m_Bounds->get_intersection(obj->get_bounds()))
+			if (m_Bounds->get_distance(obj->get_bounds()) == 0)
 			{
 				return __collision(obj);
 			}
@@ -49,7 +49,7 @@ namespace onion
 			return false;
 		}
 
-		void Object::display(const Ray& center) const 
+		void Object::display(const vec3i& normal) const 
 		{
 			if (m_Graphic)
 			{
@@ -57,10 +57,10 @@ namespace onion
 
 				// Set up the transform
 				Transform::model.push();
-				Transform::model.translate(pos.get(0) / UNITS_PER_PIXEL, pos.get(1) / UNITS_PER_PIXEL, pos.get(2) / UNITS_PER_PIXEL);
+				Transform::model.translate(pos.get(0), pos.get(1), pos.get(2));
 
 				// Display the graphic
-				m_Graphic->display(center);
+				m_Graphic->display(normal);
 
 				// Clean up
 				Transform::model.pop();
@@ -141,13 +141,13 @@ namespace onion
 
 		XAlignedWall::XAlignedWall(const vec3i& pos, const Flat3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite) :
 			Wall(
-				new Rectangle(pos, vec3i(UNITS_PER_PIXEL * sprite->width, 0, UNITS_PER_PIXEL * sprite->height)),
+				new UprightRectangle(pos, vec3i(sprite->width, 0, sprite->height)),
 				(sprite_sheet != nullptr && sprite != nullptr) ? new FlatWallGraphic3D(sprite_sheet, sprite) : nullptr
 			) {}
 
 		YAlignedWall::YAlignedWall(const vec3i& pos, const Flat3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite) :
 			Wall(
-				new Rectangle(pos, vec3i(0, UNITS_PER_PIXEL * sprite->width, UNITS_PER_PIXEL * sprite->height)),
+				new UprightRectangle(pos, vec3i(0, sprite->width, sprite->height)),
 				(sprite_sheet != nullptr && sprite != nullptr) ? new TransformedFlatWallGraphic3D(sprite_sheet, sprite, vec2f(0.f, 1.f)) : nullptr
 			) {}
 

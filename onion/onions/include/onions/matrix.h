@@ -199,15 +199,9 @@ namespace onion
 
 		matrix()
 		{
-			for (int r = _Rows - 1; r >= 0; --r)
+			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
 			{
-				for (int c = _Columns - 1; c >= 0; --c)
-				{
-					if (r == c && _Rows == _Columns)
-						set(r, c, 1);
-					else
-						set(r, c, 0);
-				}
+				mat[k] = ((_Rows == _Columns) && (k % (_Rows + 1) == 0)) ? 1 : 0;
 			}
 		}
 	};
@@ -232,18 +226,18 @@ namespace onion
 	}
 
 	template <typename T, int _Columns, int _Rows>
-	matrix<primitive_multiplication<T, Int>, _Columns, _Rows> operator*(const matrix<T, _Columns, _Rows>& lhs, Int rhs)
+	matrix<primitive_arithmetic<T, Int>, _Columns, _Rows> operator*(const matrix<T, _Columns, _Rows>& lhs, Int rhs)
 	{
-		matrix<primitive_multiplication<T, Int>, _Columns, _Rows> res;
+		matrix<primitive_arithmetic<T, Int>, _Columns, _Rows> res;
 		for (int k = (_Columns * _Rows) - 1; k >= 0; --k)
 			res(k) = lhs.get(k) * rhs;
 		return res;
 	}
 
 	template <typename T, int _Columns, int _Rows>
-	matrix<primitive_multiplication<T, Int>, _Columns, _Rows> operator*(Int lhs, const matrix<T, _Columns, _Rows>& rhs)
+	matrix<primitive_arithmetic<T, Int>, _Columns, _Rows> operator*(Int lhs, const matrix<T, _Columns, _Rows>& rhs)
 	{
-		matrix<primitive_multiplication<T, Int>, _Columns, _Rows> res;
+		matrix<primitive_arithmetic<T, Int>, _Columns, _Rows> res;
 		for (int k = (_Columns * _Rows) - 1; k >= 0; --k)
 			res(k) = lhs * rhs.get(k);
 		return res;
@@ -259,9 +253,9 @@ namespace onion
 	}
 
 	template <typename T, typename U, int _Columns, int _Rows>
-	matrix<primitive_multiplication<T, U>, _Columns, _Rows> operator/(const matrix<T, _Columns, _Rows>& lhs, U rhs)
+	matrix<primitive_arithmetic<T, U>, _Columns, _Rows> operator/(const matrix<T, _Columns, _Rows>& lhs, U rhs)
 	{
-		matrix<primitive_multiplication<T, U>, _Columns, _Rows> res;
+		matrix<primitive_arithmetic<T, U>, _Columns, _Rows> res;
 		for (int k = (_Columns * _Rows) - 1; k >= 0; --k)
 			res(k) = lhs.get(k) / rhs;
 		return res;
@@ -270,9 +264,9 @@ namespace onion
 
 
 	template <typename T, typename U, int _Columns, int _Middle, int _Rows>
-	matrix<primitive_multiplication<T, U>, _Columns, _Rows> operator*(const matrix<T, _Middle, _Rows>& lhs, const matrix<U, _Columns, _Middle>& rhs)
+	matrix<primitive_arithmetic<T, U>, _Columns, _Rows> operator*(const matrix<T, _Middle, _Rows>& lhs, const matrix<U, _Columns, _Middle>& rhs)
 	{
-		matrix<primitive_multiplication<T, U>, _Columns, _Rows> res;
+		matrix<primitive_arithmetic<T, U>, _Columns, _Rows> res;
 		for (int i = _Rows - 1; i >= 0; --i)
 		{
 			for (int j = _Columns - 1; j >= 0; --j)
@@ -288,9 +282,9 @@ namespace onion
 	}
 
 	template <typename T, typename U, int _Rows>
-	matrix<primitive_multiplication<T, U>, 1, _Rows> operator*(const matrix<T, 1, _Rows>& lhs, const matrix<U, 1, _Rows>& rhs)
+	matrix<primitive_arithmetic<T, U>, 1, _Rows> operator*(const matrix<T, 1, _Rows>& lhs, const matrix<U, 1, _Rows>& rhs)
 	{
-		matrix<primitive_multiplication<T, U>, 1, _Rows> res;
+		matrix<primitive_arithmetic<T, U>, 1, _Rows> res;
 		for (int k = _Rows - 1; k >= 0; --k)
 			res(k) = lhs.get(k) * rhs.get(k);
 		return res;
@@ -375,9 +369,10 @@ namespace onion
 		/// <summary>Computes the dot product of two vectors.</summary>
 		/// <param name="other">The other vector.</param>
 		/// <returns>The dot product of the two vectors.</returns>
-		T dot(const matrix<T, 1, N>& other) const
+		template <typename U>
+		primitive_arithmetic<T, U> dot(const matrix<U, 1, N>& other) const
 		{
-			T sum = 0;
+			primitive_arithmetic<T, U> sum = 0;
 			for (int k = N - 1; k >= 0; --k)
 				sum += get(k) * other.get(k);
 			return sum;

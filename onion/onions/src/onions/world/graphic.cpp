@@ -256,7 +256,7 @@ namespace onion
 		
 		FlatWallGraphic3D::FlatWallGraphic3D(const Flat3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite) : SpriteGraphic3D<Flat3DPixelSpriteSheet>(sprite_sheet), m_Sprite(sprite) {}
 
-		void FlatWallGraphic3D::display(const Ray& center) const
+		void FlatWallGraphic3D::display(const vec3i& normal) const
 		{
 			m_SpriteSheet->display(m_Sprite);
 		}
@@ -279,7 +279,7 @@ namespace onion
 			m_Transform.rotatez(angle);
 		}
 
-		void TransformedFlatWallGraphic3D::display(const Ray& center) const
+		void TransformedFlatWallGraphic3D::display(const vec3i& normal) const
 		{
 			// Set up the transform
 			Transform::model.push();
@@ -304,7 +304,7 @@ namespace onion
 			m_SpriteIndex = 0;
 		}
 
-		void DynamicShadingSpriteGraphic3D::display(const Ray& center) const
+		void DynamicShadingSpriteGraphic3D::display(const vec3i& normal) const
 		{
 			m_SpriteSheet->display(m_Sprites[m_SpriteIndex], false, m_Texture, m_Palette);
 		}

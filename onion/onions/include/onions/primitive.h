@@ -15,6 +15,23 @@ namespace onion
 
 
 	template <typename T>
+	struct type_limits
+	{
+		/// <summary>Retrieves the minimum value of the primitive allowed.</summary>
+		static constexpr T min()
+		{
+			return std::numeric_limits<T>::min();
+		}
+
+		/// <summary>Retrieves the maximum value of the primitive allowed.</summary>
+		static constexpr T max()
+		{
+			return std::numeric_limits<T>::max();
+		}
+	};
+
+
+	template <typename T>
 	struct type_size
 	{
 		// The size of the primitive(s) that compose the type.

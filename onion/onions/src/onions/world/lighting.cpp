@@ -92,15 +92,15 @@ namespace onion
 
 
 		CubeLightObject::CubeLightObject(const vec3i& position, const vec3i& dimensions, const vec3f& color, Float intensity, Int radius) :
-			LightObject(new RectangularPrism(position, dimensions))
+			LightObject(new OrthogonalPrism(position, dimensions))
 		{
-			m_Light.mins = position / UNITS_PER_PIXEL;
-			m_Light.maxs = (position + dimensions) / UNITS_PER_PIXEL;
+			m_Light.mins = position;
+			m_Light.maxs = position + dimensions;
 
 			m_Light.color = color;
 			m_Light.intensity = intensity;
 
-			m_Light.radius = radius / UNITS_PER_PIXEL;
+			m_Light.radius = radius;
 		}
 
 		Lighting::Light* CubeLightObject::get_light()
@@ -112,7 +112,7 @@ namespace onion
 		CubeLightObjectGenerator::CubeLightObjectGenerator(std::string id, const StringData& params) : ObjectGenerator(id)
 		{
 			if (!params.get("size", m_Dimensions)) m_Dimensions = vec3i(0, 0, 0);
-			m_Dimensions = UNITS_PER_PIXEL * m_Dimensions;
+			m_Dimensions = m_Dimensions;
 
 			vec3i color;
 			if (!params.get("color", color)) color = vec3i(255, 255, 255);
@@ -123,7 +123,6 @@ namespace onion
 			m_Intensity = 0.01f * intensity;
 
 			if (!params.get("radius", m_Radius)) m_Radius = 0;
-			m_Radius *= UNITS_PER_PIXEL;
 		}
 		
 		Object* CubeLightObjectGenerator::generate(const StringData& params) const
@@ -132,7 +131,7 @@ namespace onion
 			params.get("pos", pos);
 
 			return new CubeLightObject(
-				UNITS_PER_PIXEL * pos,
+				pos,
 				m_Dimensions,
 				m_Color,
 				m_Intensity,
@@ -145,18 +144,14 @@ namespace onion
 		ConeLightObject::ConeLightObject(const vec3i& position, const vec3f& color, Float intensity, const vec3f& dir, Float angle, Int radius)
 			: LightObject(new Point(position))
 		{
-			m_Light.pos = vec3f(
-				position.get(0) / UNITS_PER_PIXEL,
-				position.get(1) / UNITS_PER_PIXEL,
-				position.get(2) / UNITS_PER_PIXEL
-			);
+			m_Light.pos = position;
 
 			m_Light.color = color;
 			m_Light.intensity = intensity;
 
 			dir.normalize(m_Light.dir);
 			m_Light.angle = angle;
-			m_Light.radius = radius / UNITS_PER_PIXEL;
+			m_Light.radius = radius;
 		}
 
 		Lighting::Light* ConeLightObject::get_light()
@@ -179,7 +174,6 @@ namespace onion
 			if (!params.get("angle", m_Angle)) m_Angle = 0;
 
 			if (!params.get("radius", m_Radius)) m_Radius = 0;
-			m_Radius *= UNITS_PER_PIXEL;
 		}
 
 		Object* ConeLightObjectGenerator::generate(const StringData& params) const
@@ -191,7 +185,7 @@ namespace onion
 			if (!params.get("dir", dir)) dir = vec3f(0.f, 0.f, -1.f);
 
 			return new ConeLightObject(
-				UNITS_PER_PIXEL * pos,
+				pos,
 				m_Color,
 				m_Intensity,
 				dir,

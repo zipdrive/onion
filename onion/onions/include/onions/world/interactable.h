@@ -51,23 +51,8 @@ namespace onion
 				{
 					if (m_Interactor)
 					{
-						// Calculate the (squared) distance between the interactor and this object
-						const Shape* interactor_bounds = m_Interactor->get_bounds();
-
-						vec3i pos[2];
-						interactor_bounds->get_closest_point(m_Bounds->get_position(), pos[0]);
-						m_Bounds->get_closest_point(interactor_bounds->get_position(), pos[1]);
-
-						vec3i closest[3];
-						closest[0] = pos[0] - m_Bounds->get_position();
-						closest[1] = pos[1] - interactor_bounds->get_position();
-						closest[2] = pos[0] - pos[1];
-
-						// TODO this is just a heuristic, do this but better?
-						Int dist_sq = std::min(std::min(closest[0].square_sum(), closest[1].square_sum()), closest[2].square_sum());
-
-						// Check that the distance is less than the maximum distance possible to still interact from
-						if (dist_sq <= m_MaximumRadiusSquared)
+						// Check that the distance to the interactor is less than the maximum distance possible to still interact from
+						if (m_Bounds->get_distance(m_Interactor->get_bounds()) <= m_MaximumRadiusSquared)
 						{
 							// Interact with the object
 							return interact() ? EVENT_STOP : EVENT_CONTINUE;

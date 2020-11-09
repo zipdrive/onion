@@ -125,336 +125,297 @@ namespace onion
 
 
 
-		bool solve(const vec3i& a1, const vec3i& a2, const vec3i& b, Frac& t1, Frac& t2)
+		template <int N>
+		bool lambda_all_positive(const matrix<Frac, 1, N>& lambda)
 		{
-			INT_MAT2X3 A;
-			for (int r = 2; r >= 0; --r)
-			{
-				A.set(r, 0, a1.get(r));
-				A.set(r, 1, a2.get(r));
-			}
-
-			FRAC_VEC2 x0;
-			std::vector<INT_VEC2> x;
-
-			if (solve(A, b, x0, x))
-			{
-				t1 = x0.get(0);
-				t2 = x0.get(1);
-
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
-
-
-
-		bool Plane::get_intersection(const Plane& other, Line& intersection) const
-		{
-			// TODO replace with solve function for readability?
-
-			if (normal.get(0) == 0)
-			{
-				if (normal.get(1) == 0)
-				{
-					if (normal.get(2) == 0)
-						return false;
-
-					if (other.normal.get(0) == 0)
-					{
-						if (other.normal.get(1) == 0)
-						{
-							return false;
-						}
-						else
-						{
-							intersection.origin(0) = 0;
-							intersection.origin(1) = other.dot / other.normal.get(1);
-						}
-					}
-					else
-					{
-						Int t = minimize_modulo_difference(other.dot, other.normal.get(1), other.normal.get(0));
-
-						intersection.origin(0) = (other.dot - (t * other.normal.get(1))) / other.normal.get(0);
-						intersection.origin(1) = t;
-					}
-
-					intersection.origin(2) = dot / normal.get(2);
-				}
-				else
-				{
-					Int a = (other.normal.get(0) * normal.get(1)) - (other.normal.get(1) * normal.get(0));
-					Int c = (other.normal.get(2) * normal.get(1)) - (other.normal.get(1) * normal.get(2));
-					Int d = (other.dot * normal.get(1)) - (other.normal.get(1) * dot);
-
-					if (a == 0)
-					{
-						if (c == 0)
-						{
-							return false;
-						}
-						else
-						{
-							intersection.origin(0) = 0;
-							intersection.origin(1) = (dot - d) / normal.get(1);
-							intersection.origin(2) = d / c;
-						}
-					}
-					else
-					{
-						Int t = minimize_double_modulo_difference(d, c, a, dot, normal.get(2), normal.get(1));
-
-						intersection.origin(0) = (d - (t * c)) / a;
-						intersection.origin(1) = (dot - (t * normal.get(2))) / normal.get(1);
-						intersection.origin(2) = t;
-					}
-				}
-			}
-			else if (Int b = (other.normal.get(1) * normal.get(0)) - (other.normal.get(0) * normal.get(1)))
-			{
-				Int c = (other.normal.get(2) * normal.get(0)) - (other.normal.get(0) * normal.get(2));
-				Int d = (other.dot * normal.get(0)) - (other.normal.get(0) * dot);
-
-				Int mod = normal.get(0) * b;
-				Int lhs = (dot * b) - (normal.get(1) * d);
-				Int rhs = (normal.get(2) * b) - (normal.get(1) * c);
-
-				Int t = minimize_modulo_difference(lhs, rhs, mod);
-
-				intersection.origin(0) = (lhs - (t * rhs)) / mod;
-				intersection.origin(1) = (d - (t * c)) / b;
-				intersection.origin(2) = t;
-			}
-			else if (Int c = (other.normal.get(2) * normal.get(0)) - (other.normal.get(0) * normal.get(2)))
-			{
-				Int d = (other.dot * normal.get(0)) - (other.normal.get(0) * dot);
-
-				Int mod = normal.get(0) * c;
-				Int lhs = (dot * c) - (normal.get(2) * d);
-				Int rhs = normal.get(1) * c;
-
-				Int t = minimize_modulo_difference(lhs, rhs, mod);
-
-				intersection.origin(0) = (lhs - (t * rhs)) / mod;
-				intersection.origin(1) = t;
-				intersection.origin(2) = d / c;
-			}
-			else
-			{
-				return false;
-			}
-
-			normal.cross(other.normal, intersection.direction);
+			for (int k = N - 1; k >= 0; --k)
+				if (lambda.get(k) <= 0)
+					return false;
 			return true;
 		}
 
-		bool Plane::get_intersection(const Line& line, Line& intersection) const
+		template <int N>
+		vec3i lambda_mult(const matrix<Frac, 1, N>& lambda, const Simplex& s)
 		{
-			// Check if line is not parallel to the plane
-			if (Int denom = normal.dot(line.direction))
-			{
-				line.get(Frac(dot - (normal.dot(line.origin)), denom), intersection.origin);
-				return normal.dot(intersection.origin) == dot;
-			}
-
-			// If the line is parallel to the plane, check if the line lies on the plane
-			else if (normal.dot(line.origin) == dot)
-			{
-				intersection = line;
-				return true;
-			}
-
-			return false;
+			// TODO current implementation may produce rounding errors?
+			vec3i total(0, 0, 0);
+			for (int k = N - 1; k >= 0; --k)
+				total += s[k] * lambda.get(k);
+			return total;
 		}
 
-		void Plane::get_closest_point(const vec3i& point, vec3i& closest) const
-		{
-			closest = point + (normal * Frac(dot - normal.dot(point), normal.square_sum()));
-		}
-
-
-		void Parallelogram::clamp(vec3i& point) const
-		{
-			// The coefficients for each of the radius vectors
-			Frac t[2];
-
-			// Solve for the coefficients
-			solve(sides[0], sides[1], point, t[0], t[1]);
-
-			// Clamp each coefficient to the range [0, 1]
-			for (int k = 1; k >= 0; --k)
-			{
-				if (t[k] < 0)
-					t[k] = 0;
-				else if (t[k] > 1)
-					t[k] = 1;
-			}
-
-			// Solve for the clamped point
-			point = pos + (sides[0] * t[0]) + (sides[1] * t[1]);
-		}
 		
-		void Parallelogram::get_closest_point(const vec3i& point, vec3i& closest) const
+		void nearest_simplex1d(const Simplex& s_input, Simplex& s_output, vec3i& dir)
 		{
-			// Calculate the closest point on the parallelogram's plane to the given point
-			vec3i normal;
-			sides[0].cross(sides[1], normal);
+			// Project the origin onto the line formed by the vertices
+			vec3i t = s_input[1] - s_input[0];
+			vec3i o = s_input[1] + (t * Frac(t.dot(s_input[1]), t.square_sum()));
 
-			closest = point + (normal * Frac(normal.dot(pos - point), normal.square_sum()));
-
-			// Clamp the closest point to the bounds of the parallelogram
-			clamp(closest);
-		}
-
-		void Parallelogram::get_closest_point(const Line& line, vec3i& closest) const
-		{
-			// TODO see if this can be done more efficiently?
-
-			// Construct five planes: one representing the plane that the parallelogram is on, and the others representing the planes parallel to one of the sides and perpendicular to the parallelogram itself
-			Plane p[5];
-			sides[0].cross(sides[1], p[4].normal);
-			p[4].dot = p[4].normal.dot(pos);
-
-			for (int k = 3; k >= 0; --k)
+			// Project the vertices and the projected origin onto R^1
+			Int mu_max = 0;
+			int index = -1;
+			for (int k = 2; k >= 0; --k)
 			{
-				sides[k / 2].cross(p[4].normal, p[k].normal);
-				p[k].dot = p[k].normal.dot(k % 2 == 0 ? pos : (pos + sides[k / 2]));
+				Int mu = t.get(k);
+				if (abs(mu) > abs(mu_max))
+				{
+					mu_max = -mu;
+					index = k;
+				}
 			}
 
-			Int smallest_dist = std::numeric_limits<Int>::max();
-			for (int k = 4; k >= 0; --k)
+			// Calculate the potential lambdas
+			FRAC_VEC2 lambda;
+			for (int m = 1; m >= 0; --m)
+				lambda(m) = Frac((m == 0 ? 1 : -1) * (s_input[m].get(index) - o.get(index)), mu_max);
+
+			if (lambda_all_positive(lambda))
 			{
-				// Calculate the intersection between the line and each of the planes
-				Line plane_intersection;
-				if (p[k].get_intersection(line, plane_intersection))
+				// The projected origin lies between the two vertices
+				s_output = s_input;
+				dir = -1 * lambda_mult(lambda, s_output);
+			}
+			else
+			{
+				// The projected origin lies outside the line segment formed by the two vertices, so delete a vertex
+				s_output = { s_input[0] };
+				dir = -1 * s_input[0];
+			}
+		}
+
+		void nearest_simplex2d(const Simplex& s_input, Simplex& s_output, vec3i& dir)
+		{
+			// Project the origin onto the plane formed by the vertices
+			vec3i normal;
+			vec3i(s_input[1] - s_input[0]).cross(s_input[2] - s_input[0], normal);
+			vec3i o = normal * Frac(normal.dot(s_input[0]), normal.square_sum());
+
+			// Project the triangle and the origin onto R^2 by selecting the Cartesian plane such that the projected triangle has the greatest area
+			vec3i cof[3]; // Vectors whose k-th elements are the cofactors C_{3,c} of M (see below) for the projection onto the Cartesian plane that excludes the k-th dimension
+			vec3i mu;
+			for (int c = 2; c >= 0; --c)
+			{
+				s_input[(c + 1) % 3].cross(s_input[(c + 2) % 3], cof[c]);
+
+				// Sum the cross products from each pair of vertices to obtain a vector whose k-th element is the area of the triangle projected onto the Cartesian plane that excludes the k-th dimension
+				mu += cof[c];
+			}
+			
+			Int mu_max = 0;
+			int index = -1;
+			for (int k = 2; k >= 0; --k)
+			{
+				// Calculate which Cartesian plane has the largest projected area for the triangle
+				if (abs(mu.get(k)) > abs(mu_max))
 				{
-					// Determine the closest point on the parallelogram to the intersection of the line and the plane
-					vec3i diff;
-					if (plane_intersection.direction.square_sum() > 0)
-					{
-						// Plane is parallel to line
-						diff = plane_intersection.origin; // TODO pick point closest to center of parallelogram
-					}
-					else
-					{
-						// Plane is not parallel to line
-						diff = plane_intersection.origin;
-					}
+					mu_max = mu.get(k);
+					index = k;
+				}
+			}
 
-					vec3i closest_on_parallelogram;
-					get_closest_point(diff, closest_on_parallelogram);
-					diff -= closest_on_parallelogram;
+			// Calculate the determinant of M = [ (s_0^proj, 1)  (s_1^proj, 1)  (s_2^proj, 1) ]
+			Int det = 0; // The determinant of M
+			for (int c = 2; c >= 0; --c) // The index of the column being removed from the minor
+			{
+				// Sum the cofactors to get the determinant of M
+				det += cof[c].get(index);
+			}
 
-					// If this point is closer than the prior closest, replace it
-					Int dist = diff.square_sum();
-					if (dist < smallest_dist)
+			// Calculate the potential lambdas that serve as the solution to M * lambda = [ o_{k1}  o_{k2}  1 ]
+			FRAC_VEC3 lambda;
+			int k1 = (index + 1) % 3;
+			int k2 = (index + 2) % 3;
+			for (int c = 3; c >= 0; --c)
+			{
+				int c1 = (c + 1) % 3;
+				int c2 = (c + 2) % 3;
+				lambda(c) = Frac(
+					(o.get(k1) * (s_input[c1].get(k2) - s_input[c2].get(k2)))
+						+ (o.get(k2) * (s_input[c2].get(k1) - s_input[c1].get(k1)))
+						+ cof[c].get(index),
+					det
+				);
+			}
+
+			if (lambda_all_positive(lambda))
+			{
+				// The origin lies within the triangle
+				s_output = s_input;
+				dir = -1 * lambda_mult(lambda, s_output);
+			}
+			else
+			{
+				// Delete a vertex
+				Int d_min = std::numeric_limits<Int>::max();
+
+				for (int c = 2; c > 0; --c)
+				{
+					if (lambda.get(c) < 0) // Discard the c-th vertex
 					{
-						closest = closest_on_parallelogram;
-						smallest_dist = dist;
+						// Construct a simplex with the c-th vertex excluded
+						Simplex w;
+						for (int n = 0; n < 3; ++n)
+							if (n != c)
+								w.push_back(s_input[n]);
+
+						// Run the sub-routine for a triangle
+						Simplex s_output_temp;
+						vec3i dir_temp;
+						nearest_simplex1d(w, s_output_temp, dir_temp);
+
+						// In case there are multiple negative lambda values, check which has the better minimum norm
+						Int d = dir_temp.square_sum();
+						if (d < d_min)
+						{
+							s_output = s_output_temp;
+							dir = dir_temp;
+							d_min = d;
+						}
 					}
 				}
 			}
 		}
 
-		void Parallelogram::get_closest_point(const Parallelogram& quad, vec3i& closest) const
+		void nearest_simplex3d(const Simplex& s_input, Simplex& s_output, vec3i& dir)
 		{
-			// Construct the planes that each parallelogram occupies
-			Plane p[2];
-
-			sides[0].cross(sides[1], p[0].normal);
-			p[0].dot = pos.dot(p[0].normal);
-
-			quad.sides[0].cross(quad.sides[1], p[1].normal);
-			p[1].dot = quad.pos.dot(p[1].normal);
-
-			// Calculate the intersection between the two planes
-			Line plane_intersection;
-			if (p[0].get_intersection(p[1], plane_intersection))
+			// Calculate the determinant of M = [ (s_0, 1)  (s_1, 1)  (s_2, 1)  (s_3, 1) ]
+			vec4i cof; // The cofactors C_{4,c} of M
+			Int det = 0; // The determinant of M
+			for (int c = 3; c >= 0; --c) // The index of the column being removed from the minor
 			{
-				// The two parallelograms are not parallel or occupy the same plane
-				vec3i closest_on_quad;
-				quad.get_closest_point(plane_intersection, closest_on_quad);
+				// Calculate the c-th cofactor of M
+				vec3i a;
+				s_input[c > 1 ? 1 : 2].cross(s_input[c > 2 ? 2 : 3], a);
+				cof(c) = (c % 2 == 0 ? -1 : 1) * a.dot(s_input[c > 0 ? 0 : 1]);
 
-				get_closest_point(closest_on_quad, closest);
+				// Sum the cofactors to get the determinant of M
+				det += cof.get(c);
+			}
+
+			// Calculate the potential lambdas
+			FRAC_VEC4 lambda;
+			for (int c = 3; c >= 0; --c)
+				lambda(c) = Frac(cof.get(c), det);
+
+			if (lambda_all_positive(lambda))
+			{
+				// The origin lies within the tetrahedron
+				s_output = s_input;
+				dir = -1 * lambda_mult(lambda, s_output);
 			}
 			else
 			{
-				// The two parallelograms exist on parallel planes that do not intersect
+				// Delete a vertex
+				Int d_min = std::numeric_limits<Int>::max();
+
+				for (int c = 3; c > 0; --c)
+				{
+					if (lambda.get(c) < 0) // Discard the c-th vertex
+					{
+						// Construct a simplex with the c-th vertex excluded
+						Simplex w;
+						for (int n = 0; n < 4; ++n)
+							if (n != c)
+								w.push_back(s_input[n]);
+
+						// Run the sub-routine for a triangle
+						Simplex s_output_temp;
+						vec3i dir_temp;
+						nearest_simplex2d(w, s_output_temp, dir_temp);
+
+						// In case there are multiple negative lambda values, check which has the better minimum norm
+						Int d = dir_temp.square_sum();
+						if (d < d_min)
+						{
+							s_output = s_output_temp;
+							dir = dir_temp;
+							d_min = d;
+						}
+					}
+				}
 			}
 		}
-
-
 		
-		void Line::get(Int t, vec3i& point) const
+		/// <summary></summary>
+		/// <returns>True if the generated simplex contains the origin, false otherwise.</returns>
+		bool nearest_simplex(const Simplex& s_input, Simplex& s_output, vec3i& dir)
 		{
-			point = origin + (direction * t);
-		}
+			switch (s_input.size())
+			{
+			case 2: // Line
+			{
+				nearest_simplex1d(s_input, s_output, dir);
+				break;
+			}
+			case 3: // Triangle
+			{
+				nearest_simplex2d(s_input, s_output, dir);
+				break;
+			}
+			case 4: // Tetrahedron
+			{
+				nearest_simplex3d(s_input, s_output, dir);
+				break;
+			}
+			default: // Point
+			{
+				s_output = s_input;
+				dir = -1 * s_input[0];
+			}
+			}
 
-		void Line::get(const Frac& t, vec3i& point) const
-		{
-			point = origin + (direction * t);
-		}
-
-		void Line::get_closest_point(const vec3i& point, vec3i& closest) const
-		{
-			get(Frac(direction.dot(origin - point), direction.square_sum()), closest);
-		}
-
-
-		void Ray::get(Int t, vec3i& point) const
-		{
-			point = t <= 0 ? origin : (origin + (direction * t));
-		}
-
-		void Ray::get(const Frac& t, vec3i& point) const
-		{
-			if ((t.numerator < 0 && t.denominator > 0) || (t.numerator > 0 && t.denominator < 0))
-				point = origin;
-			else
-				point = origin + (direction * t);
-		}
-
-
-		void Segment::get(Int t, vec3i& point) const
-		{
-			point = t <= 0 ? origin : (origin + direction);
-		}
-
-		void Segment::get(const Frac& t, vec3i& point) const
-		{
-			// t < 0
-			if ((t.numerator < 0 && t.denominator > 0) || (t.numerator > 0 && t.denominator < 0))
-				point = origin;
-
-			// t > 1
-			else if (abs(t.numerator) > abs(t.denominator))
-				point = origin + direction;
-
-			// 0 <= t <= 1
-			else
-				point = origin + (direction * t);
+			// TODO i don't know for sure that this works
+			return dir.square_sum() == 0;
 		}
 
 
 
-		const vec3i& Shape::get_position() const
+		Int Shape::__get_distance(const Shape* other, Simplex& s, vec3i& d) const
 		{
-			return m_Position;
+			// TODO figure out a way to ensure there are no infinite loops
+
+			vec3i a;
+			Simplex temp;
+
+			do
+			{
+				a = support(d) - other->support(-1 * d);
+
+				if (a.dot(d) < 0)
+				{
+					// No intersection between the two shapes
+					break;
+				}
+
+				// Add the new vertex to the simplex
+				temp = s;
+				temp.push_back(a);
+				
+				// Calculate the simplex on the current simplex that is nearest to the origin
+				if (nearest_simplex(temp, s, d))
+				{
+					// The two shapes intersect, so the distance is 0
+					return 0;
+				}
+			} 
+			while (s.size() < 4);
+
+			return d.square_sum();
 		}
 
-		void Shape::set_position(const vec3i& pos)
+		Int Shape::get_distance(const Shape* other) const
 		{
-			m_Position = pos;
+			// Generate an initial guess
+			vec3i d = other->get_position() - get_position();
+			vec3i a = support(d) - other->support(-1 * d);
+			d = -1 * a;
+			
+			Simplex s = { a };
+
+			// Calculate the distance between the two shapes using GJK algorithm
+			return __get_distance(other, s, d);
 		}
 
-		void Shape::translate(const vec3i& trans)
-		{
-			set_position(m_Position + trans);
-		}
 
 
 		Point::Point(const vec3i& pos)
@@ -462,337 +423,94 @@ namespace onion
 			m_Position = pos;
 		}
 
-		void Point::get_closest_point(const vec3i& pos, vec3i& closest) const
+		vec3i Point::get_position() const
 		{
-			closest = m_Position;
+			return m_Position;
 		}
 
-		void Point::get_closest_point(const Line& line, vec3i& closest) const
+		void Point::set_position(const vec3i& pos)
 		{
-			closest = m_Position;
+			translate(pos - m_Position);
 		}
 
-		void Point::get_closest_point(const Parallelogram& quad, vec3i& closest) const
+		void Point::translate(const vec3i& trans)
 		{
-			closest = m_Position;
+			m_Position += trans;
 		}
-
-		Int Point::get_distance(const Shape* other) const
+		
+		vec3i Point::support(const vec3i& dir) const
 		{
-			vec3i diff;
-			other->get_closest_point(m_Position, diff);
-			diff -= m_Position;
-
-			return diff.square_sum();
+			return m_Position;
 		}
-
-
-		Sphere::Sphere(const vec3i& pos, Int radius)
+		
+		
+		OrthogonalPrism::OrthogonalPrism(const vec3i& pos, const vec3i& dimensions) : Point(pos)
 		{
-			m_Position = pos;
-			m_RadiusSquared = radius * radius;
-		}
-
-		void Sphere::get_closest_point(const vec3i& pos, vec3i& closest) const
-		{
-			vec3i diff = pos - m_Position;
-			Int dist = diff.square_sum();
-
-			if (dist <= m_RadiusSquared)
-			{
-				closest = pos;
-			}
-			else
-			{
-				closest = (diff * (Int)floor(sqrt(m_RadiusSquared))) / (Int)ceil(sqrt(dist));
-				closest += m_Position;
-			}
-		}
-
-		void Sphere::get_closest_point(const Line& line, vec3i& closest) const
-		{
-			vec3i diff;
-			line.get_closest_point(m_Position, diff);
-			diff -= m_Position;
-
-			vec3f dir;
-			diff.normalize(dir);
-			dir *= (Float)sqrtf(m_RadiusSquared);
-
-			closest = m_Position;
-			for (int k = 2; k >= 0; --k)
-				closest(k) += (Int)round(dir.get(k));
-		}
-
-		void Sphere::get_closest_point(const Parallelogram& quad, vec3i& closest) const
-		{
-			// Calculate the closest point on the plane to the center of the sphere
-			vec3i dir;
-			quad.get_closest_point(m_Position, dir);
-
-			// Calculate the direction from the sphere to the plane
-			dir -= m_Position;
-			Int len_squared = dir.square_sum();
-			if (len_squared <= m_RadiusSquared)
-			{
-				closest = m_Position + dir;
-			}
-			else
-			{
-				// Scale the direction to have length equal to the radius of the sphere
-				vec3f dir_f;
-				dir.normalize(dir_f);
-				dir_f *= (Float)sqrtf(m_RadiusSquared);
-
-				// Convert to integers
-				closest = m_Position;
-				for (int k = 2; k >= 0; --k)
-				{
-					closest(k) += (Int)(dir.get(k) < 0
-						? ceil(dir_f.get(k))
-						: floor(dir_f.get(k))
-						);
-				}
-			}
-		}
-
-		Int Sphere::get_distance(const Shape* other) const
-		{
-			vec3i diff;
-			other->get_closest_point(m_Position, diff);
-			diff -= m_Position;
-
-			Int dist = diff.square_sum() - m_RadiusSquared;
-			return dist < 0 ? 0 : dist;
-		}
-
-
-		RectangularPrism::RectangularPrism(const vec3i& pos, const vec3i& dimensions)
-		{
-			m_Position = pos;
 			m_Dimensions = dimensions;
 		}
 
-		void RectangularPrism::clamp(vec3i& point) const
+		vec3i OrthogonalPrism::support(const vec3i& dir) const
 		{
+			vec3i res = m_Position;
 			for (int k = 2; k >= 0; --k)
-			{
-				if (point.get(k) < m_Position.get(k))
-					point(k) = m_Position.get(k);
-				else if (point.get(k) > m_Position.get(k) + m_Dimensions.get(k))
-					point(k) = m_Position.get(k) + m_Dimensions.get(k);
-			}
+				if (dir.get(k) > 0)
+					res(k) += m_Dimensions.get(k);
+			return res;
 		}
 
-		void RectangularPrism::get_closest_point(const vec3i& pos, vec3i& closest) const
-		{
-			for (int k = 2; k >= 0; --k)
-			{
-				int n = pos.get(k);
 
-				if (n <= m_Position.get(k))
-					closest.set(k, 0, m_Position.get(k));
-				else if (n >= m_Position.get(k) + m_Dimensions.get(k))
-					closest.set(k, 0, m_Position.get(k) + m_Dimensions.get(k));
-				else
-					closest.set(k, 0, n);
-			}
+		UprightRectangle::UprightRectangle(const vec3i& pos, const vec3i& dimensions) : Point(pos) 
+		{
+			m_Dimensions = dimensions;
 		}
 
-		void RectangularPrism::get_closest_point(const Line& line, vec3i& closest) const
+		vec3i UprightRectangle::support(const vec3i& dir) const
 		{
-			// TODO do this more efficiently?
-			Int smallest_dist = std::numeric_limits<Int>::max();
+			vec3i res = m_Position;
 
-			// Check the intersection of the ray with every planar edge, and see which intersection is the closest
-			for (int k = 2; k >= 0; --k)
+			if ((m_Dimensions.get(0) * dir.get(0)) + (m_Dimensions.get(1) * dir.get(1)) > 0)
 			{
-				for (int m = 1; m >= 0; --m)
+				res(0) += m_Dimensions.get(0);
+				res(1) += m_Dimensions.get(1);
+			}
+
+			if (dir.get(2) > 0)
+			{
+				res(2) += m_Dimensions.get(2);
+			}
+
+			return res;
+		}
+
+
+		Parallelogram::Parallelogram(const vec3i& pos, const vec3i& dir1, const vec3i& dir2) : Point(pos)
+		{
+			m_Radii[0] = dir1;
+			m_Radii[1] = dir2;
+		}
+
+		vec3i Parallelogram::support(const vec3i& dir) const
+		{
+			vec3i res;
+			Int d_max = std::numeric_limits<Int>::min();
+
+			for (int c = 3; c >= 0; --c)
+			{
+				vec3i p = m_Position;
+				if (c % 2 > 0)
+					p += m_Radii[0];
+				if (c / 2 > 0)
+					p += m_Radii[1];
+
+				Int d = dir.dot(p);
+				if (d > d_max)
 				{
-					// Construct a parallelogram for the face
-					Parallelogram p;
-
-					p.pos = m_Position;
-					if (m == 1)
-						p.pos(k) += m_Dimensions.get(k);
-
-					p.sides[0]((k + 1) % 3) = m_Dimensions.get((k + 1) % 3);
-					p.sides[1]((k + 2) % 3) = m_Dimensions.get((k + 2) % 3);
-
-					// Calculate the closest point to the line on that face
-					vec3i closest_on_face;
-					p.get_closest_point(line, closest_on_face);
-
-					// Calculate the difference between the face and the line
-					vec3i diff;
-					line.get_closest_point(closest_on_face, diff);
-					diff -= closest_on_face;
-
-					// Calculate the distance from the line
-					Int dist = diff.square_sum();
-					if (dist < smallest_dist)
-						smallest_dist = dist;
-				}
-			}
-		}
-
-		void RectangularPrism::get_closest_point(const Parallelogram& quad, vec3i& closest) const
-		{
-			Int smallest_dist = std::numeric_limits<Int>::max();
-
-			for (int k = 2; k >= 0; --k)
-			{
-				for (int m = 1; m >= 0; --m)
-				{
-					// Construct the parallelogram for the face
-					Parallelogram p =
-					{
-						m_Position,
-						{
-							vec3i(0, 0, 0),
-							vec3i(0, 0, 0)
-						}
-					};
-					if (m > 0)
-						p.pos(k) += m_Dimensions.get(k);
-					p.sides[0]((k + 1) % 3) = m_Dimensions.get((k + 1) % 3);
-					p.sides[1]((k + 2) % 3) = m_Dimensions.get((k + 2) % 3);
-
-					// Calculate the closest point on the face
-					vec3i closest_on_face;
-					p.get_closest_point(quad, closest_on_face);
-					vec3i diff;
-					quad.get_closest_point(closest_on_face, diff);
-					diff -= closest_on_face;
-
-					// Calculate distance between the face and the parallelogram
-					Int dist = diff.square_sum();
-					if (dist < smallest_dist)
-					{
-						closest = closest_on_face;
-						smallest_dist = dist;
-					}
-				}
-			}
-		}
-
-		Int RectangularPrism::get_distance(const Shape* other) const
-		{
-			Int smallest_dist = std::numeric_limits<Int>::max();
-
-			for (int k = 2; k >= 0; --k)
-			{
-				for (int m = 1; m >= 0; --m)
-				{
-					Parallelogram p = 
-					{
-						m_Position,
-						{
-							vec3i(0, 0, 0),
-							vec3i(0, 0, 0)
-						}
-					};
-					if (m > 0)
-						p.pos(k) += m_Dimensions.get(k);
-					p.sides[0]((k + 1) % 3) = m_Dimensions.get((k + 1) % 3);
-					p.sides[1]((k + 2) % 3) = m_Dimensions.get((k + 2) % 3);
-
-					vec3i diff;
-					other->get_closest_point(p, diff);
-					for (int n = 2; n >= 0; --n)
-					{
-						if (diff.get(n) < m_Position.get(n))
-							diff(n) -= m_Position.get(n);
-						else if (diff.get(n) > m_Position.get(n) + m_Dimensions.get(n))
-							diff(n) -= m_Position.get(n) + m_Dimensions.get(n);
-						else
-							diff(n) = 0;
-					}
-
-					Int dist = diff.square_sum();
-					if (dist < smallest_dist)
-						smallest_dist = dist;
+					res = p;
+					d_max = d;
 				}
 			}
 
-			return smallest_dist;
-		}
-
-
-		Rectangle::Rectangle(const vec3i& pos, const vec3i& dimensions) : RectangularPrism(pos, dimensions) {}
-
-		void Rectangle::get_closest_point(const vec3i& pos, vec3i& closest) const
-		{
-			// Find the closest point on the plane that the rectangle is on to the given point
-			Frac t(
-				(m_Dimensions.get(0) * (m_Position.get(0) - pos.get(0))) + (m_Dimensions.get(1) * (m_Position.get(1) - pos.get(1))),
-				(m_Dimensions.get(0) * m_Dimensions.get(0)) + (m_Dimensions.get(1) * m_Dimensions.get(1))
-			);
-
-			closest = m_Position - (m_Dimensions * t);
-			closest(2) = pos.get(2);
-
-			// Clamp the closest point to the bounds of the rectangle
-			clamp(closest);
-		}
-
-		void Rectangle::get_closest_point(const Line& line, vec3i& closest) const
-		{
-			// Find the intersection between the line and the plane that the rectangle is on
-			if (Int denom = (m_Dimensions.get(1) * line.direction.get(0)) - (m_Dimensions.get(0) * line.direction.get(1)))
-			{
-				Frac t(
-					(m_Dimensions.get(1) * (m_Position.get(0) - line.origin.get(0))) - (m_Dimensions.get(0) * (m_Position.get(1) - line.origin.get(1))),
-					denom
-				);
-
-				line.get(t, closest);
-				clamp(closest);
-			}
-			else
-			{
-				// Line is parallel to the plane that the rectangle is on, so just return the closest point to the origin
-				get_closest_point(line.origin, closest);
-			}
-		}
-
-		void Rectangle::get_closest_point(const Parallelogram& quad, vec3i& closest) const
-		{
-			// Construct the parallelogram that constitutes the bounds of the rectangle
-			Parallelogram p =
-			{
-				m_Position,
-				{
-					vec3i(m_Dimensions.get(0), m_Dimensions.get(1), 0),
-					vec3i(0, 0, m_Dimensions.get(2))
-				}
-			};
-
-			// Use the parallelogram to get the closest point
-			p.get_closest_point(quad, closest);
-		}
-
-		Int Rectangle::get_distance(const Shape* other) const
-		{
-			// Calculate the closest point to the rectangle on the other shape
-			Parallelogram quad = {
-				m_Position,
-				{
-					vec3i(m_Dimensions.get(0), m_Dimensions.get(1), 0),
-					vec3i(0, 0, m_Dimensions.get(2))
-				}
-			};
-
-			vec3i closest_on_other;
-			other->get_closest_point(quad, closest_on_other);
-
-			// Calculate the closest point to that point
-			vec3i closest_on_rectangle;
-			get_closest_point(closest_on_other, closest_on_rectangle);
-
-			// Calculate the (squared) distance between the two points
-			vec3i diff = closest_on_rectangle - closest_on_other;
-			return diff.square_sum();
+			return res;
 		}
 
 	}

@@ -122,59 +122,6 @@ namespace onion
 			delete m_Displayer;
 		}
 
-		void Chunk::reset_visible(const WorldCamera::View& view)
-		{
-			m_VisibleTiles.clear();
-
-			// TODO do this more efficiently?
-			bool ydir = view.edges[BOTTOM_VIEW_EDGE].normal.get(1) >= 0;
-			for (int j = ydir ? 0 : m_Dimensions.get(1) - 1; 
-				ydir ? j < m_Dimensions.get(1) : j >= 0; 
-				ydir ? ++j : --j)
-			{
-				int first_i = INT_MIN;
-				int last_i = INT_MAX;
-
-				bool xdir = view.edges[BOTTOM_VIEW_EDGE].normal.get(0) >= 0;
-
-				for (int i = xdir ? 0 : m_Dimensions.get(0) - 1;
-					xdir ? i < m_Dimensions.get(0) : i >= 0;
-					xdir ? ++i : --i)
-				{
-					for (int k = 3; k >= 0; --k)
-					{
-						// Calculate the 2D position of the corner
-						vec2i corner_pos(
-							k % 2 == 0 ? m_TileSize * UNITS_PER_PIXEL * i : (m_TileSize * UNITS_PER_PIXEL * (i + 1)) - 1,
-							k / 2 == 0 ? m_TileSize * UNITS_PER_PIXEL * j : (m_TileSize * UNITS_PER_PIXEL * (j + 1)) - 1
-						);
-
-						// Calculate the 3D position of the corner
-						vec3i corner(corner_pos, get_tile_height(corner_pos.get(0), corner_pos.get(1)));
-
-						// Calculate whether the corner is visible
-						if (view.is_visible(corner))
-						{
-							if (first_i < 0)
-								first_i = i;
-							last_i = i;
-							break;
-						}
-					}
-
-					// Break if the end of the visible row has been reached
-					if (last_i < i)
-						break;
-				}
-
-				// Add a visible row
-				if (first_i >= 0)
-				{
-					m_VisibleTiles.emplace_back(get_index(first_i, j) * 6, last_i - first_i + 1);
-				}
-			}
-		}
-
 		void Chunk::display_tiles() const
 		{
 			if (m_IsLoaded) // Make sure everything is loaded
@@ -375,55 +322,47 @@ namespace onion
 			get_bluenoise_image()->activate(1);
 		}
 
-		void FlatChunk::reset_visible(const WorldCamera::View& view)
+		void FlatChunk::reset_visible(const WorldCamera::View* view)
 		{
 			// Reset visible tiles
 			// TODO do this more efficiently???
 			m_VisibleTiles.clear();
 
-			Int min_x = std::numeric_limits<Int>::min(), max_x = std::numeric_limits<Int>::max();
-			Int min_y = min_x, max_y = max_x;
-			for (int k = 3; k >= 0; --k)
-			{
-				int e1 = k % 2 == 0 ? LEFT_VIEW_EDGE : RIGHT_VIEW_EDGE;
-				int e2 = k / 2 == 0 ? BOTTOM_VIEW_EDGE : TOP_VIEW_EDGE;
+			const Int max_allowed = type_limits<Int>::max();
 
-				Int y = ((view.edges[e1].normal.get(0) * view.edges[e2].dot) - (view.edges[e2].normal.get(0) * view.edges[e1].dot))
-					/ ((view.edges[e1].normal.get(0) * view.edges[e2].normal.get(1)) - (view.edges[e2].normal.get(0) * view.edges[e1].normal.get(1)));
-				Int x = (view.edges[e1].dot - (view.edges[e1].normal.get(1) * y)) / view.edges[e1].normal.get(0);
+			UprightRectangle r(vec3i(), vec3i(0, max_allowed, max_allowed));
+			Int min_x = r.get_distance(view);
 
-				if (x < min_x)
-					min_x = x;
-				else if (x > max_x)
-					max_x = x;
-				
-				if (y < min_y)
-					min_y = y;
-				else if (y > max_y)
-					max_y = y;
-			}
+			r.translate(vec3i(max_allowed, 0, 0));
+			Int max_x = max_allowed - r.get_distance(view);
 
-			Int min_j = std::max<Int>(0, min_y / (m_TileSize * UNITS_PER_PIXEL));
-			Int max_j = std::min<Int>(m_Dimensions.get(1) - 1, max_y / (m_TileSize * UNITS_PER_PIXEL));
+			r = UprightRectangle(vec3i(), vec3i(max_allowed, 0, max_allowed));
+			Int min_y = r.get_distance(view);
+
+			r.translate(vec3i(0, max_allowed, 0));
+			Int max_y = r.get_distance(view);
+
+			Int min_j = std::max<Int>(0, min_y / m_TileSize);
+			Int max_j = std::min<Int>(m_Dimensions.get(1) - 1, max_y / m_TileSize);
 			for (Int j = min_j; j <= max_j; ++j)
 			{
 				Int first_i = std::numeric_limits<Int>::min(), last_i = std::numeric_limits<Int>::max();
 
-				Int min_i = std::max<Int>(0, min_x / (m_TileSize * UNITS_PER_PIXEL));
-				Int max_i = std::min<Int>(m_Dimensions.get(0) - 1, max_x / (m_TileSize * UNITS_PER_PIXEL));
+				Int min_i = std::max<Int>(0, min_x / m_TileSize);
+				Int max_i = std::min<Int>(m_Dimensions.get(0) - 1, max_x / m_TileSize);
 				for (Int i = min_i; i <= max_i; ++i)
 				{
 					for (int k = 3; k >= 0; --k)
 					{
 						// Calculate the 3D position of the corner
-						vec3i corner(
-							k % 2 == 0 ? m_TileSize * UNITS_PER_PIXEL * i : (m_TileSize * UNITS_PER_PIXEL * (i + 1)) - 1,
-							k / 2 == 0 ? m_TileSize * UNITS_PER_PIXEL * j : (m_TileSize * UNITS_PER_PIXEL * (j + 1)) - 1,
+						Point corner(vec3i(
+							k % 2 == 0 ? m_TileSize * i : (m_TileSize * (i + 1)) - 1,
+							k / 2 == 0 ? m_TileSize * j : (m_TileSize * (j + 1)) - 1,
 							0
-						);
+						));
 
 						// Calculate whether the corner is visible
-						if (view.is_visible(corner))
+						if (corner.get_distance(view) == 0)
 						{
 							if (first_i < 0)
 								first_i = i;
@@ -446,14 +385,14 @@ namespace onion
 			m_Manager.reset_visible(view);
 		}
 
-		void FlatChunk::update_visible(const WorldCamera::View& view, int frames_passed)
+		void FlatChunk::update_visible(const WorldCamera::View* view, int frames_passed)
 		{
 			m_Manager.update_visible(view, frames_passed);
 		}
 
-		void FlatChunk::display_objects(const Ray& center) const
+		void FlatChunk::display_objects(const vec3i& normal) const
 		{
-			m_Manager.display(center);
+			m_Manager.display(normal);
 		}
 
 
@@ -533,8 +472,8 @@ namespace onion
 						{
 							// If the height wasn't set for that corner, use the previous height of that corner
 							heights[k] = get_tile_height(
-								UNITS_PER_PIXEL * m_TileSize * ((k + (k / 2)) % 2 == 0 ? x : x + dx),
-								UNITS_PER_PIXEL * m_TileSize * (k / 2 == 0 ? y : y + dy)
+								m_TileSize * ((k + (k / 2)) % 2 == 0 ? x : x + dx),
+								m_TileSize * (k / 2 == 0 ? y : y + dy)
 							);
 						}
 					}
@@ -636,8 +575,6 @@ namespace onion
 				}
 			}
 
-			const int units_per_tile = m_TileSize * UNITS_PER_PIXEL;
-
 			// Determine the normal vector of each face on each tile
 			std::vector<vec3f> face_normals(2 * m_Dimensions.get(0) * m_Dimensions.get(1));
 			for (int i = m_Dimensions.get(0) - 1; i >= 0; --i)
@@ -661,12 +598,12 @@ namespace onion
 						vec3i(
 							heights[TILE_CORNER_BOTTOM_LEFT] - heights[TILE_CORNER_BOTTOM_RIGHT],
 							heights[TILE_CORNER_BOTTOM_RIGHT] - heights[TILE_CORNER_TOP_RIGHT],
-							units_per_tile
+							m_TileSize
 						).normalize(face_normals[index + 0]);
 						vec3i(
 							heights[TILE_CORNER_TOP_LEFT] - heights[TILE_CORNER_TOP_RIGHT],
 							heights[TILE_CORNER_BOTTOM_LEFT] - heights[TILE_CORNER_TOP_LEFT],
-							units_per_tile
+							m_TileSize
 						).normalize(face_normals[index + 1]);
 					}
 					else
@@ -677,12 +614,12 @@ namespace onion
 						vec3i(
 							heights[TILE_CORNER_BOTTOM_LEFT] - heights[TILE_CORNER_BOTTOM_RIGHT],
 							heights[TILE_CORNER_BOTTOM_LEFT] - heights[TILE_CORNER_TOP_LEFT],
-							units_per_tile
+							m_TileSize
 						).normalize(face_normals[index + 0]);
 						vec3i(
 							heights[TILE_CORNER_BOTTOM_RIGHT] - heights[TILE_CORNER_TOP_RIGHT],
 							heights[TILE_CORNER_TOP_LEFT] - heights[TILE_CORNER_TOP_RIGHT],
-							units_per_tile
+							m_TileSize
 						).normalize(face_normals[index + 1]);
 					}
 				}
@@ -758,7 +695,7 @@ namespace onion
 						vec2i corner(pos[k] / m_TileSize);
 						int corner_index = get_index(corner.get(0), corner.get(1)) + corner.get(1);
 
-						pos[k](2) = m_TileCornerHeights[corner_index] * PIXELS_PER_UNIT;
+						pos[k](2) = m_TileCornerHeights[corner_index];
 						normal[k] = vertex_normals[corner_index];
 					}
 
@@ -777,10 +714,8 @@ namespace onion
 
 		int SmoothChunk::get_tile_height(int x, int y) const
 		{
-			const int units_per_tile = m_TileSize * UNITS_PER_PIXEL;
-
-			int i = x / units_per_tile;
-			int j = y / units_per_tile;
+			int i = x / m_TileSize;
+			int j = y / m_TileSize;
 
 			if (i < 0)
 				return get_tile_height(0, y);
@@ -793,26 +728,26 @@ namespace onion
 					return m_TileCornerHeights.back();
 				
 				// Interpolate between the bottom and top edge
-				int v = y - (j * units_per_tile);
+				int v = y - (j * m_TileSize);
 
 				int bottom_height = m_TileCornerHeights[get_index(m_Dimensions.get(0), j) + j];
 				int top_height = m_TileCornerHeights[get_index(m_Dimensions.get(0), j + 1) + j + 1];
 
-				return bottom_height + ((top_height - bottom_height) * v / units_per_tile);
+				return bottom_height + ((top_height - bottom_height) * v / m_TileSize);
 			}
 			else if (j >= m_Dimensions.get(1))
 			{
 				// Interpolate between the left and right edge
-				int u = x - (i * units_per_tile);
+				int u = x - (i * m_TileSize);
 
 				int left_height = m_TileCornerHeights[get_index(i, m_Dimensions.get(1)) + m_Dimensions.get(1)];
 				int right_height = m_TileCornerHeights[get_index(i + 1, m_Dimensions.get(1)) + m_Dimensions.get(1)];
 
-				return left_height + ((right_height - left_height) * u / units_per_tile);
+				return left_height + ((right_height - left_height) * u / m_TileSize);
 			}
 
-			int u = x - (i * units_per_tile);
-			int v = y - (j * units_per_tile);
+			int u = x - (i * m_TileSize);
+			int v = y - (j * m_TileSize);
 
 			int heights[4] = {
 				m_TileCornerHeights[get_index(i, j) + j],
@@ -848,7 +783,7 @@ namespace onion
 				//		bottom-left, bottom-right, top-left
 				//		top-right, bottom-right, top-left
 
-				if (u + v < units_per_tile)
+				if (u + v < m_TileSize)
 				{
 					// Interpolate height from bottom-left, bottom-right, top-left
 					dhu = heights[TILE_CORNER_BOTTOM_RIGHT] - heights[TILE_CORNER_BOTTOM_LEFT];
@@ -862,7 +797,7 @@ namespace onion
 				}
 			}
 
-			return heights[TILE_CORNER_BOTTOM_LEFT] + (((u * dhu) + (v * dhv)) / units_per_tile);
+			return heights[TILE_CORNER_BOTTOM_LEFT] + (((u * dhu) + (v * dhv)) / m_TileSize);
 		}
 
 		const opengl::_Shader* SmoothChunk::get_tile_shader() const
@@ -877,55 +812,47 @@ namespace onion
 			get_bluenoise_image()->activate(1);
 		}
 
-		void SmoothChunk::reset_visible(const WorldCamera::View& view)
+		void SmoothChunk::reset_visible(const WorldCamera::View* view)
 		{
 			// Reset visible tiles
 			// TODO take height into account
 			m_VisibleTiles.clear();
 
-			Int min_x = std::numeric_limits<Int>::min(), max_x = std::numeric_limits<Int>::max();
-			Int min_y = min_x, max_y = max_x;
-			for (int k = 3; k >= 0; --k)
-			{
-				int e1 = k % 2 == 0 ? LEFT_VIEW_EDGE : RIGHT_VIEW_EDGE;
-				int e2 = k / 2 == 0 ? BOTTOM_VIEW_EDGE : TOP_VIEW_EDGE;
+			const Int max_allowed = type_limits<Int>::max();
+			
+			UprightRectangle r(vec3i(), vec3i(0, max_allowed, max_allowed));
+			Int min_x = r.get_distance(view);
 
-				Int y = ((view.edges[e1].normal.get(0) * view.edges[e2].dot) - (view.edges[e2].normal.get(0) * view.edges[e1].dot))
-					/ ((view.edges[e1].normal.get(0) * view.edges[e2].normal.get(1)) - (view.edges[e2].normal.get(0) * view.edges[e1].normal.get(1)));
-				Int x = (view.edges[e1].dot - (view.edges[e1].normal.get(1) * y)) / view.edges[e1].normal.get(0);
+			r.translate(vec3i(max_allowed, 0, 0));
+			Int max_x = max_allowed - r.get_distance(view);
 
-				if (x < min_x)
-					min_x = x;
-				else if (x > max_x)
-					max_x = x;
+			r = UprightRectangle(vec3i(), vec3i(max_allowed, 0, max_allowed));
+			Int min_y = r.get_distance(view);
 
-				if (y < min_y)
-					min_y = y;
-				else if (y > max_y)
-					max_y = y;
-			}
+			r.translate(vec3i(0, max_allowed, 0));
+			Int max_y = r.get_distance(view);
 
-			Int min_j = std::max<Int>(0, min_y / (m_TileSize * UNITS_PER_PIXEL));
-			Int max_j = std::min<Int>(m_Dimensions.get(1) - 1, max_y / (m_TileSize * UNITS_PER_PIXEL));
+			Int min_j = std::max<Int>(0, min_y / m_TileSize);
+			Int max_j = std::min<Int>(m_Dimensions.get(1) - 1, max_y / m_TileSize);
 			for (Int j = min_j; j <= max_j; ++j)
 			{
 				Int first_i = std::numeric_limits<Int>::min(), last_i = std::numeric_limits<Int>::max();
 
-				Int min_i = std::max<Int>(0, min_x / (m_TileSize * UNITS_PER_PIXEL));
-				Int max_i = std::min<Int>(m_Dimensions.get(0) - 1, max_x / (m_TileSize * UNITS_PER_PIXEL));
+				Int min_i = std::max<Int>(0, min_x / m_TileSize);
+				Int max_i = std::min<Int>(m_Dimensions.get(0) - 1, max_x / m_TileSize);
 				for (Int i = min_i; i <= max_i; ++i)
 				{
 					for (int k = 3; k >= 0; --k)
 					{
 						// Calculate the 3D position of the corner
-						vec3i corner(
-							k % 2 == 0 ? m_TileSize * UNITS_PER_PIXEL * i : (m_TileSize * UNITS_PER_PIXEL * (i + 1)) - 1,
-							k / 2 == 0 ? m_TileSize * UNITS_PER_PIXEL * j : (m_TileSize * UNITS_PER_PIXEL * (j + 1)) - 1,
+						Point corner(vec3i(
+							k % 2 == 0 ? m_TileSize * i : (m_TileSize * (i + 1)) - 1,
+							k / 2 == 0 ? m_TileSize * j : (m_TileSize * (j + 1)) - 1,
 							0
-						);
+						));
 
 						// Calculate whether the corner is visible
-						if (view.is_visible(corner))
+						if (corner.get_distance(view) == 0)
 						{
 							if (first_i < 0)
 								first_i = i;
@@ -948,14 +875,14 @@ namespace onion
 			m_Manager.reset_visible(view);
 		}
 
-		void SmoothChunk::update_visible(const WorldCamera::View& view, int frames_passed)
+		void SmoothChunk::update_visible(const WorldCamera::View* view, int frames_passed)
 		{
 			m_Manager.update_visible(view, frames_passed);
 		}
 
-		void SmoothChunk::display_objects(const Ray& center) const
+		void SmoothChunk::display_objects(const vec3i& normal) const
 		{
-			m_Manager.display(center);
+			m_Manager.display(normal);
 		}
 
 

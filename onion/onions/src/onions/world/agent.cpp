@@ -7,8 +7,25 @@ namespace onion
 	namespace world
 	{
 		
+		SubpixelHandler::SubpixelHandler(Shape* shape) : m_Subpixels(0, 0, 0)
+		{
+			m_Shape = shape;
+		}
+
+		void SubpixelHandler::translate(const vec3i& trans)
+		{
+			m_Subpixels += trans;
+
+			// This might give inaccurate results if the C++ implementation doesn't truncate division of negative integers towards 0
+			vec3i t = trans / num_subpixels;
+			m_Subpixels -= t * num_subpixels;
+
+			m_Shape->translate(t);
+		}
+
+
 		
-		Actor::Actor(Shape* bounds, Agent* agent, Graphic3D* graphic) : Object(bounds, graphic)
+		Actor::Actor(Shape* bounds, Agent* agent, Graphic3D* graphic) : Object(bounds, graphic), m_SubpixelHandler(bounds)
 		{
 			m_Agent = agent;
 		}
@@ -19,7 +36,12 @@ namespace onion
 				delete m_Agent;
 		}
 
-		vec3i Actor::update(const WorldCamera::View& view, int frames_passed)
+		SubpixelHandler& Actor::get_translator()
+		{
+			return m_SubpixelHandler;
+		}
+
+		vec3i Actor::update(const WorldCamera::View* view, int frames_passed)
 		{
 			return m_Agent->update(view, frames_passed);
 		}
@@ -33,13 +55,17 @@ namespace onion
 			unfreeze(INT_MIN);
 		}
 		
-		vec3i PlayerMovementControlledAgent::update(const WorldCamera::View& view, int frames_passed)
+		vec3i PlayerMovementControlledAgent::update(const WorldCamera::View* view, int frames_passed)
 		{
-			vec2i d = view.center.direction;
+			// TODO
+
+			vec2i d = view->get_normal();
 			Int d_len = d.square_sum();
-			d = (d * d) * (m_MovementSpeed * m_MovementSpeed * frames_passed * frames_passed) / (d_len * UpdateEvent::frames_per_second * UpdateEvent::frames_per_second);
+			vec2i t = (d * d) 
+				* (m_MovementSpeed * m_MovementSpeed * frames_passed * frames_passed) 
+				/ (d_len * UpdateEvent::frames_per_second * UpdateEvent::frames_per_second);
 			for (int k = 0; k < 2; ++k)
-				d(k) = (d.get(k) < 0 ? -1 : 1) * (Int)round(sqrt(d.get(k)));
+				d(k) = (d.get(k) < 0 ? -1 : 1) * (Int)round(sqrt(t.get(k)));
 
 			return vec3i(
 				(d.get(1) * m_Direction.get(0)) + (d.get(0) * m_Direction.get(1)),

@@ -7,6 +7,32 @@ namespace onion
 	namespace world
 	{
 
+		// A wrapper for a shape that handles subpixel translations.
+		struct SubpixelHandler
+		{
+		protected:
+			// The shape being handled.
+			Shape* m_Shape;
+
+			// The current subpixel position within the current pixel.
+			vec3i m_Subpixels;
+
+		public:
+			// The number of subpixels contained in a single pixel.
+			static constexpr Int num_subpixels = 256;
+
+
+			/// <summary>Constructs a wrapper for a shape that handles subpixel translations.</summary>
+			/// <param name="shape">The shape to handle subpixel translations for.</param>
+			SubpixelHandler(Shape* shape);
+
+			/// <summary>Translates the shape by a given vector, in subpixel units.</summary>
+			/// <param name="trans">A vector of translation, in subpixel units.</param>
+			void translate(const vec3i& trans);
+		};
+
+
+
 		// Controls the actions of an actor.
 		class Agent
 		{
@@ -14,8 +40,8 @@ namespace onion
 			/// <summary>Updates the actor.</summary>
 			/// <param name="view">The geometry of what is visible.</param>
 			/// <param name="frames_passed">The number of frames since the last update.</param>
-			/// <returns>The desired translation of the actor.</returns>
-			virtual vec3i update(const WorldCamera::View& view, int frames_passed) = 0;
+			/// <returns>The desired translation of the actor, in subpixel units.</returns>
+			virtual vec3i update(const WorldCamera::View* view, int frames_passed) = 0;
 		};
 
 		// An object that can move around and do stuff.
@@ -24,6 +50,9 @@ namespace onion
 		protected:
 			// The agent that controls the actor movement.
 			Agent* m_Agent;
+
+			// Wrapper for the shape that handles subpixel translations.
+			SubpixelHandler m_SubpixelHandler;
 
 		public:
 			/// <summary>Constructs an actor object.</summary>
@@ -36,10 +65,16 @@ namespace onion
 			virtual ~Actor();
 
 
+			/// <summary>Retrieves the handler for whenever the actor is translated by subpixel units.</summary>
+			/// <returns>A reference to the subpixel handler for the actor's bounds.</returns>
+			SubpixelHandler& get_translator();
+			
+			
 			/// <summary>Updates the actor.</summary>
 			/// <param name="view">The geometry of what is visible.</param>
 			/// <param name="frames_passed">The number of frames since the last update.</param>
-			vec3i update(const WorldCamera::View& view, int frames_passed);
+			/// <returns>The desired translation of the actor, in subpixel units.</returns>
+			vec3i update(const WorldCamera::View* view, int frames_passed);
 		};
 
 
@@ -61,7 +96,7 @@ namespace onion
 			/// <summary>Moves the actor.</summary>
 			/// <param name="view">The geometry of what is visible.</param>
 			/// <param name="frames_passed">The number of frames since the last update.</param>
-			virtual vec3i update(const WorldCamera::View& view, int frames_passed);
+			virtual vec3i update(const WorldCamera::View* view, int frames_passed);
 
 			/// <summary>Responds to a keyboard control being pressed.</summary>
 			/// <param name="event_data">The data for the event.</param>

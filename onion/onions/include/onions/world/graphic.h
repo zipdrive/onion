@@ -12,8 +12,8 @@ namespace onion
 		{
 		public:
 			/// <summary>Displays the graphic.</summary>
-			/// <param name="center">The ray from the camera position towards the camera.</param>
-			virtual void display(const Ray& center) const = 0;
+			/// <param name="normal">A vector pointing towards the camera.</param>
+			virtual void display(const vec3i& normal) const = 0;
 		};
 
 
@@ -130,8 +130,8 @@ namespace onion
 			FlatWallGraphic3D(const Flat3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite);
 
 			/// <summary>Displays the wall.</summary>
-			/// <param name="center">The ray from the camera position towards the camera.</param>
-			virtual void display(const Ray& center) const;
+			/// <param name="normal">A vector pointing towards the camera.</param>
+			virtual void display(const vec3i& normal) const;
 		};
 
 		// A wall sprite with an arbitrary two-dimensional normal vector.
@@ -156,8 +156,8 @@ namespace onion
 			TransformedFlatWallGraphic3D(const Flat3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite, Float angle);
 
 			/// <summary>Displays the wall.</summary>
-			/// <param name="center">The ray from the camera position towards the camera.</param>
-			virtual void display(const Ray& center) const;
+			/// <param name="normal">A vector pointing towards the camera.</param>
+			virtual void display(const vec3i& normal) const;
 		};
 
 
@@ -190,8 +190,8 @@ namespace onion
 			DynamicShadingSpriteGraphic3D(const Textured3DPixelSpriteSheet* sprite_sheet, const std::vector<const Sprite*>& sprites, bool flip_horizontally, const Texture* texture, Palette* palette);
 
 			/// <summary>Displays the sprite using the current index.</summary>
-			/// <param name="center">The ray from the camera position towards the camera.</param>
-			virtual void display(const Ray& center) const;
+			/// <param name="normal">A vector pointing towards the camera.</param>
+			virtual void display(const vec3i& normal) const;
 		};
 
 
@@ -206,14 +206,14 @@ namespace onion
 			_BillboardedGraphic3D(const _Args&... args) : T(args...) {}
 
 			/// <summary>Displays the graphic as facing towards the screen.</summary>
-			/// <param name="center">The ray from the camera position towards the camera.</param>
-			virtual void display(const Ray& center) const
+			/// <param name="normal">A vector pointing towards the camera.</param>
+			virtual void display(const vec3i& normal) const
 			{
 				// Set up the transform
 				Transform::model.push();
 
 				// Pivot the sprite so that dir => (0, -1)
-				Int x = center.direction.get(0), y = center.direction.get(1);
+				Int x = normal.get(0), y = normal.get(1);
 				Float len = sqrtf((x * x) + (y * y));
 				Float c = -y / len;
 				Float s = x / len;
@@ -226,7 +226,7 @@ namespace onion
 				);
 
 				// Display the graphic
-				T::display(center);
+				T::display(normal);
 
 				// Clean up
 				Transform::model.pop();

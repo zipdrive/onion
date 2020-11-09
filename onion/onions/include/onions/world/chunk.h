@@ -141,17 +141,17 @@ namespace onion
 
 
 			/// <summary>Resets what is visible, in response to the view changing.</summary>
-			virtual void reset_visible(const WorldCamera::View& view);
+			virtual void reset_visible(const WorldCamera::View* view) = 0;
 
 			/// <summary>Updates what is visible, in response to the passage of time.</summary>
-			virtual void update_visible(const WorldCamera::View& view, int frames_passed) = 0;
+			virtual void update_visible(const WorldCamera::View* view, int frames_passed) = 0;
 
 			/// <summary>Displays tiles in the chunk.</summary>
 			void display_tiles() const;
 
 			/// <summary>Displays objects in the chunk.</summary>
-			/// <param name="center">The ray from the camera position towards the camera.</param>
-			virtual void display_objects(const Ray& center) const = 0;
+			/// <param name="normal">A vector pointing towards the camera.</param>
+			virtual void display_objects(const vec3i& normal) const = 0;
 		};
 
 
@@ -205,14 +205,14 @@ namespace onion
 
 
 			/// <summary>Resets what is visible, in response to the view changing.</summary>
-			void reset_visible(const WorldCamera::View& view);
+			void reset_visible(const WorldCamera::View* view);
 
 			/// <summary>Updates what is visible, in response to the passage of time.</summary>
-			void update_visible(const WorldCamera::View& view, int frames_passed);
+			void update_visible(const WorldCamera::View* view, int frames_passed);
 
 			/// <summary>Displays objects in the chunk.</summary>
-			/// <param name="center">The ray from the camera position towards the camera.</param>
-			void display_objects(const Ray& center) const;
+			/// <param name="normal">A vector pointing towards the camera.</param>
+			void display_objects(const vec3i& normal) const;
 		};
 
 
@@ -267,14 +267,14 @@ namespace onion
 
 
 			/// <summary>Resets what is visible, in response to the view changing.</summary>
-			void reset_visible(const WorldCamera::View& view);
+			void reset_visible(const WorldCamera::View* view);
 
 			/// <summary>Updates what is visible, in response to the passage of time.</summary>
-			void update_visible(const WorldCamera::View& view, int frames_passed);
+			void update_visible(const WorldCamera::View* view, int frames_passed);
 
 			/// <summary>Displays objects in the chunk.</summary>
-			/// <param name="center">The ray from the camera position towards the camera.</param>
-			void display_objects(const Ray& center) const;
+			/// <param name="normal">A vector pointing towards the camera.</param>
+			void display_objects(const vec3i& normal) const;
 		};
 
 

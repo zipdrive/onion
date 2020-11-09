@@ -49,8 +49,8 @@ namespace onion
 
 
 			/// <summary>Displays the object.</summary>
-			/// <param name="center">The ray from the camera position towards the camera.</param>
-			virtual void display(const Ray& center) const;
+			/// <param name="normal">A vector pointing towards the camera.</param>
+			virtual void display(const vec3i& normal) const;
 		};
 
 
@@ -203,7 +203,6 @@ namespace onion
 			{
 				vec3i pos;
 				params.get("pos", pos);
-				pos = UNITS_PER_PIXEL * pos;
 
 				return new T(pos, m_SpriteSheet, m_Sprite);
 			}

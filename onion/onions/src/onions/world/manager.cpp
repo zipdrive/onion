@@ -18,8 +18,8 @@ namespace onion
 		}
 
 
-		vec3i ObjectManager::m_BlockDimensions{ UNITS_PER_PIXEL * 320, UNITS_PER_PIXEL * 320, UNITS_PER_PIXEL * 320 };
-		Int ObjectManager::m_UpperBound = UNITS_PER_PIXEL * 320;
+		vec3i ObjectManager::m_BlockDimensions{ 320, 320, 320 };
+		Int ObjectManager::m_UpperBound = 320;
 
 		ObjectManager::Block::Block(const vec3i& pos, Object* obj) : cube(pos, m_BlockDimensions)
 		{
@@ -49,27 +49,11 @@ namespace onion
 
 		bool ObjectManager::contains(const vec3i& index, Object* obj) const
 		{
-			// Calculates the minimum and maximum corner of the block
-			vec3i mins = index * m_BlockDimensions;
-			vec3i maxs = mins + m_BlockDimensions;
+			// Construct a rectangular prism representing the block
+			OrthogonalPrism rect(index * m_BlockDimensions, m_BlockDimensions);
 
-			// Calculate the center of the block
-			vec3i center = mins;
-			for (int k = 2; k >= 0; --k)
-				center(k) += (m_BlockDimensions.get(k) / 2);
-
-			// Find the closest point on the object to the block
-			vec3i closest;
-			obj->get_bounds()->get_closest_point(center, closest);
-
-			// Check whether the closest point lies within the block
-			for (int k = 2; k >= 0; --k)
-			{
-				if (closest.get(k) < mins.get(k) || closest.get(k) > maxs.get(k))
-					return false;
-			}
-
-			return true;
+			// Check if the distance between the object and the block is 0
+			return obj->get_bounds()->get_distance(&rect) == 0;
 		}
 
 		bool ObjectManager::collision(Object* obj)
@@ -226,34 +210,15 @@ namespace onion
 		template <>
 		bool ObjectManager::__insert<LightObject, -1>(const vec3i& index, LightObject* obj)
 		{
-			// Calculates the minimum corner of the block
-			vec3i mins = index * m_BlockDimensions;
-			vec3i maxs = mins + m_BlockDimensions;
+			// Construct a rectangular prism representing the block
+			OrthogonalPrism rect(index * m_BlockDimensions, m_BlockDimensions);
 
-			// Calculate the center of the block
-			vec3i center = mins;
-			for (int k = 2; k >= 0; --k)
-				center(k) += (m_BlockDimensions.get(k) / 2);
-
-			// Find the closest point on the light to the block
-			vec3i closest;
-			obj->get_bounds()->get_closest_point(center, closest);
-
-			// Get the minimal difference vector between the light and the block
-			vec3i diff;
-			for (int k = 2; k >= 0; --k)
-			{
-				if (closest.get(k) < mins.get(k))
-					diff(k) = mins.get(k) - closest.get(k);
-				else if (closest.get(k) > maxs.get(k))
-					diff(k) = maxs.get(k) - closest.get(k);
-				else
-					diff(k) = 0;
-			}
+			// Find the minimum (squared) difference from the light to the block
+			Int dist = obj->get_bounds()->get_distance(&rect);
 
 			// If the (squared) length of the minimal difference vector is less than or equal to the (squared) radius of the light, then add it to the block
-			Int radius = obj->get_light()->radius * UNITS_PER_PIXEL;
-			if (diff.square_sum() < radius * radius)
+			Int radius = obj->get_light()->radius;
+			if (dist < radius * radius)
 			{
 				if (Block* block = get_block(index))
 				{
@@ -263,7 +228,7 @@ namespace onion
 				else
 				{
 					// Construct a new block, then insert the light
-					m_Blocks.emplace(index, new Block(mins, obj));
+					m_Blocks.emplace(index, new Block(rect.get_position(), obj));
 				}
 				return true;
 			}
@@ -273,63 +238,15 @@ namespace onion
 
 
 
-		WorldCamera::View ObjectManager::ObjectComparer::view{};
-		
-		bool ObjectManager::ObjectComparer::compare(const Object* lhs, const Object* rhs)
-		{
-			// TODO
-			// this is a heuristic for which should be displayed in front, but there are edge case exceptions
-			
-			// Calculate the point in the bottom-left of the screen at the upper bound for z-coordinates
-			const vec3i& n1 = view.edges[BOTTOM_VIEW_EDGE].normal;
-			Int d1 = view.edges[BOTTOM_VIEW_EDGE].dot;
-			const vec3i& n2 = view.edges[LEFT_VIEW_EDGE].normal;
-			Int d2 = view.edges[LEFT_VIEW_EDGE].dot;
-
-			Int x, y, z = m_UpperBound;
-
-			if (n1.get(0) != 0)
-			{
-				Int denom = (n1.get(0) * n2.get(1)) - (n1.get(1) * n2.get(0)); // Only 0 if both normals are parallel
-				y = ((n1.get(0) * (d2 - (n2.get(2) * z))) - (n2.get(0) * (d1 - (n1.get(2) * z)))) / denom;
-				x = (d1 - (n1.get(1) * y) - (n1.get(2) * z)) / n1.get(0);
-			}
-			else // TODO maybe check in case n1 = (0, 0, 1)?
-			{
-				y = (d1 - (n1.get(2) * z)) / n1.get(1);
-				x = (d2 - (n2.get(1) * y) - (n2.get(2) * z)) / n2.get(0);
-			}
-
-			// Create a ray spanning the bottom of the screen
-			Ray bottom_near = { vec3i(x, y, z), view.edges[LEFT_VIEW_EDGE].normal };
-			
-			// Get the point on each object's bounds that is closest to the screen depth-wise and farthest towards the bottom of the screen
-			vec3i closest_lhs, closest_rhs;
-			lhs->get_bounds()->get_closest_point(bottom_near, closest_lhs);
-			rhs->get_bounds()->get_closest_point(bottom_near, closest_rhs);
-
-			// Compare dot products with the to see which is closer to the bottom of the screen
-			Int d_lhs = n1.dot(closest_lhs) - d1;
-			Int d_rhs = n1.dot(closest_rhs) - d1;
-			if (d_lhs != d_rhs)
-				return d_lhs > d_rhs; // True if LHS is closer to top of screen
-			else if (closest_lhs.get(2) != closest_rhs.get(2))
-				return closest_lhs.get(2) < closest_rhs.get(2); // True if LHS is lower down than RHS
-			else
-			{
-				d_lhs = n2.dot(closest_lhs) - d2;
-				d_rhs = n2.dot(closest_rhs) - d2;
-				return d_lhs > d_rhs;
-			}
-		}
+		const WorldCamera::View* ObjectManager::ObjectComparer::view{ nullptr };
 
 		bool ObjectManager::ObjectComparer::operator()(const Object* lhs, const Object* rhs) const
 		{
-			return compare(lhs, rhs);
+			return view->compare(lhs->get_bounds(), rhs->get_bounds());
 		}
 
 
-		void ObjectManager::reset_visible(const WorldCamera::View& view)
+		void ObjectManager::reset_visible(const WorldCamera::View* view)
 		{
 			// A set of all blocks within view.
 			std::unordered_set<Block*> active_blocks;
@@ -339,13 +256,9 @@ namespace onion
 			for (auto iter = m_Blocks.begin(); iter != m_Blocks.end(); ++iter) // Iterate over every block to check if each is visible
 			{
 				Block* block = iter->second;
-				
-				// Get the closest point to the ray through the center of the screen
-				vec3i closest;
-				block->cube.get_closest_point(view.center, closest);
 
-				// Check if the closest point in the block to the center of the screen is visible, and add it to the list of active blocks if it is
-				if (view.is_visible(closest))
+				// Check if the block is visible, and add it to the list of active blocks if it is
+				if (view->get_distance(&block->cube) == 0)
 					active_blocks.insert(block);
 			}
 
@@ -368,7 +281,7 @@ namespace onion
 				Object* obj = *iter;
 
 				// Check if the object is visible
-				if (view.is_visible(obj->get_bounds()))
+				if (view->get_distance(obj->get_bounds()) == 0)
 				{
 					m_ActiveObjects.insert(obj);
 				}
@@ -380,7 +293,7 @@ namespace onion
 				Object* obj = *iter;
 
 				// Check if the actor is visible
-				if (view.is_visible(obj->get_bounds()))
+				if (view->get_distance(obj->get_bounds()) == 0)
 				{
 					m_ActiveObjects.insert(obj);
 				}
@@ -397,13 +310,12 @@ namespace onion
 			m_ActiveLights = active_lights;
 		}
 
-		void ObjectManager::update_visible(const WorldCamera::View& view, int frames_passed)
+		void ObjectManager::update_visible(const WorldCamera::View* view, int frames_passed)
 		{
 			for (auto iter = m_Actors.begin(); iter != m_Actors.end(); ++iter)
 			{
 				Actor* actor = *iter;
-				Shape* bounds = actor->get_bounds();
-				vec3i original = bounds->get_position();
+				SubpixelHandler& translator = actor->get_translator();
 
 				// Calculate how the actor should (ideally) be translated
 				vec3i trans = actor->update(view, frames_passed);
@@ -411,17 +323,17 @@ namespace onion
 				if (trans.square_sum() > 0)
 				{
 					// Test whether there are any collisions if the actor is translated as it is supposed to be
-					bounds->translate(trans);
+					translator.translate(trans);
 					if (collision(actor))
 					{
 						// If there was a collision, reset the position
-						bounds->set_position(original);
+						translator.translate(-1 * trans);
 
 						// TODO test whether there isn't a collision if the actor is only translated on one axis, or if it is pushed upwards
 					}
 
 					// Check if the actor is visible
-					if (view.is_visible(bounds))
+					if (view->get_distance(actor->get_bounds()) == 0)
 					{
 						// Add the actor to the set of visible objects, if it isn't already included
 						m_ActiveObjects.insert(actor);
@@ -435,11 +347,11 @@ namespace onion
 			}
 		}
 
-		void ObjectManager::display(const Ray& center) const
+		void ObjectManager::display(const vec3i& normal) const
 		{
 			// Display all static objects
 			for (auto iter = m_ActiveObjects.begin(); iter != m_ActiveObjects.end(); ++iter)
-				(*iter)->display(center);
+				(*iter)->display(normal);
 		}
 
 	}

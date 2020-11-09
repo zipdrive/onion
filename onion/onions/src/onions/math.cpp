@@ -41,6 +41,16 @@ namespace onion
 			return n * denominator < numerator; // TODO
 	}
 
+	bool Frac::operator<=(Int n) const
+	{
+		return !operator>(n);
+	}
+
+	bool Frac::operator>=(Int n) const
+	{
+		return !operator<(n);
+	}
+
 	Frac& Frac::operator=(Int n)
 	{
 		numerator = n;

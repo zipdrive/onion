@@ -477,7 +477,7 @@ namespace onion
 			return new _FlickeringLightObject<CubeLightObject>(
 				m_IntensityMinimum,
 				m_Probability,
-				UNITS_PER_PIXEL * pos,
+				pos,
 				m_Dimensions,
 				m_Color,
 				m_Intensity,
@@ -497,7 +497,7 @@ namespace onion
 			return new _FlickeringLightObject<ConeLightObject>(
 				m_IntensityMinimum,
 				m_Probability,
-				UNITS_PER_PIXEL * pos,
+				pos,
 				m_Color,
 				m_Intensity,
 				dir,
