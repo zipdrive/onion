@@ -152,6 +152,20 @@ namespace onion
 			return *this;
 		}
 
+		/// <summary>Divides this matrix in-place by a scalar value.</summary>
+		/// <param name="scalar">The scalar value.</param>
+		/// <returns>A reference to this matrix.</returns>
+		template <typename U>
+		matrix<T, _Columns, _Rows>& operator/=(U scalar)
+		{
+			for (int k = (_Rows * _Columns) - 1; k >= 0; --k)
+			{
+				mat[k] /= scalar;
+			}
+
+			return *this;
+		}
+
 
 		/// <summary>Sets this matrix equal to another one.</summary>
 		/// <param name="other">The other matrix.</param>

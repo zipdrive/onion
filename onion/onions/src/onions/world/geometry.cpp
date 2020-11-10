@@ -5,131 +5,11 @@ namespace onion
 	namespace world
 	{
 
-		/// <summary>Implements the extended Euclidean algorithm to find the greatest common divisor of two integers, as well as integers A, B such that Aa + Bb = gcd(a, b).</summary>
-		/// <param name="r0">The first integer.</param>
-		/// <param name="r1">The second integer.</param>
-		/// <param name="s0">The first integer in the recursive sequence to calculate the coefficient of a.</param>
-		/// <param name="s1">The second integer in the recursive sequence to calculate the coefficient of a.</param>
-		/// <param name="sfinal">Outputs the coefficient of a.</param>
-		/// <param name="t0">The first integer in the recursive sequence to calculate the coefficient of b.</param>
-		/// <param name="t1">The second integer in the recursive sequence to calculate the coefficient of b.</param>
-		/// <param name="tfinal">Outputs the coefficient of b.</param>
-		/// <returns>The greatest common divisor of both integers.</returns>
-		template <typename T>
-		T __gcd(T r0, T r1, T s0, T s1, T& sfinal, T t0, T t1, T& tfinal)
-		{
-			T q1 = r0 / r1;
-			T r2 = r0 - (q1 * r1);
-
-			if (r2 == 0)
-			{
-				sfinal = s1;
-				tfinal = t1;
-				return r1;
-			}
-			else
-			{
-				T s2 = s0 - (q1 * s1);
-				T t2 = t0 - (q1 * t2);
-
-				return __gcd(r1, r2, s1, s2, sfinal, t1, t2, tfinal);
-			}
-		}
-
-		/// <summary>Implements the extended Euclidean algorithm to find the greatest common divisor of two integers, as well as integers A, B such that Aa + Bb = gcd(a, b).</summary>
-		/// <param name="a">The first integer.</param>
-		/// <param name="b">The second integer.</param>
-		/// <param name="A">Outputs the coefficient of a.</param>
-		/// <param name="B">Outputs the coefficient of b.</param>
-		/// <returns>The greatest common divisor of both integers.</returns>
-		template <typename T>
-		T gcd(T a, T b, T& A, T& B)
-		{
-			if (a < b)
-				return gcd(b, a, B, A);
-			else
-			{
-				if (b == 0)
-				{
-					A = 1;
-					B = 0;
-					return a;
-				}
-				else
-				{
-					return __gcd(a, b, 1, 0, A, 0, 1, B);
-				}
-			}
-		}
-
-
-		/// <summary>Calculates x to minimize a - bx % n.</summary>
-		/// <returns>The value of x that minimizes a - bx % n.</returns>
-		template <typename T>
-		T minimize_modulo_difference(T a, T b, T n)
-		{
-			T a_mod = a % n;
-			if (a_mod == 0)
-				return 0;
-			else if (a_mod < 0)
-				a_mod += abs(n);
-
-			T b_mod = b % n;
-			if (b_mod < 0)
-				b_mod += n;
-
-			T B, N;
-			T divisor = gcd(n, b_mod, N, B);
-
-			do
-			{
-				if (a_mod % divisor == 0)
-				{
-					// There is a perfect solution to make ax == b mod n
-					return (B * a_mod) / divisor;
-				}
-			} while (--a_mod >= 0);
-		}
-
-		/// <summary>Calculates x to minimize both (a1 - (b1 * x) % n1) and (a2 - (b2 * x) % n2).</summary>
-		/// <returns>The value of x that minimizes both (a1 - (b1 * x) % n1) and (a2 - (b2 * x) % n2).</returns>
-		template <typename T>
-		T minimize_double_modulo_difference(T a1, T b1, T n1, T a2, T b2, T n2)
-		{
-			T n[2] = { abs(n1), abs(n2) };
-
-			T a[2] = { a1 % n[0], a2 % n[1] };
-			if (a[0] == 0 && a[1] == 0)
-				return 0;
-
-			T b[2] = { b1 % n1, b2 % n2 };
-			T divisors[2], B[2], N[2];
-			for (int k = 0; k < 2; k++)
-			{
-				if (a[k] < 0)
-					a[k] += n[k];
-				if (b[k] < 0)
-					b[k] += n[k];
-
-				divisors[k] = gcd(n[k], b[k], N[k], B[k]);
-				while (a[k] % divisors[k] != 0)
-					--a[k];
-			}
-
-			T r = (divisors[0] * B[1] * a[1]) - (divisors[1] * B[0] * a[0]);
-			T s[2] = { -divisors[1] * n[0], divisors[0] * n[1] };
-			T x = minimize_modulo_difference(r, s[0], s[1]);
-
-			return ((B[0] * a[0]) + (x * n[0])) / divisors[0];
-		}
-
-
-
 		template <int N>
 		bool lambda_all_positive(const matrix<Frac, 1, N>& lambda)
 		{
 			for (int k = N - 1; k >= 0; --k)
-				if (lambda.get(k) <= 0)
+				if (lambda.get(k) < 0)
 					return false;
 			return true;
 		}
@@ -144,36 +24,29 @@ namespace onion
 			return total;
 		}
 
+
+		void reduce(vec3i& a)
+		{
+			Int divisor = gcd(abs(a.get(0)), gcd(abs(a.get(1)), abs(a.get(2))));
+			a /= divisor;
+		}
+
 		
 		void nearest_simplex1d(const Simplex& s_input, Simplex& s_output, vec3i& dir)
 		{
 			// Project the origin onto the line formed by the vertices
-			vec3i t = s_input[1] - s_input[0];
-			vec3i o = s_input[1] + (t * Frac(t.dot(s_input[1]), t.square_sum()));
+			vec3i s_diff = s_input[1] - s_input[0];
 
-			// Project the vertices and the projected origin onto R^1
-			Int mu_max = 0;
-			int index = -1;
-			for (int k = 2; k >= 0; --k)
-			{
-				Int mu = t.get(k);
-				if (abs(mu) > abs(mu_max))
-				{
-					mu_max = -mu;
-					index = k;
-				}
-			}
+			Int numer[2];
+			numer[0] = s_diff.dot(s_input[1]);
+			numer[1] = s_diff.dot(s_input[0]);
+			Int denom = s_diff.square_sum();
 
-			// Calculate the potential lambdas
-			FRAC_VEC2 lambda;
-			for (int m = 1; m >= 0; --m)
-				lambda(m) = Frac((m == 0 ? 1 : -1) * (s_input[m].get(index) - o.get(index)), mu_max);
-
-			if (lambda_all_positive(lambda))
+			if (numer[0] > 0 && numer[1] < 0)
 			{
 				// The projected origin lies between the two vertices
 				s_output = s_input;
-				dir = -1 * lambda_mult(lambda, s_output);
+				dir = (s_input[1] * Frac(numer[1], denom)) - (s_input[0] * Frac(numer[0], denom));
 			}
 			else
 			{
@@ -185,63 +58,49 @@ namespace onion
 
 		void nearest_simplex2d(const Simplex& s_input, Simplex& s_output, vec3i& dir)
 		{
-			// Project the origin onto the plane formed by the vertices
-			vec3i normal;
-			vec3i(s_input[1] - s_input[0]).cross(s_input[2] - s_input[0], normal);
-			vec3i o = normal * Frac(normal.dot(s_input[0]), normal.square_sum());
+			// Calculate the two vectors that constitute the basis for the plane
+			vec3i d[2] = { s_input[1] - s_input[0], s_input[2] - s_input[0] };
 
-			// Project the triangle and the origin onto R^2 by selecting the Cartesian plane such that the projected triangle has the greatest area
-			vec3i cof[3]; // Vectors whose k-th elements are the cofactors C_{3,c} of M (see below) for the projection onto the Cartesian plane that excludes the k-th dimension
-			vec3i mu;
-			for (int c = 2; c >= 0; --c)
-			{
-				s_input[(c + 1) % 3].cross(s_input[(c + 2) % 3], cof[c]);
+			// TODO come up with a better solution to prevent integer overflow
+			reduce(d[0]);
+			reduce(d[1]);
+			vec3i d0 = d[0];
+			vec3i d1 = d[1];
 
-				// Sum the cross products from each pair of vertices to obtain a vector whose k-th element is the area of the triangle projected onto the Cartesian plane that excludes the k-th dimension
-				mu += cof[c];
-			}
-			
-			Int mu_max = 0;
-			int index = -1;
+			Int d00 = d[0].square_sum();
+			Int d11 = d[1].square_sum();
+			Int d01 = d[0].dot(d[1]);
+
+			// Construct the adjugate matrix
+			INT_MAT3X2 adj;
 			for (int k = 2; k >= 0; --k)
 			{
-				// Calculate which Cartesian plane has the largest projected area for the triangle
-				if (abs(mu.get(k)) > abs(mu_max))
-				{
-					mu_max = mu.get(k);
-					index = k;
-				}
+				adj.set(0, k, (d[0].get(k) * d11) - (d[1].get(k) * d01));
+				adj.set(1, k, (d[1].get(k) * d00) - (d[0].get(k) * d01));
 			}
 
-			// Calculate the determinant of M = [ (s_0^proj, 1)  (s_1^proj, 1)  (s_2^proj, 1) ]
-			Int det = 0; // The determinant of M
-			for (int c = 2; c >= 0; --c) // The index of the column being removed from the minor
-			{
-				// Sum the cofactors to get the determinant of M
-				det += cof[c].get(index);
-			}
+			// Calculate the normal vector of the plane formed by the vertices
+			vec3i normal;
+			d[0].cross(d[1], normal);
+			reduce(normal);
 
-			// Calculate the potential lambdas that serve as the solution to M * lambda = [ o_{k1}  o_{k2}  1 ]
+			// Calculate the projection of the origin onto the plane formed by the simplex
+			vec3i o = normal * Frac(normal.dot(s_input[0]), normal.square_sum());
+
+			// Calculate the barycentric coordinates of the origin projection, with lambda_0 = 1
+			vec2i numer = adj * (o - s_input[0]);
+			Int denom = (d00 * d11) - (d01 * d01); // TODO make sure nonzero!
+
 			FRAC_VEC3 lambda;
-			int k1 = (index + 1) % 3;
-			int k2 = (index + 2) % 3;
-			for (int c = 3; c >= 0; --c)
-			{
-				int c1 = (c + 1) % 3;
-				int c2 = (c + 2) % 3;
-				lambda(c) = Frac(
-					(o.get(k1) * (s_input[c1].get(k2) - s_input[c2].get(k2)))
-						+ (o.get(k2) * (s_input[c2].get(k1) - s_input[c1].get(k1)))
-						+ cof[c].get(index),
-					det
-				);
-			}
+			lambda(0) = 1;
+			lambda(1) = Frac(numer.get(0), denom);
+			lambda(2) = Frac(numer.get(1), denom);
 
 			if (lambda_all_positive(lambda))
 			{
-				// The origin lies within the triangle
+				// The projected origin lies within the triangle
 				s_output = s_input;
-				dir = -1 * lambda_mult(lambda, s_output);
+				dir = -1 * o;
 			}
 			else
 			{
@@ -253,10 +112,7 @@ namespace onion
 					if (lambda.get(c) < 0) // Discard the c-th vertex
 					{
 						// Construct a simplex with the c-th vertex excluded
-						Simplex w;
-						for (int n = 0; n < 3; ++n)
-							if (n != c)
-								w.push_back(s_input[n]);
+						Simplex w = { s_input[0], s_input[c == 1 ? 2 : 1] };
 
 						// Run the sub-routine for a triangle
 						Simplex s_output_temp;
@@ -301,7 +157,7 @@ namespace onion
 			{
 				// The origin lies within the tetrahedron
 				s_output = s_input;
-				dir = -1 * lambda_mult(lambda, s_output);
+				dir = vec3i(0, 0, 0);
 			}
 			else
 			{
@@ -370,7 +226,7 @@ namespace onion
 
 
 
-		Int Shape::__get_distance(const Shape* other, Simplex& s, vec3i& d) const
+		/*Int Shape::__get_distance(const Shape* other, Simplex& s, vec3i& d) const
 		{
 			// TODO figure out a way to ensure there are no infinite loops
 
@@ -401,6 +257,54 @@ namespace onion
 			while (s.size() < 4);
 
 			return d.square_sum();
+		}*/
+
+		Int Shape::__get_distance(const Shape* other, Simplex& s, vec3i& d) const
+		{
+			// Calculate the next point on the Minkowski difference
+			vec3i d0 = d;
+			vec3i a1 = support(d0);
+			vec3i a2 = other->support(-1 * d0);
+			vec3i a = a1 - a2;
+
+			if (a.dot(d) < 0)
+			{
+				// No intersection
+				return d.square_sum();
+			}
+
+			// Add a to the simplex, making sure there are no duplicates
+			Simplex temp = { a };
+			for (auto iter = s.begin(); iter != s.end(); ++iter)
+			{
+				if (a == *iter)
+				{
+					// The algorithm has stalled, so stop running
+					return d.square_sum();
+				}
+				else
+				{
+					// Add the point to the new simplex
+					temp.push_back(*iter);
+				}
+			}
+
+			// Calculate the simplex on the current simplex that is nearest to the origin
+			if (nearest_simplex(temp, s, d))
+			{
+				// The two shapes intersect
+				return 0;
+			}
+			else if (s.size() < 4)
+			{
+				// Recurse
+				return __get_distance(other, s, d);
+			}
+			else
+			{
+				// All points on the simplex are equally close to the origin
+				return d.square_sum();
+			}
 		}
 
 		Int Shape::get_distance(const Shape* other) const

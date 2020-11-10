@@ -28,17 +28,17 @@ namespace onion
 	bool Frac::operator<(Int n) const
 	{
 		if (denominator > 0)
-			return n * denominator < numerator; // TODO
-		else
 			return n * denominator > numerator; // TODO
+		else
+			return n * denominator < numerator; // TODO
 	}
 
 	bool Frac::operator>(Int n) const
 	{
 		if (denominator > 0)
-			return n * denominator > numerator; // TODO
-		else
 			return n * denominator < numerator; // TODO
+		else
+			return n * denominator > numerator; // TODO
 	}
 
 	bool Frac::operator<=(Int n) const
