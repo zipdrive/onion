@@ -14,6 +14,15 @@ namespace onion
 	namespace opengl
 	{
 
+		void synchronize()
+		{
+			// Don't allow the GPU to accept any display commands until the buffer has been uploaded
+			GLsync synchro = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+			glWaitSync(synchro, 0, GL_TIMEOUT_IGNORED);
+			glDeleteSync(synchro);
+		}
+
+
 		/// <summary>Checks for any OpenGL errors. If any were received, logs them.</summary>
 		/// <param name="message">The header written before writing the OpenGL error codes.</param>
 		void errcheck(std::string message)
@@ -1340,10 +1349,8 @@ namespace onion
 				// Bind the vertex attributes
 				__activate();
 
-				// Don't allow the GPU to accept any display commands until the buffer has been uploaded
-				GLsync synchro = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-				glWaitSync(synchro, 0, GL_TIMEOUT_IGNORED);
-				glDeleteSync(synchro);
+				// Synchronize with the GPU
+				synchronize();
 			}
 		}
 

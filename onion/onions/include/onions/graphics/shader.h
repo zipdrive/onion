@@ -13,6 +13,10 @@ namespace onion
 	namespace opengl
 	{
 
+		/// <summary>Synchronizes the CPU with the GPU.</summary>
+		void synchronize();
+
+
 		// An untyped vertex attrib.
 		struct _VertexAttrib
 		{

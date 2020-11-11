@@ -104,6 +104,34 @@ namespace onion
 			const vec3i dx(m_FrameBounds.get(0, 1) - m_FrameBounds.get(0, 0), 0, 0);
 			const vec3i dy(0, m_FrameBounds.get(1, 1) - m_FrameBounds.get(1, 0), 0);
 
+			// Check which object is closer to the screen
+			Parallelogram rect(vec3i(m_Position, 0) + n, dx, dy);
+			Int dl = rect.get_distance(lhs);
+			Int dr = rect.get_distance(rhs);
+			if (dr < dl)
+				return true;
+			else if (dl < dr)
+				return false;
+
+			// Check which object is closer to the bottom of the screen
+			rect = Parallelogram(m_Position, dx, n);
+			dl = rect.get_distance(lhs);
+			dr = rect.get_distance(rhs);
+			if (dr < dl)
+				return true;
+			else if (dl < dr)
+				return false;
+
+			// Check which object is closer to the left side of the screen
+			rect = Parallelogram(m_Position, dy, n);
+			dl = rect.get_distance(lhs);
+			dr = rect.get_distance(rhs);
+			if (dr < dl)
+				return true;
+			return false;
+
+			/*
+
 			// Check if the highest z-coordinate of lhs is below the lowest z-coordinate of rhs
 			Parallelogram r(m_Position, dx, dy);
 			Parallelogram t(vec3i(m_Position, 0) + n, dx, dy);
@@ -138,6 +166,8 @@ namespace onion
 			if (dr < dl)
 				return true;
 			return false;
+
+			*/
 		}
 		
 		

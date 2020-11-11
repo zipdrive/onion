@@ -28,5 +28,5 @@ begin obj DEBUG interactable
 end
 
 begin obj DEBUG actor
-    pos = (180, 220, 0)
+    pos = (180, 120, 0)
 end

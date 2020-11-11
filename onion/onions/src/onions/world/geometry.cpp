@@ -134,67 +134,76 @@ namespace onion
 
 		void nearest_simplex3d(const Simplex& s_input, Simplex& s_output, vec3i& dir)
 		{
-			// Calculate the determinant of M = [ (s_0, 1)  (s_1, 1)  (s_2, 1)  (s_3, 1) ]
-			vec4i cof; // The cofactors C_{4,c} of M
-			Int det = 0; // The determinant of M
-			for (int c = 3; c >= 0; --c) // The index of the column being removed from the minor
+			// Construct a barycentric coordinate system
+			vec3i s_diff[3];
+			for (int c = 3; c > 0; --c)
+				s_diff[c - 1] = s_input[c] - s_input[0];
+
+			// Calculate the barycentric coordinates of the origin
+			vec3i o = -1 * s_input[0];
+
+			vec3i cross[3];
+			o.cross(s_diff[1], cross[0]);
+			s_diff[0].cross(o, cross[1]);
+			s_diff[0].cross(s_diff[1], cross[2]);
+
+			if (Int denom = cross[2].dot(s_diff[2])) 
 			{
-				// Calculate the c-th cofactor of M
-				vec3i a;
-				s_input[c > 1 ? 1 : 2].cross(s_input[c > 2 ? 2 : 3], a);
-				cof(c) = (c % 2 == 0 ? -1 : 1) * a.dot(s_input[c > 0 ? 0 : 1]);
+				// The three vectors form a basis for R^3
+				FRAC_VEC4 lambda;
+				lambda(0) = 1;
+				lambda(1) = Frac(cross[0].dot(s_diff[2]), denom);
+				lambda(2) = Frac(cross[1].dot(s_diff[2]), denom);
+				lambda(3) = Frac(cross[2].dot(o), denom);
 
-				// Sum the cofactors to get the determinant of M
-				det += cof.get(c);
-			}
-
-			// Calculate the potential lambdas
-			FRAC_VEC4 lambda;
-			for (int c = 3; c >= 0; --c)
-				lambda(c) = Frac(cof.get(c), det);
-
-			if (lambda_all_positive(lambda))
-			{
-				// The origin lies within the tetrahedron
-				s_output = s_input;
-				dir = vec3i(0, 0, 0);
-			}
-			else
-			{
-				// Delete a vertex
-				Int d_min = std::numeric_limits<Int>::max();
-
-				for (int c = 3; c > 0; --c)
+				if (lambda_all_positive(lambda))
 				{
-					if (lambda.get(c) < 0) // Discard the c-th vertex
+					// The origin lies within the tetrahedron
+					s_output = s_input;
+					dir = vec3i(0, 0, 0);
+				}
+				else
+				{
+					// Delete a vertex
+					Int d_min = std::numeric_limits<Int>::max();
+
+					for (int c = 3; c > 0; --c)
 					{
-						// Construct a simplex with the c-th vertex excluded
-						Simplex w;
-						for (int n = 0; n < 4; ++n)
-							if (n != c)
-								w.push_back(s_input[n]);
-
-						// Run the sub-routine for a triangle
-						Simplex s_output_temp;
-						vec3i dir_temp;
-						nearest_simplex2d(w, s_output_temp, dir_temp);
-
-						// In case there are multiple negative lambda values, check which has the better minimum norm
-						Int d = dir_temp.square_sum();
-						if (d < d_min)
+						if (lambda.get(c) < 0) // Discard the c-th vertex
 						{
-							s_output = s_output_temp;
-							dir = dir_temp;
-							d_min = d;
+							// Construct a simplex with the c-th vertex excluded
+							Simplex w;
+							for (int n = 0; n < 4; ++n)
+								if (n != c)
+									w.push_back(s_input[n]);
+
+							// Run the sub-routine for a triangle
+							Simplex s_output_temp;
+							vec3i dir_temp;
+							nearest_simplex2d(w, s_output_temp, dir_temp);
+
+							// In case there are multiple negative lambda values, check which has the better minimum norm
+							Int d = dir_temp.square_sum();
+							if (d < d_min)
+							{
+								s_output = s_output_temp;
+								dir = dir_temp;
+								d_min = d;
+							}
 						}
 					}
 				}
+			}
+			else
+			{
+				// The three vectors are coplanar, which shouldn't ever happen because that would mean that a * d < 0 in the __get_distance function? But just in case...
+				s_output = s_input;
 			}
 		}
 		
 		/// <summary></summary>
 		/// <returns>True if the generated simplex contains the origin, false otherwise.</returns>
-		bool nearest_simplex(const Simplex& s_input, Simplex& s_output, vec3i& dir)
+		void nearest_simplex(const Simplex& s_input, Simplex& s_output, vec3i& dir)
 		{
 			switch (s_input.size())
 			{
@@ -219,9 +228,6 @@ namespace onion
 				dir = -1 * s_input[0];
 			}
 			}
-
-			// TODO i don't know for sure that this works
-			return dir.square_sum() == 0;
 		}
 
 
@@ -290,20 +296,17 @@ namespace onion
 			}
 
 			// Calculate the simplex on the current simplex that is nearest to the origin
-			if (nearest_simplex(temp, s, d))
+			nearest_simplex(temp, s, d);
+			
+			Int dist = d.square_sum();
+			if (dist == 0 || s.size() == 4)
 			{
-				// The two shapes intersect
-				return 0;
-			}
-			else if (s.size() < 4)
-			{
-				// Recurse
-				return __get_distance(other, s, d);
+				return dist;
 			}
 			else
 			{
-				// All points on the simplex are equally close to the origin
-				return d.square_sum();
+				// Recurse
+				return __get_distance(other, s, d);
 			}
 		}
 

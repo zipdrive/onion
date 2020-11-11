@@ -16,9 +16,13 @@ namespace onion
 		{
 			m_Subpixels += trans;
 
-			// This might give inaccurate results if the C++ implementation doesn't truncate division of negative integers towards 0
-			vec3i t = trans / num_subpixels;
-			m_Subpixels -= t * num_subpixels;
+			vec3i t;
+			for (int k = 2; k >= 0; --k)
+			{
+				// This might give inaccurate results depending on C++ implementation of how rounding is done for negative integer division, but it should probably be fine
+				t(k) = m_Subpixels.get(k) / num_subpixels;
+				m_Subpixels(k) -= t.get(k) * num_subpixels;
+			}
 
 			m_Shape->translate(t);
 		}
@@ -65,7 +69,7 @@ namespace onion
 				* (m_MovementSpeed * m_MovementSpeed * frames_passed * frames_passed) 
 				/ (d_len * UpdateEvent::frames_per_second * UpdateEvent::frames_per_second);
 			for (int k = 0; k < 2; ++k)
-				d(k) = (d.get(k) < 0 ? -1 : 1) * (Int)round(sqrt(t.get(k)));
+				d(k) = (d.get(k) < 0 ? 1 : -1) * (Int)round(sqrt(t.get(k)));
 
 			return vec3i(
 				(d.get(1) * m_Direction.get(0)) + (d.get(0) * m_Direction.get(1)),
