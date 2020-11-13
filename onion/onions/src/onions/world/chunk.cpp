@@ -814,23 +814,23 @@ namespace onion
 
 		void SmoothChunk::reset_visible(const WorldCamera::View* view)
 		{
+			static const Int max_allowed = type_limits<Int>::max();
+
 			// Reset visible tiles
 			// TODO take height into account
 			m_VisibleTiles.clear();
-
-			const Int max_allowed = type_limits<Int>::max();
 			
-			UprightRectangle r(vec3i(), vec3i(0, max_allowed, max_allowed));
+			UprightRectangle r(vec3i(), vec3i(0, max_allowed, 0));
 			Int min_x = r.get_distance(view);
 
 			r.translate(vec3i(max_allowed, 0, 0));
 			Int max_x = max_allowed - r.get_distance(view);
 
-			r = UprightRectangle(vec3i(), vec3i(max_allowed, 0, max_allowed));
+			r = UprightRectangle(vec3i(), vec3i(max_allowed, 0, 0));
 			Int min_y = r.get_distance(view);
 
 			r.translate(vec3i(0, max_allowed, 0));
-			Int max_y = r.get_distance(view);
+			Int max_y = max_allowed - r.get_distance(view);
 
 			Int min_j = std::max<Int>(0, min_y / m_TileSize);
 			Int max_j = std::min<Int>(m_Dimensions.get(1) - 1, max_y / m_TileSize);

@@ -10,6 +10,39 @@ namespace onion
 	using Double = primitive<double>;
 
 
+	/*
+	NOTE: type_limits for Int and Uint are so low to ensure that the dot product of any two vec3i (within the passed limits) will not cause an integer overflow
+	*/
+
+	template <>
+	struct type_limits<Int>
+	{
+		static constexpr Int min()
+		{
+			return std::numeric_limits<Int>::min() / (1 << ((sizeof(Int) * 4) + 1));
+		}
+
+		static constexpr Int max()
+		{
+			return std::numeric_limits<Int>::max() / (1 << ((sizeof(Int) * 4) + 1));
+		}
+	};
+
+	template <>
+	struct type_limits<Uint>
+	{
+		static constexpr Uint min()
+		{
+			return 0;
+		}
+
+		static constexpr Uint max()
+		{
+			return std::numeric_limits<Uint>::max() / (1 << ((sizeof(Uint) * 4) + 1));
+		}
+	};
+
+
 
 	struct Frac
 	{

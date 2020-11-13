@@ -218,7 +218,7 @@ namespace onion
 
 			// If the (squared) length of the minimal difference vector is less than or equal to the (squared) radius of the light, then add it to the block
 			Int radius = obj->get_light()->radius;
-			if (dist < radius * radius)
+			if (dist < radius)
 			{
 				if (Block* block = get_block(index))
 				{

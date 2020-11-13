@@ -16,7 +16,7 @@ namespace onion
 
 		void synchronize()
 		{
-			// Don't allow the GPU to accept any display commands until the buffer has been uploaded
+			// Don't allow the GPU to accept any more commands until everything has been completed
 			GLsync synchro = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 			glWaitSync(synchro, 0, GL_TIMEOUT_IGNORED);
 			glDeleteSync(synchro);
@@ -1496,6 +1496,9 @@ namespace onion
 		{
 			// Bind the buffer
 			m_Buffer->activate();
+
+			// Ensure prior commands sent to the GPU are completed
+			synchronize();
 
 			// Display the sprite using information from buffer
 			glDrawArrays(GL_TRIANGLES, start, 6 * count);

@@ -103,7 +103,7 @@ namespace onion
 				/// <summary>A support function for the GJK algorithm.</summary>
 				/// <param name="dir">A direction vector.</param>
 				/// <param name="point">Outputs the point on the shape that produces the largest dot product with dir.</param>
-				vec3i support(const vec3i& dir) const;
+				vec3f support(const vec3f& dir) const;
 
 			public:
 				/// <summary>Constructs the view geometry.</summary>
@@ -181,7 +181,7 @@ namespace onion
 				/// <summary>A support function for the GJK algorithm.</summary>
 				/// <param name="dir">A direction vector.</param>
 				/// <param name="point">Outputs the point on the shape that produces the largest dot product with dir.</param>
-				vec3i support(const vec3i& dir) const;
+				vec3f support(const vec3f& dir) const;
 
 			public:
 				/// <summary>Constructs the view geometry.</summary>

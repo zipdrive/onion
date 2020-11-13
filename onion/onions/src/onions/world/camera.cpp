@@ -42,7 +42,7 @@ namespace onion
 		
 		vec3i StaticTopDownWorldCamera::StaticTopDownView::get_position() const
 		{
-			return m_Position;
+			return vec3i(m_Position, 0);
 		}
 
 		void StaticTopDownWorldCamera::StaticTopDownView::set_position(const vec3i& pos)
@@ -53,7 +53,7 @@ namespace onion
 				0
 			);
 
-			m_Position = pos - halves - (get_normal() * pos.get(2));
+			m_Position = pos - (get_normal() * pos.get(2)) - halves;
 		}
 
 		void StaticTopDownWorldCamera::StaticTopDownView::translate(const vec3i& trans)
@@ -67,26 +67,26 @@ namespace onion
 			return normal;
 		}
 
-		vec3i StaticTopDownWorldCamera::StaticTopDownView::support(const vec3i& dir) const
+		vec3f StaticTopDownWorldCamera::StaticTopDownView::support(const vec3f& dir) const
 		{
-			const Int near = m_FrameBounds.get(2, 1) - m_FrameBounds.get(2, 0);
-			const vec3i n(0, -near, near);
+			const Float near = ONION_WORLD_GEOMETRY_SCALE * (m_FrameBounds.get(2, 1) - m_FrameBounds.get(2, 0));
+			const vec3f n(0.f, -near, near);
 
-			vec3i res;
-			Int d_max = std::numeric_limits<Int>::min();
+			vec3f res;
+			Float d_max = std::numeric_limits<Float>::min();
 
 			for (int c = 7; c >= 0; --c)
 			{
-				vec3i p(m_Position, 0);
+				vec3f p(ONION_WORLD_GEOMETRY_SCALE * m_Position, 0);
 
 				if (c % 2 == 0)
-					p(0) += m_FrameBounds.get(0, 1) - m_FrameBounds.get(0, 0);
+					p(0) += ONION_WORLD_GEOMETRY_SCALE * (m_FrameBounds.get(0, 1) - m_FrameBounds.get(0, 0));
 				if ((c / 2) % 2 == 0)
-					p(1) += m_FrameBounds.get(1, 1) - m_FrameBounds.get(1, 0);
+					p(1) += ONION_WORLD_GEOMETRY_SCALE * (m_FrameBounds.get(1, 1) - m_FrameBounds.get(1, 0));
 				if (c / 4 == 0)
 					p += n;
 
-				Int d = p.dot(dir);
+				Float d = p.dot(dir);
 				if (d > d_max)
 				{
 					res = p;
@@ -252,25 +252,25 @@ namespace onion
 			return m_Normal;
 		}
 
-		vec3i DynamicAxonometricWorldCamera::DynamicAxonometricView::support(const vec3i& dir) const
+		vec3f DynamicAxonometricWorldCamera::DynamicAxonometricView::support(const vec3f& dir) const
 		{
-			const vec3i n = m_Normal * Frac(m_FrameBounds.get(2, 1) - m_FrameBounds.get(2, 0), m_Normal.get(2));
+			const vec3f n = m_Normal * (ONION_WORLD_GEOMETRY_SCALE * (m_FrameBounds.get(2, 1) - m_FrameBounds.get(2, 0)) / m_Normal.get(2));
 
-			vec3i res;
-			Int d_max = std::numeric_limits<Int>::min();
+			vec3f res;
+			Float d_max = std::numeric_limits<Float>::min();
 
 			for (int c = 7; c >= 0; --c)
 			{
-				vec3i p(m_Position, 0);
+				vec3f p(ONION_WORLD_GEOMETRY_SCALE * m_Position, 0);
 
 				if (c % 2 == 0)
-					p += vec3i(m_Radii[0], 0);
+					p += vec3f(ONION_WORLD_GEOMETRY_SCALE * m_Radii[0], 0);
 				if ((c / 2) % 2 == 0)
-					p += vec3i(m_Radii[1], 0);
+					p += vec3f(ONION_WORLD_GEOMETRY_SCALE * m_Radii[1], 0);
 				if (c / 4 == 0)
-					p += m_Normal;
+					p += ONION_WORLD_GEOMETRY_SCALE * m_Normal;
 
-				Int d = p.dot(dir);
+				Float d = p.dot(dir);
 				if (d > d_max)
 				{
 					res = p;

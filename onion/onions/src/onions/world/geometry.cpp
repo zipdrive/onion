@@ -5,8 +5,8 @@ namespace onion
 	namespace world
 	{
 
-		template <int N>
-		bool lambda_all_positive(const matrix<Frac, 1, N>& lambda)
+		template <typename T, int N>
+		bool lambda_all_positive(const matrix<T, 1, N>& lambda)
 		{
 			for (int k = N - 1; k >= 0; --k)
 				if (lambda.get(k) < 0)
@@ -14,65 +14,42 @@ namespace onion
 			return true;
 		}
 
-		template <int N>
-		vec3i lambda_mult(const matrix<Frac, 1, N>& lambda, const Simplex& s)
-		{
-			// TODO current implementation may produce rounding errors?
-			vec3i total(0, 0, 0);
-			for (int k = N - 1; k >= 0; --k)
-				total += s[k] * lambda.get(k);
-			return total;
-		}
-
-
-		void reduce(vec3i& a)
-		{
-			Int divisor = gcd(abs(a.get(0)), gcd(abs(a.get(1)), abs(a.get(2))));
-			a /= divisor;
-		}
-
 		
-		void nearest_simplex1d(const Simplex& s_input, Simplex& s_output, vec3i& dir)
+		void nearest_simplex1d(const Simplex& s_input, Simplex& s_output, vec3f& dir)
 		{
 			// Project the origin onto the line formed by the vertices
-			vec3i s_diff = s_input[1] - s_input[0];
+			vec3f s_diff = s_input[1] - s_input[0];
 
-			Int numer[2];
+			Float numer[2];
 			numer[0] = s_diff.dot(s_input[1]);
 			numer[1] = s_diff.dot(s_input[0]);
-			Int denom = s_diff.square_sum();
+			Float denom = 1.f / s_diff.square_sum();
 
 			if (numer[0] > 0 && numer[1] < 0)
 			{
 				// The projected origin lies between the two vertices
 				s_output = s_input;
-				dir = (s_input[1] * Frac(numer[1], denom)) - (s_input[0] * Frac(numer[0], denom));
+				dir = ((s_input[1] * numer[1]) - (s_input[0] * numer[0])) * denom;
 			}
 			else
 			{
 				// The projected origin lies outside the line segment formed by the two vertices, so delete a vertex
 				s_output = { s_input[0] };
-				dir = -1 * s_input[0];
+				dir = -1.f * s_input[0];
 			}
 		}
 
-		void nearest_simplex2d(const Simplex& s_input, Simplex& s_output, vec3i& dir)
+		void nearest_simplex2d(const Simplex& s_input, Simplex& s_output, vec3f& dir)
 		{
 			// Calculate the two vectors that constitute the basis for the plane
-			vec3i d[2] = { s_input[1] - s_input[0], s_input[2] - s_input[0] };
+			vec3f d[2] = { s_input[1] - s_input[0], s_input[2] - s_input[0] };
 
-			// TODO come up with a better solution to prevent integer overflow
-			reduce(d[0]);
-			reduce(d[1]);
-			vec3i d0 = d[0];
-			vec3i d1 = d[1];
-
-			Int d00 = d[0].square_sum();
-			Int d11 = d[1].square_sum();
-			Int d01 = d[0].dot(d[1]);
+			Float d00 = d[0].square_sum();
+			Float d11 = d[1].square_sum();
+			Float d01 = d[0].dot(d[1]);
 
 			// Construct the adjugate matrix
-			INT_MAT3X2 adj;
+			FLOAT_MAT3X2 adj;
 			for (int k = 2; k >= 0; --k)
 			{
 				adj.set(0, k, (d[0].get(k) * d11) - (d[1].get(k) * d01));
@@ -80,32 +57,31 @@ namespace onion
 			}
 
 			// Calculate the normal vector of the plane formed by the vertices
-			vec3i normal;
+			vec3f normal;
 			d[0].cross(d[1], normal);
-			reduce(normal);
 
 			// Calculate the projection of the origin onto the plane formed by the simplex
-			vec3i o = normal * Frac(normal.dot(s_input[0]), normal.square_sum());
+			vec3f o = normal * normal.dot(s_input[0]) / normal.square_sum();
 
 			// Calculate the barycentric coordinates of the origin projection, with lambda_0 = 1
-			vec2i numer = adj * (o - s_input[0]);
-			Int denom = (d00 * d11) - (d01 * d01); // TODO make sure nonzero!
+			vec2f numer = adj * (o - s_input[0]);
+			Float denom = (d00 * d11) - (d01 * d01); // TODO make sure nonzero!
 
-			FRAC_VEC3 lambda;
-			lambda(0) = 1;
-			lambda(1) = Frac(numer.get(0), denom);
-			lambda(2) = Frac(numer.get(1), denom);
+			vec3f lambda;
+			lambda(0) = 1.f;
+			lambda(1) = numer.get(0) / denom;
+			lambda(2) = numer.get(1) / denom;
 
 			if (lambda_all_positive(lambda))
 			{
 				// The projected origin lies within the triangle
 				s_output = s_input;
-				dir = -1 * o;
+				dir = -1.f * o;
 			}
 			else
 			{
 				// Delete a vertex
-				Int d_min = std::numeric_limits<Int>::max();
+				Float d_min = std::numeric_limits<Float>::max();
 
 				for (int c = 2; c > 0; --c)
 				{
@@ -116,11 +92,11 @@ namespace onion
 
 						// Run the sub-routine for a triangle
 						Simplex s_output_temp;
-						vec3i dir_temp;
+						vec3f dir_temp;
 						nearest_simplex1d(w, s_output_temp, dir_temp);
 
 						// In case there are multiple negative lambda values, check which has the better minimum norm
-						Int d = dir_temp.square_sum();
+						Float d = dir_temp.square_sum();
 						if (d < d_min)
 						{
 							s_output = s_output_temp;
@@ -132,40 +108,40 @@ namespace onion
 			}
 		}
 
-		void nearest_simplex3d(const Simplex& s_input, Simplex& s_output, vec3i& dir)
+		void nearest_simplex3d(const Simplex& s_input, Simplex& s_output, vec3f& dir)
 		{
 			// Construct a barycentric coordinate system
-			vec3i s_diff[3];
+			vec3f s_diff[3];
 			for (int c = 3; c > 0; --c)
 				s_diff[c - 1] = s_input[c] - s_input[0];
 
 			// Calculate the barycentric coordinates of the origin
-			vec3i o = -1 * s_input[0];
+			vec3f o = -1.f * s_input[0];
 
-			vec3i cross[3];
+			vec3f cross[3];
 			o.cross(s_diff[1], cross[0]);
 			s_diff[0].cross(o, cross[1]);
 			s_diff[0].cross(s_diff[1], cross[2]);
 
-			if (Int denom = cross[2].dot(s_diff[2])) 
+			if (Float denom = cross[2].dot(s_diff[2])) 
 			{
 				// The three vectors form a basis for R^3
 				FRAC_VEC4 lambda;
 				lambda(0) = 1;
-				lambda(1) = Frac(cross[0].dot(s_diff[2]), denom);
-				lambda(2) = Frac(cross[1].dot(s_diff[2]), denom);
-				lambda(3) = Frac(cross[2].dot(o), denom);
+				lambda(1) = cross[0].dot(s_diff[2]) / denom;
+				lambda(2) = cross[1].dot(s_diff[2]) / denom;
+				lambda(3) = cross[2].dot(o) / denom;
 
 				if (lambda_all_positive(lambda))
 				{
 					// The origin lies within the tetrahedron
 					s_output = s_input;
-					dir = vec3i(0, 0, 0);
+					dir = vec3f(0.f, 0.f, 0.f);
 				}
 				else
 				{
 					// Delete a vertex
-					Int d_min = std::numeric_limits<Int>::max();
+					Float d_min = std::numeric_limits<Int>::max();
 
 					for (int c = 3; c > 0; --c)
 					{
@@ -179,11 +155,11 @@ namespace onion
 
 							// Run the sub-routine for a triangle
 							Simplex s_output_temp;
-							vec3i dir_temp;
+							vec3f dir_temp;
 							nearest_simplex2d(w, s_output_temp, dir_temp);
 
 							// In case there are multiple negative lambda values, check which has the better minimum norm
-							Int d = dir_temp.square_sum();
+							Float d = dir_temp.square_sum();
 							if (d < d_min)
 							{
 								s_output = s_output_temp;
@@ -203,7 +179,7 @@ namespace onion
 		
 		/// <summary></summary>
 		/// <returns>True if the generated simplex contains the origin, false otherwise.</returns>
-		void nearest_simplex(const Simplex& s_input, Simplex& s_output, vec3i& dir)
+		void nearest_simplex(const Simplex& s_input, Simplex& s_output, vec3f& dir)
 		{
 			switch (s_input.size())
 			{
@@ -225,83 +201,73 @@ namespace onion
 			default: // Point
 			{
 				s_output = s_input;
-				dir = -1 * s_input[0];
+				dir = -1.f * s_input[0];
 			}
 			}
 		}
 
 
 
-		/*Int Shape::__get_distance(const Shape* other, Simplex& s, vec3i& d) const
+		Int Shape::__get_distance(const Shape* other, Simplex& s, vec3f& d) const
 		{
-			// TODO figure out a way to ensure there are no infinite loops
+			static constexpr Float inv_distance_scale = 1.f / ONION_WORLD_GEOMETRY_SCALE;
+			static constexpr Float epsilon = ONION_WORLD_GEOMETRY_SCALE * ONION_WORLD_GEOMETRY_SCALE * 0.5f;
 
-			vec3i a;
-			Simplex temp;
-
-			do
-			{
-				a = support(d) - other->support(-1 * d);
-
-				if (a.dot(d) < 0)
-				{
-					// No intersection between the two shapes
-					break;
-				}
-
-				// Add the new vertex to the simplex
-				temp = s;
-				temp.push_back(a);
-				
-				// Calculate the simplex on the current simplex that is nearest to the origin
-				if (nearest_simplex(temp, s, d))
-				{
-					// The two shapes intersect, so the distance is 0
-					return 0;
-				}
-			} 
-			while (s.size() < 4);
-
-			return d.square_sum();
-		}*/
-
-		Int Shape::__get_distance(const Shape* other, Simplex& s, vec3i& d) const
-		{
 			// Calculate the next point on the Minkowski difference
-			vec3i d0 = d;
-			vec3i a1 = support(d0);
-			vec3i a2 = other->support(-1 * d0);
-			vec3i a = a1 - a2;
+			vec3f d0 = d;
+			vec3f a1 = support(d0);
+			vec3f a2 = other->support(-1.f * d0);
+			vec3f a = a1 - a2;
 
 			if (a.dot(d) < 0)
 			{
 				// No intersection
-				return d.square_sum();
+				if (s.size() == 1)
+				{
+					Simplex temp = { a, s[0] };
+
+					nearest_simplex(temp, s, d);
+					return (Int)round(sqrt(d.square_sum()) * inv_distance_scale);
+				}
+				else
+				{
+					Float dist_min = type_limits<Float>::max();
+
+					for (int c = s.size() - 1; c >= 0; --c)
+					{
+						Simplex temp = { a };
+						for (int n = s.size() - 1; n >= 0; --n)
+							if (n != c)
+								temp.push_back(s[n]);
+
+						Simplex s_temp;
+						vec3f d_temp;
+						nearest_simplex(temp, s_temp, d_temp);
+
+						Float dist = d_temp.square_sum();
+						if (dist < dist_min)
+						{
+							s = s_temp;
+							d = d_temp;
+							dist_min = dist;
+						}
+					}
+
+					return (Int)round(sqrt(dist_min) * inv_distance_scale);
+				}
 			}
 
 			// Add a to the simplex, making sure there are no duplicates
 			Simplex temp = { a };
-			for (auto iter = s.begin(); iter != s.end(); ++iter)
-			{
-				if (a == *iter)
-				{
-					// The algorithm has stalled, so stop running
-					return d.square_sum();
-				}
-				else
-				{
-					// Add the point to the new simplex
-					temp.push_back(*iter);
-				}
-			}
+			temp.insert(temp.end(), s.begin(), s.end());
 
 			// Calculate the simplex on the current simplex that is nearest to the origin
 			nearest_simplex(temp, s, d);
 			
-			Int dist = d.square_sum();
-			if (dist == 0 || s.size() == 4)
+			Float dist = d.square_sum();
+			if (dist < epsilon || s.size() == 4)
 			{
-				return dist;
+				return (Int)round(sqrt(dist) * inv_distance_scale);
 			}
 			else
 			{
@@ -313,9 +279,9 @@ namespace onion
 		Int Shape::get_distance(const Shape* other) const
 		{
 			// Generate an initial guess
-			vec3i d = other->get_position() - get_position();
-			vec3i a = support(d) - other->support(-1 * d);
-			d = -1 * a;
+			vec3f d = ONION_WORLD_GEOMETRY_SCALE * (other->get_position() - get_position());
+			vec3f a = support(d) - other->support(-1.f * d);
+			d = -1.f * a;
 			
 			Simplex s = { a };
 
@@ -345,9 +311,9 @@ namespace onion
 			m_Position += trans;
 		}
 		
-		vec3i Point::support(const vec3i& dir) const
+		vec3f Point::support(const vec3f& dir) const
 		{
-			return m_Position;
+			return ONION_WORLD_GEOMETRY_SCALE * m_Position;
 		}
 		
 		
@@ -356,12 +322,12 @@ namespace onion
 			m_Dimensions = dimensions;
 		}
 
-		vec3i OrthogonalPrism::support(const vec3i& dir) const
+		vec3f OrthogonalPrism::support(const vec3f& dir) const
 		{
-			vec3i res = m_Position;
+			vec3f res = ONION_WORLD_GEOMETRY_SCALE * m_Position;
 			for (int k = 2; k >= 0; --k)
 				if (dir.get(k) > 0)
-					res(k) += m_Dimensions.get(k);
+					res(k) += ONION_WORLD_GEOMETRY_SCALE * m_Dimensions.get(k);
 			return res;
 		}
 
@@ -371,19 +337,19 @@ namespace onion
 			m_Dimensions = dimensions;
 		}
 
-		vec3i UprightRectangle::support(const vec3i& dir) const
+		vec3f UprightRectangle::support(const vec3f& dir) const
 		{
-			vec3i res = m_Position;
+			vec3i res = ONION_WORLD_GEOMETRY_SCALE * m_Position;
 
-			if ((m_Dimensions.get(0) * dir.get(0)) + (m_Dimensions.get(1) * dir.get(1)) > 0)
+			if ((m_Dimensions.get(0) * dir.get(0)) + (m_Dimensions.get(1) * dir.get(1)) > 0.f)
 			{
-				res(0) += m_Dimensions.get(0);
-				res(1) += m_Dimensions.get(1);
+				res(0) += ONION_WORLD_GEOMETRY_SCALE * m_Dimensions.get(0);
+				res(1) += ONION_WORLD_GEOMETRY_SCALE * m_Dimensions.get(1);
 			}
 
-			if (dir.get(2) > 0)
+			if (dir.get(2) > 0.f)
 			{
-				res(2) += m_Dimensions.get(2);
+				res(2) += ONION_WORLD_GEOMETRY_SCALE * m_Dimensions.get(2);
 			}
 
 			return res;
@@ -396,20 +362,20 @@ namespace onion
 			m_Radii[1] = dir2;
 		}
 
-		vec3i Parallelogram::support(const vec3i& dir) const
+		vec3f Parallelogram::support(const vec3f& dir) const
 		{
-			vec3i res;
-			Int d_max = std::numeric_limits<Int>::min();
+			vec3f res;
+			Float d_max = std::numeric_limits<Float>::min();
 
 			for (int c = 3; c >= 0; --c)
 			{
-				vec3i p = m_Position;
+				vec3f p = ONION_WORLD_GEOMETRY_SCALE * m_Position;
 				if (c % 2 > 0)
-					p += m_Radii[0];
+					p += ONION_WORLD_GEOMETRY_SCALE * m_Radii[0];
 				if (c / 2 > 0)
-					p += m_Radii[1];
+					p += ONION_WORLD_GEOMETRY_SCALE * m_Radii[1];
 
-				Int d = dir.dot(p);
+				Float d = dir.dot(p);
 				if (d > d_max)
 				{
 					res = p;

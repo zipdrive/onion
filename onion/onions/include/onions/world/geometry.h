@@ -2,12 +2,14 @@
 #include <vector>
 #include "../matrix.h"
 
+#define ONION_WORLD_GEOMETRY_SCALE		0.01f
+
 namespace onion
 {
 	namespace world
 	{
 
-		typedef std::vector<vec3i> Simplex;
+		typedef std::vector<vec3f> Simplex;
 
 
 		// A three-dimensional shape.
@@ -17,14 +19,14 @@ namespace onion
 			/// <summary>A support function for the GJK algorithm.</summary>
 			/// <param name="dir">A direction vector.</param>
 			/// <param name="point">Outputs the point on the shape that produces the largest dot product with dir.</param>
-			virtual vec3i support(const vec3i& dir) const = 0;
+			virtual vec3f support(const vec3f& dir) const = 0;
 
-			/// <summary>Calculates the squared distance from this shape to the given shape, using the GJK algorithm.</summary>
+			/// <summary>Calculates the distance from this shape to the given shape, using the GJK algorithm.</summary>
 			/// <param name="other">The shape to calculate the distance from.</param>
 			/// <param name="s">Inputs the initial guess for s, outputs the last value of s.</param>
 			/// <param name="d">Inputs the initial guess for d (as used in the GJK algorithm), outputs the last value of d.</param>
-			/// <returns>The squared distance from this shape to the given shape.</returns>
-			Int __get_distance(const Shape* other, Simplex& s, vec3i& d) const;
+			/// <returns>The distance from this shape to the given shape.</returns>
+			Int __get_distance(const Shape* other, Simplex& s, vec3f& d) const;
 
 		public:
 			/// <summary>Retrieves the position of the shape.</summary>
@@ -40,9 +42,9 @@ namespace onion
 			virtual void translate(const vec3i& trans) = 0;
 
 
-			/// <summary>Calculates the squared distance from this shape to the given shape.</summary>
+			/// <summary>Calculates the distance from this shape to the given shape.</summary>
 			/// <param name="other">The shape to calculate the distance from.</param>
-			/// <returns>The squared distance from this shape to the given shape.</returns>
+			/// <returns>The distance from this shape to the given shape.</returns>
 			virtual Int get_distance(const Shape* other) const;
 		};
 
@@ -59,7 +61,7 @@ namespace onion
 			/// <summary>A support function for the GJK algorithm.</summary>
 			/// <param name="dir">A direction vector.</param>
 			/// <param name="point">Outputs the point on the shape that produces the largest dot product with dir.</param>
-			virtual vec3i support(const vec3i& dir) const;
+			virtual vec3f support(const vec3f& dir) const;
 
 		public:
 			/// <summary>Constructs a single point in three-dimensional space.</summary>
@@ -92,7 +94,7 @@ namespace onion
 			/// <summary>A support function for the GJK algorithm.</summary>
 			/// <param name="dir">A direction vector.</param>
 			/// <param name="point">Outputs the point on the shape that produces the largest dot product with dir.</param>
-			vec3i support(const vec3i& dir) const;
+			vec3f support(const vec3f& dir) const;
 
 		public:
 			/// <summary>Constructs a rectangular prism.</summary>
@@ -113,7 +115,7 @@ namespace onion
 			/// <summary>A support function for the GJK algorithm.</summary>
 			/// <param name="dir">A direction vector.</param>
 			/// <param name="point">Outputs the point on the shape that produces the largest dot product with dir.</param>
-			vec3i support(const vec3i& dir) const;
+			vec3f support(const vec3f& dir) const;
 
 		public:
 			/// <summary>Constructs an upright rectangle.</summary>
@@ -133,7 +135,7 @@ namespace onion
 			/// <summary>A support function for the GJK algorithm.</summary>
 			/// <param name="dir">A direction vector.</param>
 			/// <param name="point">Outputs the point on the shape that produces the largest dot product with dir.</param>
-			vec3i support(const vec3i& dir) const;
+			vec3f support(const vec3f& dir) const;
 
 		public:
 			/// <summary>Constructs a parallelogram.</summary>
