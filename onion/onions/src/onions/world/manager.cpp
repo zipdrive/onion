@@ -238,7 +238,7 @@ namespace onion
 
 
 
-		const WorldCamera::View* ObjectManager::ObjectComparer::view{ nullptr };
+		const WorldCamera* ObjectManager::ObjectComparer::view{ nullptr };
 
 		bool ObjectManager::ObjectComparer::operator()(const Object* lhs, const Object* rhs) const
 		{
@@ -246,7 +246,7 @@ namespace onion
 		}
 
 
-		void ObjectManager::reset_visible(const WorldCamera::View* view)
+		void ObjectManager::reset_visible(const WorldCamera* view)
 		{
 			// A set of all blocks within view.
 			std::unordered_set<Block*> active_blocks;
@@ -310,7 +310,7 @@ namespace onion
 			m_ActiveLights = active_lights;
 		}
 
-		void ObjectManager::update_visible(const WorldCamera::View* view, int frames_passed)
+		void ObjectManager::update_visible(const WorldCamera* view, int frames_passed)
 		{
 			for (auto iter = m_Actors.begin(); iter != m_Actors.end(); ++iter)
 			{

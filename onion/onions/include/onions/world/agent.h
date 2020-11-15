@@ -15,7 +15,7 @@ namespace onion
 			/// <param name="view">The geometry of what is visible.</param>
 			/// <param name="frames_passed">The number of frames since the last update.</param>
 			/// <returns>The desired translation of the actor, in subpixel units.</returns>
-			virtual vec3i update(const WorldCamera::View* view, int frames_passed) = 0;
+			virtual vec3i update(const WorldCamera* view, int frames_passed) = 0;
 		};
 
 		// An object that can move around and do stuff.
@@ -48,7 +48,7 @@ namespace onion
 			/// <param name="view">The geometry of what is visible.</param>
 			/// <param name="frames_passed">The number of frames since the last update.</param>
 			/// <returns>The desired translation of the actor, in subpixel units.</returns>
-			vec3i update(const WorldCamera::View* view, int frames_passed);
+			vec3i update(const WorldCamera* view, int frames_passed);
 		};
 
 
@@ -70,7 +70,7 @@ namespace onion
 			/// <summary>Moves the actor.</summary>
 			/// <param name="view">The geometry of what is visible.</param>
 			/// <param name="frames_passed">The number of frames since the last update.</param>
-			virtual vec3i update(const WorldCamera::View* view, int frames_passed);
+			virtual vec3i update(const WorldCamera* view, int frames_passed);
 
 			/// <summary>Responds to a keyboard control being pressed.</summary>
 			/// <param name="event_data">The data for the event.</param>

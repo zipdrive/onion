@@ -15,7 +15,7 @@ namespace onion
 
 		void World::__set_bounds()
 		{
-			m_Camera->reset_view();
+			m_Camera->__set_bounds();
 			reset_camera();
 		}
 
@@ -57,19 +57,19 @@ namespace onion
 
 		void BasicWorld::reset_camera()
 		{
-			m_Chunk->reset_visible(m_Camera->get_view());
+			m_Chunk->reset_visible(m_Camera);
 		}
 
 		void BasicWorld::update(int frames_passed)
 		{
-			m_Chunk->update_visible(m_Camera->get_view(), frames_passed);
+			m_Chunk->update_visible(m_Camera, frames_passed);
 		}
 		
 		void BasicWorld::__display() const
 		{
 			// Display the chunk
 			m_Chunk->display_tiles();
-			m_Chunk->display_objects(m_Camera->get_view()->get_normal());
+			m_Chunk->display_objects(m_Camera->get_normal());
 		}
 
 		void BasicWorld::set_chunk(Chunk* chunk)

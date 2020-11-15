@@ -23,7 +23,7 @@ namespace onion
 			m_SubpixelHandler.translate(trans);
 		}
 
-		vec3i Actor::update(const WorldCamera::View* view, int frames_passed)
+		vec3i Actor::update(const WorldCamera* view, int frames_passed)
 		{
 			return m_Agent->update(view, frames_passed);
 		}
@@ -37,7 +37,7 @@ namespace onion
 			unfreeze(INT_MIN);
 		}
 		
-		vec3i PlayerMovementControlledAgent::update(const WorldCamera::View* view, int frames_passed)
+		vec3i PlayerMovementControlledAgent::update(const WorldCamera* view, int frames_passed)
 		{
 			// TODO
 

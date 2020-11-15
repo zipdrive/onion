@@ -81,7 +81,7 @@ namespace onion
 			struct ObjectComparer
 			{
 				// The view to use when comparing two objects.
-				static const WorldCamera::View* view;
+				static const WorldCamera* view;
 
 				/// <summary>Compares two objects using the WorldCamera::View stored.</summary>
 				/// <param name="lhs">One object to compare.</param>
@@ -113,11 +113,11 @@ namespace onion
 
 			/// <summary>Resets what is visible, in response to a change in the camera view.</summary>
 			/// <param name="view">The geometry of what is visible.</param>
-			void reset_visible(const WorldCamera::View* view);
+			void reset_visible(const WorldCamera* view);
 
 			/// <summary>Updates which dynamic objects are visible, in response to the passage of time.</summary>
 			/// <param name="view">The geometry of what is visible.</param>
-			void update_visible(const WorldCamera::View* view, int frames_passed);
+			void update_visible(const WorldCamera* view, int frames_passed);
 
 			/// <summary>Displays all visible managed objects.</summary>
 			/// <param name="normal">The direction facing towards the camera.</param>

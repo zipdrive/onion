@@ -322,7 +322,7 @@ namespace onion
 			get_bluenoise_image()->activate(1);
 		}
 
-		void FlatChunk::reset_visible(const WorldCamera::View* view)
+		void FlatChunk::reset_visible(const WorldCamera* view)
 		{
 			// Reset visible tiles
 			// TODO do this more efficiently???
@@ -385,7 +385,7 @@ namespace onion
 			m_Manager.reset_visible(view);
 		}
 
-		void FlatChunk::update_visible(const WorldCamera::View* view, int frames_passed)
+		void FlatChunk::update_visible(const WorldCamera* view, int frames_passed)
 		{
 			m_Manager.update_visible(view, frames_passed);
 		}
@@ -812,7 +812,7 @@ namespace onion
 			get_bluenoise_image()->activate(1);
 		}
 
-		void SmoothChunk::reset_visible(const WorldCamera::View* view)
+		void SmoothChunk::reset_visible(const WorldCamera* view)
 		{
 			static const Int max_allowed = type_limits<Int>::max();
 
@@ -875,7 +875,7 @@ namespace onion
 			m_Manager.reset_visible(view);
 		}
 
-		void SmoothChunk::update_visible(const WorldCamera::View* view, int frames_passed)
+		void SmoothChunk::update_visible(const WorldCamera* view, int frames_passed)
 		{
 			m_Manager.update_visible(view, frames_passed);
 		}
