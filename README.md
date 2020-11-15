@@ -7,11 +7,13 @@ First, you will need to download the following libraries:
 * <a href="https://www.glfw.org/">GLFW</a> (Minimum version: 3.2.1)
 * <a href="https://github.com/kbranigan/Simple-OpenGL-Image-Library">SOIL</a>
 
+The following instructions were written for VS2015, and may be different for other versions of Visual Studio.
+
+### All Projects
 For all projects, under the General tab:
 * Output Directory = $(SolutionDir)bin\\$(Configuration)\
 
-The onions\ folder corresponds to a static library. Under Properties, set the following options:
-
+### onions (Static Library)
 Under VC++ Directories, add the following to Include Directories:
 * C:\\[insert path here]\glew-2.1.0-win32\glew-2.1.0\include
 * C:\\[insert path here]\soil\Simple OpenGL Image Library\src
@@ -32,8 +34,7 @@ Under Librarian, add the following to Additional Dependencies:
 * glfw3.lib
 * SOIL.lib
 
-The onion\ folder corresponds to a console executable. Under Properties, set the following options:
-
+### onion (Console Executable)
 Under Debugging, set the Working Directory to $(SolutionDir)
 
 Under VC++ Directories, add the following to Include Directories:
