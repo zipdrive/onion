@@ -315,7 +315,6 @@ namespace onion
 			for (auto iter = m_Actors.begin(); iter != m_Actors.end(); ++iter)
 			{
 				Actor* actor = *iter;
-				SubpixelHandler& translator = actor->get_translator();
 
 				// Calculate how the actor should (ideally) be translated
 				vec3i trans = actor->update(view, frames_passed);
@@ -323,11 +322,11 @@ namespace onion
 				if (trans.square_sum() > 0)
 				{
 					// Test whether there are any collisions if the actor is translated as it is supposed to be
-					translator.translate(trans);
+					actor->translate(trans);
 					if (collision(actor))
 					{
 						// If there was a collision, reset the position
-						translator.translate(-1 * trans);
+						actor->translate(-1 * trans);
 
 						// TODO test whether there isn't a collision if the actor is only translated on one axis, or if it is pushed upwards
 					}

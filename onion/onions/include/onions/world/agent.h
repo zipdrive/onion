@@ -7,32 +7,6 @@ namespace onion
 	namespace world
 	{
 
-		// A wrapper for a shape that handles subpixel translations.
-		struct SubpixelHandler
-		{
-		protected:
-			// The shape being handled.
-			Shape* m_Shape;
-
-			// The current subpixel position within the current pixel.
-			vec3i m_Subpixels;
-
-		public:
-			// The number of subpixels contained in a single pixel.
-			static constexpr Int num_subpixels = 256;
-
-
-			/// <summary>Constructs a wrapper for a shape that handles subpixel translations.</summary>
-			/// <param name="shape">The shape to handle subpixel translations for.</param>
-			SubpixelHandler(Shape* shape);
-
-			/// <summary>Translates the shape by a given vector, in subpixel units.</summary>
-			/// <param name="trans">A vector of translation, in subpixel units.</param>
-			void translate(const vec3i& trans);
-		};
-
-
-
 		// Controls the actions of an actor.
 		class Agent
 		{
@@ -65,9 +39,9 @@ namespace onion
 			virtual ~Actor();
 
 
-			/// <summary>Retrieves the handler for whenever the actor is translated by subpixel units.</summary>
-			/// <returns>A reference to the subpixel handler for the actor's bounds.</returns>
-			SubpixelHandler& get_translator();
+			/// <summary>Translates the actor by a number of subpixel units.</summary>
+			/// <param name="trans">The vector of translation, in subpixel units.</returns>
+			void translate(const vec3i& trans);
 			
 			
 			/// <summary>Updates the actor.</summary>

@@ -7,28 +7,6 @@ namespace onion
 	namespace world
 	{
 		
-		SubpixelHandler::SubpixelHandler(Shape* shape) : m_Subpixels(0, 0, 0)
-		{
-			m_Shape = shape;
-		}
-
-		void SubpixelHandler::translate(const vec3i& trans)
-		{
-			m_Subpixels += trans;
-
-			vec3i t;
-			for (int k = 2; k >= 0; --k)
-			{
-				// This might give inaccurate results depending on C++ implementation of how rounding is done for negative integer division, but it should probably be fine
-				t(k) = m_Subpixels.get(k) / num_subpixels;
-				m_Subpixels(k) -= t.get(k) * num_subpixels;
-			}
-
-			m_Shape->translate(t);
-		}
-
-
-		
 		Actor::Actor(Shape* bounds, Agent* agent, Graphic3D* graphic) : Object(bounds, graphic), m_SubpixelHandler(bounds)
 		{
 			m_Agent = agent;
@@ -40,9 +18,9 @@ namespace onion
 				delete m_Agent;
 		}
 
-		SubpixelHandler& Actor::get_translator()
+		void Actor::translate(const vec3i& trans)
 		{
-			return m_SubpixelHandler;
+			m_SubpixelHandler.translate(trans);
 		}
 
 		vec3i Actor::update(const WorldCamera::View* view, int frames_passed)

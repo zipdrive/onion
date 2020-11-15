@@ -41,7 +41,7 @@ namespace onion
 
 		bool Object::collision(Object* obj)
 		{
-			if (m_Bounds->get_distance(obj->get_bounds()) < 4)
+			if (m_Bounds->get_distance(obj->get_bounds()) == 0)
 			{
 				return __collision(obj);
 			}

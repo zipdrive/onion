@@ -324,11 +324,11 @@ namespace onion
 
 		vec3f OrthogonalPrism::support(const vec3f& dir) const
 		{
-			vec3f res = ONION_WORLD_GEOMETRY_SCALE * m_Position;
+			vec3i res = m_Position;
 			for (int k = 2; k >= 0; --k)
 				if (dir.get(k) > 0)
-					res(k) += ONION_WORLD_GEOMETRY_SCALE * m_Dimensions.get(k);
-			return res;
+					res(k) += m_Dimensions.get(k);
+			return ONION_WORLD_GEOMETRY_SCALE * res;
 		}
 
 
@@ -339,20 +339,20 @@ namespace onion
 
 		vec3f UprightRectangle::support(const vec3f& dir) const
 		{
-			vec3i res = ONION_WORLD_GEOMETRY_SCALE * m_Position;
+			vec3i res = m_Position;
 
 			if ((m_Dimensions.get(0) * dir.get(0)) + (m_Dimensions.get(1) * dir.get(1)) > 0.f)
 			{
-				res(0) += ONION_WORLD_GEOMETRY_SCALE * m_Dimensions.get(0);
-				res(1) += ONION_WORLD_GEOMETRY_SCALE * m_Dimensions.get(1);
+				res(0) += m_Dimensions.get(0);
+				res(1) += m_Dimensions.get(1);
 			}
 
 			if (dir.get(2) > 0.f)
 			{
-				res(2) += ONION_WORLD_GEOMETRY_SCALE * m_Dimensions.get(2);
+				res(2) += m_Dimensions.get(2);
 			}
 
-			return res;
+			return ONION_WORLD_GEOMETRY_SCALE * res;
 		}
 
 
@@ -384,6 +384,36 @@ namespace onion
 			}
 
 			return res;
+		}
+
+
+
+
+
+		SubpixelHandler::SubpixelHandler(Shape* shape) : m_Subpixels(0, 0, 0)
+		{
+			m_Shape = shape;
+		}
+
+		void SubpixelHandler::translate(const vec3i& trans)
+		{
+			m_Subpixels += trans;
+
+			vec3i t;
+			for (int k = 2; k >= 0; --k)
+			{
+				// This might give inaccurate results depending on C++ implementation of how rounding is done for negative integer division, but it should probably be fine
+				t(k) = m_Subpixels.get(k) / num_subpixels;
+				m_Subpixels(k) -= t.get(k) * num_subpixels;
+
+				if (m_Subpixels.get(k) < 0)
+				{
+					--t(k);
+					m_Subpixels(k) += num_subpixels;
+				}
+			}
+
+			m_Shape->translate(t);
 		}
 
 	}
