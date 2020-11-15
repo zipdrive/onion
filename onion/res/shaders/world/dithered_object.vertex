@@ -1,0 +1,47 @@
+// Vertex shader
+#version 330 core
+
+
+// Input
+in vec3 vertexPosition;
+in vec3 vertexNormal;
+in vec2 vertexUV;
+
+
+// MVP matrices
+uniform Camera
+{
+    // The projection matrix
+    mat4 projection;
+    
+    // The view matrix
+    mat4 view;
+};
+// The model matrix
+uniform mat4 model;
+
+
+out VS_FS
+{
+    // The fragment position
+    vec3 pos;
+    
+    // The fragment normal
+    vec3 normal;
+
+    // The UV texture coordinates
+    vec2 uv;
+}
+vs_out;
+
+
+void main()
+{
+    // Set the shader's output to the fragment shader
+    vs_out.pos = vec3(model * vec4(vertexPosition, 1.0));
+    vs_out.normal = vec3(model * vec4(vertexNormal, 0.0));
+    vs_out.uv = vertexUV;
+    
+    // Set the position of the vertex
+    gl_Position = projection * view * vec4(vs_out.pos, 1.0);
+}

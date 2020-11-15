@@ -1,0 +1,38 @@
+begin DEBUG light1
+    type = "light:cube:flickering"
+    color = (255, 255, 255)
+    intensity = (90, 100)
+    ratio = 0.05
+    radius = 1000
+end
+
+begin DEBUG wall1
+    type = "wall:xalign"
+    sprite_sheet = "sprites/debug.png"
+    sprite = "debug"
+end
+begin DEBUG wall2
+    type = "wall:xalign"
+    sprite_sheet = "sprites/debug2.png"
+    sprite = "debug"
+end
+
+begin DEBUG texture
+    type = "__DEBUG:texture"
+    sprite_sheet = "sprites/debugtexture.png"
+    sprite = "debug"
+    texture = "debug"
+end
+
+begin DEBUG actor
+    type = "__DEBUG:actor"
+    sprite_sheet = "sprites/debug.png"
+    sprite = "debug"
+end
+
+begin DEBUG interactable
+    type = "__DEBUG:interactable"
+    sprite_sheet = "sprites/debug2.png"
+    sprite = "debug"
+    interact_radius = 10
+end

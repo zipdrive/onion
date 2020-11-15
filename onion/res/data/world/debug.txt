@@ -1,0 +1,32 @@
+sprites = "debug.png"
+
+begin tile
+    x           = 0
+    y           = 0
+    dx          = 25
+    dy          = 25
+    sprite      = 1
+end
+begin tile
+    x           = 1
+    y           = 1
+    dx          = 2
+    dy          = 2
+    sprite      = 6
+    sprite_rot  = 1
+end
+
+begin obj DEBUG light1
+    pos = (200, 0, 75)
+end
+
+begin obj DEBUG wall1
+    pos = (120, 240, 0)
+end
+begin obj DEBUG interactable
+    pos = (240, 240, 0)
+end
+
+begin obj DEBUG actor
+    pos = (180, 120, 0)
+end

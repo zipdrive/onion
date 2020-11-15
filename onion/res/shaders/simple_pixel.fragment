@@ -1,0 +1,16 @@
+#version 330 core
+
+in VS_TO_FS
+{
+    vec2 uv;
+}
+fs_in;
+
+uniform mat4 tintMatrix;
+
+uniform sampler2D tex2D;
+
+void main() 
+{
+    gl_FragColor = tintMatrix * texture(tex2D, fs_in.uv);
+}

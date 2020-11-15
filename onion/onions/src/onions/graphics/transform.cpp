@@ -1,3 +1,4 @@
+#include "../../../include/onions/application.h"
 #include "../../../include/onions/graphics/transform.h"
 
 namespace onion
@@ -20,11 +21,41 @@ namespace onion
 
 	void Transform::set_projection()
 	{
-		m_Buffer->set(0, projection);
+		m_Buffer->set<FLOAT_MAT4>(0, projection.get());
 	}
 
 	void Transform::set_view()
 	{
-		m_Buffer->set(1, view);
+		m_Buffer->set<FLOAT_MAT4>(1, view.get());
 	}
+
+
+	Camera* Camera::m_ActiveCamera{ nullptr };
+	
+	bool Camera::is_active() const
+	{
+		return this == m_ActiveCamera;
+	}
+
+	void Camera::activate()
+	{
+		if (!is_active())
+		{
+			m_ActiveCamera = this;
+
+			Transform::projection.identity();
+			Transform::view.identity();
+			__activate();
+			Transform::set_projection();
+			Transform::set_view();
+		}
+	}
+
+
+	void OrthogonalCamera::__activate()
+	{
+		Application* app = get_application_settings();
+		Transform::projection.ortho(0.f, app->width, 0.f, app->height, app->width, -app->width);
+	}
+
 }

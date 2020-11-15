@@ -1,6 +1,6 @@
 #include <onion.h>
 #include "../include/charactercreator.h"
-#include "../include/graphictest.h"
+#include "../include/test.h"
 
 #include <iostream>
 
@@ -60,11 +60,12 @@ Palette* g_TestAlphaPalette;
 
 void test_alpha_display()
 {
-	g_TestAlphaSpriteSheet->display(0, g_TestAlphaPalette->get_red_palette_matrix());
-
 	Transform::model.push();
+	Transform::model.translate(100.f, 100.f);
+	g_TestAlphaSpriteSheet->display(0, g_TestAlphaPalette->get_red_palette_matrix(), 0);
+
 	Transform::model.translate(-64.f, 64.f, -0.01f);
-	g_TestAlphaSpriteSheet->display(12, g_TestAlphaPalette->get_red_palette_matrix());
+	g_TestAlphaSpriteSheet->display(12, g_TestAlphaPalette->get_red_palette_matrix(), 0);
 	Transform::model.pop();
 }
 
@@ -213,10 +214,66 @@ void test_font_main()
 
 
 
+void convert_hune()
+{
+	LoadFile loader("res/img/sprites/hune.meta.txt");
+	SaveFile saver("res/img/sprites/hune.meta");
+
+	std::regex texture("^texture\\s+(.*)");
+
+	while (loader.good())
+	{
+		StringData line;
+		String id = loader.load_data(line);
+
+		if (!id.empty())
+		{
+			StringData newline;
+
+			std::smatch match;
+			if (std::regex_match(id, match, texture))
+			{
+				// Load a texture
+				vec2i size, pos;
+
+				line.get("width", size(0));
+				line.get("height", size(1));
+				line.get("left", pos(0));
+				line.get("right", pos(1));
+
+				newline.set("pos", pos);
+				newline.set("size", size);
+			}
+			else
+			{
+				// Load a sprite
+				vec2i size, shading, mapping;
+
+				line.get("width", size(0));
+				line.get("height", size(1));
+				line.get("shading_left", shading(0));
+				line.get("shading_top", shading(1));
+				line.get("mapping_left", mapping(0));
+				line.get("mapping_top", mapping(1));
+
+				newline.set("shading", shading);
+				newline.set("mapping", mapping);
+				newline.set("size", size);
+			}
+
+			saver.save_data(id, newline);
+		}
+	}
+}
+
+
+
 // The entry point for the program.
 int main()
 {
 	init("settings.ini");
-	test_alpha_main();
+
+	worldtest_main();
+	//character_creator_setup();
 	return 0;
 }

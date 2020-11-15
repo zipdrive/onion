@@ -1,7 +1,7 @@
 #include <onions/matrix.h>
 #include <onions/graphics/sprite.h>
 #include <onions/application.h>
-#include "../include/graphictest.h"
+#include "../include/test.h"
 
 #define TEST_SHADED_TEXTURE
 

@@ -29,7 +29,7 @@ namespace onion
 	class SolidColorGraphic : public Graphic
 	{
 	private:
-		typedef Shader<const vec4f&> SolidColorShader;
+		typedef Shader<vec4f> SolidColorShader;
 
 		// The shader for all solid color graphics.
 		static SolidColorShader* m_Shader;
@@ -170,6 +170,6 @@ namespace onion
 	};
 
 
-	typedef StaticSpriteGraphic<const PALETTE_MATRIX&> SimpleStaticSpriteGraphic;
+	typedef StaticSpriteGraphic<matrix<float, 4, 4>, int> SimpleStaticSpriteGraphic;
 
 }

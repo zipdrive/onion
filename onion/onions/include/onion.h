@@ -14,3 +14,7 @@
 #include "onions/graphics/font.h"
 #include "onions/graphics/hune.h"
 #include "onions/graphics/frame.h"
+
+// World
+#include "onions/world/world.h"
+#include "onions/world/interactable.h"

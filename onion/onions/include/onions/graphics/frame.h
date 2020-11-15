@@ -15,7 +15,7 @@ namespace onion
 		Frame* m_Parent;
 
 		// The frame boundaries on the screen
-		mat3x2i m_Bounds;
+		mat2x3i m_Bounds;
 
 		/// <summary>Adjusts the position and dimensions of the frame.</summary>
 		virtual void __set_bounds();
@@ -38,11 +38,11 @@ namespace onion
 
 		/// <summary>Retrieves the boundaries of the frame on the screen.</summary>
 		/// <returns>A const reference to the boundaries. The first column represents minimum values, and the second column represents maximum values.</returns>
-		const mat3x2i& get_bounds() const;
+		const mat2x3i& get_bounds() const;
 
 		/// <summary>Retrieves the absolute boundaries of the frame.</summary>
 		/// <returns>The absolute boundaries of the frame.</returns>
-		mat3x2i get_absolute_bounds() const;
+		mat2x3i get_absolute_bounds() const;
 
 		/// <summary>Sets the boundaries of the frame on the screen.</summary>
 		/// <param name="x">The leftmost x-coordinate of the frame.</param>

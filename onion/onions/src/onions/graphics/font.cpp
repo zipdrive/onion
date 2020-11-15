@@ -54,13 +54,13 @@ namespace onion
 		fpath = regex_replace(fpath, fext_finder, "$1.meta");
 
 		// Set up the data vector
-		vector<float> data;
+		VertexBufferData<FLOAT_VEC2, FLOAT_VEC2> data;
 
 		// Load the file
 		LoadFile file(fpath);
 		while (file.good())
 		{
-			_IntegerData line;
+			IntegerData line;
 			string id = file.load_data(line);
 
 			line.get("height", m_LineHeight);
@@ -76,56 +76,38 @@ namespace onion
 					flush = width;
 
 				// Create a sprite data object
-				m_CharacterManager.set(id[0], new Character(data.size() / 4, width, m_LineHeight, flush));
+				m_CharacterManager.set(id[0], new Character(data.buffer_size(), width, m_LineHeight, flush));
 
 				// Calculate texcoord numbers
-				float l = (float)left / image->get_width(); // left texcoord
-				float r = (float)(left + width) / image->get_width(); // right texcoord
-				float w = (float)width;
+				Float l = (Float)left / image->get_width(); // left texcoord
+				Float r = (Float)(left + width) / image->get_width(); // right texcoord
+				Float w = (Float)width;
 
-				float t = (float)top / image->get_height(); // top texcoord
-				float b = (float)(top + m_LineHeight) / image->get_height(); // bottom texcoord
-				float h = (float)m_LineHeight;
+				Float t = (Float)top / image->get_height(); // top texcoord
+				Float b = (Float)(top + m_LineHeight) / image->get_height(); // bottom texcoord
+				Float h = (Float)m_LineHeight;
 
-				// First triangle: bottom-left, bottom-right, top-right
-				// Bottom-left corner, vertices
-				data.push_back(0.0f);
-				data.push_back(0.0f);
-				// Bottom-left corner, tex coord
-				data.push_back(l);
-				data.push_back(b);
-				// Bottom-right corner, vertices
-				data.push_back(w);
-				data.push_back(0.0f);
-				// Bottom-right corner, tex coord
-				data.push_back(r);
-				data.push_back(b);
-				// Top-right corner, vertices
-				data.push_back(w);
-				data.push_back(h);
-				// Top-right corner, tex coord
-				data.push_back(r);
-				data.push_back(t);
+				// Calculate the position and UV-coordinates of each corner
+				vec2f pos[4], uv[4];
+				for (int k = 3; k >= 0; --k)
+				{
+					pos[k](0) = k % 2 == 0 ? 0.f : w;
+					pos[k](1) = k / 2 == 0 ? 0.f : h;
 
-				// Second triangle: bottom-left, top-left, top-right
-				// Bottom-left corner, vertices
-				data.push_back(0.0f);
-				data.push_back(0.0f);
-				// Bottom-left corner, tex coord
-				data.push_back(l);
-				data.push_back(b);
-				// Top-left corner, vertices
-				data.push_back(0.0f);
-				data.push_back(h);
-				// Top-left corner, tex coord
-				data.push_back(l);
-				data.push_back(t);
-				// Top-right corner, vertices
-				data.push_back(w);
-				data.push_back(h);
-				// Top-right corner, tex coord
-				data.push_back(r);
-				data.push_back(t);
+					uv[k](0) = k % 2 == 0 ? l : r;
+					uv[k](1) = k / 2 == 0 ? b : t;
+				}
+
+				// Insert the vertices into the data buffer
+				int index = data.buffer_size();
+				data.push(6);
+
+				for (int k = 5; k >= 0; --k)
+				{
+					int corner = k % 3 == 0 ? 0 : (k % 3 == 1 ? 3 : (k / 3 == 0 ? 1 : 2));
+					data.set<0>(index + k, pos[corner]);
+					data.set<1>(index + k, uv[corner]);
+				}
 			}
 		}
 
@@ -135,7 +117,7 @@ namespace onion
 			new ImageBuffer(
 
 				// The array of data
-				data,
+				&data,
 
 				// The shader used by the sprite sheet
 				SimplePixelSpriteSheet::get_shader()->get_attribs(),
@@ -205,7 +187,7 @@ namespace onion
 			if (const SpriteFont::Character* c = m_CharacterManager.get(prev))
 			{
 				// Activate the shader
-				SimplePixelSpriteSheet::get_shader()->activate(Transform::model, palette->get_red_palette_matrix());
+				SimplePixelSpriteSheet::get_shader()->activate(Transform::model.get(), palette->get_red_palette_matrix(), 0);
 
 				// Display the buffer
 				m_Displayer->display(c->key);

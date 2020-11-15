@@ -8,9 +8,10 @@
 #include <memory>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "../../include/onions/application.h"
+#include "../../include/onions/state.h"
 #include "../../include/onions/event.h"
 #include "../../include/onions/graphics/transform.h"
+#include "../../include/onions/world/lighting.h"
 
 
 using namespace std;
@@ -339,6 +340,22 @@ namespace onion
 
 	void register_keyboard_control(int control, int key)
 	{
+		if (key < 0)
+		{
+			if (control == ONION_KEY_LEFT)
+				key = GLFW_KEY_LEFT;
+			else if (control == ONION_KEY_RIGHT)
+				key = GLFW_KEY_RIGHT;
+			else if (control == ONION_KEY_DOWN)
+				key = GLFW_KEY_DOWN;
+			else if (control == ONION_KEY_UP)
+				key = GLFW_KEY_UP;
+			else if (control == ONION_KEY_SELECT)
+				key = GLFW_KEY_Z;
+			else if (control == ONION_KEY_CANCEL)
+				key = GLFW_KEY_X;
+		}
+
 		g_KeyboardManager.assign_key_to_control(control, key);
 	}
 
@@ -594,6 +611,10 @@ namespace onion
 			}
 		}
 
+		// Resize the state, if it exists
+		if (State* state = get_state())
+			state->set_bounds(width, height);
+
 		// Set the viewport
 		glViewport(0, 0, width, height);
 		return 0;
@@ -732,6 +753,10 @@ namespace onion
 			return 1;
 		}
 
+		// Set up the transformation matrices
+		Transform::init();
+		Lighting::init();
+
 		return 0;
 	}
 
@@ -746,13 +771,6 @@ namespace onion
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 		glClearColor(0.f, 0.f, 0.f, 1.f);
-
-		// Set up the transformation matrices
-		float depth = std::max(g_Application->width, g_Application->height);
-		Transform::init();
-		Transform::projection.ortho(0.f, g_Application->width, 0.f, g_Application->height, -depth, depth);
-		Transform::set_projection();
-		Transform::set_view();
 
 		// Core loop
 		while (!glfwWindowShouldClose(g_Window))
@@ -772,6 +790,11 @@ namespace onion
 
 				// Draw everything
 				display_callback();
+
+				// Synchronize the CPU with the GPU
+				GLsync synchro = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+				glClientWaitSync(synchro, GL_SYNC_FLUSH_COMMANDS_BIT, 1000000000);
+				glDeleteSync(synchro);
 
 				// Swap buffers
 				glfwSwapBuffers(g_Window);

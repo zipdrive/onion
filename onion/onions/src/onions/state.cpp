@@ -4,7 +4,7 @@
 namespace onion
 {
 
-	State::~State() {}
+	void State::set_bounds(int width, int height) {}
 
 
 	State* g_State = nullptr;
@@ -20,6 +20,9 @@ namespace onion
 		if (g_State)
 			delete g_State;
 		g_State = state;
+
+		Application* app = get_application_settings();
+		g_State->set_bounds(app->width, app->height);
 	}
 
 

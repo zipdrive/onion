@@ -1,0 +1,65 @@
+#version 330 core
+#define MAX_NUMBER_LIGHTS 2
+
+in vec3 vertexPosition;
+in vec3 vertexNormal; // This should be normalized before being passed into the shader
+in vec2 vertexUV;
+
+
+// MVP matrices
+
+uniform Camera
+{
+    mat4 projection;
+    mat4 view;
+};
+
+uniform mat4 model;
+
+
+// Scene lighting
+
+struct OverheadLight
+{
+    // A normalized vector pointing away from the fragment in the direction of the overhead light.
+    vec3 direction;
+};
+
+struct PointLight
+{
+    // The position of the point light.
+    vec3 position;
+    
+    // The attenuation values that drop off the brightness as distance from the light grows.
+    float linear; // The linear drop-off term
+    float quadratic; // The quadratic drop-off term
+};
+
+uniform Lighting
+{
+    // The overhead lighting.
+    OverheadLight overhead;
+    
+    // The point lights.
+    int num_point_lights;
+    PointLight point_lights[MAX_NUMBER_LIGHTS];
+};
+
+
+// The attributes passed to the fragment
+
+out vec2 fragmentUV;
+
+out float fragmentBrightness[MAX_NUMBER_LIGHTS + 1];
+
+
+void main() 
+{
+    // 
+	gl_Position = projection * view * model * vec4(vertexPosition, 1);
+	fragmentUV = vertexUV;
+    
+    // Calculate brightness from each light
+    fragmentBrightness[0] = max(dot(vertexNormal, overhead.direction), 0.0);
+    
+}
