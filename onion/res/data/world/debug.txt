@@ -3,8 +3,8 @@ sprites = "debug.png"
 begin tile
     x           = 0
     y           = 0
-    dx          = 25
-    dy          = 25
+    dx          = 50
+    dy          = 30
     sprite      = 1
 end
 begin tile
@@ -25,8 +25,4 @@ begin obj DEBUG wall1
 end
 begin obj DEBUG interactable
     pos = (240, 240, 0)
-end
-
-begin obj DEBUG actor
-    pos = (180, 120, 0)
 end

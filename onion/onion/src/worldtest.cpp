@@ -172,11 +172,18 @@ void worldtest_main()
 	world::ObjectGenerator::set<TestActorGenerator>("__DEBUG:actor");
 	world::ObjectGenerator::set<TestInteractableWallGenerator>("__DEBUG:interactable");
 
+	// Generate the player
+	StringData actor_data;
+	actor_data.set("pos", vec3i(180, 120, 0));
+	world::Actor* player = dynamic_cast<world::Actor*>(world::ObjectGenerator::generate("DEBUG actor", actor_data));
+
 	// Load the chunk
 	world::Chunk::set_tile_size(16);
-
 	world::Chunk* chunk = new world::SmoothChunk("debug.txt");
-	world::World* world = new world::BasicWorld(chunk);
+	chunk->add(player);
+
+	world::World* world = new world::ActorFollowingBasicWorld(player, vec3f(0.25f, 0.25f, 0.f), chunk);
+	//world::World* world = new world::BasicWorld(chunk);
 
 	// Lighting setup
 	Lighting::add_light_array<CubeLight>("cubeLights", "numCubeLights", 8);

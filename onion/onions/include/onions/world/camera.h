@@ -94,9 +94,9 @@ namespace onion
 			StaticTopDownWorldCamera(const mat2x3i& frame_bounds);
 
 
-			/// <summary>Translates the camera's position, using unit coordinates.</summary>
+			/// <summary>Translates the camera's position.</summary>
 			/// <param name="trans">The translation of the camera.</param>
-			void translate(const vec3i& trans);
+			virtual void translate(const vec3i& trans);
 
 
 			/// <summary>Retrieves a vector representing the direction facing the screen.</summary>
@@ -156,9 +156,9 @@ namespace onion
 			DynamicAxonometricWorldCamera(const mat2x3i& frame_bounds, float top_view_angle, float side_view_angle);
 
 
-			/// <summary>Translates the camera's position, using unit coordinates.</summary>
+			/// <summary>Translates the camera's position.</summary>
 			/// <param name="trans">The translation of the camera.</param>
-			void translate(const vec3i& trans);
+			virtual void translate(const vec3i& trans);
 
 
 			/// <summary>Sets the top-down angle that the model space is viewed from.</summary>
@@ -189,6 +189,84 @@ namespace onion
 			/// <returns>True if lhs should be rendered behind rhs, false if rhs should be rendered behind lhs.</returns>
 			bool compare(const Shape* lhs, const Shape* rhs) const;
 		};
+
+
+
+		// A world camera whose center is bounded inside a rectangular prism of values.
+		template <typename T>
+		class _BoundedWorldCamera : public T
+		{
+		protected:
+			// The minimum and maximum possible visible points.
+			mat2x3i m_CameraBounds;
+
+			/// <summary>Clamps the camera position so that no point visible on-screen lies outside of the camera bounds.</summary>
+			void clamp()
+			{
+				// Clamp the position so that no point on-screen lies outside of the camera bounds
+				vec3i trans;
+				for (int k = 2; k >= 0; --k)
+				{
+					Int d = m_FrameBounds.get(k, 1) - m_FrameBounds.get(k, 0);
+
+					Int min_pos = m_CameraBounds.get(k, 0) + (d / 2);
+					Int max_pos = m_CameraBounds.get(k, 1) - (d / 2) - (d % 2);
+
+					if (m_Position.get(k) < min_pos)
+						trans(k) = min_pos - m_Position.get(k);
+					else if (m_Position.get(k) > max_pos)
+						trans(k) = max_pos - m_Position.get(k);
+					else
+						trans(k) = 0;
+				}
+				T::translate(trans);
+			}
+
+			
+			/// <summary>Responds to a change in the frame bounds.</summary>
+			virtual void __set_bounds()
+			{
+				clamp();
+				T::__set_bounds();
+			}
+
+		public:
+			/// <summary>Constructs a bounded world camera.</summary>
+			/// <param name="frame_bounds">A reference to the bounds of the world that the camera is viewing.</param>
+			/// <param name="minimum">The minimum possible point visible on-screen.</param>
+			/// <param name="maximum">The maximum possible point visible on-screen.</param>
+			/// <param name="args">The other arguments to pass to the class this one inherits from.</param>
+			template <typename... _Args>
+			_BoundedWorldCamera(const mat2x3i& frame_bounds, const vec3i& minimum, const vec3i& maximum, _Args... args) : T(frame_bounds, args...)
+			{
+				set_camera_bounds(minimum, maximum);
+			}
+
+			/// <summary>Translates the camera's position.</summary>
+			/// <param name="trans">The translation of the camera.</param>
+			virtual void translate(const vec3i& trans)
+			{
+				T::translate(trans);
+				clamp();
+			}
+
+			/// <summary>Sets the minimum and maximum possible values for the camera position.</summary>
+			/// <param name="minimum">The minimum possible position for the camera.</param>
+			/// <param name="maximum">The maximum possible position for the camera.</param>
+			void set_camera_bounds(const vec3i& minimum, const vec3i& maximum)
+			{
+				for (int k = 2; k >= 0; --k)
+				{
+					m_CameraBounds(k, 0) = minimum.get(k);
+					m_CameraBounds(k, 1) = maximum.get(k);
+				}
+
+				// Clamp the position
+				clamp();
+			}
+		};
+
+		typedef _BoundedWorldCamera<StaticTopDownWorldCamera> StaticBoundedTopDownWorldCamera;
 
 	}
 }

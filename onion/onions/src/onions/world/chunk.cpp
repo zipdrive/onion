@@ -89,6 +89,11 @@ namespace onion
 			return (m_Dimensions.get(0) * y) + x;
 		}
 
+		const vec2i& Chunk::get_dimensions() const
+		{
+			return m_Dimensions;
+		}
+
 		bool Chunk::is_loaded() const
 		{
 			return m_IsLoaded;
@@ -320,6 +325,11 @@ namespace onion
 			m_BasicFlatTileShader->activate(Transform::model.get(), 0, 1);
 			get_tile_image()->activate(0);
 			get_bluenoise_image()->activate(1);
+		}
+
+		void FlatChunk::add(Object* obj)
+		{
+			m_Manager.add(obj);
 		}
 
 		void FlatChunk::reset_visible(const WorldCamera* view)
@@ -810,6 +820,11 @@ namespace onion
 			Flat3DPixelSpriteSheet::get_shader()->activate(Transform::model.get(), 0, 1);
 			get_tile_image()->activate(0);
 			get_bluenoise_image()->activate(1);
+		}
+
+		void SmoothChunk::add(Object* obj)
+		{
+			m_Manager.add(obj);
 		}
 
 		void SmoothChunk::reset_visible(const WorldCamera* view)

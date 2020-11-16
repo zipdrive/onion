@@ -49,8 +49,9 @@ namespace onion
 			m_Chunk = nullptr;
 			set_chunk(chunk);
 
-			m_Camera = new StaticTopDownWorldCamera(m_Bounds);
-			m_Camera->set_position(vec3i(200, 200, 0));
+			m_Camera = new StaticBoundedTopDownWorldCamera(m_Bounds, vec3i(0, 0, 0), vec3i(chunk->get_tile_size() * chunk->get_dimensions(), 0));
+			//m_Camera = new StaticTopDownWorldCamera(m_Bounds);
+			m_Camera->set_position(vec3i(200, 0, 0));
 
 			unfreeze(INT_MAX);
 		}
