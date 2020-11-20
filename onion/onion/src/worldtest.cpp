@@ -103,7 +103,7 @@ public:
 
 		world::Actor* actor = new world::Actor(
 			new world::OrthogonalPrism(pos, vec3i(m_Sprite->width, 4, m_Sprite->height)), 
-			new world::PlayerMovementControlledAgent(world::SubpixelHandler::num_subpixels * 32), 
+			new world::PlayerMovementControlledAgent(world::SubpixelHandler::num_subpixels * 80), 
 			new world::FlatWallGraphic3D(m_SpriteSheet, m_Sprite)
 		);
 

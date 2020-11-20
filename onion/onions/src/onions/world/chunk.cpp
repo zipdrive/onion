@@ -847,43 +847,13 @@ namespace onion
 			r.translate(vec3i(0, max_allowed, 0));
 			Int max_y = max_allowed - r.get_distance(view);
 
+			Int min_i = std::max<Int>(0, min_x / m_TileSize);
+			Int max_i = std::min<Int>(m_Dimensions.get(0) - 1, max_x / m_TileSize);
 			Int min_j = std::max<Int>(0, min_y / m_TileSize);
 			Int max_j = std::min<Int>(m_Dimensions.get(1) - 1, max_y / m_TileSize);
 			for (Int j = min_j; j <= max_j; ++j)
 			{
-				Int first_i = std::numeric_limits<Int>::min(), last_i = std::numeric_limits<Int>::max();
-
-				Int min_i = std::max<Int>(0, min_x / m_TileSize);
-				Int max_i = std::min<Int>(m_Dimensions.get(0) - 1, max_x / m_TileSize);
-				for (Int i = min_i; i <= max_i; ++i)
-				{
-					for (int k = 3; k >= 0; --k)
-					{
-						// Calculate the 3D position of the corner
-						Point corner(vec3i(
-							k % 2 == 0 ? m_TileSize * i : (m_TileSize * (i + 1)) - 1,
-							k / 2 == 0 ? m_TileSize * j : (m_TileSize * (j + 1)) - 1,
-							0
-						));
-
-						// Calculate whether the corner is visible
-						if (corner.get_distance(view) == 0)
-						{
-							if (first_i < 0)
-								first_i = i;
-							last_i = i;
-							break;
-						}
-					}
-
-					// Break if at the end of the visible row
-					if (last_i < i)
-						break;
-				}
-
-				// Add the visible row
-				if (first_i >= 0)
-					m_VisibleTiles.emplace_back(get_index(first_i, j) * 6, last_i - first_i + 1);
+				m_VisibleTiles.emplace_back(get_index(min_i, j) * 6, max_i - min_i + 1); // TODO can this be done more efficiently?
 			}
 
 			// Reset visible objects

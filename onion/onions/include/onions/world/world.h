@@ -137,11 +137,19 @@ namespace onion
 				m_Camera->translate(t);
 				trans = m_Camera->get_position() - trans;
 
+				bool trans_nonzero = false;
 				for (int k = 2; k >= 0; --k)
 				{
+					if (trans.get(k) != 0)
+						trans_nonzero = true;
+
 					for (int m = 1; m >= 0; --m)
 						m_CenterBounds(k, m) += trans.get(k);
 				}
+
+				// Reset what is visible if the camera moved
+				if (trans_nonzero)
+					reset_camera();
 			}
 
 		public:
