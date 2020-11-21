@@ -835,17 +835,19 @@ namespace onion
 			// TODO take height into account
 			m_VisibleTiles.clear();
 			
-			UprightRectangle r(vec3i(), vec3i(0, max_allowed, 0));
+			Segment r(vec3i(), vec3i(0, max_allowed, 0));
 			Int min_x = r.get_distance(view);
 
 			r.translate(vec3i(max_allowed, 0, 0));
-			Int max_x = max_allowed - r.get_distance(view);
+			Int x_dist = r.get_distance(view);
+			Int max_x = max_allowed - x_dist;
 
-			r = UprightRectangle(vec3i(), vec3i(max_allowed, 0, 0));
+			r = Segment(vec3i(), vec3i(max_allowed, 0, 0));
 			Int min_y = r.get_distance(view);
 
 			r.translate(vec3i(0, max_allowed, 0));
-			Int max_y = max_allowed - r.get_distance(view);
+			Int y_dist = r.get_distance(view);
+			Int max_y = max_allowed - y_dist;
 
 			Int min_i = std::max<Int>(0, min_x / m_TileSize);
 			Int max_i = std::min<Int>(m_Dimensions.get(0) - 1, max_x / m_TileSize);

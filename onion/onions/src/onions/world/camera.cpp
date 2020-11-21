@@ -74,20 +74,20 @@ namespace onion
 
 		vec3f StaticTopDownWorldCamera::support(const vec3f& dir) const
 		{
-			const Float near = ONION_WORLD_GEOMETRY_SCALE * (m_FrameBounds.get(2, 1) - m_FrameBounds.get(2, 0));
-			const vec3f n(0.f, -near, near);
+			const Int near = abs(m_FrameBounds.get(2, 1) - m_FrameBounds.get(2, 0));
+			const vec3i n(0.f, -near, near);
 
-			vec3f res;
+			vec3i res;
 			Float d_max = std::numeric_limits<Float>::min();
 
 			for (int c = 7; c >= 0; --c)
 			{
-				vec3f p(ONION_WORLD_GEOMETRY_SCALE * m_ZeroPosition, 0);
+				vec3i p(m_ZeroPosition, 0);
 
 				if (c % 2 == 0)
-					p(0) += ONION_WORLD_GEOMETRY_SCALE * (m_FrameBounds.get(0, 1) - m_FrameBounds.get(0, 0));
+					p(0) += m_FrameBounds.get(0, 1) - m_FrameBounds.get(0, 0);
 				if ((c / 2) % 2 == 0)
-					p(1) += ONION_WORLD_GEOMETRY_SCALE * (m_FrameBounds.get(1, 1) - m_FrameBounds.get(1, 0));
+					p(1) += m_FrameBounds.get(1, 1) - m_FrameBounds.get(1, 0);
 				if (c / 4 == 0)
 					p += n;
 
@@ -99,12 +99,12 @@ namespace onion
 				}
 			}
 
-			return res;
+			return ONION_WORLD_GEOMETRY_SCALE * res;
 		}
 
 		bool StaticTopDownWorldCamera::compare(const Shape* lhs, const Shape* rhs) const
 		{
-			const Int near = m_FrameBounds.get(2, 1) - m_FrameBounds.get(2, 0);
+			const Int near = abs(m_FrameBounds.get(2, 1) - m_FrameBounds.get(2, 0));
 			const vec3i n(0, -near, near);
 			const vec3i dx(m_FrameBounds.get(0, 1) - m_FrameBounds.get(0, 0), 0, 0);
 			const vec3i dy(0, m_FrameBounds.get(1, 1) - m_FrameBounds.get(1, 0), 0);

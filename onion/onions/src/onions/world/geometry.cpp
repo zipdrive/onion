@@ -14,6 +14,29 @@ namespace onion
 			return true;
 		}
 
+
+		vec3f dir_to_origin(const vec3f& a, const vec3f& b)
+		{
+			// Project the origin onto the line formed by the vertices
+			vec3f s_diff = b - a;
+
+			Float numer[2];
+			numer[0] = s_diff.dot(b);
+			numer[1] = s_diff.dot(a);
+			Float denom = 1.f / s_diff.square_sum();
+
+			if (numer[0] > 0 && numer[1] < 0)
+			{
+				// The projected origin lies between the two vertices
+				return ((b * numer[1]) - (a * numer[0])) * denom;
+			}
+			else
+			{
+				// The projected origin lies outside the line segment formed by the two vertices, so delete a vertex
+				return -1.f * (a.square_sum() > b.square_sum() ? b : a);
+			}
+		}
+
 		
 		void nearest_simplex1d(const Simplex& s_input, Simplex& s_output, vec3f& dir)
 		{
@@ -280,10 +303,12 @@ namespace onion
 		{
 			// Generate an initial guess
 			vec3f d = ONION_WORLD_GEOMETRY_SCALE * (other->get_position() - get_position());
-			vec3f a = support(d) - other->support(-1.f * d);
-			d = -1.f * a;
+			vec3f a1 = support(d) - other->support(-1.f * d);
+			d = -1.f * d;
+			vec3f a2 = support(d) - other->support(-1.f * d);
+			d = dir_to_origin(a1, a2);
 			
-			Simplex s = { a };
+			Simplex s = { a1, a2 };
 
 			// Calculate the distance between the two shapes using GJK algorithm
 			return __get_distance(other, s, d);
@@ -314,6 +339,26 @@ namespace onion
 		vec3f Point::support(const vec3f& dir) const
 		{
 			return ONION_WORLD_GEOMETRY_SCALE * m_Position;
+		}
+
+
+		Segment::Segment(const vec3i& origin, const vec3i& direction) : Point(origin)
+		{
+			m_EndPoint = origin + direction;
+		}
+
+		vec3f Segment::support(const vec3f& dir) const
+		{
+			Float d1 = dir.dot(m_Position);
+			Float d2 = dir.dot(m_EndPoint);
+
+			return ONION_WORLD_GEOMETRY_SCALE * (d1 >= d2 ? m_Position : m_EndPoint);
+		}
+
+		void Segment::translate(const vec3i& trans)
+		{
+			Point::translate(trans);
+			m_EndPoint += trans;
 		}
 		
 		
@@ -364,16 +409,16 @@ namespace onion
 
 		vec3f Parallelogram::support(const vec3f& dir) const
 		{
-			vec3f res;
+			vec3i res;
 			Float d_max = std::numeric_limits<Float>::min();
 
 			for (int c = 3; c >= 0; --c)
 			{
-				vec3f p = ONION_WORLD_GEOMETRY_SCALE * m_Position;
+				vec3i p = m_Position;
 				if (c % 2 > 0)
-					p += ONION_WORLD_GEOMETRY_SCALE * m_Radii[0];
+					p += m_Radii[0];
 				if (c / 2 > 0)
-					p += ONION_WORLD_GEOMETRY_SCALE * m_Radii[1];
+					p += m_Radii[1];
 
 				Float d = dir.dot(p);
 				if (d > d_max)
@@ -383,7 +428,7 @@ namespace onion
 				}
 			}
 
-			return res;
+			return ONION_WORLD_GEOMETRY_SCALE * res;
 		}
 
 
