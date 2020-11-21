@@ -328,7 +328,26 @@ namespace onion
 						// If there was a collision, reset the position
 						actor->translate(-1 * trans);
 
-						// TODO test whether there isn't a collision if the actor is only translated on one axis, or if it is pushed upwards
+						vec3i norm = view->get_normal();
+						
+						// Translate by only the vertical axis
+						vec3i dy = vec3i(norm.get(0), norm.get(1), 0);
+						dy = dy * Frac(trans.get(1), dy.square_sum());
+						actor->translate(dy);
+						if (collision(actor))
+						{
+							actor->translate(-1 * dy);
+
+							// Translate by only the horizontal axis
+							vec3i dx = vec3i(vec2i(trans - dy), 0);
+							actor->translate(dx);
+							if (collision(actor))
+							{
+								actor->translate(-1 * dx);
+
+								// TODO test other translations?
+							}
+						}
 					}
 
 					// Check if the actor is visible
