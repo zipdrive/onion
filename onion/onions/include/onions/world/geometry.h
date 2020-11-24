@@ -82,6 +82,31 @@ namespace onion
 			virtual void translate(const vec3i& trans);
 		};
 
+		// A line segment in three-dimensional space.
+		class Segment : public Point
+		{
+		protected:
+			// The end point of the line segment.
+			vec3i m_EndPoint;
+
+
+			/// <summary>A support function for the GJK algorithm.</summary>
+			/// <param name="dir">A direction vector.</param>
+			/// <param name="point">Outputs the point on the shape that produces the largest dot product with dir.</param>
+			virtual vec3f support(const vec3f& dir) const;
+
+		public:
+			/// <summary>Constructs a line segment.</summary>
+			/// <param name="origin">The origin of the line segment.</param>
+			/// <param name="direction">The direction of the line segment.</param>
+			Segment(const vec3i& origin, const vec3i& direction);
+
+
+			/// <summary>Translates the shape by a given vector.</summary>
+			/// <param name="trans">The vector of translation.</param>
+			virtual void translate(const vec3i& trans);
+		};
+
 
 		// A rectangular prism whose faces are aligned with the Cartesian planes.
 		class OrthogonalPrism : public Point

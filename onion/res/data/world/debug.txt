@@ -3,8 +3,8 @@ sprites = "debug.png"
 begin tile
     x           = 0
     y           = 0
-    dx          = 25
-    dy          = 25
+    dx          = 50
+    dy          = 30
     sprite      = 1
 end
 begin tile
@@ -13,7 +13,7 @@ begin tile
     dx          = 2
     dy          = 2
     sprite      = 6
-    sprite_rot  = 1
+    rotation    = 1
 end
 
 begin obj DEBUG light1
@@ -26,7 +26,6 @@ end
 begin obj DEBUG interactable
     pos = (240, 240, 0)
 end
-
-begin obj DEBUG actor
-    pos = (180, 120, 0)
+begin obj DEBUG texture
+    pos = (360, 240, 0)
 end

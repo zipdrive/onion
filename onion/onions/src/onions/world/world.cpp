@@ -15,7 +15,7 @@ namespace onion
 
 		void World::__set_bounds()
 		{
-			m_Camera->reset_view();
+			m_Camera->__set_bounds();
 			reset_camera();
 		}
 
@@ -49,27 +49,29 @@ namespace onion
 			m_Chunk = nullptr;
 			set_chunk(chunk);
 
-			m_Camera = new StaticTopDownWorldCamera(m_Bounds);
-			m_Camera->set_position(vec3i(200, 200, 0));
+			m_Camera = new StaticBoundedTopDownWorldCamera(m_Bounds, vec3i(0, 0, 0), vec3i(chunk->get_tile_size() * chunk->get_dimensions(), 0));
+			//m_Camera = new StaticTopDownWorldCamera(m_Bounds);
+			//m_Camera = new DynamicAxonometricWorldCamera(m_Bounds, 0.f, 0.f);
+			m_Camera->set_position(vec3i(200, 0, 0));
 
 			unfreeze(INT_MAX);
 		}
 
 		void BasicWorld::reset_camera()
 		{
-			m_Chunk->reset_visible(m_Camera->get_view());
+			m_Chunk->reset_visible(m_Camera);
 		}
 
 		void BasicWorld::update(int frames_passed)
 		{
-			m_Chunk->update_visible(m_Camera->get_view(), frames_passed);
+			m_Chunk->update_visible(m_Camera, frames_passed);
 		}
 		
 		void BasicWorld::__display() const
 		{
 			// Display the chunk
 			m_Chunk->display_tiles();
-			m_Chunk->display_objects(m_Camera->get_view()->get_normal());
+			m_Chunk->display_objects(m_Camera->get_normal());
 		}
 
 		void BasicWorld::set_chunk(Chunk* chunk)

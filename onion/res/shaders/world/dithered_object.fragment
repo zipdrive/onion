@@ -19,6 +19,11 @@ fs_in;
 
 
 
+float CalcDitherUV(vec3 pos)
+{
+    return tan(pos.x * 2.718281828) + tan(pos.y * 1.414213562) + tan(pos.z * 1.745240644);
+}
+
 float CalcLightStrength(vec3 pos, vec3 normal, vec3 dir, float intensity, float maxDistance, sampler2D noiseTexture)
 {
     float distance = length(dir);
@@ -28,20 +33,19 @@ float CalcLightStrength(vec3 pos, vec3 normal, vec3 dir, float intensity, float 
         
         // Calculate the base strength of the light
         float edgeDiffuseStrength = 0.081024 * strengthPerLevel;
-        float attenuation = max((dir.z / (maxDistance * edgeDiffuseStrength)) - 1.0, 0.0) * pow(distance / maxDistance, 5.0);
-        float baseDiffuseStrength = max(dot(normal, dir) / distance, 0.0);
+        float minDistance = dot(normal, dir);
+        float attenuation = max((minDistance / (maxDistance * edgeDiffuseStrength)) - 1.0, 0.0) * pow(distance / maxDistance, 5.0);
+        float baseDiffuseStrength = max(minDistance / distance, 0.0);
         float baseStrength = baseDiffuseStrength * intensity / (1.0 + attenuation);
         
         // Calculate the discretized strength of the light
-        float strength = strengthPerLevel * round(baseStrength / strengthPerLevel);
+        float strength = 0.25 * floor(baseStrength / strengthPerLevel);
         
         // Dither the boundary between discrete strengths
-        float closenessToBoundary = (strength - baseStrength) / strengthPerLevel;
-        float closenessSign = abs(closenessToBoundary) / closenessToBoundary;
-        float strengthChange = -strengthPerLevel * closenessSign;
-        closenessToBoundary = (4.0 * closenessToBoundary * closenessToBoundary * closenessToBoundary) + max(-closenessSign, 0.0);
-        float dither = texture(noiseTexture, vec2(closenessToBoundary, tan(2.14732 * pos.x) + tan(5.444246 * pos.y) + tan(1.4643123 * pos.z))).r;
-        strength += (dither * min(strengthChange, 0.0)) + ((1.0 - dither) * max(strengthChange, 0.0));
+        float closenessToBoundary = round(baseStrength / strengthPerLevel) - (baseStrength / strengthPerLevel);
+        closenessToBoundary = (4.0 * closenessToBoundary * closenessToBoundary * closenessToBoundary) - min(sign(closenessToBoundary), 0.0);
+        float dither = texture(noiseTexture, vec2(0.001 + (0.998 * closenessToBoundary), distance * CalcDitherUV(pos))).r;
+        strength -= 0.25 * dither;
         
         return strength;
     }

@@ -121,6 +121,10 @@ namespace onion
 			/// <returns>The index of the tile.</returns>
 			int get_index(int x, int y) const;
 
+			/// <summary>Retrieves the dimensions of the chunk.</summary>
+			/// <returns>A reference to the dimensions of the chunk.</returns>
+			const vec2i& get_dimensions() const;
+
 
 			/// <summary>Retrieves the height of the tile at the given world coordinates.</summary>
 			/// <param name="x">The x-coordinate in the world.</param>
@@ -140,11 +144,16 @@ namespace onion
 			void unload();
 
 
+			/// <summary>Inserts an object into the chunk.</summary>
+			/// <param name="obj">The object to insert.</param>
+			virtual void add(Object* obj) = 0;
+
+
 			/// <summary>Resets what is visible, in response to the view changing.</summary>
-			virtual void reset_visible(const WorldCamera::View* view) = 0;
+			virtual void reset_visible(const WorldCamera* view) = 0;
 
 			/// <summary>Updates what is visible, in response to the passage of time.</summary>
-			virtual void update_visible(const WorldCamera::View* view, int frames_passed) = 0;
+			virtual void update_visible(const WorldCamera* view, int frames_passed) = 0;
 
 			/// <summary>Displays tiles in the chunk.</summary>
 			void display_tiles() const;
@@ -204,11 +213,16 @@ namespace onion
 			int get_tile_height(int x, int y) const;
 
 
+			/// <summary>Inserts an object into the chunk.</summary>
+			/// <param name="obj">The object to insert.</param>
+			void add(Object* obj);
+
+
 			/// <summary>Resets what is visible, in response to the view changing.</summary>
-			void reset_visible(const WorldCamera::View* view);
+			void reset_visible(const WorldCamera* view);
 
 			/// <summary>Updates what is visible, in response to the passage of time.</summary>
-			void update_visible(const WorldCamera::View* view, int frames_passed);
+			void update_visible(const WorldCamera* view, int frames_passed);
 
 			/// <summary>Displays objects in the chunk.</summary>
 			/// <param name="normal">A vector pointing towards the camera.</param>
@@ -266,11 +280,16 @@ namespace onion
 			int get_tile_height(int x, int y) const;
 
 
+			/// <summary>Inserts an object into the chunk.</summary>
+			/// <param name="obj">The object to insert.</param>
+			void add(Object* obj);
+
+
 			/// <summary>Resets what is visible, in response to the view changing.</summary>
-			void reset_visible(const WorldCamera::View* view);
+			void reset_visible(const WorldCamera* view);
 
 			/// <summary>Updates what is visible, in response to the passage of time.</summary>
-			void update_visible(const WorldCamera::View* view, int frames_passed);
+			void update_visible(const WorldCamera* view, int frames_passed);
 
 			/// <summary>Displays objects in the chunk.</summary>
 			/// <param name="normal">A vector pointing towards the camera.</param>
