@@ -13,7 +13,7 @@ begin tile
     dx          = 2
     dy          = 2
     sprite      = 6
-    sprite_rot  = 1
+    rotation    = 1
 end
 
 begin obj DEBUG light1
@@ -25,4 +25,7 @@ begin obj DEBUG wall1
 end
 begin obj DEBUG interactable
     pos = (240, 240, 0)
+end
+begin obj DEBUG texture
+    pos = (360, 240, 0)
 end

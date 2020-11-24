@@ -6,6 +6,14 @@ begin DEBUG light1
     radius = 1000
 end
 
+begin DEBUG light2
+    type = "light:cube"
+    color = (240, 40, 20)
+    intensity = 100
+    size = (70, 30, 0)
+    radius = 500
+end
+
 begin DEBUG wall1
     type = "wall:xalign"
     sprite_sheet = "sprites/debug.png"

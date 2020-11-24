@@ -124,7 +124,7 @@ namespace onion
 
 			if (!params.get("radius", m_Radius)) m_Radius = 0;
 		}
-		
+	
 		Object* CubeLightObjectGenerator::generate(const StringData& params) const
 		{
 			vec3i pos;
