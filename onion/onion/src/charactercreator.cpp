@@ -41,7 +41,7 @@ Sprite* get_bg_diamonds()
 
 
 
-HuneCreator* g_HuneCreator = nullptr;
+world::HuneCreator* g_HuneCreator = nullptr;
 
 
 class HuneCreatorButton : public Button
@@ -49,7 +49,7 @@ class HuneCreatorButton : public Button
 protected:
 	Graphic* m_Graphic;
 
-	void (HuneCreator::*m_ClickFunc)();
+	void (world::HuneCreator::*m_ClickFunc)();
 
 	void click()
 	{
@@ -62,7 +62,7 @@ protected:
 	}
 
 public:
-	HuneCreatorButton(Graphic* graphic, void (HuneCreator::*click_func)()) 
+	HuneCreatorButton(Graphic* graphic, void (world::HuneCreator::*click_func)()) 
 	{
 		m_Graphic = graphic;
 		m_ClickFunc = click_func;
@@ -122,9 +122,9 @@ class HuneIndexButton : public Button
 protected:
 	Graphic* m_Graphic;
 
-	HuneCreator::Index* m_Index;
+	world::HuneCreator::Index* m_Index;
 
-	void (HuneCreator::Index::*m_ClickFunc)();
+	void (world::HuneCreator::Index::*m_ClickFunc)();
 
 	void click()
 	{
@@ -137,7 +137,7 @@ protected:
 	}
 
 public:
-	HuneIndexButton(Graphic* graphic, HuneCreator::Index* index, void (HuneCreator::Index::*click_func)())
+	HuneIndexButton(Graphic* graphic, world::HuneCreator::Index* index, void (world::HuneCreator::Index::*click_func)())
 	{
 		m_Graphic = graphic;
 		m_Index = index;
@@ -177,9 +177,9 @@ protected:
 	}
 
 public:
-	HuneCreatorFeature(string label, Graphic* left_arrow, Graphic* right_arrow, HuneCreator::Index* index) :
-		m_LeftButton(left_arrow, index, &HuneCreator::Index::decrement),
-		m_RightButton(right_arrow, index, &HuneCreator::Index::increment)
+	HuneCreatorFeature(string label, Graphic* left_arrow, Graphic* right_arrow, world::HuneCreator::Index* index) :
+		m_LeftButton(left_arrow, index, &world::HuneCreator::Index::decrement),
+		m_RightButton(right_arrow, index, &world::HuneCreator::Index::increment)
 	{
 		m_LeftButton.set_bounds(0, 0, 0, left_arrow->get_width(), left_arrow->get_height(), 0);
 		m_LeftButton.set_parent(this);
@@ -430,7 +430,7 @@ protected:
 		}
 	} m_PageSwapper;
 
-	HuneCreator* m_Hune;
+	world::HuneCreator* m_Hune;
 
 	SimpleStaticSpriteGraphic* m_LeftArrow;
 
@@ -460,7 +460,7 @@ protected:
 	}
 
 public:
-	HuneCreatorPageContainer(HuneCreator* hune, SimpleStaticSpriteGraphic* left_arrow, SimpleStaticSpriteGraphic* right_arrow) :
+	HuneCreatorPageContainer(world::HuneCreator* hune, SimpleStaticSpriteGraphic* left_arrow, SimpleStaticSpriteGraphic* right_arrow) :
 		m_PageSwapper(this, left_arrow, right_arrow)
 	{
 		m_Hune = hune;
@@ -530,7 +530,7 @@ void character_creator_setup()
 	Application* app = get_application_settings();
 
 	// Set up the hune
-	g_HuneCreator = new HuneCreator();
+	g_HuneCreator = new world::HuneCreator();
 
 	// Set up buttons
 	SimplePixelSpriteSheet* ui = get_ui_sprite_sheet();
@@ -538,14 +538,14 @@ void character_creator_setup()
 
 	g_RotateLeftButton = new HuneCreatorButton(
 		new SimpleStaticSpriteGraphic(ui, "rotate left", ui_palette->get_red_palette_matrix(), 0), 
-		&HuneCreator::rotate_left
+		&world::HuneCreator::rotate_left
 	);
 	g_RotateLeftButton->set_bounds(71, 149, -1, 18, 15, 0);
 	g_RotateLeftButton->unfreeze();
 
 	g_RotateRightButton = new HuneCreatorButton(
 		new SimpleStaticSpriteGraphic(ui, "rotate right", ui_palette->get_red_palette_matrix(), 0), 
-		&HuneCreator::rotate_right
+		&world::HuneCreator::rotate_right
 	);
 	g_RotateRightButton->set_bounds(111, 149, -1, 18, 15, 0);
 	g_RotateRightButton->unfreeze();
@@ -644,7 +644,8 @@ void character_creator_display_func()
 
 	Transform::model.reset();
 	Transform::model.translate(100.f, 170.f, -100.f);
-	g_HuneCreator->display();
+	//g_HuneCreator->display();
+	// TODO
 
 	Transform::model.reset();
 	g_RotateLeftButton->display();

@@ -68,33 +68,10 @@ public:
 };
 
 
-class TestActorGenerator : public world::ObjectGenerator
+class TestActorGenerator : public world::FurryGenerator
 {
-protected:
-	const world::Flat3DPixelSpriteSheet* m_SpriteSheet;
-	const Sprite* m_Sprite;
-
 public:
-	TestActorGenerator(String id, const StringData& params) : ObjectGenerator(id)
-	{
-		m_SpriteSheet = nullptr;
-		m_Sprite = nullptr;
-
-		String sprite_sheet;
-		if (params.get("sprite_sheet", sprite_sheet))
-		{
-			if (const _SpriteSheet* ptr = _SpriteSheet::get_sprite_sheet("world/" + sprite_sheet))
-			{
-				if (m_SpriteSheet = dynamic_cast<const world::Flat3DPixelSpriteSheet*>(ptr))
-				{
-					String sprite;
-					params.get("sprite", sprite);
-
-					m_Sprite = m_SpriteSheet->get_sprite(sprite);
-				}
-			}
-		}
-	}
+	TestActorGenerator(String id, const StringData& params) : world::FurryGenerator(id, params) {}
 
 	world::Object* generate(const StringData& params) const
 	{
@@ -102,9 +79,9 @@ public:
 		params.get("pos", pos);
 
 		world::Actor* actor = new world::Actor(
-			new world::OrthogonalPrism(pos, vec3i(m_Sprite->width, 4, m_Sprite->height)), 
+			new world::OrthogonalPrism(pos, vec3i(24, 24, 60)), 
 			new world::PlayerMovementControlledAgent(world::SubpixelHandler::num_subpixels * 80), 
-			new world::FlatWallGraphic3D(m_SpriteSheet, m_Sprite)
+			generate_graphic(params)
 		);
 
 		world::_Interactable::set_interactor(actor);
@@ -166,6 +143,8 @@ void worldtest_main()
 	new world::Flat3DPixelSpriteSheet("sprites/debug.png");
 	new world::Flat3DPixelSpriteSheet("sprites/debug2.png");
 	new world::Textured3DPixelSpriteSheet("sprites/debugtexture.png");
+
+	world::load_furry_components();
 
 	// Set up the object types
 	world::ObjectGenerator::set<TestTexturedObjectGenerator>("__DEBUG:texture");

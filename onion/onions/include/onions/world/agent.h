@@ -48,7 +48,7 @@ namespace onion
 			/// <param name="view">The geometry of what is visible.</param>
 			/// <param name="frames_passed">The number of frames since the last update.</param>
 			/// <returns>The desired translation of the actor, in subpixel units.</returns>
-			vec3i update(const WorldCamera* view, int frames_passed);
+			virtual vec3i update(const WorldCamera* view, int frames_passed);
 		};
 
 

@@ -6,7 +6,7 @@
 
 using namespace onion;
 
-
+/*
 #define CONTROL_DEBUG 0
 
 class KeyboardControlTester : public KeyboardListener
@@ -49,7 +49,7 @@ void test_update_main()
 {
 	g_UpdateTester.unfreeze(0);
 }
-
+*/
 
 
 mat4x4f g_Transform;
@@ -153,17 +153,18 @@ void test_texmap_main()
 
 
 
-HuneGraphic* g_TestHune = nullptr;
+world::HuneGraphic* g_TestHune = nullptr;
 
 void test_hune_display()
 {
-	g_TestHune->display();
+	//g_TestHune->display();
+	// TODO
 }
 
 void test_hune_main()
 {
 	// Load graphic
-	g_TestHune = new HuneGraphic();
+	g_TestHune = new world::HuneGraphic();
 
 	g_TestHune->set_body_type("lean");
 	g_TestHune->set_head_shape("thin");
@@ -177,7 +178,7 @@ void test_hune_main()
 	g_TestHune->set_tertiary_color(vec4i(142, 108, 17, 255), vec4i(255, 255, 220, 255), vec4i(0, 0, 20, 255));
 	//g_TestHune->set_primary_color(vec4i(133, 76, 25, 255), vec4i(244, 243, 234, 255), vec4i(25, 2, 25, 255));
 
-	g_TestHune->facing = FACING_BACK;
+	g_TestHune->direction = vec2i(0, -1);
 
 	// Call the main function
 	onion::main(test_hune_display);
