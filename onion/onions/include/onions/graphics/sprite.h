@@ -201,6 +201,9 @@ namespace onion
 		PALETTE_MATRIX m_Matrix;
 
 	public:
+		// Default constructor.
+		SinglePalette() = default;
+
 		/// <summary>Constructs a single palette matrix using integer values.</summary>
 		/// <param name="red_maps_to">The color that the palette matrix should map RED to.</param>
 		/// <param name="green_maps_to">The color that the palette matrix should map GREEN to.</param>

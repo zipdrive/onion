@@ -68,10 +68,10 @@ public:
 };
 
 
-class TestActorGenerator : public world::FurryGenerator
+class TestFurryActorGenerator : public world::FurryGenerator
 {
 public:
-	TestActorGenerator(String id, const StringData& params) : world::FurryGenerator(id, params) {}
+	TestFurryActorGenerator(String id, const StringData& params) : world::FurryGenerator(id, params) {}
 
 	world::Object* generate(const StringData& params) const
 	{
@@ -82,6 +82,27 @@ public:
 			new world::OrthogonalPrism(pos, vec3i(24, 24, 60)), 
 			new world::PlayerMovementControlledAgent(world::SubpixelHandler::num_subpixels * 80), 
 			generate_graphic(params)
+		);
+
+		world::_Interactable::set_interactor(actor);
+		return actor;
+	}
+};
+
+class TestHuneActorGenerator : public world::ObjectGenerator
+{
+public:
+	TestHuneActorGenerator(String id, const StringData& params) : ObjectGenerator(id) {}
+
+	world::Object* generate(const StringData& params) const
+	{
+		vec3i pos;
+		params.get("pos", pos);
+
+		world::Actor* actor = new world::HuneActor(
+			new world::OrthogonalPrism(pos, vec3i(24, 24, 60)),
+			new world::PlayerMovementControlledAgent(world::SubpixelHandler::num_subpixels * 80),
+			new world::HuneCreator()
 		);
 
 		world::_Interactable::set_interactor(actor);
@@ -148,7 +169,7 @@ void worldtest_main()
 
 	// Set up the object types
 	world::ObjectGenerator::set<TestTexturedObjectGenerator>("__DEBUG:texture");
-	world::ObjectGenerator::set<TestActorGenerator>("__DEBUG:actor");
+	world::ObjectGenerator::set<TestFurryActorGenerator>("__DEBUG:actor");
 	world::ObjectGenerator::set<TestInteractableWallGenerator>("__DEBUG:interactable");
 
 	// Generate the player
@@ -166,7 +187,8 @@ void worldtest_main()
 
 	// Lighting setup
 	Lighting::add_light_array<CubeLight>("cubeLights", "numCubeLights", 8);
-	Lighting::set_ambient_light(vec3f(0.04f, 0.13f, 0.27f));
+	//Lighting::set_ambient_light(vec3f(0.04f, 0.13f, 0.27f));
+	Lighting::set_ambient_light(vec3f(1.f, 1.f, 1.f));
 
 	// Run the main loop
 	set_state(new world::WorldState(world));

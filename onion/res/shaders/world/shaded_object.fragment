@@ -1,0 +1,120 @@
+// Fragment shader
+#version 330 core
+
+#define NR_CUBE_LIGHTS 8
+
+
+in VS_FS
+{
+    // The fragment position
+    vec3 pos;
+    
+    // The fragment normal
+    vec2 shadingUV;
+
+    // The UV texture coordinates
+    vec2 mappingUV;
+}
+fs_in;
+
+
+
+float CalcLightStrength(vec3 pos, vec3 normal, vec3 dir, float intensity, float maxDistance)
+{
+    float distance = length(dir);
+    if (distance < maxDistance)
+    {
+        float strengthPerLevel = intensity / round(5.0 * intensity); // The difference in strength between each discretized level
+        
+        // Calculate the base strength of the light
+        float edgeDiffuseStrength = 0.081024 * strengthPerLevel;
+        float attenuation = max((dir.z / (maxDistance * edgeDiffuseStrength)) - 1.0, 0.0) * pow(distance / maxDistance, 5.0);
+        float baseDiffuseStrength = max(dot(normal, dir) / distance, 0.0);
+        float baseStrength = baseDiffuseStrength * intensity / (1.0 + attenuation);
+        
+        // Calculate the discretized strength of the light
+        return strengthPerLevel * round(baseStrength / strengthPerLevel);
+    }
+    
+    return 0.0;
+}
+
+
+struct CubeLight
+{
+    // The corner with minimum values.
+    vec3 mins;
+    
+    // The corner with maximum values.
+    vec3 maxs;
+    
+    
+    // The color of the light.
+    vec3 color;
+    
+    // The intensity of the specular highlight.
+    float intensity;
+    
+    
+    // The maximum radius of the light.
+    float radius;
+};
+
+vec3 CalcCubeLight(CubeLight light, vec3 pos)
+{
+    // Calculate the closest point on the light
+    vec3 closest = vec3(
+        max(light.mins.x, min(light.maxs.x, pos.x)),
+        max(light.mins.y, min(light.maxs.y, pos.y)),
+        max(light.mins.z, min(light.maxs.z, pos.z))
+    );
+    float dist = length(closest - pos); // The distance between the point and the light
+    
+    // Calculate the diffuse color of the fragment
+    float strength = (light.radius - dist) / light.radius;
+    return strength * light.color;
+}
+
+
+uniform Lighting
+{
+    // The ambient light
+    vec3 ambient;
+    
+    // All lights shaped like a rectangular prism
+    CubeLight cubeLights[NR_CUBE_LIGHTS];
+    int numCubeLights;
+};
+
+
+
+uniform mat4 model;
+
+uniform mat4x2 mappingMatrix;
+uniform mat4 paletteMatrix;
+
+uniform sampler2D objTexture;
+
+
+// MAIN FUNCTION
+
+void main()
+{
+    vec2 diffUV = vec2(mappingMatrix * texture(objTexture, fs_in.mappingUV));
+    vec4 diff = paletteMatrix * texture(objTexture, diffUV);
+    
+    vec4 shading_rgba = texture(objTexture, fs_in.shadingUV);
+    vec3 shading_mod = (shading_rgba.r * vec3(1.0)) + (shading_rgba.g * vec3(1.0 / diff.r, 1.0 / diff.g, 1.0 / diff.b));
+    
+    vec3 color = ambient;
+    
+    if (numCubeLights <= NR_CUBE_LIGHTS)
+    {
+        for (int k = numCubeLights - 1; k >= 0; --k)
+        {
+            color += shading_mod * CalcCubeLight(cubeLights[k], fs_in.pos);
+        }
+    }
+    
+    gl_FragColor = vec4(color * vec3(diff), shading_rgba.a * diff.a);
+}

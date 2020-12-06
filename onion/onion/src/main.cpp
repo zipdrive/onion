@@ -173,9 +173,9 @@ void test_hune_main()
 
 	g_TestHune->set_textures("head striped", "monochrome", "monochrome", "monochrome");
 
-	g_TestHune->set_primary_color(vec4i(244, 151, 31, 255), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
-	g_TestHune->set_secondary_color(vec4i(243, 236, 226, 255), vec4i(255, 255, 220, 255), vec4i(0, 0, 25, 255));
-	g_TestHune->set_tertiary_color(vec4i(142, 108, 17, 255), vec4i(255, 255, 220, 255), vec4i(0, 0, 20, 255));
+	g_TestHune->set_primary_color(vec4i(244, 151, 31, 255));
+	g_TestHune->set_secondary_color(vec4i(243, 236, 226, 255));
+	g_TestHune->set_tertiary_color(vec4i(142, 108, 17, 255));
 	//g_TestHune->set_primary_color(vec4i(133, 76, 25, 255), vec4i(244, 243, 234, 255), vec4i(25, 2, 25, 255));
 
 	g_TestHune->direction = vec2i(0, -1);

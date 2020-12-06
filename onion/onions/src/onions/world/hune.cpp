@@ -72,7 +72,7 @@ namespace onion
 
 
 
-		onion::ShadedTexturePixelSpriteSheet* HuneSprite::sprite_sheet{ nullptr };
+		Shaded3DPixelSpriteSheet* HuneSprite::sprite_sheet{ nullptr };
 
 		int HuneSprite::get_width() const
 		{
@@ -819,7 +819,7 @@ namespace onion
 		{
 			if (!HuneSprite::sprite_sheet)
 			{
-				HuneSprite::sprite_sheet = new ShadedTexturePixelSpriteSheet("sprites/hune.png");
+				HuneSprite::sprite_sheet = new Shaded3DPixelSpriteSheet("sprites/hune.png");
 
 				LoadFile meta("res/img/sprites/hune.meta");
 				regex word_separator("(\\S+)\\s+(\\S.*)");
@@ -1044,19 +1044,19 @@ namespace onion
 			m_BaseLowerBody.texture = temp ? temp : HuneSprite::sprite_sheet->get_texture("monochrome");
 		}
 
-		void HuneGraphic::set_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+		void HuneGraphic::set_primary_color(const vec4i& color)
 		{
-			m_BodyPalette.set_red_palette_matrix(color, highlight, shading);
+			m_BodyPalette.set_red_maps_to(color);
 		}
 
-		void HuneGraphic::set_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+		void HuneGraphic::set_secondary_color(const vec4i& color)
 		{
-			m_BodyPalette.set_green_palette_matrix(color, highlight, shading);
+			m_BodyPalette.set_green_maps_to(color);
 		}
 
-		void HuneGraphic::set_tertiary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+		void HuneGraphic::set_tertiary_color(const vec4i& color)
 		{
-			m_BodyPalette.set_blue_palette_matrix(color, highlight, shading);
+			m_BodyPalette.set_blue_maps_to(color);
 		}
 
 		void HuneGraphic::set_top_texture(string texture)
@@ -1077,14 +1077,14 @@ namespace onion
 			}
 		}
 
-		void HuneGraphic::set_top_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+		void HuneGraphic::set_top_primary_color(const vec4i& color)
 		{
-			m_TopPalette.set_red_palette_matrix(color, highlight, shading);
+			m_TopPalette.set_red_maps_to(color);
 		}
 
-		void HuneGraphic::set_top_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+		void HuneGraphic::set_top_secondary_color(const vec4i& color)
 		{
-			m_TopPalette.set_green_palette_matrix(color, highlight, shading);
+			m_TopPalette.set_green_maps_to(color);
 		}
 
 		void HuneGraphic::set_jacket_texture(string texture)
@@ -1105,14 +1105,14 @@ namespace onion
 			}
 		}
 
-		void HuneGraphic::set_jacket_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+		void HuneGraphic::set_jacket_primary_color(const vec4i& color)
 		{
-			m_JacketPalette.set_red_palette_matrix(color, highlight, shading);
+			m_JacketPalette.set_red_maps_to(color);
 		}
 
-		void HuneGraphic::set_jacket_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+		void HuneGraphic::set_jacket_secondary_color(const vec4i& color)
 		{
-			m_JacketPalette.set_green_palette_matrix(color, highlight, shading);
+			m_JacketPalette.set_green_maps_to(color);
 		}
 
 		void HuneGraphic::set_bottom_texture(string texture)
@@ -1131,14 +1131,14 @@ namespace onion
 			}
 		}
 
-		void HuneGraphic::set_bottom_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+		void HuneGraphic::set_bottom_primary_color(const vec4i& color)
 		{
-			m_BottomPalette.set_red_palette_matrix(color, highlight, shading);
+			m_BottomPalette.set_red_maps_to(color);
 		}
 
-		void HuneGraphic::set_bottom_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+		void HuneGraphic::set_bottom_secondary_color(const vec4i& color)
 		{
-			m_BottomPalette.set_green_palette_matrix(color, highlight, shading);
+			m_BottomPalette.set_green_maps_to(color);
 		}
 
 		void HuneGraphic::set_shoe_texture(string texture)
@@ -1157,14 +1157,14 @@ namespace onion
 			}
 		}
 
-		void HuneGraphic::set_shoe_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+		void HuneGraphic::set_shoe_primary_color(const vec4i& color)
 		{
-			m_ShoesPalette.set_red_palette_matrix(color, highlight, shading);
+			m_ShoesPalette.set_red_maps_to(color);
 		}
 
-		void HuneGraphic::set_shoe_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading)
+		void HuneGraphic::set_shoe_secondary_color(const vec4i& color)
 		{
-			m_ShoesPalette.set_green_palette_matrix(color, highlight, shading);
+			m_ShoesPalette.set_green_maps_to(color);
 		}
 
 		void HuneGraphic::set_animation(HuneAnimation* animation)
@@ -1447,14 +1447,14 @@ namespace onion
 		{
 		protected:
 			// The function to call whenever the index changes.
-			void (HuneGraphic::*m_ValueFunc)(const vec4i&, const vec4i&, const vec4i&);
+			void (HuneGraphic::*m_ValueFunc)(const vec4i&);
 
 			/// <summary>Sets the index value.</summary>
 			/// <param name="index">The value to set the index to.</param>
 			void set(int index)
 			{
 				m_Index = index;
-				(m_HuneGraphic->*m_ValueFunc)(hsv_to_rgb(get_value()), vec4i(255, 255, 220, 0), vec4i(0, 0, 25, 0));
+				(m_HuneGraphic->*m_ValueFunc)(hsv_to_rgb(get_value()));
 			}
 
 		public:
@@ -1462,7 +1462,7 @@ namespace onion
 			/// <param name="hune">The hune graphic to change whenever the index changes.</param>
 			/// <param name="values">The possible values for the index to take.</param>
 			/// <param name="value_func">The function to call whenever the index changes.</param>
-			ColorFuncIndex(HuneGraphic* hune, void (HuneGraphic::*value_func)(const vec4i&, const vec4i&, const vec4i&)) : VectorIndex<vec3i>(hune, g_Colors)
+			ColorFuncIndex(HuneGraphic* hune, void (HuneGraphic::*value_func)(const vec4i&)) : VectorIndex<vec3i>(hune, g_Colors)
 			{
 				m_ValueFunc = value_func;
 				set(0);

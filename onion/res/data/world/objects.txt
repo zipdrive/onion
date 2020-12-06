@@ -14,6 +14,7 @@ begin DEBUG light2
     radius = 500
 end
 
+
 begin DEBUG wall1
     type = "wall:xalign"
     sprite_sheet = "sprites/debug.png"
@@ -25,22 +26,15 @@ begin DEBUG wall2
     sprite = "debug"
 end
 
-begin DEBUG texture
-    type = "__DEBUG:texture"
-    sprite_sheet = "sprites/debugtexture.png"
+begin DEBUG interactable
+    type = "__DEBUG:interactable"
+    sprite_sheet = "sprites/debug2.png"
     sprite = "debug"
-    texture = "debug"
+    interact_radius = 10
 end
 
 begin DEBUG actor
     type = "__DEBUG:actor"
     sprite_sheet = "sprites/debug.png"
     sprite = "debug"
-end
-
-begin DEBUG interactable
-    type = "__DEBUG:interactable"
-    sprite_sheet = "sprites/debug2.png"
-    sprite = "debug"
-    interact_radius = 10
 end

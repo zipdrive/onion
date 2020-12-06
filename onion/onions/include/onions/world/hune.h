@@ -60,7 +60,7 @@ namespace onion
 		struct HuneSprite
 		{
 			// The sprite sheet that sprites are drawn from.
-			static onion::ShadedTexturePixelSpriteSheet* sprite_sheet;
+			static Shaded3DPixelSpriteSheet* sprite_sheet;
 
 			// The sprite for the hune.
 			Sprite* sprite;
@@ -185,7 +185,7 @@ namespace onion
 		{
 		protected:
 			// The palette for the whole body.
-			MultiplePalette m_BodyPalette;
+			SinglePalette m_BodyPalette;
 
 			// The textures, palettes, and sprites of the upper body.
 			HuneUpperBody m_BaseUpperBody;
@@ -199,25 +199,25 @@ namespace onion
 
 
 			// The palette for the jacket.
-			MultiplePalette m_JacketPalette;
+			SinglePalette m_JacketPalette;
 
 			// The textures, palettes, and sprites of the jacket.
 			HuneUpperBody m_Jacket;
 
 			// The palette for the top.
-			MultiplePalette m_TopPalette;
+			SinglePalette m_TopPalette;
 
 			// The textures, palettes, and sprites of the top (shirt/sweater/etc).
 			HuneUpperBody m_Top;
 
 			// The palette for the bottoms.
-			MultiplePalette m_BottomPalette;
+			SinglePalette m_BottomPalette;
 
 			// The textures, palettes, and sprites of the bottoms (pants/shorts/skirt/etc).
 			HuneLowerBody m_Bottom;
 
 			// The palette for the shoes.
-			MultiplePalette m_ShoesPalette;
+			SinglePalette m_ShoesPalette;
 
 			// The textures, palettes, and sprites of the shoes.
 			HuneLowerBody m_Shoes;
@@ -296,86 +296,64 @@ namespace onion
 			void set_body_texture(std::string texture);
 
 			/// <summary>Sets the primary color for the body. (Mapped to by red in the texture.)</summary>
-			/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
-			/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
-			/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
-			void set_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+			/// <param name="color">The primary color for the body.</param>
+			void set_primary_color(const vec4i& color);
 
 			/// <summary>Sets the secondary color for the body. (Mapped to by green in the texture.)</summary>
-			/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
-			/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
-			/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
-			void set_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+			/// <param name="color">The secondary color for the body.</param>
+			void set_secondary_color(const vec4i& color);
 
 			/// <summary>Sets the tertiary color for the body. (Mapped to by blue in the texture.)</summary>
-			/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
-			/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
-			/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
-			void set_tertiary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+			/// <param name="color">The tertiary color for the body.</param>
+			void set_tertiary_color(const vec4i& color);
 
 			/// <summary>Sets the textures for the top.</summary>
 			/// <param name="texture">The texture ID for the body.</param>
 			void set_top_texture(std::string texture);
 
 			/// <summary>Sets the primary color for the top. (Mapped to by red in the texture.)</summary>
-			/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
-			/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
-			/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
-			void set_top_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+			/// <param name="color">The primary color for the top.</param>
+			void set_top_primary_color(const vec4i& color);
 
 			/// <summary>Sets the secondary color for the top. (Mapped to by green in the texture.)</summary>
-			/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
-			/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
-			/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
-			void set_top_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+			/// <param name="color">The secondary color for the top.</param>
+			void set_top_secondary_color(const vec4i& color);
 
 			/// <summary>Sets the textures for the jacket.</summary>
 			/// <param name="texture">The texture ID for the body.</param>
 			void set_jacket_texture(std::string texture);
 
 			/// <summary>Sets the primary color for the jacket. (Mapped to by red in the texture.)</summary>
-			/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
-			/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
-			/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
-			void set_jacket_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+			/// <param name="color">The primary color for the jacket.</param>
+			void set_jacket_primary_color(const vec4i& color);
 
 			/// <summary>Sets the secondary color for the jacket. (Mapped to by green in the texture.)</summary>
-			/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
-			/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
-			/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
-			void set_jacket_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+			/// <param name="color">The secondary color for the jacket.</param>
+			void set_jacket_secondary_color(const vec4i& color);
 
 			/// <summary>Sets the textures for the bottoms.</summary>
 			/// <param name="texture">The texture ID for the body.</param>
 			void set_bottom_texture(std::string texture);
 
 			/// <summary>Sets the primary color for the bottoms. (Mapped to by red in the texture.)</summary>
-			/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
-			/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
-			/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
-			void set_bottom_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+			/// <param name="color">The primary color for the bottoms.</param>
+			void set_bottom_primary_color(const vec4i& color);
 
 			/// <summary>Sets the secondary color for the bottoms. (Mapped to by green in the texture.)</summary>
-			/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
-			/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
-			/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
-			void set_bottom_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+			/// <param name="color">The secondary color for the bottoms.</param>
+			void set_bottom_secondary_color(const vec4i& color);
 
 			/// <summary>Sets the textures for the shoes.</summary>
 			/// <param name="texture">The texture ID for the body.</param>
 			void set_shoe_texture(std::string texture);
 
 			/// <summary>Sets the primary color for the shoes. (Mapped to by red in the texture.)</summary>
-			/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
-			/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
-			/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
-			void set_shoe_primary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+			/// <param name="color">The primary color for the shoes.</param>
+			void set_shoe_primary_color(const vec4i& color);
 
 			/// <summary>Sets the secondary color for the shoes. (Mapped to by green in the texture.)</summary>
-			/// <param name="color">The main color. (Mapped to by red in the shading sprite.)</param>
-			/// <param name="highlight">The highlight color. (Mapped to by green in the shading sprite.)</param>
-			/// <param name="shading">The shading color. (Mapped to by blue in the shading sprite.)</param>
-			void set_shoe_secondary_color(const vec4i& color, const vec4i& highlight, const vec4i& shading);
+			/// <param name="color">The secondary color for the shoes.</param>
+			void set_shoe_secondary_color(const vec4i& color);
 
 			/// <summary>Sets the animation of the hune graphic.</summary>
 			/// <param name="animation">The animation to play.</param>
