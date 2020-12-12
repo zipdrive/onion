@@ -165,11 +165,11 @@ void worldtest_main()
 	new world::Flat3DPixelSpriteSheet("sprites/debug2.png");
 	new world::Textured3DPixelSpriteSheet("sprites/debugtexture.png");
 
-	world::load_furry_components();
+	//world::load_furry_components();
 
 	// Set up the object types
 	world::ObjectGenerator::set<TestTexturedObjectGenerator>("__DEBUG:texture");
-	world::ObjectGenerator::set<TestFurryActorGenerator>("__DEBUG:actor");
+	world::ObjectGenerator::set<TestHuneActorGenerator>("__DEBUG:actor");
 	world::ObjectGenerator::set<TestInteractableWallGenerator>("__DEBUG:interactable");
 
 	// Generate the player
@@ -187,8 +187,8 @@ void worldtest_main()
 
 	// Lighting setup
 	Lighting::add_light_array<CubeLight>("cubeLights", "numCubeLights", 8);
-	//Lighting::set_ambient_light(vec3f(0.04f, 0.13f, 0.27f));
-	Lighting::set_ambient_light(vec3f(1.f, 1.f, 1.f));
+	Lighting::set_ambient_light(vec3f(0.04f, 0.13f, 0.27f));
+	//Lighting::set_ambient_light(vec3f(1.f, 1.f, 1.f));
 
 	// Run the main loop
 	set_state(new world::WorldState(world));

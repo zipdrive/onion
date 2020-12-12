@@ -792,9 +792,8 @@ namespace onion
 				display_callback();
 
 				// Synchronize the CPU with the GPU
-				GLsync synchro = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-				glClientWaitSync(synchro, GL_SYNC_FLUSH_COMMANDS_BIT, 1000000000);
-				glDeleteSync(synchro);
+				glFlush();
+				glFinish();
 
 				// Swap buffers
 				glfwSwapBuffers(g_Window);

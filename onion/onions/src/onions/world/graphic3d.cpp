@@ -271,7 +271,8 @@ namespace onion
 			String fpath("world/");
 			fpath += path;
 
-			load(fpath.c_str());
+			const char* c_fpath = fpath.c_str();
+			load(c_fpath);
 		}
 
 		Shaded3DPixelSpriteSheet::_SpriteShader* Shaded3DPixelSpriteSheet::get_shader()

@@ -19,6 +19,9 @@ end
 begin obj DEBUG light1
     pos = (200, 0, 75)
 end
+begin obj DEBUG light2
+    pos = (300, 0, 75)
+end
 
 begin obj DEBUG wall1
     pos = (120, 240, 0)

@@ -114,12 +114,9 @@ void main()
     vec3 color = ambient;
     vec3 norm = normalize(fs_in.normal);
     
-    if (numCubeLights <= NR_CUBE_LIGHTS)
+    for (int k = NR_CUBE_LIGHTS - 1; k >= 0; --k)
     {
-        for (int k = numCubeLights - 1; k >= 0; --k)
-        {
-            color += CalcCubeLight(cubeLights[k], fs_in.pos, norm, noiseTexture);
-        }
+        color += CalcCubeLight(cubeLights[k], fs_in.pos, norm, noiseTexture);
     }
     
     gl_FragColor = vec4(color * diff, 1.0);

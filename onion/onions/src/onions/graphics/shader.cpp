@@ -14,13 +14,7 @@ namespace onion
 	namespace opengl
 	{
 
-		void synchronize()
-		{
-			// Don't allow the GPU to accept any more commands until everything has been completed
-			GLsync synchro = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-			glWaitSync(synchro, 0, GL_TIMEOUT_IGNORED);
-			glDeleteSync(synchro);
-		}
+		
 
 
 		/// <summary>Checks for any OpenGL errors. If any were received, logs them.</summary>
@@ -43,7 +37,17 @@ namespace onion
 			}
 		}
 
+		void synchronize()
+		{
+			/*
+			// Don't allow the GPU to accept any more commands until everything has been completed
+			GLsync synchro = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+			glWaitSync(synchro, 0, GL_TIMEOUT_IGNORED);
+			glDeleteSync(synchro);
+			*/
 
+			//glFinish();
+		}
 
 		
 
