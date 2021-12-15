@@ -46,7 +46,7 @@ namespace onion
 			glDeleteSync(synchro);
 			*/
 
-			//glFinish();
+			glFlush();
 		}
 
 		
@@ -1527,6 +1527,9 @@ namespace onion
 	
 	void ImageBuffer::__activate() const
 	{
+		// Activate the buffer
+		opengl::_VertexBuffer::__activate();
+
 		// Activate the image
 		m_Image->activate();
 	}
