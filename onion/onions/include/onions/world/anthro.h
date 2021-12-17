@@ -8,7 +8,7 @@ namespace onion
 	{
 
 		// The direction that a humanoid is facing, relative to the camera view.
-		enum class FurryDirection
+		enum class AnthroDirection
 		{
 			// Facing towards the camera.
 			FRONT = 0,
@@ -29,13 +29,13 @@ namespace onion
 
 
 		// The ID for each of a humanoid's animations.
-		enum class FurryAnimationID
+		enum class AnthroAnimationID
 		{
 			// Animation for standing idle.
-			STAND,
+			STAND = 0,
 
 			// Animation for walking.
-			WALK,
+			WALK = 1,
 
 
 			// Used to retrieve the size of all animations composited together.
@@ -43,8 +43,8 @@ namespace onion
 		};
 
 		// The index and size of each animation in the frame array.
-		template <FurryAnimationID _Anim>
-		struct FurryAnimationVars
+		template <AnthroAnimationID _Anim>
+		struct AnthroAnimationVars
 		{
 			// The index of the start of the animation in the frame array.
 			static constexpr int index = 0;
@@ -55,10 +55,10 @@ namespace onion
 
 		
 		// A sprite that represents part of a humanoid.
-		struct FurrySprite
+		struct AnthroSprite
 		{
 			// The sprite sheet containing the furry sprites and textures.
-			static Textured3DPixelSpriteSheet* sprite_sheet;
+			static NormalMapped3DPixelSpriteSheet* sprite_sheet;
 
 			// The actual sprite to display.
 			Sprite* sprite;
@@ -68,12 +68,12 @@ namespace onion
 
 
 			// Default constructor.
-			FurrySprite() = default;
+			AnthroSprite() = default;
 
 			/// <summary>Loads the sprite with the given ID.</summary>
 			/// <param name="id">The ID of the sprite.</param>
 			/// <param name="flip_horizontally">True if the sprite should be flipped horizontally when displayed, false otherwise.</param>
-			FurrySprite(std::string id, bool flip_horizontally = false);
+			AnthroSprite(std::string id, bool flip_horizontally = false);
 
 
 			/// <summary>Retrieves the width of the sprite.</summary>
@@ -90,49 +90,49 @@ namespace onion
 
 
 		// A component of the humanoid.
-		struct FurryComponent
+		struct AnthroComponent
 		{
 		protected:
 			// A collection of all components.
-			static std::unordered_map<std::string, FurryComponent*> m_Components;
+			static std::unordered_map<std::string, AnthroComponent*> m_Components;
 
 			/// <summary>Protected so it can't be called from outside.</summary>
 			/// <param name="id">The ID for the component.</param>
-			FurryComponent(std::string id);
+			AnthroComponent(std::string id);
 
 		public:
 			// Virtual deconstructor.
-			virtual ~FurryComponent();
+			virtual ~AnthroComponent();
 
 			/// <summary>Retrieves a component with a given ID.</summary>
 			/// <param name="id">The ID of the humanoid component.</param>
 			/// <returns>The component with that ID.</returns>
-			static FurryComponent* get(std::string id);
+			static AnthroComponent* get(std::string id);
 
 
 			/// <summary>Retrieves the sprite at a given frame.</summary>
 			/// <param name="facing">Which way the humanoid is facing, relative to the camera.</param>
 			/// <param name="frame">The frame to retrieve.</param>
 			/// <returns>The sprite at the given frame.</returns>
-			virtual const FurrySprite* get_frame(FurryDirection facing, int frame) const = 0;
+			virtual const AnthroSprite* get_frame(AnthroDirection facing, int frame) const = 0;
 		};
 
 		/// <summary>Loads all components for humanoids.</summary>
-		void load_furry_components();
+		void load_anthro_components();
 
 
 
 		// The body of the humanoid.
-		struct FurryBody
+		struct AnthroBody
 		{
 			// The sprites for the chest and legs.
-			FurryComponent* body;
+			AnthroComponent* body;
 
 			// The sprites for the left arm.
-			FurryComponent* left_arm;
+			AnthroComponent* left_arm;
 
 			// The sprites for the right arm.
-			FurryComponent* right_arm;
+			AnthroComponent* right_arm;
 
 
 			// The texture to overlay onto the body sprites.
@@ -142,23 +142,23 @@ namespace onion
 			SinglePalette palette;
 
 
-			FurryBody();
+			AnthroBody();
 
 			/// <summary>Displays the component of the humanoid.</summary>
 			/// <param name="normal">The direction facing towards the camera, normalized.</param>
 			/// <param name="facing">The direction that the humanoid is facing relative to the camera.</param>
 			/// <param name="frame">The frame of animation.</param>
-			void display(const vec3f& normal, FurryDirection facing, int frame) const;
+			void display(const vec3f& normal, AnthroDirection facing, int frame) const;
 		};
 
 
 
 		// A 3D graphic that displays a humanoid sprite.
-		class FurryGraphic3D : public Graphic3D
+		class AnthroGraphic3D : public Graphic3D
 		{
 		protected:
 			// The body of the humanoid.
-			FurryBody m_Body;
+			AnthroBody m_Body;
 
 		public:
 			// The direction that the humanoid is facing, in world space.
@@ -168,7 +168,7 @@ namespace onion
 			/// <summary>Constructs a humanoid sprite.</summary>
 			/// <param name="body">The option for the body type. "" for default.</param>
 			/// <param name="body_markings">The option for the body markings. "" for default.</param>
-			FurryGraphic3D(
+			AnthroGraphic3D(
 				std::string body,
 				std::string body_markings
 			);
@@ -180,17 +180,17 @@ namespace onion
 
 
 		template <typename T>
-		class _FurryActor : public T
+		class _AnthroActor : public T
 		{
 		protected:
 			// The animation currently being played.
-			FurryAnimationID m_CurrentAnimation;
+			AnthroAnimationID m_CurrentAnimation;
 
 		public:
 			template <typename... _Args>
-			_FurryActor(_Args... args) : T(args...)
+			_AnthroActor(_Args... args) : T(args...)
 			{
-				m_CurrentAnimation = FurryAnimationID::STAND;
+				m_CurrentAnimation = AnthroAnimationID::STAND;
 			}
 
 			/// <summary>Updates the actor.</summary>
@@ -201,23 +201,23 @@ namespace onion
 			{
 				vec3i trans = T::update(view, frames_passed);
 
-				if (FurryGraphic3D* g = dynamic_cast<FurryGraphic3D*>(m_Graphic))
+				if (AnthroGraphic3D* g = dynamic_cast<AnthroGraphic3D*>(m_Graphic))
 				{
 					if (trans.get(0) == 0 && trans.get(1) == 0)
 					{
-						if (m_CurrentAnimation != FurryAnimationID::STAND)
+						if (m_CurrentAnimation != AnthroAnimationID::STAND)
 						{
 							//g->set_animation(generate_hune_standing_animation());
-							m_CurrentAnimation = FurryAnimationID::STAND;
+							m_CurrentAnimation = AnthroAnimationID::STAND;
 						}
 					}
 					else
 					{
-						if (m_CurrentAnimation != FurryAnimationID::WALK)
+						if (m_CurrentAnimation != AnthroAnimationID::WALK)
 						{
 							g->direction = trans;
 							//g->set_animation(generate_hune_walking_animation());
-							m_CurrentAnimation = FurryAnimationID::WALK;
+							m_CurrentAnimation = AnthroAnimationID::WALK;
 						}
 					}
 				}
@@ -226,11 +226,11 @@ namespace onion
 			}
 		};
 
-		typedef _FurryActor<Actor> FurryActor;
+		typedef _AnthroActor<Actor> AnthroActor;
 
 
 		// An object generator for an object that uses a humanoid sprite.
-		class FurryGenerator : public ObjectGenerator
+		class AnthroGenerator : public ObjectGenerator
 		{
 		protected:
 			// The body type of the humanoid.
@@ -240,11 +240,11 @@ namespace onion
 			std::string m_BodyMarkingsOption;
 
 		public:
-			FurryGenerator(std::string id, const StringData& params);
+			AnthroGenerator(std::string id, const StringData& params);
 
 			/// <summary>Generates a humanoid sprite for the object to use.</summary>
 			/// <param name="params">The parameters for the object.</param>
-			FurryGraphic3D* generate_graphic(const StringData& params) const;
+			AnthroGraphic3D* generate_graphic(const StringData& params) const;
 		};
 		
 

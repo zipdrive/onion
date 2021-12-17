@@ -101,6 +101,12 @@ namespace onion
 		/// <returns>True if the key exists, false otherwise.</returns>
 		bool get(String key, FLOAT_VEC3& value) const;
 
+		/// <summary>Retrieves the value associated with a key.</summary>
+		/// <param name="key">The key to retrieve the value of.</param>
+		/// <param name="value">Outputs the value associated with the given key, converted to an array of strings.</param>
+		/// <returns>True if the key exists, false otherwise.</returns>
+		bool get(String key, std::vector<String>& value) const;
+
 		using _Data<String, String>::set;
 
 		/// <summary>Sets the value to the key.</summary>
@@ -132,9 +138,14 @@ namespace onion
 		/// <param name="key">The key to set the value of.</param>
 		/// <param name="value">The value to assign to the given key.</param>
 		void set(String key, const FLOAT_VEC3& value);
+
+		/// <summary>Sets the value to the key.</summary>
+		/// <param name="key">The key to set the value of.</param>
+		/// <param name="value">The value to assign to the given key.</param>
+		void set(String key, const std::vector<String>& value);
 	};
 
-	typedef _Data<std::string, int> IntegerData;
+	typedef _Data<String, int> IntegerData;
 
 
 	class SaveFile

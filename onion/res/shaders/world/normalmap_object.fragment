@@ -9,22 +9,17 @@ in VS_FS
     // The fragment position
     vec3 pos;
     
-    // The fragment normal
-    vec3 normal;
+    // The UV coordinates of the normal map
+    vec2 normalUV;
 
-    // The UV texture coordinates
-    vec2 uv;
+    // The UV coordinates of the diffuse map
+    vec2 diffuseUV;
 }
 fs_in;
 
 
 
-float CalcDitherUV(vec3 pos)
-{
-    return tan(pos.x * 2.718281828) + tan(pos.y * 1.414213562) + tan(pos.z * 1.745240644);
-}
-
-float CalcLightStrength(vec3 pos, vec3 normal, vec3 dir, float intensity, float maxDistance, sampler2D noiseTexture)
+float CalcLightStrength(vec3 pos, vec3 normal, vec3 dir, float intensity, float maxDistance)
 {
     float distance = length(dir);
     if (distance < maxDistance)
@@ -38,16 +33,7 @@ float CalcLightStrength(vec3 pos, vec3 normal, vec3 dir, float intensity, float 
         float baseDiffuseStrength = max(minDistance / distance, 0.0);
         float baseStrength = baseDiffuseStrength * intensity / (1.0 + attenuation);
         
-        // Calculate the discretized strength of the light
-        float strength = 0.25 * floor(baseStrength / strengthPerLevel);
-        
-        // Dither the boundary between discrete strengths
-        float closenessToBoundary = round(baseStrength / strengthPerLevel) - (baseStrength / strengthPerLevel);
-        closenessToBoundary = (4.0 * closenessToBoundary * closenessToBoundary * closenessToBoundary) - min(sign(closenessToBoundary), 0.0);
-        float dither = texture(noiseTexture, vec2(0.001 + (0.998 * closenessToBoundary), distance * CalcDitherUV(pos))).r;
-        strength -= 0.25 * dither;
-        
-        return max(strength, 0.0);
+        return baseStrength;
     }
     
     return 0.0;
@@ -74,7 +60,7 @@ struct CubeLight
     float radius;
 };
 
-vec3 CalcCubeLight(CubeLight light, vec3 pos, vec3 normal, sampler2D noiseTexture)
+vec3 CalcCubeLight(CubeLight light, vec3 pos, vec3 normal)
 {
     // Calculate the closest point on the light
     vec3 closest = vec3(
@@ -86,7 +72,7 @@ vec3 CalcCubeLight(CubeLight light, vec3 pos, vec3 normal, sampler2D noiseTextur
     
     float dist = dot(dir, normal); // The distance between the plane that this point is on and the plane parallel to it that the closest point of the light is on
     float maxDistance = sqrt((light.radius * light.radius) - (dist * dist)); // The maximum distance from the closest point
-    return CalcLightStrength(pos, normal, dir, light.intensity, maxDistance, noiseTexture) * light.color;
+    return CalcLightStrength(pos, normal, dir, light.intensity, maxDistance) * light.color;
 }
 
 
@@ -101,23 +87,31 @@ uniform Lighting
 };
 
 
+uniform mat4 model;
 
-uniform sampler2D tileTexture;
-uniform sampler2D noiseTexture;
+uniform mat4x2 overlayMapping;
+uniform mat4 paletteMapping;
+
+uniform sampler2D baseTexture;
 
 
 // MAIN FUNCTION
 
 void main()
 {
-    vec3 diff = vec3(texture(tileTexture, fs_in.uv));
+    vec2 overlayUV = vec2(overlayMapping * texture(baseTexture, fs_in.diffuseUV));
+    vec4 diff = paletteMapping * texture(baseTexture, overlayUV);
+
+    vec4 baseNormal = texture(baseTexture, fs_in.normalUV);
+    vec3 baseNormalVector = vec3(model * vec4(vec3(-1.0) + (2.0 * vec3(baseNormal)), 0.0));
+    vec3 norm = normalize(baseNormalVector);
+    
     vec3 color = ambient;
-    vec3 norm = normalize(fs_in.normal);
     
     for (int k = NR_CUBE_LIGHTS - 1; k >= 0; --k)
     {
-        color += CalcCubeLight(cubeLights[k], fs_in.pos, norm, noiseTexture);
+        color += CalcCubeLight(cubeLights[k], fs_in.pos, norm);
     }
     
-    gl_FragColor = vec4(color * diff, 1.0);
+    gl_FragColor = vec4(color * vec3(diff), baseNormal.a * diff.a);
 }

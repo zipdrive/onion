@@ -113,20 +113,19 @@ namespace onion
 		}
 
 
+		NormalMapped3DPixelSpriteSheet::_SpriteShader* NormalMapped3DPixelSpriteSheet::m_NormalMapped3DPixelShader{ nullptr };
 
-		Textured3DPixelSpriteSheet::_SpriteShader* Textured3DPixelSpriteSheet::m_Textured3DPixelShader{ nullptr };
-
-		Textured3DPixelSpriteSheet::Textured3DPixelSpriteSheet(const char* path)
+		NormalMapped3DPixelSpriteSheet::NormalMapped3DPixelSpriteSheet(const char* path)
 		{
-			if (!m_Textured3DPixelShader)
+			if (!m_NormalMapped3DPixelShader)
 			{
-				m_Textured3DPixelShader = new Textured3DPixelSpriteSheet::_SpriteShader(
-					"world/textured_object",
-					{ "model", "mappingMatrix", "paletteMatrix", "objTexture" }
+				m_NormalMapped3DPixelShader = new NormalMapped3DPixelSpriteSheet::_SpriteShader(
+					"world/normalmap_object",
+					{ "model", "overlayMapping", "paletteMapping", "baseTexture" }
 				);
 			}
 
-			m_Shader = m_Textured3DPixelShader;
+			m_Shader = m_NormalMapped3DPixelShader;
 
 			String fpath("world/");
 			fpath += path;
@@ -134,59 +133,35 @@ namespace onion
 			load(fpath.c_str());
 		}
 
-		Textured3DPixelSpriteSheet::_SpriteShader* Textured3DPixelSpriteSheet::get_shader()
+		NormalMapped3DPixelSpriteSheet::_SpriteShader* NormalMapped3DPixelSpriteSheet::get_shader()
 		{
-			return m_Textured3DPixelShader;
+			return m_NormalMapped3DPixelShader;
 		}
 
-		Texture* Textured3DPixelSpriteSheet::get_texture(TEXTURE_ID id)
-		{
-			return m_TextureManager.get(id);
-		}
-
-		const Texture* Textured3DPixelSpriteSheet::get_texture(TEXTURE_ID id) const
-		{
-			return m_TextureManager.get(id);
-		}
-
-		opengl::_VertexBufferData* Textured3DPixelSpriteSheet::__load(LoadFile& file, opengl::_Image* image)
+		opengl::_VertexBufferData* NormalMapped3DPixelSpriteSheet::__load(LoadFile& file, opengl::_Image* image)
 		{
 			auto data = new VertexBufferData<FLOAT_VEC3, FLOAT_VEC2, FLOAT_VEC2>();
-
-			// Regex that checks if the data is for shading or a texture
-			std::regex tex_checker("^texture\\s+(\\S.+)");
-			std::smatch tex_idmatch;
 
 			while (file.good())
 			{
 				StringData line;
 				String id = file.load_data(line);
 
-				if (regex_match(id, tex_idmatch, tex_checker)) // Load a texture
+				if (id.substr(0, 6) == "sprite")
 				{
-					vec2i pos, size;
-					if (line.get("pos", pos) && line.get("size", size))
+					vec2i norm, diff, size;
+					if (line.get("normal", norm) && line.get("overlay", diff) && line.get("size", size))
 					{
-						// Get the ID for the texture
-						id = tex_idmatch[1].str();
-
-						// Set the information for the texture
-						m_TextureManager.set(id, new Texture(pos.get(0), pos.get(1), size.get(0), size.get(1), image->get_width(), image->get_height()));
-					}
-				}
-				else
-				{
-					vec2i shading, mapping, size;
-					if (line.get("shading", shading) && line.get("mapping", mapping) && line.get("size", size))
-					{
+						id = id.substr(7);
 						int index = data->buffer_size();
 
-						// Set the information for the sprite
+						// Create a sprite data object
 						m_SpriteManager.set(id, new Sprite(index, size.get(0), size.get(1)));
 
 						// Construct the corners, in the order bottom-left -> bottom-right -> top-left -> top-right
 						vec3f vertex_pos[4];
-						vec2f vertex_shading_uv[4], vertex_mapping_uv[4];
+						vec2f vertex_normalUV[4];
+						vec2f vertex_diffuseUV[4];
 						for (int k = 0; k < 4; ++k)
 						{
 							vertex_pos[k](0) = k % 2 == 0
@@ -197,19 +172,19 @@ namespace onion
 								? 0.f
 								: size.get(1);
 
-							vertex_shading_uv[k](0) = k % 2 == 0
-								? (Float)shading.get(0) / image->get_width()
-								: (Float)(shading.get(0) + size.get(0)) / image->get_width();
-							vertex_shading_uv[k](1) = k / 2 == 0
-								? (Float)(shading.get(1) + size.get(1)) / image->get_height()
-								: (Float)shading.get(1) / image->get_height();
+							vertex_normalUV[k](0) = k % 2 == 0
+								? (Float)norm.get(0) / image->get_width()
+								: (Float)(norm.get(0) + size.get(0)) / image->get_width();
+							vertex_normalUV[k](1) = k / 2 == 0
+								? (Float)(norm.get(1) + size.get(1)) / image->get_height()
+								: (Float)norm.get(1) / image->get_height();
 
-							vertex_mapping_uv[k](0) = k % 2 == 0
-								? (Float)mapping.get(0) / image->get_width()
-								: (Float)(mapping.get(0) + size.get(0)) / image->get_width();
-							vertex_mapping_uv[k](1) = k / 2 == 0
-								? (Float)(mapping.get(1) + size.get(1)) / image->get_height()
-								: (Float)mapping.get(1) / image->get_height();
+							vertex_diffuseUV[k](0) = k % 2 == 0
+								? (Float)diff.get(0) / image->get_width()
+								: (Float)(diff.get(0) + size.get(0)) / image->get_width();
+							vertex_diffuseUV[k](1) = k / 2 == 0
+								? (Float)(diff.get(1) + size.get(1)) / image->get_height()
+								: (Float)diff.get(1) / image->get_height();
 						}
 
 						// Insert the data to the buffer in triangles of bottom-left -> top-right -> one of the remaining vertices
@@ -218,150 +193,26 @@ namespace onion
 						{
 							int corner_index = k % 3 == 0 ? 0 : (k % 3 == 1 ? 3 : (k / 3 == 0 ? 1 : 2));
 							data->set<0>(index + k, vertex_pos[corner_index]);
-							data->set<1>(index + k, vertex_shading_uv[corner_index]);
-							data->set<2>(index + k, vertex_mapping_uv[corner_index]);
+							data->set<1>(index + k, vertex_normalUV[corner_index]);
+							data->set<2>(index + k, vertex_diffuseUV[corner_index]);
 						}
 					}
 				}
-			}
-
-			return data;
-		}
-
-		void Textured3DPixelSpriteSheet::display(const Sprite* sprite, bool flip_horizontally, const Texture* texture, const Palette* palette) const
-		{
-			if (flip_horizontally)
-			{
-				// Flip where red and green map to on the texture
-				const mat4x2f& tex = texture->tex;
-				mat4x2f trans_tex(
-					-tex.get(0, 0), -tex.get(0, 1), tex.get(0, 2), tex.get(0, 3),
-					-tex.get(1, 0), -tex.get(1, 1), tex.get(1, 2), tex.get(1, 3)
-				);
-
-				// Flip and display the textured sprite
-				Transform::model.push();
-				Transform::model.translate(sprite->width);
-				Transform::model.scale(-1.f);
-				display(sprite, trans_tex, palette->get_red_palette_matrix(), 0);
-				Transform::model.pop();
-			}
-			else
-			{
-				display(sprite, texture->tex, palette->get_red_palette_matrix(), 0);
-			}
-		}
-
-
-
-		Shaded3DPixelSpriteSheet::_SpriteShader* Shaded3DPixelSpriteSheet::m_Shaded3DPixelShader{ nullptr };
-
-		Shaded3DPixelSpriteSheet::Shaded3DPixelSpriteSheet(const char* path)
-		{
-			if (!m_Shaded3DPixelShader)
-			{
-				m_Shaded3DPixelShader = new Shaded3DPixelSpriteSheet::_SpriteShader(
-					"world/shaded_object",
-					{ "model", "mappingMatrix", "paletteMatrix", "objTexture" }
-				);
-			}
-
-			m_Shader = m_Shaded3DPixelShader;
-
-			String fpath("world/");
-			fpath += path;
-
-			const char* c_fpath = fpath.c_str();
-			load(c_fpath);
-		}
-
-		Shaded3DPixelSpriteSheet::_SpriteShader* Shaded3DPixelSpriteSheet::get_shader()
-		{
-			return m_Shaded3DPixelShader;
-		}
-
-		Texture* Shaded3DPixelSpriteSheet::get_texture(TEXTURE_ID id)
-		{
-			return m_TextureManager.get(id);
-		}
-
-		const Texture* Shaded3DPixelSpriteSheet::get_texture(TEXTURE_ID id) const
-		{
-			return m_TextureManager.get(id);
-		}
-
-		opengl::_VertexBufferData* Shaded3DPixelSpriteSheet::__load(LoadFile& file, opengl::_Image* image)
-		{
-			auto data = new VertexBufferData<FLOAT_VEC3, FLOAT_VEC2, FLOAT_VEC2>();
-
-			// Regex that checks if the data is for shading or a texture
-			std::regex tex_checker("^texture\\s+(\\S.+)");
-			std::smatch tex_idmatch;
-
-			while (file.good())
-			{
-				StringData line;
-				String id = file.load_data(line);
-
-				if (regex_match(id, tex_idmatch, tex_checker)) // Load a texture
+				else if (id.substr(0, 7) == "texture")
 				{
 					vec2i pos, size;
 					if (line.get("pos", pos) && line.get("size", size))
 					{
-						// Get the ID for the texture
-						id = tex_idmatch[1].str();
+						id = id.substr(8);
 
-						// Set the information for the texture
-						m_TextureManager.set(id, new Texture(pos.get(0), pos.get(1), size.get(0), size.get(1), image->get_width(), image->get_height()));
-					}
-				}
-				else
-				{
-					vec2i shading, mapping, size;
-					if (line.get("shading", shading) && line.get("mapping", mapping) && line.get("size", size))
-					{
-						int index = data->buffer_size();
-
-						// Set the information for the sprite
-						m_SpriteManager.set(id, new Sprite(index, size.get(0), size.get(1)));
-
-						// Construct the corners, in the order bottom-left -> bottom-right -> top-left -> top-right
-						vec3f vertex_pos[4];
-						vec2f vertex_shading_uv[4], vertex_mapping_uv[4];
-						for (int k = 0; k < 4; ++k)
-						{
-							vertex_pos[k](0) = k % 2 == 0
-								? 0.f
-								: size.get(0);
-							vertex_pos[k](1) = 0.f;
-							vertex_pos[k](2) = k / 2 == 0
-								? 0.f
-								: size.get(1);
-
-							vertex_shading_uv[k](0) = k % 2 == 0
-								? (Float)shading.get(0) / image->get_width()
-								: (Float)(shading.get(0) + size.get(0)) / image->get_width();
-							vertex_shading_uv[k](1) = k / 2 == 0
-								? (Float)(shading.get(1) + size.get(1)) / image->get_height()
-								: (Float)shading.get(1) / image->get_height();
-
-							vertex_mapping_uv[k](0) = k % 2 == 0
-								? (Float)mapping.get(0) / image->get_width()
-								: (Float)(mapping.get(0) + size.get(0)) / image->get_width();
-							vertex_mapping_uv[k](1) = k / 2 == 0
-								? (Float)(mapping.get(1) + size.get(1)) / image->get_height()
-								: (Float)mapping.get(1) / image->get_height();
-						}
-
-						// Insert the data to the buffer in triangles of bottom-left -> top-right -> one of the remaining vertices
-						data->push(6);
-						for (int k = 0; k < 6; ++k)
-						{
-							int corner_index = k % 3 == 0 ? 0 : (k % 3 == 1 ? 3 : (k / 3 == 0 ? 1 : 2));
-							data->set<0>(index + k, vertex_pos[corner_index]);
-							data->set<1>(index + k, vertex_shading_uv[corner_index]);
-							data->set<2>(index + k, vertex_mapping_uv[corner_index]);
-						}
+						// Create a texture data object
+						m_TextureManager.set(id, 
+							new Texture(
+								pos.get(0), pos.get(1), 
+								size.get(0), size.get(1), 
+								image->get_width(), image->get_height()
+							)
+						);
 					}
 				}
 			}
@@ -369,7 +220,12 @@ namespace onion
 			return data;
 		}
 
-		void Shaded3DPixelSpriteSheet::display(const Sprite* sprite, bool flip_horizontally, const Texture* texture, const Palette* palette) const
+		const Texture* NormalMapped3DPixelSpriteSheet::get_texture(TEXTURE_ID id) const
+		{
+			return m_TextureManager.get(id);
+		}
+
+		void NormalMapped3DPixelSpriteSheet::display(const Sprite* sprite, bool flip_horizontally, const Texture* texture, const Palette* palette) const
 		{
 			if (flip_horizontally)
 			{
@@ -439,7 +295,7 @@ namespace onion
 
 
 
-		DynamicShadingSpriteGraphic3D::DynamicShadingSpriteGraphic3D(const Textured3DPixelSpriteSheet* sprite_sheet, const std::vector<const Sprite*>& sprites, bool flip_horizontally, const Texture* texture, Palette* palette) : SpriteGraphic3D(sprite_sheet)
+		DynamicShadingSpriteGraphic3D::DynamicShadingSpriteGraphic3D(const NormalMapped3DPixelSpriteSheet* sprite_sheet, const std::vector<const Sprite*>& sprites, bool flip_horizontally, const Texture* texture, Palette* palette) : SpriteGraphic3D(sprite_sheet)
 		{
 			m_Sprites = sprites;
 			m_Texture = texture;

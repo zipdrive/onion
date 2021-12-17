@@ -29,6 +29,6 @@ end
 begin obj DEBUG interactable
     pos = (240, 240, 0)
 end
-begin obj DEBUG texture
+begin obj DEBUG textureWall
     pos = (360, 240, 0)
 end

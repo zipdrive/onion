@@ -153,6 +153,7 @@ void test_texmap_main()
 
 
 
+/*
 world::HuneGraphic* g_TestHune = nullptr;
 
 void test_hune_display()
@@ -186,7 +187,7 @@ void test_hune_main()
 	// Clean up
 	delete g_TestHune;
 	g_TestHune = nullptr;
-}
+}*/
 
 
 Font* g_TestFont;
@@ -214,7 +215,7 @@ void test_font_main()
 }
 
 
-
+/*
 void convert_hune()
 {
 	LoadFile loader("res/img/sprites/hune.meta.txt");
@@ -265,7 +266,7 @@ void convert_hune()
 			saver.save_data(id, newline);
 		}
 	}
-}
+}*/
 
 
 
@@ -274,6 +275,7 @@ int main()
 {
 	init("settings.ini");
 
+	//test_texmap_main();
 	worldtest_main();
 	//character_creator_setup();
 	return 0;

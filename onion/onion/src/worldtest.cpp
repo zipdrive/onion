@@ -7,7 +7,7 @@ using namespace onion;
 class TestTexturedObject : public world::Object
 {
 public:
-	TestTexturedObject(const vec3i pos, const world::Textured3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite, const Texture* texture)
+	TestTexturedObject(const vec3i pos, const world::NormalMapped3DPixelSpriteSheet* sprite_sheet, const Sprite* sprite, const Texture* texture)
 		: world::Object(
 			new world::UprightRectangle(pos, vec3i(sprite->width, 0, sprite->height)),
 			new world::DynamicShadingSpriteGraphic3D(
@@ -28,7 +28,7 @@ class TestTexturedObjectGenerator : public world::ObjectGenerator
 {
 private:
 	// The sprite sheet.
-	const world::Textured3DPixelSpriteSheet* m_SpriteSheet;
+	const world::NormalMapped3DPixelSpriteSheet* m_SpriteSheet;
 
 	// The sprite.
 	const Sprite* m_Sprite;
@@ -44,7 +44,7 @@ public:
 		{
 			if (const _SpriteSheet* sprite_sheet = _SpriteSheet::get_sprite_sheet("world/" + path))
 			{
-				if (m_SpriteSheet = dynamic_cast<const world::Textured3DPixelSpriteSheet*>(sprite_sheet))
+				if (m_SpriteSheet = dynamic_cast<const world::NormalMapped3DPixelSpriteSheet*>(sprite_sheet))
 				{
 					String sprite;
 					params.get("sprite", sprite);
@@ -68,10 +68,116 @@ public:
 };
 
 
-class TestFurryActorGenerator : public world::FurryGenerator
+class TestFlatActorGenerator : public world::ObjectGenerator
+{
+private:
+	// The sprite sheet.
+	const world::Flat3DPixelSpriteSheet* m_SpriteSheet;
+
+	// The sprite.
+	const Sprite* m_Sprite;
+
+public:
+	TestFlatActorGenerator(String id, const StringData& params) : world::ObjectGenerator(id)
+	{
+		String path;
+		if (params.get("sprite_sheet", path))
+		{
+			if (const _SpriteSheet* sprite_sheet = _SpriteSheet::get_sprite_sheet("world/" + path))
+			{
+				if (m_SpriteSheet = dynamic_cast<const world::Flat3DPixelSpriteSheet*>(sprite_sheet))
+				{
+					String sprite;
+					params.get("sprite", sprite);
+					m_Sprite = m_SpriteSheet->get_sprite(sprite);
+				}
+			}
+		}
+	}
+
+	world::Object* generate(const StringData& params) const
+	{
+		vec3i pos;
+		params.get("pos", pos);
+
+		world::Actor* actor = new world::Actor(
+			new world::OrthogonalPrism(pos, vec3i(m_Sprite->width, 24, m_Sprite->height)),
+			new world::PlayerMovementControlledAgent(world::SubpixelHandler::num_subpixels * 80),
+			new world::FlatWallGraphic3D(
+				m_SpriteSheet,
+				m_Sprite
+			)
+		);
+
+		world::_Interactable::set_interactor(actor);
+		return actor;
+	}
+};
+
+class TestNormalMapActorGenerator : public world::ObjectGenerator
+{
+private:
+	// The sprite sheet.
+	const world::NormalMapped3DPixelSpriteSheet* m_SpriteSheet;
+
+	// The sprite.
+	const Sprite* m_Sprite;
+
+	// The texture.
+	const Texture* m_Texture;
+
+public:
+	TestNormalMapActorGenerator(String id, const StringData& params) : world::ObjectGenerator(id) 
+	{
+		String path;
+		if (params.get("sprite_sheet", path))
+		{
+			if (const _SpriteSheet* sprite_sheet = _SpriteSheet::get_sprite_sheet("world/" + path))
+			{
+				if (m_SpriteSheet = dynamic_cast<const world::NormalMapped3DPixelSpriteSheet*>(sprite_sheet))
+				{
+					String sprite;
+					params.get("sprite", sprite);
+					m_Sprite = m_SpriteSheet->get_sprite(sprite);
+
+					String texture;
+					params.get("texture", texture);
+					m_Texture = m_SpriteSheet->get_texture(texture);
+				}
+			}
+		}
+	}
+
+	world::Object* generate(const StringData& params) const
+	{
+		vec3i pos;
+		params.get("pos", pos);
+
+		world::Actor* actor = new world::Actor(
+			new world::UprightRectangle(pos, vec3i(m_Sprite->width, 0, m_Sprite->height)),
+			new world::PlayerMovementControlledAgent(world::SubpixelHandler::num_subpixels * 80),
+			new world::DynamicShadingSpriteGraphic3D(
+				m_SpriteSheet,
+				{ m_Sprite },
+				false,
+				m_Texture,
+				new SinglePalette(
+					vec4f(0.588f, 0.376f, 0.055f, 0.f),
+					vec4f(0.859f, 0.698f, 0.267f, 0.f),
+					vec4f(0.345f, 0.149f, 0.f, 0.f)
+				)
+			)
+		);
+
+		world::_Interactable::set_interactor(actor);
+		return actor;
+	}
+};
+
+class TestAnthroActorGenerator : public world::AnthroGenerator
 {
 public:
-	TestFurryActorGenerator(String id, const StringData& params) : world::FurryGenerator(id, params) {}
+	TestAnthroActorGenerator(String id, const StringData& params) : world::AnthroGenerator(id, params) {}
 
 	world::Object* generate(const StringData& params) const
 	{
@@ -82,27 +188,6 @@ public:
 			new world::OrthogonalPrism(pos, vec3i(24, 24, 60)), 
 			new world::PlayerMovementControlledAgent(world::SubpixelHandler::num_subpixels * 80), 
 			generate_graphic(params)
-		);
-
-		world::_Interactable::set_interactor(actor);
-		return actor;
-	}
-};
-
-class TestHuneActorGenerator : public world::ObjectGenerator
-{
-public:
-	TestHuneActorGenerator(String id, const StringData& params) : ObjectGenerator(id) {}
-
-	world::Object* generate(const StringData& params) const
-	{
-		vec3i pos;
-		params.get("pos", pos);
-
-		world::Actor* actor = new world::HuneActor(
-			new world::OrthogonalPrism(pos, vec3i(24, 24, 60)),
-			new world::PlayerMovementControlledAgent(world::SubpixelHandler::num_subpixels * 80),
-			new world::HuneCreator()
 		);
 
 		world::_Interactable::set_interactor(actor);
@@ -163,13 +248,14 @@ void worldtest_main()
 	// Load the sprite sheets
 	new world::Flat3DPixelSpriteSheet("sprites/debug.png");
 	new world::Flat3DPixelSpriteSheet("sprites/debug2.png");
-	new world::Textured3DPixelSpriteSheet("sprites/debugtexture.png");
+	new world::NormalMapped3DPixelSpriteSheet("sprites/debugtexture.png");
+	new world::NormalMapped3DPixelSpriteSheet("sprites/anthrotest.png");
 
 	//world::load_furry_components();
 
 	// Set up the object types
 	world::ObjectGenerator::set<TestTexturedObjectGenerator>("__DEBUG:texture");
-	world::ObjectGenerator::set<TestHuneActorGenerator>("__DEBUG:actor");
+	world::ObjectGenerator::set<TestNormalMapActorGenerator>("__DEBUG:actor");
 	world::ObjectGenerator::set<TestInteractableWallGenerator>("__DEBUG:interactable");
 
 	// Generate the player

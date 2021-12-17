@@ -113,6 +113,52 @@ namespace onion
 		return false;
 	}
 
+	bool StringData::get(String key, std::vector<String>& value) const
+	{
+		String str;
+		if (get(key, str))
+		{
+			regex pattern("\\[(.*)\\]");
+
+			smatch match;
+			if (regex_match(str, match, pattern))
+			{
+				str = match[1].str();
+				regex blank_value("^\\s*,(.*)$");
+				regex quoted_value("^\\s*\"(.*)\"\s*,(.*)$");
+				regex unquoted_value("^\\s*(.*\\S)\\s*,(.*)$");
+				regex final_value("^\\s*(.*\\S)\\s*$");
+
+				while (true)
+				{
+					if (regex_match(str, match, blank_value))
+					{
+						value.push_back("");
+						str = match[1].str();
+					}
+					if (regex_match(str, match, quoted_value) || regex_match(str, match, unquoted_value))
+					{
+						value.push_back(match[1].str());
+						str = match[2].str();
+					}
+					else if (regex_match(str, match, final_value))
+					{
+						value.push_back(match[1].str());
+						break;
+					}
+					else
+					{
+						value.push_back("");
+						break;
+					}
+				}
+
+				return true;
+			}
+		}
+		return false;
+	}
+
 	void StringData::set(String key, Boolean value)
 	{
 		set(key, value ? "true" : "false");
@@ -141,6 +187,15 @@ namespace onion
 	void StringData::set(String key, const FLOAT_VEC3& value)
 	{
 		set(key, "(" + to_string(value.get(0)) + "," + to_string(value.get(1)) + "," + to_string(value.get(2)) + ")");
+	}
+
+	void StringData::set(String key, const std::vector<String>& value)
+	{
+		String arr_to_str("[");
+		for (auto iter = value.begin(); iter != value.end(); ++iter)
+			arr_to_str += (iter == value.begin() ? "\"" : ",\"") + *iter + "\"";
+		arr_to_str += "]";
+		set(key, arr_to_str);
 	}
 
 

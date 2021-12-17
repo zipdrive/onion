@@ -408,6 +408,7 @@ namespace onion
 	};
 
 	// An object that loads, stores data, and displays sprites.
+	// Arguments are uniforms that should be passed to the shader.
 	template <typename... _Args>
 	class SpriteSheet : public _SpriteSheet
 	{

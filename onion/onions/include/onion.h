@@ -17,5 +17,4 @@
 // World
 #include "onions/world/world.h"
 #include "onions/world/interactable.h"
-#include "onions/world/furry.h"
-#include "onions/world/hune.h"
+#include "onions/world/anthro.h"

@@ -26,6 +26,13 @@ begin DEBUG wall2
     sprite = "debug"
 end
 
+begin DEBUG textureWall
+    type = "__DEBUG:texture"
+    sprite_sheet = "sprites/debugtexture.png"
+    sprite = "debug"
+    texture = "debug"
+end
+
 begin DEBUG interactable
     type = "__DEBUG:interactable"
     sprite_sheet = "sprites/debug2.png"
@@ -35,6 +42,7 @@ end
 
 begin DEBUG actor
     type = "__DEBUG:actor"
-    sprite_sheet = "sprites/debug.png"
-    sprite = "debug"
+    sprite_sheet = "sprites/anthrotest.png"
+    sprite = "test"
+    texture = "test"
 end

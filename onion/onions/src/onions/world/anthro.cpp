@@ -1,4 +1,4 @@
-#include "../../../include/onions/world/furry.h"
+#include "../../../include/onions/world/anthro.h"
 
 using namespace std;
 
@@ -8,50 +8,50 @@ namespace onion
 	{
 
 		template <>
-		struct FurryAnimationVars<FurryAnimationID::STAND>
+		struct AnthroAnimationVars<AnthroAnimationID::STAND>
 		{
 			static constexpr int index = 0;
 			static constexpr int size = 1;
 		};
 
 		template <>
-		struct FurryAnimationVars<FurryAnimationID::WALK>
+		struct AnthroAnimationVars<AnthroAnimationID::WALK>
 		{
 			static constexpr int index = 
-				FurryAnimationVars<FurryAnimationID::STAND>::index 
-				+ FurryAnimationVars<FurryAnimationID::STAND>::size;
+				AnthroAnimationVars<AnthroAnimationID::STAND>::index 
+				+ AnthroAnimationVars<AnthroAnimationID::STAND>::size;
 			static constexpr int size = 8;
 		};
 
 		template <>
-		struct FurryAnimationVars<FurryAnimationID::_ALL>
+		struct AnthroAnimationVars<AnthroAnimationID::_ALL>
 		{
 			static constexpr int index = 0;
 			static constexpr int size = 
-				FurryAnimationVars<FurryAnimationID::STAND>::size
-				+ FurryAnimationVars<FurryAnimationID::WALK>::size;
+				AnthroAnimationVars<AnthroAnimationID::STAND>::size
+				+ AnthroAnimationVars<AnthroAnimationID::WALK>::size;
 		};
 
 
 
-		Textured3DPixelSpriteSheet* FurrySprite::sprite_sheet{ nullptr };
+		NormalMapped3DPixelSpriteSheet* AnthroSprite::sprite_sheet{ nullptr };
 		
-		FurrySprite::FurrySprite(string id, bool flip_horizontally) : flip_horizontally(flip_horizontally)
+		AnthroSprite::AnthroSprite(string id, bool flip_horizontally) : flip_horizontally(flip_horizontally)
 		{
 			sprite = sprite_sheet->get_sprite(id);
 		}
 
-		int FurrySprite::get_width() const
+		int AnthroSprite::get_width() const
 		{
 			return sprite ? sprite->width : 0;
 		}
 
-		int FurrySprite::get_height() const
+		int AnthroSprite::get_height() const
 		{
 			return sprite ? sprite->height : 0;
 		}
 
-		void FurrySprite::display(const Texture* texture, const Palette* palette) const
+		void AnthroSprite::display(const Texture* texture, const Palette* palette) const
 		{
 			if (sprite)
 			{
@@ -60,16 +60,16 @@ namespace onion
 		}
 
 
-		unordered_map<string, FurryComponent*> FurryComponent::m_Components{};
+		unordered_map<string, AnthroComponent*> AnthroComponent::m_Components{};
 
-		FurryComponent::FurryComponent(string id) 
+		AnthroComponent::AnthroComponent(string id) 
 		{
 			m_Components.emplace(id, this);
 		}
 
-		FurryComponent::~FurryComponent() {}
+		AnthroComponent::~AnthroComponent() {}
 
-		FurryComponent* FurryComponent::get(string id)
+		AnthroComponent* AnthroComponent::get(string id)
 		{
 			auto iter = m_Components.find(id);
 			if (iter != m_Components.end())
@@ -80,48 +80,48 @@ namespace onion
 
 
 		// A component that doesn't change between frames.
-		struct FurryStaticComponent : public FurryComponent
+		struct AnthroStaticComponent : public AnthroComponent
 		{
 			// The sprite as viewed from each direction.
-			FurrySprite sprites[(int)FurryDirection::_ALL];
+			AnthroSprite sprites[(int)AnthroDirection::_ALL];
 
 
-			FurryStaticComponent(string id, string prefix) : FurryComponent(id) 
+			AnthroStaticComponent(string id, string prefix) : AnthroComponent(id) 
 			{
-				sprites[(int)FurryDirection::FRONT] = FurrySprite(prefix + " front");
-				sprites[(int)FurryDirection::BACK] = FurrySprite(prefix + " back");
-				sprites[(int)FurryDirection::RIGHT] = FurrySprite(prefix + " right");
-				sprites[(int)FurryDirection::LEFT] = FurrySprite(prefix + " right", true);
+				sprites[(int)AnthroDirection::FRONT] = AnthroSprite(prefix + " front");
+				sprites[(int)AnthroDirection::BACK] = AnthroSprite(prefix + " back");
+				sprites[(int)AnthroDirection::RIGHT] = AnthroSprite(prefix + " right");
+				sprites[(int)AnthroDirection::LEFT] = AnthroSprite(prefix + " right", true);
 			}
 
 			/// <summary>Retrieves the sprite at a given frame.</summary>
 			/// <param name="facing">Which way the humanoid is facing, relative to the camera.</param>
 			/// <param name="frame">The frame to retrieve.</param>
 			/// <returns>The sprite at the given frame.</returns>
-			const FurrySprite* get_frame(FurryDirection facing, int frame) const
+			const AnthroSprite* get_frame(AnthroDirection facing, int frame) const
 			{
 				return &sprites[(int)facing];
 			}
 		};
 		
 		// A component that changes between frames.
-		struct FurryDynamicComponent : public FurryComponent
+		struct AnthroDynamicComponent : public AnthroComponent
 		{
 			// The sprites for each frame of animation and direction.
-			FurrySprite sprites[FurryAnimationVars<FurryAnimationID::_ALL>::size * (int)FurryDirection::_ALL];
+			AnthroSprite sprites[AnthroAnimationVars<AnthroAnimationID::_ALL>::size * (int)AnthroDirection::_ALL];
 
-			template <FurryDirection _Facing, FurryAnimationID _Anim>
+			template <AnthroDirection _Facing, AnthroAnimationID _Anim>
 			void load_sprites(string prefix)
 			{
-				static constexpr int base_index = (FurryAnimationVars<FurryAnimationID::_ALL>::size * (int)_Facing) + FurryAnimationVars<_Anim>::index;
+				static constexpr int base_index = (AnthroAnimationVars<AnthroAnimationID::_ALL>::size * (int)_Facing) + AnthroAnimationVars<_Anim>::index;
 
-				static constexpr int half_size = FurryAnimationVars<_Anim>::size / 2;
-				static constexpr int quarter_size = FurryAnimationVars<_Anim>::size / 4;
+				static constexpr int half_size = AnthroAnimationVars<_Anim>::size / 2;
+				static constexpr int quarter_size = AnthroAnimationVars<_Anim>::size / 4;
 
-				for (int k = 0; k < FurryAnimationVars<_Anim>::size; ++k)
+				for (int k = 0; k < AnthroAnimationVars<_Anim>::size; ++k)
 				{
 					int f = base_index + k;
-					sprites[f] = FurrySprite(prefix + to_string(k));
+					sprites[f] = AnthroSprite(prefix + to_string(k));
 
 					if (!sprites[f].sprite)
 					{
@@ -154,27 +154,27 @@ namespace onion
 				}
 			}
 			
-			template <FurryDirection _Facing>
+			template <AnthroDirection _Facing>
 			void load_sprites(string prefix)
 			{
-				load_sprites<_Facing, FurryAnimationID::STAND>(prefix + " walk");
-				load_sprites<_Facing, FurryAnimationID::WALK>(prefix + " walk");
+				load_sprites<_Facing, AnthroAnimationID::STAND>(prefix + " walk");
+				load_sprites<_Facing, AnthroAnimationID::WALK>(prefix + " walk");
 			}
 
 
-			FurryDynamicComponent(string id, string prefix) : FurryComponent(id) 
+			AnthroDynamicComponent(string id, string prefix) : AnthroComponent(id) 
 			{
-				load_sprites<FurryDirection::FRONT>(prefix + " front");
-				load_sprites<FurryDirection::BACK>(prefix + " back");
-				load_sprites<FurryDirection::RIGHT>(prefix + " right");
-				load_sprites<FurryDirection::LEFT>(prefix + " left");
+				load_sprites<AnthroDirection::FRONT>(prefix + " front");
+				load_sprites<AnthroDirection::BACK>(prefix + " back");
+				load_sprites<AnthroDirection::RIGHT>(prefix + " right");
+				load_sprites<AnthroDirection::LEFT>(prefix + " left");
 
-				for (int k = 0; k < FurryAnimationVars<FurryAnimationID::_ALL>::size; ++k)
+				for (int k = 0; k < AnthroAnimationVars<AnthroAnimationID::_ALL>::size; ++k)
 				{
-					int f = (FurryAnimationVars<FurryAnimationID::_ALL>::size * (int)FurryDirection::LEFT) + k;
+					int f = (AnthroAnimationVars<AnthroAnimationID::_ALL>::size * (int)AnthroDirection::LEFT) + k;
 					if (!sprites[f].sprite)
 					{
-						sprites[f].sprite = sprites[(FurryAnimationVars<FurryAnimationID::_ALL>::size * (int)FurryDirection::RIGHT) + k].sprite;
+						sprites[f].sprite = sprites[(AnthroAnimationVars<AnthroAnimationID::_ALL>::size * (int)AnthroDirection::RIGHT) + k].sprite;
 						sprites[f].flip_horizontally = true;
 					}
 				}
@@ -184,7 +184,7 @@ namespace onion
 			/// <param name="facing">Which way the humanoid is facing, relative to the camera.</param>
 			/// <param name="frame">The frame to retrieve.</param>
 			/// <returns>The sprite at the given frame.</returns>
-			const FurrySprite* get_frame(FurryDirection facing, int frame) const
+			const AnthroSprite* get_frame(AnthroDirection facing, int frame) const
 			{
 				return &sprites[frame * (int)facing];
 			}
@@ -193,21 +193,21 @@ namespace onion
 
 
 
-		vector<string> g_BodyOptions;			// Options for the body type (lean or stocky)
+		vector<string> g_TorsoOptions;			// Options for the torso (lean or stocky, nude/clothed/hoodie)
 		vector<string> g_ArmOptions;			// Options for the arms (paws or wings)
+		vector<string> g_LegOptions;			// Options for the legs (nude/pants/skirt)
 		vector<string> g_BodyMarkingOptions;	// Options for the body markings
 
-		void load_furry_components()
+		void load_anthro_components()
 		{
-			static const regex texture_test("^texture\\s+(.*)");
 			static const regex word_by_word("^(\\S+)\\s+(\\S.*)");
-			static smatch match;
+			smatch match;
 
 			// Load the sprite sheet
-			FurrySprite::sprite_sheet = new Textured3DPixelSpriteSheet("sprites/hune.png");
+			AnthroSprite::sprite_sheet = new NormalMapped3DPixelSpriteSheet("sprites/anthro.png");
 
 			// Register the components
-			LoadFile file("res/img/world/sprites/hune.meta");
+			LoadFile file("res/img/world/sprites/anthro.meta");
 			while (file.good())
 			{
 				StringData line;
@@ -217,9 +217,9 @@ namespace onion
 				{
 					string remainder;
 
-					if (regex_match(id, match, texture_test)) // Is a texture
+					if (id.substr(0, 7) == "texture") // Is a texture
 					{
-						remainder = match[1].str();
+						remainder = id.substr(8);
 
 						// Determine what component the texture maps onto
 						string component;
@@ -237,11 +237,13 @@ namespace onion
 						if (opts)
 							opts->push_back(remainder);
 					}
-					else // Is a sprite
+					else if (id.substr(6) == "sprite") // Is a sprite
 					{
+						remainder = id.substr(7);
+
 						// Determine what component the sprite is part of
 						string component;
-						if (regex_match(id, match, word_by_word))
+						if (regex_match(remainder, match, word_by_word))
 						{
 							component = match[1].str();
 							remainder = match[2].str();
@@ -250,8 +252,9 @@ namespace onion
 						// If the sprite represents an option that hasn't been seen before, add it to the list of options
 						vector<string>* opts = nullptr; // A vector of options for the given component
 
-						if (component.compare("body") == 0)			opts = &g_BodyOptions;
+						if (component.compare("torso") == 0)		opts = &g_TorsoOptions;
 						else if (component.compare("arm") == 0)		opts = &g_ArmOptions;
+						else if (component.compare("leg") == 0)		opts = &g_LegOptions;
 
 						if (opts)
 						{
@@ -288,21 +291,21 @@ namespace onion
 			}
 
 			// Set up all humanoid components
-			for (auto iter = g_BodyOptions.begin(); iter != g_BodyOptions.end(); ++iter)
+			for (auto iter = g_TorsoOptions.begin(); iter != g_TorsoOptions.end(); ++iter)
 			{
-				new FurryDynamicComponent("body " + *iter, "body " + *iter);
+				new AnthroDynamicComponent("body " + *iter, "body " + *iter);
 			}
 
 			for (auto iter = g_ArmOptions.begin(); iter != g_ArmOptions.end(); ++iter)
 			{
-				new FurryDynamicComponent("left_arm " + *iter, "arm " + *iter);
-				new FurryDynamicComponent("right_arm " + *iter, "arm " + *iter);
+				new AnthroDynamicComponent("left_arm " + *iter, "arm " + *iter);
+				new AnthroDynamicComponent("right_arm " + *iter, "arm " + *iter);
 			}
 		}
 
 
 
-		FurryBody::FurryBody() 
+		AnthroBody::AnthroBody() 
 			: palette(
 				vec4f(1.f, 0.f, 0.f, 1.f),
 				vec4f(0.f, 1.f, 0.f, 1.f),
@@ -310,31 +313,31 @@ namespace onion
 			)
 		{}
 
-		void FurryBody::display(const vec3f& normal, FurryDirection facing, int frame) const
+		void AnthroBody::display(const vec3f& normal, AnthroDirection facing, int frame) const
 		{
-			const FurrySprite* bspr = body->get_frame(facing, frame);
-			//const FurrySprite* lspr = left_arm->get_frame(facing, frame);
-			//const FurrySprite* rspr = right_arm->get_frame(facing, frame);
+			const AnthroSprite* bspr = body->get_frame(facing, frame);
+			//const AnthroSprite* lspr = left_arm->get_frame(facing, frame);
+			//const AnthroSprite* rspr = right_arm->get_frame(facing, frame);
 
 			bspr->display(texture, &palette);
 		}
 
 
-		FurryGraphic3D::FurryGraphic3D(
+		AnthroGraphic3D::AnthroGraphic3D(
 			string body,
 			string body_markings
 		) 
 		{
 			if (body.empty())
 				body = g_BodyOptions[0];
-			m_Body.body = FurryComponent::get("body " + body);
+			m_Body.body = AnthroComponent::get("body " + body);
 
 			if (body_markings.empty())
 				body_markings = g_BodyMarkingOptions[0];
-			m_Body.texture = FurrySprite::sprite_sheet->get_texture("body " + body_markings);
+			m_Body.texture = nullptr;// AnthroSprite::sprite_sheet->get_texture("body " + body_markings); TODO
 		}
 		
-		void FurryGraphic3D::display(const vec3i& normal) const
+		void AnthroGraphic3D::display(const vec3i& normal) const
 		{
 			// Normalize the normal vector
 			vec3f n;
@@ -345,7 +348,7 @@ namespace onion
 			Transform::model.translate(n.get(0), n.get(1), 0.f);
 
 			// Display the body
-			m_Body.display(n, FurryDirection::FRONT, 0);
+			m_Body.display(n, AnthroDirection::FRONT, 0);
 
 			// Clean up
 			Transform::model.pop();
@@ -353,7 +356,7 @@ namespace onion
 
 
 
-		FurryGenerator::FurryGenerator(string id, const StringData& params) : ObjectGenerator(id)
+		AnthroGenerator::AnthroGenerator(string id, const StringData& params) : ObjectGenerator(id)
 		{
 			if (!params.get("body", m_BodyOption))
 				m_BodyOption = "";
@@ -361,7 +364,7 @@ namespace onion
 				m_BodyMarkingsOption = "";
 		}
 
-		FurryGraphic3D* FurryGenerator::generate_graphic(const StringData& params) const
+		AnthroGraphic3D* AnthroGenerator::generate_graphic(const StringData& params) const
 		{
 			// The body type
 			std::string body;
@@ -374,7 +377,7 @@ namespace onion
 				body_markings = m_BodyMarkingsOption;
 
 			// Generate the graphic
-			return new FurryGraphic3D(
+			return new AnthroGraphic3D(
 				body,
 				body_markings
 			);

@@ -368,7 +368,7 @@ namespace onion
 		void ObjectManager::display(const vec3i& normal) const
 		{
 			// Display all static objects
-			for (auto iter = m_ActiveObjects.begin(); iter != m_ActiveObjects.end(); ++iter)
+			for (auto iter = m_ActiveObjects.rbegin(); iter != m_ActiveObjects.rend(); ++iter)
 				(*iter)->display(normal);
 		}
 

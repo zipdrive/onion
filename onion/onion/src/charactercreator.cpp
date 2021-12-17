@@ -7,6 +7,7 @@
 using namespace std;
 using namespace onion;
 
+/*
 Font* get_label_font()
 {
 	static Font* font = new SpriteFont("outline11.png");
@@ -654,3 +655,7 @@ void character_creator_display_func()
 
 	g_Pages->display();
 }
+
+TODO
+
+*/
