@@ -68,6 +68,7 @@ namespace onion
 		};
 
 
+
 		// A camera that uses a top-down oblique projection, never changing the angle that the world is viewed from or the scale of the world.
 		class StaticTopDownWorldCamera : public WorldCamera
 		{

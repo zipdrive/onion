@@ -316,6 +316,9 @@ namespace onion
 			{
 				Actor* actor = *iter;
 
+				// Remove the actor from the set of visible objects, if it is currently in the set
+				m_ActiveObjects.erase(actor);
+
 				// Calculate how the actor should (ideally) be translated
 				vec3i trans = actor->update(view, frames_passed);
 
@@ -349,18 +352,13 @@ namespace onion
 							}
 						}
 					}
+				}
 
-					// Check if the actor is visible
-					if (view->get_distance(actor->get_bounds()) == 0)
-					{
-						// Add the actor to the set of visible objects, if it isn't already included
-						m_ActiveObjects.insert(actor);
-					}
-					else
-					{
-						// Remove the actor from the set of visible objects, if it is currently in the set
-						m_ActiveObjects.erase(actor);
-					}
+				// Check if the actor is visible
+				if (view->get_distance(actor->get_bounds()) == 0)
+				{
+					// Add the actor to the set of visible objects, if it isn't already included
+					m_ActiveObjects.insert(actor);
 				}
 			}
 		}
@@ -368,7 +366,7 @@ namespace onion
 		void ObjectManager::display(const vec3i& normal) const
 		{
 			// Display all static objects
-			for (auto iter = m_ActiveObjects.rbegin(); iter != m_ActiveObjects.rend(); ++iter)
+			for (auto iter = m_ActiveObjects.begin(); iter != m_ActiveObjects.end(); ++iter)
 				(*iter)->display(normal);
 		}
 

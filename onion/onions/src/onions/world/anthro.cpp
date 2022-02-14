@@ -1,5 +1,6 @@
 #include "../../../include/onions/world/anthro.h"
 
+/*
 using namespace std;
 
 namespace onion
@@ -385,3 +386,4 @@ namespace onion
 
 	}
 }
+*/

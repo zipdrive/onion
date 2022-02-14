@@ -9,9 +9,6 @@ namespace onion
 	namespace world
 	{
 
-		typedef std::vector<vec3f> Simplex;
-
-
 		// A three-dimensional shape.
 		class Shape
 		{
@@ -20,13 +17,6 @@ namespace onion
 			/// <param name="dir">A direction vector.</param>
 			/// <param name="point">Outputs the point on the shape that produces the largest dot product with dir.</param>
 			virtual vec3f support(const vec3f& dir) const = 0;
-
-			/// <summary>Calculates the distance from this shape to the given shape, using the GJK algorithm.</summary>
-			/// <param name="other">The shape to calculate the distance from.</param>
-			/// <param name="s">Inputs the initial guess for s, outputs the last value of s.</param>
-			/// <param name="d">Inputs the initial guess for d (as used in the GJK algorithm), outputs the last value of d.</param>
-			/// <returns>The distance from this shape to the given shape.</returns>
-			Int __get_distance(const Shape* other, Simplex& s, vec3f& d) const;
 
 		public:
 			/// <summary>Retrieves the position of the shape.</summary>

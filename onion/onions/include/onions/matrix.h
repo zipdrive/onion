@@ -218,6 +218,19 @@ namespace onion
 				mat[k] = ((_Rows == _Columns) && (k % (_Rows + 1) == 0)) ? 1 : 0;
 			}
 		}
+
+		matrix<T, _Rows, _Columns> transpose()
+		{
+			matrix<T, _Rows, _Columns> res;
+			for (int i = _Rows - 1; i >= 0; --i)
+			{
+				for (int j = _Columns - 1; j >= 0; --j)
+				{
+					res.set(j, i, get(i, j));
+				}
+			}
+			return res;
+		}
 	};
 
 

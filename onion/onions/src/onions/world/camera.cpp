@@ -104,11 +104,45 @@ namespace onion
 
 		bool StaticTopDownWorldCamera::compare(const Shape* lhs, const Shape* rhs) const
 		{
-			const Int near = abs(m_FrameBounds.get(2, 1) - m_FrameBounds.get(2, 0));
-			const vec3i n(0, -near, near);
 			const vec3i dx(m_FrameBounds.get(0, 1) - m_FrameBounds.get(0, 0), 0, 0);
 			const vec3i dy(0, m_FrameBounds.get(1, 1) - m_FrameBounds.get(1, 0), 0);
+			const vec3i dz(0, 0, m_FrameBounds.get(2, 0) - m_FrameBounds.get(2, 1));
 
+			const vec3i zero(m_ZeroPosition, m_FrameBounds.get(2, 1));
+
+			// Check which shape is deeper (closer to the back of the screen) and return the other one
+			Parallelogram back(zero + dy, dx, dz);
+			Int left_out = back.get_distance(lhs); // Higher value = left is shallower on screen
+			Int right_out = back.get_distance(rhs); // Higher value = right shape is shallower on screen
+			if (left_out < right_out) // Left shape is deeper than right shape
+				return true; // Left shape should be rendered before right shape
+			else if (right_out < left_out) // Right shape is deeper than left shape
+				return false; // Right shape should be rendered before left shape
+
+			// Check which shape is closer to the bottom plane
+			Parallelogram bottom(zero, dx, dy);
+			Int left_sink = bottom.get_distance(lhs); // Higher value = left shape is higher up
+			Int right_sink = bottom.get_distance(rhs); // Higher value = right shape is higher up
+			if (left_sink < right_sink) // Left shape is below right shape
+				return true; // Left shape should be rendered before right shape
+			else if (right_sink < left_sink) // Right shape is below left shape
+				return false; // Right shape should be rendered before left shape
+
+			// Check which shape is closer to the left side of the screen
+			Parallelogram side(zero, dy, dz);
+			Int left_shift = side.get_distance(lhs); // Higher value = left shape is more to right side of screen
+			Int right_shift = side.get_distance(rhs); // Higher value = right shape is more to right side of screen
+			if (left_shift < right_shift) // Left shape is farther to left side of screen than right shape
+				return true;
+			else if (right_shift < left_shift) // Right shape is farther to left side of screen than left shape
+				return false;
+
+			// Both shapes have equal out/sink/shift, so now we check the opposite of each
+			// TODO
+			// Because right now we just say "ok that means they're equal"
+			return false;
+
+			/*
 			// Check which object is closer to the screen
 			Parallelogram rect(vec3i(m_ZeroPosition, 0) + n, dx, dy);
 			Int dl = rect.get_distance(lhs);
@@ -134,6 +168,7 @@ namespace onion
 			if (dr < dl)
 				return true;
 			return false;
+			*/
 		}
 		
 		void StaticTopDownWorldCamera::__activate()

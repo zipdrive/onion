@@ -5,6 +5,12 @@ namespace onion
 	namespace world
 	{
 
+		/// <summary>
+		/// Returns true if all values in the vector are non-negative.
+		/// </summary>
+		/// <typeparam name="T">The number type (e.g. Int, Float).</typeparam>
+		/// <param name="lambda">The vector.</param>
+		/// <returns>True if all values in the vector are non-negative.</returns>
 		template <typename T, int N>
 		bool lambda_all_positive(const matrix<T, 1, N>& lambda)
 		{
@@ -15,6 +21,12 @@ namespace onion
 		}
 
 
+		/// <summary>
+		/// Projects the origin onto the line segment formed by the two vertices passed.
+		/// </summary>
+		/// <param name="a">The first vertex of the line segment.</param>
+		/// <param name="b">The second vertex of the line segment.</param>
+		/// <returns>The point on the line segment with the lowest magnitude.</returns>
 		vec3f dir_to_origin(const vec3f& a, const vec3f& b)
 		{
 			// Project the origin onto the line formed by the vertices
@@ -37,35 +49,244 @@ namespace onion
 			}
 		}
 
+
+
+		struct Simplex
+		{
+		protected:
+			/// <summary>
+			/// Constructs a new simplex with the vertex added.
+			/// </summary>
+			/// <param name="vertex">The vertex to add.</param>
+			/// <param name="new_simplex">Outputs the expanded simplex.</param>
+			virtual void __expand(const vec3f& vertex, Simplex*& new_simplex) = 0;
+
+			/// <summary>
+			/// Constructs the sub-simplex that is closest to the origin.
+			/// </summary>
+			/// <param name="new_simplex">Outputs the sub-simplex that is closest to the origin.</param>
+			/// <param name="dir">Outputs the smallest direction vector to the origin normal to the sub-simplex.</param>
+			virtual void __prune(Simplex*& new_simplex, vec3f& dir) = 0;
+
+		public:
+			// Minimum "non-zero" floating-point value
+			static constexpr Float epsilon = ONION_WORLD_GEOMETRY_SCALE * ONION_WORLD_GEOMETRY_SCALE * 0.5f;
+
+			/// <summary>
+			/// Expands the simplex by adding the given vertex. Does nothing if the simplex already contains the vertex or the simplex has 4 vertices.
+			/// </summary>
+			/// <param name="simplex">The simplex to expand.</param>
+			/// <param name="vertex">The vertex to add to the given simplex.</param>
+			static void expand(Simplex** simplex, const vec3f& vertex)
+			{
+				Simplex* temp;
+
+				(*simplex)->__expand(vertex, temp);
+				if (*simplex != temp)
+				{
+					delete* simplex;
+					*simplex = temp;
+				}
+			}
+
+			/// <summary>
+			/// Prunes the simplex down to the sub-simplex that is closest to the origin.
+			/// </summary>
+			/// <param name="simplex">The simplex to prune.</param>
+			/// <returns>The smallest direction vector to the origin normal to the sub-simplex.</returns>
+			static vec3f prune(Simplex** simplex)
+			{
+				Simplex* temp = nullptr;
+				vec3f dir;
+
+				(*simplex)->__prune(temp, dir);
+				if (*simplex != temp)
+				{
+					delete* simplex;
+					*simplex = temp;
+				}
+
+				return dir;
+			}
+
+			/// <summary>
+			/// Virtual deconstructor.
+			/// </summary>
+			virtual ~Simplex() {}
+
+			/// <summary>
+			/// Retrieves the number of vertices in the simplex.
+			/// </summary>
+			/// <returns>The number of vertices in the simplex.</returns>
+			virtual Int count() = 0;
+		};
 		
-		void nearest_simplex1d(const Simplex& s_input, Simplex& s_output, vec3f& dir)
+		
+		template <int N>
+		struct NSimplex : public Simplex
+		{
+		private:
+			friend class NSimplex<N + 1>;
+			friend class NSimplex<N - 1>;
+
+			vec3f m_Vertices[N];
+
+			NSimplex(NSimplex<N - 1>* copy_from, const vec3f& addition)
+			{
+				for (int k = N - 1; k > 0; --k)
+					m_Vertices[k] = copy_from->m_Vertices[k - 1];
+				m_Vertices[0] = addition;
+			}
+
+			NSimplex(NSimplex<N + 1>* copy_from, int omit_index)
+			{
+				for (int k = N - 1; k >= 0; --k)
+					m_Vertices[k] = copy_from->m_Vertices[k + (k >= omit_index ? 1 : 0)];
+			}
+
+		protected:
+			/// <summary>
+			/// Constructs a new simplex with the vertex added.
+			/// </summary>
+			/// <param name="vertex">The vertex to add.</param>
+			/// <param name="new_simplex">Outputs the expanded simplex.</param>
+			void __expand(const vec3f& vertex, Simplex*& new_simplex)
+			{
+				for (int k = N - 1; k >= 0; --k)
+				{
+					if (vec3f(vertex - m_Vertices[k]).square_sum() < epsilon)
+					{
+						new_simplex = this;
+						return;
+					}
+				}
+
+				new_simplex = new NSimplex<N + 1>(this, vertex);
+			}
+
+			/// <summary>
+			/// Constructs the sub-simplex that is closest to the origin.
+			/// </summary>
+			/// <param name="new_simplex">Outputs the sub-simplex that is closest to the origin.</param>
+			/// <param name="dir">Outputs the smallest direction vector to the origin normal to the sub-simplex.</param>
+			void __prune(Simplex*& new_simplex, vec3f& dir);
+
+		public:
+			/// <summary>
+			/// Retrieves the number of vertices in the simplex.
+			/// </summary>
+			/// <returns>The number of vertices in the simplex.</returns>
+			Int count() 
+			{
+				return N;
+			}
+		};
+
+		template <>
+		class NSimplex<1> : public Simplex
+		{
+		private:
+			friend class NSimplex<2>;
+
+			vec3f m_Vertices[1];
+
+			NSimplex(NSimplex<2>* copy_from, int omit_index)
+			{
+				m_Vertices[0] = copy_from->m_Vertices[(omit_index == 0 ? 1 : 0)];
+			}
+
+		protected:
+			/// <summary>
+			/// Constructs a new simplex with the vertex added.
+			/// </summary>
+			/// <param name="vertex">The vertex to add.</param>
+			/// <param name="new_simplex">Outputs the expanded simplex.</param>
+			void __expand(const vec3f& vertex, Simplex*& new_simplex)
+			{
+				if (vec3f(vertex - m_Vertices[0]).square_sum() < epsilon)
+				{
+					new_simplex = this;
+					return;
+				}
+
+				new_simplex = new NSimplex<2>(this, vertex);
+			}
+
+			/// <summary>
+			/// Constructs the sub-simplex that is closest to the origin.
+			/// </summary>
+			/// <param name="new_simplex">Outputs the sub-simplex that is closest to the origin.</param>
+			/// <param name="dir">Outputs the smallest direction vector to the origin normal to the sub-simplex.</param>
+			void __prune(Simplex*& new_simplex, vec3f& dir)
+			{
+				new_simplex = this;
+				dir = -1.f * m_Vertices[0];
+			}
+
+		public:
+			/// <summary>
+			/// Constructs a simplex composed of a single vertex.
+			/// </summary>
+			/// <param name="vertex">The sole vertex of the simplex.</param>
+			NSimplex(const vec3f& vertex)
+			{
+				m_Vertices[0] = vertex;
+			}
+
+			/// <summary>
+			/// Retrieves the number of vertices in the simplex.
+			/// </summary>
+			/// <returns>The number of vertices in the simplex.</returns>
+			Int count()
+			{
+				return 1;
+			}
+		};
+
+		template <>
+		void NSimplex<2>::__prune(Simplex*& new_simplex, vec3f& dir)
 		{
 			// Project the origin onto the line formed by the vertices
-			vec3f s_diff = s_input[1] - s_input[0];
+			vec3f s_diff = m_Vertices[1] - m_Vertices[0];
 
 			Float numer[2];
-			numer[0] = s_diff.dot(s_input[1]);
-			numer[1] = s_diff.dot(s_input[0]);
+			numer[0] = s_diff.dot(m_Vertices[1]);
+			numer[1] = s_diff.dot(m_Vertices[0]);
 			Float denom = 1.f / s_diff.square_sum();
 
-			if (numer[0] > 0 && numer[1] < 0)
+			// The projected origin can be calculated as ((numer[0] * m_Vertices[0]) - (numer[1] * m_Vertices[1])) * denom
+			// The statement (numer[0] - numer[1]) * denom = 1 will always be true.
+			// This projection lies on the line segment formed by the two vertices if and only if numer[0] > 0 and numer[1] < 0
+
+			if (numer[0] >= 0.f && numer[1] <= 0.f)
 			{
 				// The projected origin lies between the two vertices
-				s_output = s_input;
-				dir = ((s_input[1] * numer[1]) - (s_input[0] * numer[0])) * denom;
+				new_simplex = this;
+				dir = ((m_Vertices[1] * numer[1]) - (m_Vertices[0] * numer[0])) * denom;
 			}
 			else
 			{
-				// The projected origin lies outside the line segment formed by the two vertices, so delete a vertex
-				s_output = { s_input[0] };
-				dir = -1.f * s_input[0];
+				// The projected origin lies outside the line segment formed by the two vertices, so delete the vertex farther from the origin
+				if (numer[0] < 0.f)
+				{
+					// Origin is closer to m_Vertices[1]
+					new_simplex = new NSimplex<1>(this, 0);
+					dir = -1.f * m_Vertices[1];
+				}
+				else
+				{
+					// Origin is closer to m_Vertices[0]
+					new_simplex = new NSimplex<1>(this, 1);
+					dir = -1.f * m_Vertices[0];
+				}
 			}
 		}
 
-		void nearest_simplex2d(const Simplex& s_input, Simplex& s_output, vec3f& dir)
+		template <>
+		void NSimplex<3>::__prune(Simplex*& new_simplex, vec3f& dir)
 		{
 			// Calculate the two vectors that constitute the basis for the plane
-			vec3f d[2] = { s_input[1] - s_input[0], s_input[2] - s_input[0] };
+			vec3f d[2] = { m_Vertices[1] - m_Vertices[0], m_Vertices[2] - m_Vertices[0] };
 
 			Float d00 = d[0].square_sum();
 			Float d11 = d[1].square_sum();
@@ -84,234 +305,222 @@ namespace onion
 			d[0].cross(d[1], normal);
 
 			// Calculate the projection of the origin onto the plane formed by the simplex
-			vec3f o = normal * normal.dot(s_input[0]) / normal.square_sum();
+			vec3f o = normal * normal.dot(m_Vertices[0]) / normal.square_sum();
 
 			// Calculate the barycentric coordinates of the origin projection, with lambda_0 = 1
-			vec2f numer = adj * (o - s_input[0]);
-			Float denom = (d00 * d11) - (d01 * d01); // TODO make sure nonzero!
+			vec2f numer = adj * (o - m_Vertices[0]);
+			Float denom = (d00 * d11) - (d01 * d01);
 
-			vec3f lambda;
-			lambda(0) = 1.f;
-			lambda(1) = numer.get(0) / denom;
-			lambda(2) = numer.get(1) / denom;
-
-			if (lambda_all_positive(lambda))
+			if (std::abs(denom) >= epsilon)
 			{
-				// The projected origin lies within the triangle
-				s_output = s_input;
-				dir = -1.f * o;
-			}
-			else
-			{
-				// Delete a vertex
-				Float d_min = std::numeric_limits<Float>::max();
+				vec3f lambda;
+				lambda(0) = 1.f;
+				lambda(1) = numer.get(0) / denom;
+				lambda(2) = numer.get(1) / denom;
 
-				for (int c = 2; c > 0; --c)
+				if (lambda_all_positive(lambda))
 				{
-					if (lambda.get(c) < 0) // Discard the c-th vertex
+					// The projected origin lies within the triangle
+					new_simplex = this;
+					dir = -1.f * o;
+				}
+				else
+				{
+					// Delete one or more vertices
+					for (int c = 2; c > 0; --c)
 					{
-						// Construct a simplex with the c-th vertex excluded
-						Simplex w = { s_input[0], s_input[c == 1 ? 2 : 1] };
-
-						// Run the sub-routine for a triangle
-						Simplex s_output_temp;
-						vec3f dir_temp;
-						nearest_simplex1d(w, s_output_temp, dir_temp);
-
-						// In case there are multiple negative lambda values, check which has the better minimum norm
-						Float d = dir_temp.square_sum();
-						if (d < d_min)
+						if (lambda.get(c) < 0.f)
 						{
-							s_output = s_output_temp;
-							dir = dir_temp;
-							d_min = d;
+							new_simplex = new NSimplex<2>(this, c);
+							dir = Simplex::prune(&new_simplex);
+							break;
 						}
 					}
 				}
 			}
+			else
+			{
+				/// If this is true, then the simplex is actually a line, not a triangle.
+				/// That means the shortest vector in the last iteration was from a point on that line
+				/// and, since the farthest point (now at index [0]) calculated was also on that line,
+				/// that means that the "farthest point" was actually an arbitrary selection, 
+				/// because any point on that line would have had the same dot product with that vector.
+				/// Therefore, there are only three cases:
+				/// 1. The line does not intersect with the origin, in which case that aforementioned dot 
+				/// product will always be negative and the algorithm will terminate soon.
+				/// 2. The original line segment intersected with the origin, in which case the algorithm 
+				/// should have already terminated. So reaching this case is impossible.
+				/// 3. The line intersects with the origin, but the original line segment did not. But that
+				/// implies the projected origin onto that line was outside the line segment, which in turn
+				/// implies that one of those vertices should have been removed from the simplex. So reaching
+				/// this case is impossible.
+				/// In summary, we only need to consider the first case. Furthermore, we can narrow our 
+				/// scope to subsets of the first case where the projected origin onto the line lies in the
+				/// original line segment, because otherwise a vertex would have been deleted.
+				/// Since the algorithm from this point only needs the shortest vector from the line to the
+				/// origin, we can simply prune the simplex back to the original line segment and return the
+				/// prior vector.
+				new_simplex = new NSimplex<2>(this, 0);
+				dir = Simplex::prune(&new_simplex);
+			}
 		}
 
-		void nearest_simplex3d(const Simplex& s_input, Simplex& s_output, vec3f& dir)
+		template <>
+		struct NSimplex<4> : public Simplex
 		{
-			// Construct a barycentric coordinate system
-			vec3f s_diff[3];
-			for (int c = 3; c > 0; --c)
-				s_diff[c - 1] = s_input[c] - s_input[0];
+		private:
+			friend class NSimplex<3>;
 
-			// Calculate the barycentric coordinates of the origin
-			vec3f o = -1.f * s_input[0];
+			vec3f m_Vertices[4];
 
-			vec3f cross[3];
-			o.cross(s_diff[1], cross[0]);
-			s_diff[0].cross(o, cross[1]);
-			s_diff[0].cross(s_diff[1], cross[2]);
-
-			if (Float denom = cross[2].dot(s_diff[2])) 
+			NSimplex(NSimplex<3>* copy_from, const vec3f& addition)
 			{
-				// The three vectors form a basis for R^3
-				FRAC_VEC4 lambda;
-				lambda(0) = 1;
-				lambda(1) = cross[0].dot(s_diff[2]) / denom;
-				lambda(2) = cross[1].dot(s_diff[2]) / denom;
-				lambda(3) = cross[2].dot(o) / denom;
+				for (int k = 2; k >= 0; --k)
+					m_Vertices[k] = copy_from->m_Vertices[k];
+				m_Vertices[3] = addition;
+			}
 
-				if (lambda_all_positive(lambda))
-				{
-					// The origin lies within the tetrahedron
-					s_output = s_input;
-					dir = vec3f(0.f, 0.f, 0.f);
-				}
-				else
-				{
-					// Delete a vertex
-					Float d_min = std::numeric_limits<Int>::max();
+		protected:
+			/// <summary>
+			/// Does nothing.
+			/// </summary>
+			/// <param name="vertex">The vertex to add.</param>
+			/// <param name="new_simplex">Outputs the expanded simplex.</param>
+			void __expand(const vec3f& vertex, Simplex*& new_simplex)
+			{
+				new_simplex = this;
+			}
 
-					for (int c = 3; c > 0; --c)
+			/// <summary>
+			/// Constructs the sub-simplex that is closest to the origin.
+			/// </summary>
+			/// <param name="new_simplex">Outputs the sub-simplex that is closest to the origin.</param>
+			/// <param name="dir">Outputs the smallest direction vector to the origin normal to the sub-simplex.</param>
+			void __prune(Simplex*& new_simplex, vec3f& dir)
+			{
+				// Construct a barycentric coordinate system
+				vec3f s_diff[3];
+				for (int c = 3; c > 0; --c)
+					s_diff[c - 1] = m_Vertices[c] - m_Vertices[0];
+
+				// Calculate the barycentric coordinates of the origin
+				vec3f o = -1.f * m_Vertices[0];
+
+				vec3f cross[3];
+				o.cross(s_diff[1], cross[0]);
+				s_diff[0].cross(o, cross[1]);
+				s_diff[0].cross(s_diff[1], cross[2]);
+
+				Float denom = cross[2].dot(s_diff[2]);
+				if (std::abs(denom) >= epsilon) // Denom is non-zero
+				{
+					// The three vectors form a basis for R^3
+					vec4f lambda;
+					lambda(0) = 1.f;
+					lambda(1) = cross[0].dot(s_diff[2]) / denom;
+					lambda(2) = cross[1].dot(s_diff[2]) / denom;
+					lambda(3) = cross[2].dot(o) / denom;
+
+					if (lambda_all_positive(lambda))
 					{
-						if (lambda.get(c) < 0) // Discard the c-th vertex
+						// The origin lies within the tetrahedron
+						new_simplex = this;
+						dir = vec3f(0.f, 0.f, 0.f);
+					}
+					else
+					{
+						// Delete one or more vertices
+						for (int c = 3; c > 0; --c)
 						{
-							// Construct a simplex with the c-th vertex excluded
-							Simplex w;
-							for (int n = 0; n < 4; ++n)
-								if (n != c)
-									w.push_back(s_input[n]);
-
-							// Run the sub-routine for a triangle
-							Simplex s_output_temp;
-							vec3f dir_temp;
-							nearest_simplex2d(w, s_output_temp, dir_temp);
-
-							// In case there are multiple negative lambda values, check which has the better minimum norm
-							Float d = dir_temp.square_sum();
-							if (d < d_min)
+							if (lambda.get(c) < 0.f)
 							{
-								s_output = s_output_temp;
-								dir = dir_temp;
-								d_min = d;
+								new_simplex = new NSimplex<3>(this, c);
+								dir = Simplex::prune(&new_simplex);
+								break;
 							}
 						}
 					}
 				}
-			}
-			else
-			{
-				// The three vectors are coplanar, which shouldn't ever happen because that would mean that a * d < 0 in the __get_distance function? But just in case...
-				s_output = s_input;
-			}
-		}
-		
-		/// <summary></summary>
-		/// <returns>True if the generated simplex contains the origin, false otherwise.</returns>
-		void nearest_simplex(const Simplex& s_input, Simplex& s_output, vec3f& dir)
-		{
-			switch (s_input.size())
-			{
-			case 2: // Line
-			{
-				nearest_simplex1d(s_input, s_output, dir);
-				break;
-			}
-			case 3: // Triangle
-			{
-				nearest_simplex2d(s_input, s_output, dir);
-				break;
-			}
-			case 4: // Tetrahedron
-			{
-				nearest_simplex3d(s_input, s_output, dir);
-				break;
-			}
-			default: // Point
-			{
-				s_output = s_input;
-				dir = -1.f * s_input[0];
-			}
-			}
-		}
-
-
-
-		Int Shape::__get_distance(const Shape* other, Simplex& s, vec3f& d) const
-		{
-			static constexpr Float inv_distance_scale = 1.f / ONION_WORLD_GEOMETRY_SCALE;
-			static constexpr Float epsilon = ONION_WORLD_GEOMETRY_SCALE * ONION_WORLD_GEOMETRY_SCALE * 0.5f;
-
-			// Calculate the next point on the Minkowski difference
-			vec3f d0 = d;
-			vec3f a1 = support(d0);
-			vec3f a2 = other->support(-1.f * d0);
-			vec3f a = a1 - a2;
-
-			if (a.dot(d) < 0)
-			{
-				// No intersection
-				if (s.size() == 1)
-				{
-					Simplex temp = { a, s[0] };
-
-					nearest_simplex(temp, s, d);
-					return (Int)round(sqrt(d.square_sum()) * inv_distance_scale);
-				}
 				else
 				{
-					Float dist_min = type_limits<Float>::max();
-
-					for (int c = s.size() - 1; c >= 0; --c)
-					{
-						Simplex temp = { a };
-						for (int n = s.size() - 1; n >= 0; --n)
-							if (n != c)
-								temp.push_back(s[n]);
-
-						Simplex s_temp;
-						vec3f d_temp;
-						nearest_simplex(temp, s_temp, d_temp);
-
-						Float dist = d_temp.square_sum();
-						if (dist < dist_min)
-						{
-							s = s_temp;
-							d = d_temp;
-							dist_min = dist;
-						}
-					}
-
-					return (Int)round(sqrt(dist_min) * inv_distance_scale);
+					/// This case only occurs if the newest vertex is on the same plane as the prior simplex.
+					/// TODO come up with justification for following same procedure as NSimplex<3>::__prune
+					new_simplex = new NSimplex<3>(this, 0);
+					dir = Simplex::prune(&new_simplex);
 				}
 			}
 
-			// Add a to the simplex, making sure there are no duplicates
-			Simplex temp = { a };
-			temp.insert(temp.end(), s.begin(), s.end());
-
-			// Calculate the simplex on the current simplex that is nearest to the origin
-			nearest_simplex(temp, s, d);
-			
-			Float dist = d.square_sum();
-			if (dist < epsilon || s.size() == 4)
+		public:
+			/// <summary>
+			/// Retrieves the number of vertices in the simplex.
+			/// </summary>
+			/// <returns>The number of vertices in the simplex.</returns>
+			Int count()
 			{
-				return (Int)round(sqrt(dist) * inv_distance_scale);
+				return 4;
 			}
-			else
-			{
-				// Recurse
-				return __get_distance(other, s, d);
-			}
-		}
+		};
 
+
+
+		/// <summary>
+		/// Calculates the minimum distance to the other shape.
+		/// </summary>
+		/// <param name="other">The shape to calculate the distance from.</param>
+		/// <returns>The minimum distance to the other shape.</returns>
 		Int Shape::get_distance(const Shape* other) const
 		{
+			static constexpr Float inv_distance_scale = 1.f / ONION_WORLD_GEOMETRY_SCALE;
+
 			// Generate an initial guess
 			vec3f d = ONION_WORLD_GEOMETRY_SCALE * (other->get_position() - get_position());
-			vec3f a1 = support(d) - other->support(-1.f * d);
-			d = -1.f * d;
-			vec3f a2 = support(d) - other->support(-1.f * d);
-			d = dir_to_origin(a1, a2);
+			vec3f a = support(d) - other->support(-1.f * d);
+			d = -1.f * a;
 			
-			Simplex s = { a1, a2 };
+			Simplex* s = new NSimplex<1>(a);
 
-			// Calculate the distance between the two shapes using GJK algorithm
-			return __get_distance(other, s, d);
+			volatile int num_iterations = 0;
+
+			// Begin iteration
+			while (num_iterations++ >= 0)
+			{
+				if (num_iterations > 100)
+				{
+					volatile int something_has_gone_very_wrong = 1;
+				}
+
+				// Calculate the farthest point on the Minkowski difference in the direction of the shortest-found vector from the Minkowski difference to the origin
+				a = support(d) - other->support(-1.f * d);
+				bool obtuse = (a.dot(d) < 0.f); // The dot product of a and d is negative if the angle is obtuse
+
+				// Expand the simplex to include this new point (ignoring duplicates)
+				Simplex::expand(&s, a);
+
+				// Calculate shortest vector from simplex to origin, and simplify the simplex
+				d = Simplex::prune(&s);
+
+				// Calculate the (squared) shortest distance found from Minkowski difference to origin
+				Float distance = d.square_sum();
+
+				// If the angle between direction vector to origin and farthest point on Minkowski difference in that direction is obtuse, 
+				// then the Minkowski difference does not contain the origin and the two shapes do not intersect
+				if (obtuse) 
+				{
+					// Clean up simplex
+					delete s;
+
+					// Calculate minimum distance to origin, then terminate algorithm
+					return (Int)roundf(sqrtf(distance) * inv_distance_scale);
+				}
+				else if (distance < Simplex::epsilon)
+				{
+					// Clean up simplex
+					delete s;
+
+					// Minkowski difference contains origin, so distance between shapes is 0.
+					return 0;
+				}
+			}
 		}
 
 
@@ -409,23 +618,12 @@ namespace onion
 
 		vec3f Parallelogram::support(const vec3f& dir) const
 		{
-			vec3i res;
-			Float d_max = std::numeric_limits<Float>::min();
+			vec3i res = m_Position;
 
-			for (int c = 3; c >= 0; --c)
+			for (int c = 1; c >= 0; --c)
 			{
-				vec3i p = m_Position;
-				if (c % 2 > 0)
-					p += m_Radii[0];
-				if (c / 2 > 0)
-					p += m_Radii[1];
-
-				Float d = dir.dot(p);
-				if (d > d_max)
-				{
-					res = p;
-					d_max = d;
-				}
+				if (dir.dot(m_Radii[c]) > 0)
+					res += m_Radii[c];
 			}
 
 			return ONION_WORLD_GEOMETRY_SCALE * res;
